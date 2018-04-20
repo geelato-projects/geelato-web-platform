@@ -76,6 +76,7 @@ public class User extends BaseEntity {
     }
 
     @Title(title = "描述")
+    @Col(name = "description", charMaxlength = 1024)
     public String getDescription() {
         return description;
     }

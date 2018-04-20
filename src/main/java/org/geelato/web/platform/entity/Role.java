@@ -1,6 +1,7 @@
 package org.geelato.web.platform.entity;
 
 
+import org.geelato.core.meta.annotation.Col;
 import org.geelato.core.meta.annotation.Entity;
 import org.geelato.core.meta.annotation.Title;
 import org.geelato.core.meta.model.entity.BaseEntity;
@@ -34,6 +35,7 @@ public class Role extends BaseEntity {
     }
 
     @Title(title = "描述")
+    @Col(name = "description", charMaxlength = 1024)
     public String getDescription() {
         return description;
     }

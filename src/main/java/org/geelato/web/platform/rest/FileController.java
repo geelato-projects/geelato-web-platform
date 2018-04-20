@@ -25,7 +25,7 @@ import java.io.IOException;
 import java.util.Map;
 
 /**
- * 文件上线下载管理
+ * 文件上传下载管理
  * @author itechgee@126.com
  */
 @Controller
