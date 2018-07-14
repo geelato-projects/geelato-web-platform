@@ -14,8 +14,12 @@ import org.geelato.core.meta.model.entity.BaseEntity;
 public class PageConfig extends BaseEntity {
 
     private Long extendId;
+//    private String name;
+    private String type;
     private String code;
     private String content;
+    private String description;
+
 
     @Col(name = "extend_id", nullable = true)
     @Title(title = "扩展信息", description = "扩展id，如对应的叶子节点id")
@@ -27,8 +31,28 @@ public class PageConfig extends BaseEntity {
         this.extendId = extendId;
     }
 
-    @Col(name = "code", nullable = false)
-    @Title(title = "配置编码")
+//    @Col(name = "name", nullable = true)
+//    @Title(title = "名称")
+//    public String getName() {
+//        return name;
+//    }
+//
+//    public void setName(String name) {
+//        this.name = name;
+//    }
+
+    @Col(name = "type", nullable = false)
+    @Title(title = "类型",description = "如api|form|table")
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    @Col(name = "code", nullable = true)
+    @Title(title = "编码")
     public String getCode() {
         return code;
     }
@@ -38,7 +62,7 @@ public class PageConfig extends BaseEntity {
     }
 
     @Col(name = "content", nullable = false, dataType = "longText")
-    @Title(title = "配置内容")
+    @Title(title = "内容")
     public String getContent() {
         return content;
     }
@@ -47,4 +71,12 @@ public class PageConfig extends BaseEntity {
         this.content = content;
     }
 
+    @Title(title = "描述")
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
 }

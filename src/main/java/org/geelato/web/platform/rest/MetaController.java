@@ -4,6 +4,7 @@ package org.geelato.web.platform.rest;
 import org.geelato.core.api.ApiMultiPagedResult;
 import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiMetaResult;
+import org.geelato.core.meta.MetaManager;
 import org.geelato.core.mvc.MediaTypes;
 import org.geelato.core.orm.Dao;
 import org.geelato.core.service.RuleService;
@@ -35,6 +36,8 @@ public class MetaController implements InitializingBean {
 
     @Autowired
     protected RuleService ruleService;
+
+    private MetaManager metaManager = MetaManager.singleInstance();
 
 
     private static Logger logger = LoggerFactory.getLogger(MetaController.class);
@@ -92,6 +95,41 @@ public class MetaController implements InitializingBean {
         result.setData(ruleService.delete(biz, gql));
         return result;
     }
+
+
+    /**
+     * e.g.:http://localhost:8080/api/meta/defined/
+     * 获取数据定义信息，即元数据信息
+     *
+     * @param entityOrQueryKey 实体名称或查询键
+     * @return
+     */
+    @RequestMapping(value = {"defined/{entityOrQueryKey}"}, method = {RequestMethod.POST, RequestMethod.GET}, produces = MediaTypes.JSON_UTF_8)
+    @ResponseBody
+    public ApiMetaResult defined(@PathVariable("entityOrQueryKey") String entityOrQueryKey) {
+        ApiMetaResult result = new ApiMetaResult();
+        if (metaManager.containsEntity(entityOrQueryKey)) {
+            result.setMeta(metaManager.getByEntityName(entityOrQueryKey).getAllSimpleFieldMetas());
+        } else {
+            // TODO
+        }
+        return result;
+    }
+
+    /**
+     * e.g.:http://localhost:8080/api/meta/entityNames/
+     * 获取实体名称列表
+     *
+     * @return
+     */
+    @RequestMapping(value = {"entityNames"}, method = {RequestMethod.POST, RequestMethod.GET}, produces = MediaTypes.JSON_UTF_8)
+    @ResponseBody
+    public ApiMetaResult entityNames() {
+        ApiMetaResult result = new ApiMetaResult();
+        result.setData(metaManager.getAllEntityNames());
+        return result;
+    }
+
 
     private String getGql(HttpServletRequest request) {
         StringBuilder stringBuilder = new StringBuilder();
