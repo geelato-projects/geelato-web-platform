@@ -1,7 +1,7 @@
 package org.geelato.web.platform.security;
 
 import org.geelato.core.orm.Dao;
-import org.geelato.web.platform.entity.User;
+import org.geelato.web.platform.entity.security.User;
 import org.geelato.utils.Digests;
 import org.geelato.utils.Encodes;
 import org.apache.commons.lang3.StringUtils;

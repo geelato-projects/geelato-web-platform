@@ -1,4 +1,4 @@
-package org.geelato.web.platform.entity;
+package org.geelato.web.platform.entity.security;
 
 
 import org.geelato.core.meta.annotation.Entity;

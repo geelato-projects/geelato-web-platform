@@ -6,22 +6,20 @@ import org.geelato.core.meta.annotation.Entity;
 import org.geelato.core.meta.annotation.Title;
 import org.geelato.core.meta.model.entity.BaseEntity;
 
-/**
- * Created by hongxueqian on 14-5-2.
- */
-@Entity(name = "sys_common_general_config")
+@Entity(name = "platform_common_config")
 @Title(title = "平台设置")
-public class CommonGeneralConfig extends BaseEntity {
+public class CommonConfig extends BaseEntity {
     private String name;
     private String code;
     private int seq;
     private String value;
+    private String ownerId;
     private String description;
 
-    public CommonGeneralConfig() {
+    public CommonConfig() {
     }
 
-    @Col(name = "name",unique = true)
+    @Col(name = "name", unique = true)
     @Title(title = "参数名称")
     public String getName() {
         return name;
@@ -31,8 +29,8 @@ public class CommonGeneralConfig extends BaseEntity {
         this.name = name;
     }
 
-    @Col(name = "code",unique = true)
-    @Title(title = "参数编码")
+    @Col(name = "code", unique = true)
+    @Title(title = "参数编码", description = "如menu，表示")
     public String getCode() {
         return code;
     }
@@ -41,7 +39,7 @@ public class CommonGeneralConfig extends BaseEntity {
         this.code = code;
     }
 
-    @Col(name="value",nullable = false)
+    @Col(name = "value", nullable = false, dataType = "Text")
     @Title(title = "参数值")
     public String getValue() {
         return value;
@@ -60,6 +58,16 @@ public class CommonGeneralConfig extends BaseEntity {
         this.seq = seq;
     }
 
+    @Title(title = "所有者", description = "所有者为平台时，值为'platform'，若归属为具体某个账号，值为账号id。")
+    public String getOwnerId() {
+        return ownerId;
+    }
+
+    public void setOwnerId(String ownerId) {
+        this.ownerId = ownerId;
+    }
+
+    @Col(name = "description", charMaxlength = 5120)
     @Title(title = "描述")
     public String getDescription() {
         return description;

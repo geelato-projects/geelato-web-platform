@@ -7,6 +7,7 @@ import org.geelato.core.orm.Dao;
 import org.geelato.core.orm.DbGenerateDao;
 import org.geelato.core.orm.SqlFiles;
 import org.geelato.core.script.sql.SqlScriptManagerFactory;
+import org.geelato.core.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -40,7 +41,10 @@ public class PlatformApplication implements CommandLineRunner, InitializingBean 
     protected DbGenerateDao dbGenerateDao;
 
     protected boolean isWinOS;
-    
+
+    // main 方方接受的参数
+    protected String MAIN_ARGS_RESET_DB = "reset_db";
+
 
     private void assertOS() {
         Properties prop = System.getProperties();
@@ -52,30 +56,35 @@ public class PlatformApplication implements CommandLineRunner, InitializingBean 
             isWinOS = false;
     }
 
+    /**
+     * @param args 每一个参数
+     * @throws Exception
+     */
     @Override
-    public void run(String... strings) throws Exception {
-        if (strings.length == 0)
-            return;
-        System.out.println("run strings：" + strings.length);
-        System.out.println("配置文件：" + applicationContext.getEnvironment().getProperty("geelato.env"));
+    public void run(String... args) throws Exception {
+//        if (args.length == 0)
+//            return;
+
+        logger.info("主类参数：" + StringUtils.join(args, ","));
+        logger.info("配置文件：" + applicationContext.getEnvironment().getProperty("geelato.env"));
         logger.info("[启动应用]...");
         assertOS();
-        initMeta();
+        initMeta(args);
 
         logger.info("[启动应用]...OK");
         //logEnvironment();
 //		onStarted();
     }
 
-    public void initMeta() throws IOException {
+    public void initMeta(String... args) throws IOException {
         // 解析元数据
         MetaRelf.setApplicationContext(applicationContext);
         MetaManager.singleInstance().scanAndParse("org.geelato", false);
         // 解析脚本：sql、业务规则
         if (this.getClass().getClassLoader() == null || this.getClass().getClassLoader().getResource("//") == null) {
-            initFromFatJar();
+            initFromFatJar(args);
         } else {
-            initFromExploreFile();
+            initFromExploreFile(args);
         }
     }
 
@@ -84,7 +93,7 @@ public class PlatformApplication implements CommandLineRunner, InitializingBean 
      *
      * @throws IOException
      */
-    protected void initFromExploreFile() throws IOException {
+    protected void initFromExploreFile(String... args) throws IOException {
         //String path =applicationContext.getEnvironment().getProperty("geelato.res.path").trim();
         String path = this.getClass().getClassLoader().getResource("//").getPath();
         //由测试类启动时，修改资源目录为源码下的资源目录
@@ -94,11 +103,24 @@ public class PlatformApplication implements CommandLineRunner, InitializingBean 
         //--2、业务规则
         BizManagerFactory.get("rule").setDao(dao);
         BizManagerFactory.get("rule").loadFiles(path + "/geelato/core/rule/");
-        //--3、创建表结构
-        dbGenerateDao.createAllTables(true);
-        //--4、初始化表数据
-        InputStream is = this.getClass().getClassLoader().getResourceAsStream(getProperty("geelato.init.sql", "/geelato/core/data/init.sql"));
-        SqlFiles.loadAndExecute(is, dao.getJdbcTemplate(), isWinOS);
+        if (isNeedResetDb(args)) {
+            //--3、创建表结构
+            dbGenerateDao.createAllTables(true);
+            //--4、初始化表数据
+            InputStream is = this.getClass().getClassLoader().getResourceAsStream(getProperty("geelato.init.sql", "/geelato/core/data/init.sql"));
+            SqlFiles.loadAndExecute(is, dao.getJdbcTemplate(), isWinOS);
+        } else {
+            logger.info("未收到重置数据库命令，跳过创建表结构、跳过初始化表数据。");
+        }
+    }
+
+    protected boolean isNeedResetDb(String... args) {
+        for (String arg : args) {
+            if (this.MAIN_ARGS_RESET_DB.equals(arg)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -106,25 +128,29 @@ public class PlatformApplication implements CommandLineRunner, InitializingBean 
      *
      * @throws IOException
      */
-    protected void initFromFatJar() throws IOException {
+    protected void initFromFatJar(String... args) throws IOException {
         //--1、sql
         SqlScriptManagerFactory.get(Dao.SQL_TEMPLATE_MANAGER).loadResource("/geelato/core/sql/**/*.sql");
         //--2、业务规则
         BizManagerFactory.get("rule").setDao(dao);
         BizManagerFactory.get("rule").loadResource("/geelato/core/rule/**/*.js");
-        //--3、创建表结构
-        dbGenerateDao.createAllTables(true);
-        //--4、初始化表数据
-        ResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
-        String initSql = "/geelato/core/data/*.sql";
-        try {
-            Resource[] resources = resolver.getResources("/geelato/core/data/*.sql");
-            for (Resource resource : resources) {
-                InputStream is = resource.getInputStream();
-                SqlFiles.loadAndExecute(is, dao.getJdbcTemplate(), isWinOS);
+        if (isNeedResetDb(args)) {
+            //--3、创建表结构
+            dbGenerateDao.createAllTables(true);
+            //--4、初始化表数据
+            ResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
+            String initSql = "/geelato/core/data/*.sql";
+            try {
+                Resource[] resources = resolver.getResources("/geelato/core/data/*.sql");
+                for (Resource resource : resources) {
+                    InputStream is = resource.getInputStream();
+                    SqlFiles.loadAndExecute(is, dao.getJdbcTemplate(), isWinOS);
+                }
+            } catch (IOException e) {
+                logger.error("加载、初始化数据（" + initSql + "）失败。", e);
             }
-        } catch (IOException e) {
-            logger.error("加载、初始化数据（" + initSql + "）失败。", e);
+        } else {
+            logger.info("未收到重置数据库命令，跳过创建表结构、跳过初始化表数据。");
         }
     }
 
@@ -138,11 +164,14 @@ public class PlatformApplication implements CommandLineRunner, InitializingBean 
         dbGenerateDao.setDao(dao);
     }
 
+    /**
+     * @param args reset_db:若参数中，带有该字符串，表示需要重置数据库结构、重新初始化数据，一般用于开发
+     */
     public static void main(String[] args) {
-        if (args.length == 0) {
-            args = new String[1];
-            args[0] = "startFromMain";
-        }
+//        if (args.length == 0) {
+//            args = new String[1];
+//            args[0] = "false";
+//        }
         SpringApplication.run(PlatformApplication.class, args);
     }
 }

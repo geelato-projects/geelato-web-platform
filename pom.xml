@@ -120,14 +120,14 @@
 
         <!--轻量级的规则引擎-->
         <!--<dependency>-->
-            <!--<groupId>org.jeasy</groupId>-->
-            <!--<artifactId>easy-rules-core</artifactId>-->
-            <!--<version>${easy-rules.version}</version>-->
+        <!--<groupId>org.jeasy</groupId>-->
+        <!--<artifactId>easy-rules-core</artifactId>-->
+        <!--<version>${easy-rules.version}</version>-->
         <!--</dependency>-->
         <!--<dependency>-->
-            <!--<groupId>org.jeasy</groupId>-->
-            <!--<artifactId>easy-rules-mvel</artifactId>-->
-            <!--<version>${easy-rules.version}</version>-->
+        <!--<groupId>org.jeasy</groupId>-->
+        <!--<artifactId>easy-rules-mvel</artifactId>-->
+        <!--<version>${easy-rules.version}</version>-->
         <!--</dependency>-->
         <!--java性能高、内存占用小的序列化工具-->
         <dependency>
@@ -156,6 +156,7 @@
                     <archive>
                         <!--<manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>-->
                         <manifest>
+                            <!--<mainClass>org.geelato.web.platform.PlatformApplication</mainClass>-->
                             <!--<addClasspath>true</addClasspath>-->
                             <!--<classpathPrefix>lib/</classpathPrefix>-->
                             <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
@@ -168,39 +169,39 @@
     </build>
 
     <!--<build>-->
-        <!--<plugins>-->
-            <!--<plugin>-->
-                <!--<groupId>org.springframework.boot</groupId>-->
-                <!--<artifactId>spring-boot-maven-plugin</artifactId>-->
-                <!--<configuration>-->
-                    <!--&lt;!&ndash; 指定该Main Class为全局的唯一入口 &ndash;&gt;-->
-                    <!--<mainClass>org.geelato.web.platform.PlatformApplication</mainClass>-->
-                <!--</configuration>-->
-                <!--<executions>-->
-                <!--<execution>-->
-                <!--<goals>-->
-                <!--<goal>repackage</goal>&lt;!&ndash;可以把依赖的包都打包到生成的Jar包中&ndash;&gt;-->
-                <!--</goals>-->
-                <!--</execution>-->
-                <!--</executions>-->
-            <!--</plugin>-->
-            <!--&lt;!&ndash;<plugin>&ndash;&gt;-->
-            <!--&lt;!&ndash;<groupId>org.springframework.boot</groupId>&ndash;&gt;-->
-            <!--&lt;!&ndash;<artifactId>spring-boot-maven-plugin</artifactId>&ndash;&gt;-->
-            <!--&lt;!&ndash;</plugin>&ndash;&gt;-->
-            <!--&lt;!&ndash;<plugin>&ndash;&gt;-->
-            <!--&lt;!&ndash;<groupId>org.apache.maven.plugins</groupId>&ndash;&gt;-->
-            <!--&lt;!&ndash;<artifactId>maven-jar-plugin</artifactId>&ndash;&gt;-->
-            <!--&lt;!&ndash;<configuration>&ndash;&gt;-->
-            <!--&lt;!&ndash;<archive>&ndash;&gt;-->
-            <!--&lt;!&ndash;<manifest>&ndash;&gt;-->
-            <!--&lt;!&ndash;<mainClass>org.geelato.web.platform.PlatformApplication</mainClass>&ndash;&gt;-->
-            <!--&lt;!&ndash;<addDefaultImplementationEntries>true</addDefaultImplementationEntries>&ndash;&gt;-->
-            <!--&lt;!&ndash;</manifest>&ndash;&gt;-->
-            <!--&lt;!&ndash;</archive>&ndash;&gt;-->
-            <!--&lt;!&ndash;</configuration>&ndash;&gt;-->
-            <!--&lt;!&ndash;</plugin>&ndash;&gt;-->
-        <!--</plugins>-->
+    <!--<plugins>-->
+    <!--<plugin>-->
+    <!--<groupId>org.springframework.boot</groupId>-->
+    <!--<artifactId>spring-boot-maven-plugin</artifactId>-->
+    <!--<configuration>-->
+    <!--&lt;!&ndash; 指定该Main Class为全局的唯一入口 &ndash;&gt;-->
+    <!--<mainClass>org.geelato.web.platform.PlatformApplication</mainClass>-->
+    <!--</configuration>-->
+    <!--<executions>-->
+    <!--<execution>-->
+    <!--<goals>-->
+    <!--<goal>repackage</goal>&lt;!&ndash;可以把依赖的包都打包到生成的Jar包中&ndash;&gt;-->
+    <!--</goals>-->
+    <!--</execution>-->
+    <!--</executions>-->
+    <!--</plugin>-->
+    <!--&lt;!&ndash;<plugin>&ndash;&gt;-->
+    <!--&lt;!&ndash;<groupId>org.springframework.boot</groupId>&ndash;&gt;-->
+    <!--&lt;!&ndash;<artifactId>spring-boot-maven-plugin</artifactId>&ndash;&gt;-->
+    <!--&lt;!&ndash;</plugin>&ndash;&gt;-->
+    <!--&lt;!&ndash;<plugin>&ndash;&gt;-->
+    <!--&lt;!&ndash;<groupId>org.apache.maven.plugins</groupId>&ndash;&gt;-->
+    <!--&lt;!&ndash;<artifactId>maven-jar-plugin</artifactId>&ndash;&gt;-->
+    <!--&lt;!&ndash;<configuration>&ndash;&gt;-->
+    <!--&lt;!&ndash;<archive>&ndash;&gt;-->
+    <!--&lt;!&ndash;<manifest>&ndash;&gt;-->
+    <!--&lt;!&ndash;<mainClass>org.geelato.web.platform.PlatformApplication</mainClass>&ndash;&gt;-->
+    <!--&lt;!&ndash;<addDefaultImplementationEntries>true</addDefaultImplementationEntries>&ndash;&gt;-->
+    <!--&lt;!&ndash;</manifest>&ndash;&gt;-->
+    <!--&lt;!&ndash;</archive>&ndash;&gt;-->
+    <!--&lt;!&ndash;</configuration>&ndash;&gt;-->
+    <!--&lt;!&ndash;</plugin>&ndash;&gt;-->
+    <!--</plugins>-->
     <!--</build>-->
 
 </project>

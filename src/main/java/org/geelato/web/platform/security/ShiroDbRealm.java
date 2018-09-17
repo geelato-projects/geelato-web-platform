@@ -28,7 +28,7 @@ import org.apache.shiro.util.ByteSource;
 import org.geelato.core.orm.Dao;
 import org.geelato.utils.Encodes;
 import org.geelato.web.platform.common.SqlIdConstants;
-import org.geelato.web.platform.entity.User;
+import org.geelato.web.platform.entity.security.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;

@@ -1,13 +1,12 @@
 package org.geelato.web.platform.rest;
 
-import org.geelato.core.orm.Dao;
-import org.geelato.web.platform.entity.CommonGeneralConfig;
-import org.geelato.web.platform.entity.User;
-import org.geelato.web.platform.entity.UserGeneralConfig;
-import org.geelato.web.platform.security.SecurityHelper;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.*;
 import org.apache.shiro.subject.Subject;
+import org.geelato.core.orm.Dao;
+import org.geelato.web.platform.entity.CommonConfig;
+import org.geelato.web.platform.entity.security.User;
+import org.geelato.web.platform.security.SecurityHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -107,8 +106,8 @@ public class AuthRestController {
         HashMap map = new HashMap();
         map.put("user", user);
         //user config
-        map.put("userConfig", dao.queryForMapList(UserGeneralConfig.class, "creator", user.getId()));
-        map.put("sysConfig", dao.queryForMapList(CommonGeneralConfig.class));
+        map.put("userConfig", dao.queryForMapList(CommonConfig.class, "ownerId", user.getId()));
+        map.put("sysConfig", dao.queryForMapList(CommonConfig.class, "ownerId", "platform"));
         return map;
     }
 
