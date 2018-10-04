@@ -4,14 +4,13 @@ package org.geelato.web.platform.entity;
 import org.geelato.core.meta.annotation.Col;
 import org.geelato.core.meta.annotation.Entity;
 import org.geelato.core.meta.annotation.Title;
-import org.geelato.core.meta.model.entity.BaseEntity;
+import org.geelato.core.meta.model.entity.BaseSortableEntity;
 
 @Entity(name = "platform_common_config")
 @Title(title = "平台设置")
-public class CommonConfig extends BaseEntity {
+public class CommonConfig extends BaseSortableEntity {
     private String name;
     private String code;
-    private int seq;
     private String value;
     private String ownerId;
     private String description;
@@ -47,15 +46,6 @@ public class CommonConfig extends BaseEntity {
 
     public void setValue(String value) {
         this.value = value;
-    }
-
-    @Title(title = "次序")
-    public int getSeq() {
-        return seq;
-    }
-
-    public void setSeq(int seq) {
-        this.seq = seq;
     }
 
     @Title(title = "所有者", description = "所有者为平台时，值为'platform'，若归属为具体某个账号，值为账号id。")

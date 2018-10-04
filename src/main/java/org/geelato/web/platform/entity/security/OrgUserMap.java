@@ -7,24 +7,24 @@ import org.geelato.core.meta.annotation.Title;
 import org.geelato.core.meta.model.entity.IdEntity;
 
 /**
- * Created by hongxq on 2015/6/17.
+ * Created by hongxq
  */
 
-@Entity(name = "platform_role_r_user")
-@Title(title = "角色用户关系表")
-public class RoleUserMap extends IdEntity {
-    private Long roleId;
+@Entity(name = "platform_org_r_user")
+@Title(title = "组织用户关系表")
+public class OrgUserMap extends IdEntity {
+    private Long orgId;
 
     private Long userId;
 
-    @Title(title = "角色ID")
-    @Col(name = "role_id")
-    public Long getRoleId() {
-        return roleId;
+    @Title(title = "组织ID")
+    @Col(name = "org_id")
+    public Long getOrgId() {
+        return orgId;
     }
 
-    public void setRoleId(Long roleId) {
-        this.roleId = roleId;
+    public void setOrgId(Long roleId) {
+        this.orgId = orgId;
     }
 
     @Title(title = "用户ID")

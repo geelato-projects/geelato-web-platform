@@ -4,17 +4,16 @@ package org.geelato.web.platform.entity;
 import org.geelato.core.meta.annotation.Col;
 import org.geelato.core.meta.annotation.Entity;
 import org.geelato.core.meta.annotation.Title;
-import org.geelato.core.meta.model.entity.BaseEntity;
+import org.geelato.core.meta.model.entity.BaseSortableEntity;
 
 /**
  * Created by hongxueqian on 14-5-2.
  */
-@Entity(name = "sys_app")
+@Entity(name = "platform_app")
 @Title(title = "应用")
-public class App extends BaseEntity {
+public class App extends BaseSortableEntity {
     private String name;
     private String code;
-    private int seq;
     private String href;
     private String icon;
     private String menu;
@@ -66,15 +65,6 @@ public class App extends BaseEntity {
         this.icon = icon;
     }
 
-
-    @Title(title = "次序")
-    public int getSeq() {
-        return seq;
-    }
-
-    public void setSeq(int seq) {
-        this.seq = seq;
-    }
 
     @Col(name="menu",dataType = "json")
     @Title(title="菜单",description = "JSON格式，例如：[{\n" +

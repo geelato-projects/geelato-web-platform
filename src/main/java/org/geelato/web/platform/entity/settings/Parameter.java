@@ -1,4 +1,4 @@
-package org.geelato.web.platform.entity.security;
+package org.geelato.web.platform.entity.settings;
 
 
 import org.geelato.core.meta.annotation.Col;
@@ -6,16 +6,14 @@ import org.geelato.core.meta.annotation.Entity;
 import org.geelato.core.meta.annotation.Title;
 import org.geelato.core.meta.model.entity.BaseSortableEntity;
 
-/**
- * Created by hongxueqian on 14-4-12.
- */
-
-@Entity(name = "platform_role")
-@Title(title = "角色")
-public class Role extends BaseSortableEntity {
+@Entity(name = "platform_parameter")
+@Title(title = "参数")
+public class Parameter extends BaseSortableEntity {
     private String name;
     private String code;
     private String type;
+    private String value;
+    private String defaultValue;
     private String description;
 
     @Title(title = "编码")
@@ -37,7 +35,27 @@ public class Role extends BaseSortableEntity {
         this.name = name;
     }
 
-    @Title(title = "类型", description = "")
+    @Title(title = "当前值")
+    @Col(name = "value", nullable = false)
+    public String getValue() {
+        return value;
+    }
+
+    public void setValue(String value) {
+        this.value = value;
+    }
+
+    @Title(title = "默认值")
+    @Col(name = "default_value")
+    public String getDefaultValue() {
+        return defaultValue;
+    }
+
+    public void setDefaultValue(String defaultValue) {
+        this.defaultValue = defaultValue;
+    }
+
+    @Title(title = "类型", description = "platform|none")
     public String getType() {
         return type;
     }

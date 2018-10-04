@@ -99,16 +99,24 @@ public class PlatformApplication implements CommandLineRunner, InitializingBean 
         //由测试类启动时，修改资源目录为源码下的资源目录
         path = path.replace("test-classes", "classes");
         //--1、sql
-        SqlScriptManagerFactory.get(Dao.SQL_TEMPLATE_MANAGER).loadFiles(path + "/geelato/core/sql/");
+        SqlScriptManagerFactory.get(Dao.SQL_TEMPLATE_MANAGER).loadFiles(path + "/geelato/web/platform/sql/");
         //--2、业务规则
         BizManagerFactory.get("rule").setDao(dao);
-        BizManagerFactory.get("rule").loadFiles(path + "/geelato/core/rule/");
+        BizManagerFactory.get("rule").loadFiles(path + "/geelato/web/platform/rule/");
         if (isNeedResetDb(args)) {
+            logger.info("收到重置数据库命令，开始创建表结构、初始化表数据。");
             //--3、创建表结构
             dbGenerateDao.createAllTables(true);
             //--4、初始化表数据
-            InputStream is = this.getClass().getClassLoader().getResourceAsStream(getProperty("geelato.init.sql", "/geelato/core/data/init.sql"));
-            SqlFiles.loadAndExecute(is, dao.getJdbcTemplate(), isWinOS);
+            String filePaths = getProperty("geelato.init.sql", "/geelato/web/platform/data/init.sql");
+            String[] sqlFiles = filePaths.split(",");
+            for (String sqlFile : sqlFiles) {
+                InputStream is = this.getClass().getClassLoader().getResourceAsStream(sqlFile);
+                if (is == null) {
+                    // jar:file:/data/geelato-web-project-1.0.0-SNAPSHOT.jar!/BOOT-INF/lib/geelato-web-platform-1.0.0-SNAPSHOT.jar!/geelato.web.platform/data/init.sql
+                }
+                SqlFiles.loadAndExecute(is, dao.getJdbcTemplate(), isWinOS);
+            }
         } else {
             logger.info("未收到重置数据库命令，跳过创建表结构、跳过初始化表数据。");
         }
@@ -130,25 +138,29 @@ public class PlatformApplication implements CommandLineRunner, InitializingBean 
      */
     protected void initFromFatJar(String... args) throws IOException {
         //--1、sql
-        SqlScriptManagerFactory.get(Dao.SQL_TEMPLATE_MANAGER).loadResource("/geelato/core/sql/**/*.sql");
+        SqlScriptManagerFactory.get(Dao.SQL_TEMPLATE_MANAGER).loadResource("/geelato/web/platform/sql/**/*.sql");
         //--2、业务规则
         BizManagerFactory.get("rule").setDao(dao);
-        BizManagerFactory.get("rule").loadResource("/geelato/core/rule/**/*.js");
+        BizManagerFactory.get("rule").loadResource("/geelato/web/platform/rule/**/*.js");
         if (isNeedResetDb(args)) {
             //--3、创建表结构
             dbGenerateDao.createAllTables(true);
             //--4、初始化表数据
             ResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
-            String initSql = "/geelato/core/data/*.sql";
-            try {
-                Resource[] resources = resolver.getResources("/geelato/core/data/*.sql");
-                for (Resource resource : resources) {
-                    InputStream is = resource.getInputStream();
-                    SqlFiles.loadAndExecute(is, dao.getJdbcTemplate(), isWinOS);
+            String filePaths = getProperty("geelato.init.sql", "/geelato/web/platform/data/init.sql");
+            String[] sqlFiles = filePaths.split(",");
+            for (String sqlFile : sqlFiles) {
+                try {
+                    Resource[] resources = resolver.getResources(sqlFile);
+                    for (Resource resource : resources) {
+                        InputStream is = resource.getInputStream();
+                        SqlFiles.loadAndExecute(is, dao.getJdbcTemplate(), isWinOS);
+                    }
+                } catch (IOException e) {
+                    logger.error("加载、初始化数据（" + sqlFile + "）失败。", e);
                 }
-            } catch (IOException e) {
-                logger.error("加载、初始化数据（" + initSql + "）失败。", e);
             }
+
         } else {
             logger.info("未收到重置数据库命令，跳过创建表结构、跳过初始化表数据。");
         }

@@ -3,7 +3,7 @@ package org.geelato.web.platform.entity.designer;
 import org.geelato.core.meta.annotation.Col;
 import org.geelato.core.meta.annotation.Entity;
 import org.geelato.core.meta.annotation.Title;
-import org.geelato.core.meta.model.entity.BaseEntity;
+import org.geelato.core.meta.model.entity.BaseSortableEntity;
 
 /**
  * @author itechgee@126.com
@@ -11,7 +11,7 @@ import org.geelato.core.meta.model.entity.BaseEntity;
  */
 @Entity(name = "platform_page_config", table = "platform_page_config")
 @Title(title = "页面配置")
-public class PageConfig extends BaseEntity {
+public class PageConfig extends BaseSortableEntity {
 
     private Long extendId;
 //    private String name;

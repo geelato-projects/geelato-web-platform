@@ -6,15 +6,12 @@ import org.geelato.core.meta.annotation.Entity;
 import org.geelato.core.meta.annotation.Title;
 import org.geelato.core.meta.model.entity.BaseSortableEntity;
 
-/**
- * Created by hongxueqian on 14-4-12.
- */
-
-@Entity(name = "platform_role")
-@Title(title = "角色")
-public class Role extends BaseSortableEntity {
+@Entity(name = "platform_org")
+@Title(title = "组织")
+public class Org extends BaseSortableEntity {
     private String name;
     private String code;
+    private long pid;
     private String type;
     private String description;
 
@@ -35,6 +32,15 @@ public class Role extends BaseSortableEntity {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    @Title(title = "上级组织")
+    public long getPid() {
+        return pid;
+    }
+
+    public void setPid(long pid) {
+        this.pid = pid;
     }
 
     @Title(title = "类型", description = "")

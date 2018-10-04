@@ -7,7 +7,7 @@ import org.geelato.core.meta.model.entity.BaseEntity;
 /**
  * Created by hongxueqian on 14-4-12.
  */
-@Entity(name = "sys_permission")
+@Entity(name = "platform_permission")
 public class Permission extends BaseEntity {
 
     private String name;

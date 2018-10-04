@@ -9,7 +9,7 @@ import org.geelato.core.meta.model.entity.IdEntity;
  * Created by hongxq on 2015/6/17.
  */
 
-@Entity(name = "sys_role_r_permission")
+@Entity(name = "platform_role_r_permission")
 @Title(title = "角色权限关系表")
 public class RolePermissionMap extends IdEntity {
     private Long roleId;

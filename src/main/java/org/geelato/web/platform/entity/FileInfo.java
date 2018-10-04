@@ -9,7 +9,7 @@ import org.geelato.core.meta.model.entity.BaseEntity;
  *  未引入：文件版本、文件关系
  */
 
-@Entity(name = "sys_file")
+@Entity(name = "platform_file")
 @Title(title = "文件")
 public class FileInfo extends BaseEntity {
     private String name;

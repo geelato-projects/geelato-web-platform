@@ -3,33 +3,32 @@ package org.geelato.web.platform.entity;
 import org.geelato.core.meta.annotation.Col;
 import org.geelato.core.meta.annotation.Entity;
 import org.geelato.core.meta.annotation.Title;
-import org.geelato.core.meta.model.entity.BaseEntity;
+import org.geelato.core.meta.model.entity.BaseSortableEntity;
 
 /**
  * @author geemeta
  */
-@Entity(name = "sys_dict")
+@Entity(name = "platform_dict")
 @Title(title = "数据字典")
-public class Dict extends BaseEntity {
+public class Dict extends BaseSortableEntity {
 
-    private Long groupId;
+    //    private Long groupId;
     private String groupCode;
     private String name;
     private String value;
-    private int seq;
     private int enabled;
     private String description;
 
-    @Col(name = "group_id")
-    @Title(title = "分组ID")
-    public Long getGroupId() {
-        return groupId;
-    }
-
-
-    public void setGroupId(Long groupId) {
-        this.groupId = groupId;
-    }
+//    @Col(name = "group_id")
+//    @Title(title = "分组ID")
+//    public Long getGroupId() {
+//        return groupId;
+//    }
+//
+//
+//    public void setGroupId(Long groupId) {
+//        this.groupId = groupId;
+//    }
 
     @Col(name = "group_code")
     @Title(title = "分组编码")
@@ -59,16 +58,9 @@ public class Dict extends BaseEntity {
         this.value = value;
     }
 
-    @Title(title = "次顺", description = "展示的次序")
-    public int getSeq() {
-        return seq;
-    }
-
-    public void setSeq(int seq) {
-        this.seq = seq;
-    }
 
     @Title(title = "启用状态", description = "1表示启用、0表示未启用")
+    @Col(name = "enabled", nullable = false, dataType = "tinyint")
     public int getEnabled() {
         return enabled;
     }
@@ -77,6 +69,7 @@ public class Dict extends BaseEntity {
         this.enabled = enabled;
     }
 
+    @Title(title = "描述")
     public String getDescription() {
         return description;
     }

@@ -4,7 +4,7 @@ package org.geelato.web.platform.entity.designer;
 import org.geelato.core.meta.annotation.Col;
 import org.geelato.core.meta.annotation.Entity;
 import org.geelato.core.meta.annotation.Title;
-import org.geelato.core.meta.model.entity.BaseEntity;
+import org.geelato.core.meta.model.entity.BaseSortableEntity;
 
 /**
  * @author itechgee@126.com
@@ -12,7 +12,7 @@ import org.geelato.core.meta.model.entity.BaseEntity;
  */
 @Entity(name = "platform_dev_project", table = "platform_dev_project")
 @Title(title = "开发项目")
-public class DevProject extends BaseEntity {
+public class DevProject extends BaseSortableEntity {
 
     private String name;
     private String tree;
