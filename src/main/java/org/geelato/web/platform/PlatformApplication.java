@@ -79,7 +79,10 @@ public class PlatformApplication implements CommandLineRunner, InitializingBean 
     public void initMeta(String... args) throws IOException {
         // 解析元数据
         MetaRelf.setApplicationContext(applicationContext);
-        MetaManager.singleInstance().scanAndParse("org.geelato", false);
+        String[] packageNames = getProperty("geelato.meta.scan-package-names", "org.geelato").split(",");
+        for (String packageName : packageNames) {
+            MetaManager.singleInstance().scanAndParse(packageName, false);
+        }
         // 解析脚本：sql、业务规则
         if (this.getClass().getClassLoader() == null || this.getClass().getClassLoader().getResource("//") == null) {
             initFromFatJar(args);
