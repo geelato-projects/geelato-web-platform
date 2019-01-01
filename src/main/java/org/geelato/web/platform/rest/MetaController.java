@@ -21,7 +21,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 
 /**
- * get:
+ * getBizRuleScriptManager:
  *
  * @author itechgee@126.com
  * @date 2017/6/3.
@@ -39,9 +39,7 @@ public class MetaController implements InitializingBean {
 
     private MetaManager metaManager = MetaManager.singleInstance();
 
-
     private static Logger logger = LoggerFactory.getLogger(MetaController.class);
-
 
     /**
      * e.g.:http://localhost:8080/api/meta/list/

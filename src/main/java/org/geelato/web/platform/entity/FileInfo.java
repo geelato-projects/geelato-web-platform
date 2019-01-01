@@ -1,6 +1,7 @@
 package org.geelato.web.platform.entity;
 
 
+import org.geelato.core.meta.annotation.Col;
 import org.geelato.core.meta.annotation.Entity;
 import org.geelato.core.meta.annotation.Title;
 import org.geelato.core.meta.model.entity.BaseEntity;
@@ -18,6 +19,7 @@ public class FileInfo extends BaseEntity {
     private String fileType;
     private String description;
 
+    @Col(name = "path")
     @Title(title = "相对路径")
     public String getRelativePath() {
         return relativePath;
@@ -27,6 +29,7 @@ public class FileInfo extends BaseEntity {
         this.relativePath = relativePath;
     }
 
+    @Col(name = "name")
     @Title(title = "名称")
     public String getName() {
         return name;
@@ -36,6 +39,7 @@ public class FileInfo extends BaseEntity {
         this.name = name;
     }
 
+    @Col(name = "size")
     @Title(title = "大小", description = "单位Byte")
     public int getSize() {
         return size;
@@ -45,6 +49,7 @@ public class FileInfo extends BaseEntity {
         this.size = size;
     }
 
+    @Col(name = "type")
     @Title(title = "文件类型", description = "文件后缀")
     public String getFileType() {
         return fileType;
@@ -54,6 +59,7 @@ public class FileInfo extends BaseEntity {
         this.fileType = fileType;
     }
 
+    @Col(name = "description")
     @Title(title = "描述")
     public String getDescription() {
         return description;

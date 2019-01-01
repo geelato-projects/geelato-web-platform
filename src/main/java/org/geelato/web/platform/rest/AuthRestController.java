@@ -1,11 +1,14 @@
 package org.geelato.web.platform.rest;
 
+import net.oschina.j2cache.CacheChannel;
+import net.oschina.j2cache.J2Cache;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.*;
 import org.apache.shiro.subject.Subject;
 import org.geelato.core.orm.Dao;
-import org.geelato.web.platform.entity.CommonConfig;
 import org.geelato.web.platform.entity.security.User;
+import org.geelato.web.platform.entity.settings.CommonConfig;
+import org.geelato.web.platform.entity.settings.UserConfig;
 import org.geelato.web.platform.security.SecurityHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 
 /**
  * Created by hongxq on 2014/5/10.
@@ -29,6 +33,10 @@ public class AuthRestController {
     @Autowired
     @Qualifier("primaryDao")
     private Dao dao;
+
+    private Function commonConfigLoader = (p) -> dao.queryForMapList(CommonConfig.class);
+    private Function userConfigLoader = (userId) -> dao.queryForMapList(UserConfig.class, "id", userId);
+    private CacheChannel cache = J2Cache.getChannel();
 
 //    @Autowired
 //    private ShiroDbRealm shiroDbRealm;
@@ -103,11 +111,12 @@ public class AuthRestController {
     }
 
     private Map wrap(User user) {
-        HashMap map = new HashMap();
+        HashMap map = new HashMap(3);
         map.put("user", user);
         //user config
-        map.put("userConfig", dao.queryForMapList(CommonConfig.class, "ownerId", user.getId()));
-        map.put("sysConfig", dao.queryForMapList(CommonConfig.class, "ownerId", "platform"));
+//        map.put("userConfig", cache.get("config", user.getId().toString(), userConfigLoader));
+        map.put("userConfig",dao.queryForMapList(UserConfig.class, "creator", 1));
+        map.put("commonConfig", cache.get("config", "commonConfig", commonConfigLoader));
         return map;
     }
 

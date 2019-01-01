@@ -47,6 +47,7 @@ public class App extends BaseSortableEntity {
         this.code = code;
     }
 
+    @Col(name = "href")
     @Title(title = "首页链接",description = "加载模块之后打开的首页面")
     public String getHref() {
         return href;
@@ -56,6 +57,7 @@ public class App extends BaseSortableEntity {
         this.href = href;
     }
 
+    @Col(name = "icon")
     @Title(title = "图标")
     public String getIcon() {
         return icon;

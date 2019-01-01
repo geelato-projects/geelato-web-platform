@@ -42,7 +42,7 @@ public class PlatformApplication implements CommandLineRunner, InitializingBean 
 
     protected boolean isWinOS;
 
-    // main 方方接受的参数
+    // main 接受的参数
     protected String MAIN_ARGS_RESET_DB = "reset_db";
 
 
@@ -62,18 +62,12 @@ public class PlatformApplication implements CommandLineRunner, InitializingBean 
      */
     @Override
     public void run(String... args) throws Exception {
-//        if (args.length == 0)
-//            return;
-
         logger.info("主类参数：" + StringUtils.join(args, ","));
         logger.info("配置文件：" + applicationContext.getEnvironment().getProperty("geelato.env"));
         logger.info("[启动应用]...");
         assertOS();
         initMeta(args);
-
         logger.info("[启动应用]...OK");
-        //logEnvironment();
-//		onStarted();
     }
 
     public void initMeta(String... args) throws IOException {
@@ -104,8 +98,8 @@ public class PlatformApplication implements CommandLineRunner, InitializingBean 
         //--1、sql
         SqlScriptManagerFactory.get(Dao.SQL_TEMPLATE_MANAGER).loadFiles(path + "/geelato/web/platform/sql/");
         //--2、业务规则
-        BizManagerFactory.get("rule").setDao(dao);
-        BizManagerFactory.get("rule").loadFiles(path + "/geelato/web/platform/rule/");
+        BizManagerFactory.getBizRuleScriptManager("rule").setDao(dao);
+        BizManagerFactory.getBizRuleScriptManager("rule").loadFiles(path + "/geelato/web/platform/rule/");
         if (isNeedResetDb(args)) {
             logger.info("收到重置数据库命令，开始创建表结构、初始化表数据。");
             //--3、创建表结构
@@ -123,6 +117,8 @@ public class PlatformApplication implements CommandLineRunner, InitializingBean 
         } else {
             logger.info("未收到重置数据库命令，跳过创建表结构、跳过初始化表数据。");
         }
+        BizManagerFactory.getBizMvelRuleManager("mvelRule").setDao(dao);
+        BizManagerFactory.getBizMvelRuleManager("mvelRule").loadDb(null);
     }
 
     protected boolean isNeedResetDb(String... args) {
@@ -143,8 +139,8 @@ public class PlatformApplication implements CommandLineRunner, InitializingBean 
         //--1、sql
         SqlScriptManagerFactory.get(Dao.SQL_TEMPLATE_MANAGER).loadResource("/geelato/web/platform/sql/**/*.sql");
         //--2、业务规则
-        BizManagerFactory.get("rule").setDao(dao);
-        BizManagerFactory.get("rule").loadResource("/geelato/web/platform/rule/**/*.js");
+        BizManagerFactory.getBizRuleScriptManager("rule").setDao(dao);
+        BizManagerFactory.getBizRuleScriptManager("rule").loadResource("/geelato/web/platform/rule/**/*.js");
         if (isNeedResetDb(args)) {
             //--3、创建表结构
             dbGenerateDao.createAllTables(true);
@@ -167,6 +163,8 @@ public class PlatformApplication implements CommandLineRunner, InitializingBean 
         } else {
             logger.info("未收到重置数据库命令，跳过创建表结构、跳过初始化表数据。");
         }
+        BizManagerFactory.getBizMvelRuleManager("mvelRule").setDao(dao);
+        BizManagerFactory.getBizMvelRuleManager("mvelRule").loadDb(null);
     }
 
     protected String getProperty(String key, String defaultValue) {
