@@ -35,7 +35,7 @@ public class AuthRestController {
     private Dao dao;
 
     private Function commonConfigLoader = (p) -> dao.queryForMapList(CommonConfig.class);
-    private Function userConfigLoader = (userId) -> dao.queryForMapList(UserConfig.class, "id", userId);
+    private Function userConfigLoader = (userId) -> dao.queryForMapList(UserConfig.class, "creator", userId);
     private CacheChannel cache = J2Cache.getChannel();
 
 //    @Autowired
@@ -114,8 +114,16 @@ public class AuthRestController {
         HashMap map = new HashMap(3);
         map.put("user", user);
         //user config
-//        map.put("userConfig", cache.get("config", user.getId().toString(), userConfigLoader));
-        map.put("userConfig",dao.queryForMapList(UserConfig.class, "creator", 1));
+//        if (cache.check("config", user.getId().toString()) == 0) {
+//            cache.set("config", user.getId().toString(), dao.queryForMapList(UserConfig.class, "creator", user.getId()));
+//        }
+//        if (cache.check("config", "commonConfig") == 0) {
+//            cache.set("config", "commonConfig", dao.queryForMapList(CommonConfig.class));
+//        }
+//        map.put("userConfig", cache.get("config", user.getId().toString()));
+//        map.put("commonConfig", cache.get("config", "commonConfig"));
+
+        map.put("userConfig", cache.get("config", user.getId().toString(), userConfigLoader));
         map.put("commonConfig", cache.get("config", "commonConfig", commonConfigLoader));
         return map;
     }
