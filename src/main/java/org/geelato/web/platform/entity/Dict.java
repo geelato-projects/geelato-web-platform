@@ -4,13 +4,14 @@ import org.geelato.core.meta.annotation.Col;
 import org.geelato.core.meta.annotation.Entity;
 import org.geelato.core.meta.annotation.Title;
 import org.geelato.core.meta.model.entity.BaseSortableEntity;
+import org.geelato.core.meta.model.entity.EntityEnableAble;
 
 /**
  * @author geemeta
  */
 @Entity(name = "platform_dict")
 @Title(title = "数据字典")
-public class Dict extends BaseSortableEntity {
+public class Dict extends BaseSortableEntity implements EntityEnableAble {
 
     //    private Long groupId;
     private String groupCode;
@@ -60,7 +61,7 @@ public class Dict extends BaseSortableEntity {
 
 
     @Title(title = "启用状态", description = "1表示启用、0表示未启用")
-    @Col(name = "enabled", nullable = false, dataType = "tinyint")
+    @Col(name = "enabled", nullable = false, dataType = "tinyint", numericPrecision = 1)
     public int getEnabled() {
         return enabled;
     }

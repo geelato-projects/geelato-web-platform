@@ -5,11 +5,11 @@ import org.geelato.core.meta.annotation.Col;
 import org.geelato.core.meta.annotation.Entity;
 import org.geelato.core.meta.annotation.Title;
 import org.geelato.core.meta.model.entity.BaseSortableEntity;
-import org.geelato.web.platform.entity.TreeNodeAble;
+import org.geelato.core.meta.model.entity.EntityTreeAble;
 
 @Entity(name = "platform_menu_item")
 @Title(title = "菜单项", description = "菜单项与菜单子项")
-public class MenuItem extends BaseSortableEntity implements TreeNodeAble {
+public class MenuItem extends BaseSortableEntity implements EntityTreeAble {
     private String title;
     private String clazz;
     private String active;

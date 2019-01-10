@@ -5,16 +5,17 @@ import org.geelato.core.meta.annotation.Col;
 import org.geelato.core.meta.annotation.Entity;
 import org.geelato.core.meta.annotation.Title;
 import org.geelato.core.meta.model.entity.BaseSortableEntity;
+import org.geelato.core.meta.model.entity.EntityEnableAble;
 
 @Entity(name = "platform_module")
 @Title(title = "模块")
-public class Module extends BaseSortableEntity {
+public class Module extends BaseSortableEntity implements EntityEnableAble {
     private String title;
     private String code;
     private String index;
     private String resize;
     private String html;
-    private int enable;
+    private int enabled;
     private String description;
 
     @Title(title = "编码")
@@ -68,17 +69,6 @@ public class Module extends BaseSortableEntity {
     }
 
 
-    @Title(title = "启用")
-    @Col(name = "enable", numericPrecision = 1)
-    public int getEnable() {
-        return enable;
-    }
-
-    public void setEnable(int enable) {
-        this.enable = enable;
-    }
-
-
     @Title(title = "描述")
     @Col(name = "description", charMaxlength = 1024)
     public String getDescription() {
@@ -87,5 +77,17 @@ public class Module extends BaseSortableEntity {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    @Title(title = "启用状态", description = "1表示启用、0表示未启用")
+    @Col(name = "enabled", nullable = false, dataType = "tinyint", numericPrecision = 1)
+    @Override
+    public int getEnabled() {
+        return this.enabled;
+    }
+
+    @Override
+    public void setEnabled(int enabled) {
+        this.enabled = enabled;
     }
 }

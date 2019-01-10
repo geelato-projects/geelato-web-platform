@@ -129,6 +129,26 @@ public class MetaController implements InitializingBean {
     }
 
 
+    /**
+     * 获取通用树数据（platform_tree_node）
+     * e.g.:http://localhost:8080/api/meta/tree/
+     *
+     * @param biz     业务代码
+     * @param request HttpServletRequest
+     * @return ApiMetaResult
+     */
+    @RequestMapping(value = {"tree/{biz}"}, method = RequestMethod.POST, produces = MediaTypes.JSON_UTF_8)
+    @ResponseBody
+    public ApiMetaResult tree(@PathVariable("biz") String biz, HttpServletRequest request) {
+//        select tn.parent 'tn.parent',tn.icon 'tn.icon',tn.type 'tn.type',tn.text 'tn.text',t.* from platform_tree_node tn left join platform_menu_item t on tn.id = t.tree_node_id;
+
+        String gql = getGql(request);
+        ApiMetaResult result = new ApiMetaResult();
+        result.setData(ruleService.save(biz, gql));
+        return result;
+    }
+
+
     private String getGql(HttpServletRequest request) {
         StringBuilder stringBuilder = new StringBuilder();
         BufferedReader br = null;
