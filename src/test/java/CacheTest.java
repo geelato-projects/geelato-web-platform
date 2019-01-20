@@ -20,7 +20,6 @@ public class CacheTest {
     @Test
     public void test() {
         CacheChannel cache = J2Cache.getChannel();
-
         //缓存操作
         cache.set("default", "1", "Hello J2Cache");
         System.out.println(cache.get("default", "1"));

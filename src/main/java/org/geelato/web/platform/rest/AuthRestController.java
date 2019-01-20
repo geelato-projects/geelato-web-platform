@@ -5,9 +5,12 @@ import net.oschina.j2cache.J2Cache;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.*;
 import org.apache.shiro.subject.Subject;
+import org.geelato.core.api.ApiResult;
 import org.geelato.core.orm.Dao;
+import org.geelato.core.service.RuleService;
 import org.geelato.web.platform.entity.security.User;
 import org.geelato.web.platform.entity.settings.CommonConfig;
+import org.geelato.web.platform.entity.settings.Module;
 import org.geelato.web.platform.entity.settings.UserConfig;
 import org.geelato.web.platform.security.SecurityHelper;
 import org.slf4j.Logger;
@@ -20,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -33,6 +37,9 @@ public class AuthRestController {
     @Autowired
     @Qualifier("primaryDao")
     private Dao dao;
+
+    @Autowired
+    protected RuleService ruleService;
 
     private Function commonConfigLoader = (p) -> dao.queryForMapList(CommonConfig.class);
     private Function userConfigLoader = (userId) -> dao.queryForMapList(UserConfig.class, "creator", userId);
@@ -125,6 +132,14 @@ public class AuthRestController {
 
         map.put("userConfig", cache.get("config", user.getId().toString(), userConfigLoader));
         map.put("commonConfig", cache.get("config", "commonConfig", commonConfigLoader));
+        List<Map<String, Object>> moduleList = dao.queryForMapList(Module.class);
+        for (Map module : moduleList) {
+            long id = Long.parseLong(module.get("id").toString());
+            ApiResult<List<Map>> result = ruleService.queryForTree("platform_menu_item", id, "items");
+            List<Map> menuItemList = result.getData();
+            module.put("tree", menuItemList);
+        }
+        map.put("modules", moduleList);
         return map;
     }
 
