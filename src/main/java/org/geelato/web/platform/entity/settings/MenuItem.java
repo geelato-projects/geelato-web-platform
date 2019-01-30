@@ -13,7 +13,9 @@ public class MenuItem extends BaseSortableEntity implements EntityTreeAble {
     private String title;
     private String clazz;
     private String active;
+    private String linkType;
     private String href;
+    private String pageCode;
     private Long treeNodeId;
 
     @Title(title = "标题")
@@ -46,6 +48,16 @@ public class MenuItem extends BaseSortableEntity implements EntityTreeAble {
         this.active = active;
     }
 
+    @Title(title = "链接类型", description = "dynamicPage|other，dynamicPage为基于设计器配置的页面。")
+    @Col(name = "link_type", charMaxlength = 20)
+    public String getLinkType() {
+        return linkType;
+    }
+
+    public void setLinkType(String linkType) {
+        this.linkType = linkType;
+    }
+
     @Title(title = "链接")
     @Col(name = "href")
     public String getHref() {
@@ -56,6 +68,16 @@ public class MenuItem extends BaseSortableEntity implements EntityTreeAble {
         this.href = href;
     }
 
+
+    @Title(title = "链接页面", description = "链接打开的页面编码，@see PageConfig")
+    @Col(name = "page_code")
+    public String getPageCode() {
+        return pageCode;
+    }
+
+    public void setPageCode(String pageCode) {
+        this.pageCode = pageCode;
+    }
 
     @Title(title = "树节点id")
     @Col(name = "tree_node_id")
