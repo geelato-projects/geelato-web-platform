@@ -8,7 +8,7 @@ import org.geelato.core.api.ApiResult;
 import org.geelato.core.meta.MetaManager;
 import org.geelato.core.mvc.MediaTypes;
 import org.geelato.core.orm.Dao;
-import org.geelato.core.service.RuleService;
+import org.geelato.web.platform.service.RuleService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;

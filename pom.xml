@@ -151,7 +151,7 @@
                     <artifactId>slf4j-simple</artifactId>
                 </exclusion>
             </exclusions>
-            <scope>provided</scope>
+            <!--<scope>provided</scope>-->
         </dependency>
         <dependency>
             <groupId>org.ehcache</groupId>

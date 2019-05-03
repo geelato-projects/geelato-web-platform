@@ -4,7 +4,7 @@ package org.geelato.web.platform.rest;
 import org.geelato.core.api.ApiMetaResult;
 import org.geelato.core.api.ApiResultCode;
 import org.geelato.core.orm.Dao;
-import org.geelato.core.service.RuleService;
+import org.geelato.web.platform.service.RuleService;
 import org.geelato.web.platform.entity.FileInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -1,22 +1,24 @@
 package org.geelato.web.platform.rest;
 
 import net.oschina.j2cache.CacheChannel;
+import net.oschina.j2cache.CacheObject;
 import net.oschina.j2cache.J2Cache;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.*;
 import org.apache.shiro.subject.Subject;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.orm.Dao;
-import org.geelato.core.service.RuleService;
 import org.geelato.web.platform.entity.security.User;
 import org.geelato.web.platform.entity.settings.CommonConfig;
 import org.geelato.web.platform.entity.settings.Module;
 import org.geelato.web.platform.entity.settings.UserConfig;
 import org.geelato.web.platform.security.SecurityHelper;
+import org.geelato.web.platform.service.RuleService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -72,23 +74,35 @@ public class AuthRestController {
                     logger.debug("User [" + currentUser.getPrincipal() + "] login successfully.");
             } catch (UnknownAccountException uae) {
                 //username wasn't in the system, show them an error message?
-                throw new RestException(HttpStatus.BAD_REQUEST, "无效的用户名！");
+                throw new RestException(HttpStatus.UNAUTHORIZED, "无效的用户名！");
             } catch (IncorrectCredentialsException ice) {
                 //password didn't match, try again?
-                throw new RestException(HttpStatus.BAD_REQUEST, "无效的密码！");
+                throw new RestException(HttpStatus.UNAUTHORIZED, "无效的密码！");
             } catch (LockedAccountException lae) {
                 //account for that username is locked - can't login.  Show them a message?
-                throw new RestException(HttpStatus.BAD_REQUEST, "用户账号已被锁！");
+                throw new RestException(HttpStatus.FORBIDDEN, "用户账号已被锁！");
             } catch (AuthenticationException ae) {
                 //unexpected condition - error?
                 throw new RestException(HttpStatus.BAD_REQUEST, "登录失败！[" + ae.getMessage() + "]");
             }
         }
-        user = dao.queryForObject(User.class, "loginName", user.getLoginName());
-        user.setSalt("");
-        user.setPassword("");
-        user.setPlainPassword("");
+        try {
+            user = dao.queryForObject(User.class, "loginName", user.getLoginName());
+            user.setSalt("");
+            user.setPassword("");
+            user.setPlainPassword("");
+        } catch (EmptyResultDataAccessException e) {
+            throw new RestException(HttpStatus.UNAUTHORIZED, "无效的用户名！");
+        }
         return wrap(user);
+    }
+
+    @RequestMapping(value = "/loginSecurity", method = RequestMethod.POST)
+    @ResponseBody
+    public ApiResult loginMD5(@RequestBody User user, HttpServletRequest req) {
+        ApiResult apiResult = new ApiResult();
+        apiResult.setData(login(user, req));
+        return apiResult;
     }
 
     @RequestMapping(value = "/isLogged")
@@ -130,8 +144,27 @@ public class AuthRestController {
 //        map.put("userConfig", cache.get("config", user.getId().toString()));
 //        map.put("commonConfig", cache.get("config", "commonConfig"));
 
-        map.put("userConfig", cache.get("config", user.getId().toString(), userConfigLoader));
-        map.put("commonConfig", cache.get("config", "commonConfig", commonConfigLoader));
+        CacheObject userConfigCacheObject = cache.get("config", user.getId().toString(), userConfigLoader);
+        HashMap userConfig = new HashMap();
+        if (userConfigCacheObject.getValue() != null) {
+            List<Map<String, Object>> list = (List<Map<String, Object>>) userConfigCacheObject.getValue();
+            list.forEach((item) -> {
+                userConfig.put(item.get("code"), item);
+            });
+        }
+        map.put("userConfig", userConfig);
+
+        CacheObject commonConfigCacheObject = cache.get("config", user.getId().toString(), userConfigLoader);
+        HashMap commonConfig = new HashMap();
+        if (userConfigCacheObject.getValue() != null) {
+            List<Map<String, Object>> list = (List<Map<String, Object>>) commonConfigCacheObject.getValue();
+            list.forEach((item) -> {
+                commonConfig.put(item.get("code"), item);
+            });
+        }
+        map.put("commonConfig", commonConfig);
+
+//        map.put("commonConfig", cache.get("config", "commonConfig", commonConfigLoader));
         List<Map<String, Object>> moduleList = dao.queryForMapList(Module.class);
         for (Map module : moduleList) {
             long id = Long.parseLong(module.get("id").toString());

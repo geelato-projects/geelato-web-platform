@@ -20,8 +20,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Collection;
-import java.util.HashMap;
+import java.util.*;
 
 /**
  * :
@@ -49,12 +48,12 @@ public class CacheController {
      * @param request
      * @return
      */
-    @RequestMapping(value = {"regions", "regions/*"}, method = RequestMethod.POST, produces = MediaTypes.JSON_UTF_8)
+    @RequestMapping(value = {"list", "list/*"}, method = RequestMethod.POST, produces = MediaTypes.JSON_UTF_8)
     @ResponseBody
     public ApiResult list(HttpServletRequest request) {
         ApiResult apiResult = new ApiResult();
         apiResult.setData(cache.regions());
-        HashMap<String, Collection> result = null;
+        List<CacheObject> list = new ArrayList();
         for (CacheChannel.Region region : cache.regions()) {
             for (String key : cache.keys(region.getName())) {
                 CacheObject cacheObject = cache.get(region.getName(), key);
@@ -62,6 +61,7 @@ public class CacheController {
                 cacheObject.getLevel();
                 cacheObject.getRegion();
                 cacheObject.getValue();
+                list.add(cacheObject);
             }
         }
 
@@ -70,7 +70,7 @@ public class CacheController {
         page.setPage(1000);
         page.setSize(10);
         page.setTotal(1000);
-        page.setData(page);
+        page.setData(list);
         page.setMeta(metaManager.get(CacheItemMeta.class).getSimpleFieldMetas(new String[]{"region", "key", "level", "value"}));
         return page;
     }
