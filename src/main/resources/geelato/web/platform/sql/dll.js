@@ -20,7 +20,7 @@ function createOneTableJs(param) {
         if (param.addlist[i].defaultValue != null) sql.push("DEFAULT " + param.addlist[i].defaultValue);
     }
     for (var i in param.uniqueList) {
-        sql.push("alter entity " + param.tableName + " add unique key(`" + param.uniqueList[i].name + "`)");
+        sql.push("alter base " + param.tableName + " add unique key(`" + param.uniqueList[i].name + "`)");
     }
     return sql.join("\r\n");
 }

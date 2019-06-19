@@ -1,6 +1,6 @@
 import net.oschina.j2cache.CacheChannel;
 import net.oschina.j2cache.J2Cache;
-import org.geelato.web.platform.PlatformApplication;
+import org.geelato.web.platform.boot.BootApplication;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -8,11 +8,11 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 
 /**
- * @author geemeta
+ * @author geelato
  */
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = PlatformApplication.class)
+@SpringBootTest(classes = BootApplication.class)
 @WebAppConfiguration
 public class CacheTest {
 

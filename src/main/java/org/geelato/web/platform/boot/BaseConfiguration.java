@@ -6,7 +6,7 @@ import org.springframework.context.ApplicationContextAware;
 
 /**
  * 获取属性文件信息
- * @author geemeta
+ * @author geelato
  */
 public class BaseConfiguration implements ApplicationContextAware {
 

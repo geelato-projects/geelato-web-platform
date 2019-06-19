@@ -5,7 +5,7 @@ import org.geelato.core.gql.parser.SaveCommand;
 import org.geelato.core.meta.MetaManager;
 import org.geelato.core.meta.model.entity.DemoEntity;
 import org.geelato.core.mvc.Ctx;
-import org.geelato.web.platform.service.RuleService;
+import org.geelato.web.platform.m.base.service.RuleService;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -19,7 +19,7 @@ import java.nio.file.Paths;
 import java.util.List;
 
 /**
- * @author geemeta
+ * @author geelato
  */
 @RunWith(SpringRunner.class)
 public class RuleServiceTest {

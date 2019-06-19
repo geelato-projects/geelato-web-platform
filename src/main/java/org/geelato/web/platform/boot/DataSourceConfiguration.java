@@ -13,7 +13,7 @@ import javax.sql.DataSource;
 
 
 /**
- * @author geemeta
+ * @author geelato
  */
 @Configuration
 public class DataSourceConfiguration extends BaseConfiguration {

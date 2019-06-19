@@ -1,7 +1,7 @@
 package org.geelato.web.platform.common;
 
 /**
- * @author geemeta
+ * @author geelato
  */
 public class SqlIdConstants {
     public static final String SECURITY_USER_PERMISSION_STRING_LIST = "security_user_permission_string_list";
