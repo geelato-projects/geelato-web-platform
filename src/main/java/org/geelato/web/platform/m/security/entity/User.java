@@ -70,7 +70,7 @@ public class User extends BaseSortableEntity {
     }
 
     @Title(title = "密码")
-    @Col(name = "password", nullable = false)
+    @Col(name = "password", nullable = true)
 //    @JsonDeserialize(using = JsonIgnoreDeserialize.class)
     public String getPassword() {
         return password;
