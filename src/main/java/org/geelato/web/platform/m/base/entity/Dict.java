@@ -62,11 +62,11 @@ public class Dict extends BaseSortableEntity implements EntityEnableAble {
 
     @Title(title = "启用状态", description = "1表示启用、0表示未启用")
     @Col(name = "enabled", nullable = false, dataType = "tinyint", numericPrecision = 1)
-    public int getEnabled() {
+    public int getEnableStatus() {
         return enabled;
     }
 
-    public void setEnabled(int enabled) {
+    public void setEnableStatus(int enabled) {
         this.enabled = enabled;
     }
 

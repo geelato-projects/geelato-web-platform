@@ -9,9 +9,9 @@ import org.geelato.core.meta.model.entity.BaseSortableEntity;
  * @author itechgee@126.com
  * @date 2017/5/27.
  */
-@Entity(name = "platform_page_config", table = "platform_page_config")
+@Entity(name = "platform_dev_page", table = "platform_dev_page")
 @Title(title = "页面配置")
-public class PageConfig extends BaseSortableEntity {
+public class DevPage extends BaseSortableEntity {
 
     private Long extendId;
     private String type;
