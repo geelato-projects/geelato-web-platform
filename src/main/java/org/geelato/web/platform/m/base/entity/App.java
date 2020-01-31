@@ -7,28 +7,23 @@ import org.geelato.core.meta.annotation.Title;
 import org.geelato.core.meta.model.entity.BaseSortableEntity;
 
 /**
- * Created by hongxueqian on 14-5-2.
+ * @author itechgee@126.com
+ * @date 2017/9/8.
  */
-@Entity(name = "platform_app")
+@Entity(name = "platform_app", table = "platform_app")
 @Title(title = "应用")
 public class App extends BaseSortableEntity {
+
     private String name;
     private String code;
-    private String href;
     private String icon;
-    private String menu;
+    private String tree;
+    private String href;
     private String dependAppCode;
     private String description;
 
-    public App() {
-    }
-
-    public App(Long id) {
-        this.setId(id);
-    }
-
-    @Col(name = "name",unique = true)
-    @Title(title = "名称")
+    @Col(name = "name", nullable = false)
+    @Title(title = "应用名称")
     public String getName() {
         return name;
     }
@@ -47,16 +42,6 @@ public class App extends BaseSortableEntity {
         this.code = code;
     }
 
-    @Col(name = "href")
-    @Title(title = "首页链接",description = "加载模块之后打开的首页面")
-    public String getHref() {
-        return href;
-    }
-
-    public void setHref(String href) {
-        this.href = href;
-    }
-
     @Col(name = "icon")
     @Title(title = "图标")
     public String getIcon() {
@@ -68,20 +53,26 @@ public class App extends BaseSortableEntity {
     }
 
 
-    @Col(name="menu",dataType = "json")
-    @Title(title="菜单",description = "JSON格式，例如：[{\n" +
-            "                \"text\": \"系统配置\", \"expanded\": true, \"items\": [\n" +
-            "                    {\"text\": \"个人信息\", \"linkTo\": \"\\#/m/sys/profile\"},\n" +
-            "                    {\"text\": \"应用管理\", \"linkTo\": \"\\#/m/sys/app/index\"}\n" +
-            "                ]\n" +
-            "            }]")
-    public String getMenu() {
-        return menu;
+    @Col(name = "href")
+    @Title(title = "首页链接",description = "加载模块之后打开的首页面")
+    public String getHref() {
+        return href;
     }
 
-    public void setMenu(String menu) {
-        this.menu = menu;
+    public void setHref(String href) {
+        this.href = href;
     }
+
+    @Col(name = "tree", nullable = false, dataType = "longText")
+    @Title(title = "文件树", description = "json字符串，如jsTree")
+    public String getTree() {
+        return tree;
+    }
+
+    public void setTree(String tree) {
+        this.tree = tree;
+    }
+
 
     @Col(name = "depend_app_code")
     @Title(title = "依赖的应用",description = "依赖的应用模块编码，可多个，格式如：dev,sys")
@@ -93,6 +84,7 @@ public class App extends BaseSortableEntity {
         this.dependAppCode = dependAppCode;
     }
 
+    @Col(name = "description")
     @Title(title = "描述")
     public String getDescription() {
         return description;

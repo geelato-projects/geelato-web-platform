@@ -4,7 +4,7 @@ import org.geelato.core.mvc.MediaTypes;
 import org.geelato.core.api.ApiMetaResult;
 import org.geelato.core.api.ApiResultCode;
 import org.geelato.core.orm.Dao;
-import org.geelato.web.platform.m.designer.entity.DevPage;
+import org.geelato.web.platform.m.designer.entity.AppPage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,7 +31,7 @@ public class PageController {
     public ApiMetaResult pageConfig(@PathVariable String pageCode) {
         ApiMetaResult apiMetaResult = new ApiMetaResult();
         try {
-            apiMetaResult.setData(dao.queryForObject(DevPage.class, "code", pageCode));
+            apiMetaResult.setData(dao.queryForObject(AppPage.class, "code", pageCode));
             if (apiMetaResult.getData() == null) {
                 apiMetaResult.setCode(ApiResultCode.FAIL);
                 apiMetaResult.setMsg("未能获取到pageCode(" + pageCode + ")对应配置信息。");

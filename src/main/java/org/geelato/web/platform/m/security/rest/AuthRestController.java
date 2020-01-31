@@ -132,6 +132,23 @@ public class AuthRestController {
         }
     }
 
+
+    /**
+     * 获取当前用户的菜单 TODO 待按当前用户过滤
+     * @param req
+     * @return
+     */
+    @RequestMapping(value = "/currentUserMenu", method = {RequestMethod.POST, RequestMethod.GET})
+    @ResponseBody
+    public ApiResult getCurrentUserMenu(HttpServletRequest req) {
+        // 菜单
+        List<Map<String, Object>> menuItemList = dao.queryForMapList("select_platform_menu", new HashMap<>());
+
+        ApiResult apiResult = new ApiResult();
+        apiResult.setData(menuItemList);
+        return apiResult;
+    }
+
     private Map wrap(User user) {
         HashMap map = new HashMap(3);
         map.put("user", user);
@@ -174,6 +191,7 @@ public class AuthRestController {
             module.put("tree", menuItemList);
         }
         map.put("modules", moduleList);
+
         return map;
     }
 

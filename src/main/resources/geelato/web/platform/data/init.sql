@@ -32,13 +32,7 @@ INSERT INTO platform_user (id, PASSWORD, creator, create_at, updater, update_at,
                    WHERE login_name = 'super_admin');
 
 -- 初始模块信息、菜单信息
--- @sql init_platform_app
-INSERT INTO platform_app (id, creator, create_at, updater, update_at, code, name, icon, href, depend_app_code, menu, seq_no, description)
-VALUES
-  (1, 1, NOW(), 1, NOW(), 'dev', '开发工具', '', '/m/dev/table_config/index', 'md,sys', null, 1, '面向开发人员的配置工具'),
-  (2, 1, NOW(), 1, NOW(), 'md', '元数据管理', '', '/m/md/data_dynamic/index', '', null, 2, '系统元数据信息'),
-  (3, 1, NOW(), 1, NOW(), 'sys', '系统管理', '', '/m/sys/user/index', 'md', null, 3, '面向系统管理员的日常配置管理工具'),
-  (4, 1, NOW(), 1, NOW(), 'pd', '物流管理', '', 'm/pd/bin/index', 'md', null, 4, '物流管理');
+-- 无
 
 -- 初始化字典目录
 -- INSERT INTO `md_data_item_catalog`(create_at,creator,code,name,description,update_at,updater)
