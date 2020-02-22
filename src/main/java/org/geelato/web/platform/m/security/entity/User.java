@@ -171,7 +171,7 @@ public class User extends BaseSortableEntity {
     }
 
 
-    @Title(title = "来源", description = "0:本用用户|1:用户平台")
+    @Title(title = "来源", description = "0:本地用户|1:系统同步")
     @Col(name = "source", nullable = false)
     public int getSource() {
         return source;

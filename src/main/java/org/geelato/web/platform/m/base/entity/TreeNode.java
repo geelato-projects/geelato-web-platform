@@ -26,6 +26,7 @@ public class TreeNode extends BaseEntity {
     private String extendEntity;
     private Long extendId;
     private String meta;
+    private String flag;
     private String description;
 
     @Col(name = "tree_entity", nullable = true)
@@ -108,6 +109,16 @@ public class TreeNode extends BaseEntity {
 
     public void setExtendId(Long extendId) {
         this.extendId = extendId;
+    }
+
+    @Col(name = "flag", nullable = true)
+    @Title(title = "标志旗", description = "信号旗，标志旗，用于对该节点做特别的标识，如该节点作为菜单项")
+    public String getFlag() {
+        return flag;
+    }
+
+    public void setFlag(String flag) {
+        this.flag = flag;
     }
 
     @Col(name = "meta", nullable = true)
