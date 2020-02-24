@@ -4,7 +4,7 @@ package org.geelato.web.platform.m.security.entity;
 import org.geelato.core.meta.annotation.Col;
 import org.geelato.core.meta.annotation.Entity;
 import org.geelato.core.meta.annotation.Title;
-import org.geelato.core.meta.model.entity.IdEntity;
+import org.geelato.core.meta.model.entity.BaseEntity;
 
 /**
  * Created by hongxq
@@ -12,7 +12,7 @@ import org.geelato.core.meta.model.entity.IdEntity;
 
 @Entity(name = "platform_org_r_user")
 @Title(title = "组织用户关系表")
-public class OrgUserMap extends IdEntity {
+public class OrgUserMap extends BaseEntity {
     private Long orgId;
 
     private Long userId;

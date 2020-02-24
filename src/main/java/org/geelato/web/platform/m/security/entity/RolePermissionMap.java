@@ -3,7 +3,7 @@ package org.geelato.web.platform.m.security.entity;
 
 import org.geelato.core.meta.annotation.Entity;
 import org.geelato.core.meta.annotation.Title;
-import org.geelato.core.meta.model.entity.IdEntity;
+import org.geelato.core.meta.model.entity.BaseEntity;
 
 /**
  * Created by hongxq on 2015/6/17.
@@ -11,7 +11,7 @@ import org.geelato.core.meta.model.entity.IdEntity;
 
 @Entity(name = "platform_role_r_permission")
 @Title(title = "角色权限关系表")
-public class RolePermissionMap extends IdEntity {
+public class RolePermissionMap extends BaseEntity {
     private Long roleId;
 
     private Long permissionId;
