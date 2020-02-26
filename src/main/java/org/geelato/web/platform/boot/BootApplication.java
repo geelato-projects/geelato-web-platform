@@ -22,6 +22,7 @@ import org.springframework.core.io.support.ResourcePatternResolver;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Properties;
 
 // 在繼承的类中编写该注解
@@ -41,8 +42,16 @@ public class BootApplication implements CommandLineRunner, InitializingBean {
 
     protected boolean isWinOS;
 
+    protected boolean isNeedResetDb = false;
+    protected boolean isIgnoreInitData = false;
     // main 接受的参数
     protected String MAIN_ARGS_RESET_DB = "reset_db";
+    protected String MAIN_ARGS_IGNORE_INIT_DATA = "ignore_init_data";
+    protected String IGNORE_ENTITY_PREFIX = "ignore_entity_prefix_";
+    protected String RESET_ONLY_ENTITY_PREFIX = "reset_entity_only_";
+    // 不重置DB的实体前缀
+    protected ArrayList ignoreEntityNamePrefixList = new ArrayList();
+    protected ArrayList resetOnlyEntityNamePrefixList = new ArrayList();
 
 
     private void assertOS() {
@@ -65,8 +74,34 @@ public class BootApplication implements CommandLineRunner, InitializingBean {
         logger.info("[配置文件]：" + applicationContext.getEnvironment().getProperty("geelato.env"));
         logger.info("[启动应用]...ing");
         assertOS();
+        parseStartArgs(args);
         initMeta(args);
         logger.info("[启动应用]...OK");
+    }
+
+
+    private void parseStartArgs(String... args) {
+
+        isNeedResetDb = false;
+        isIgnoreInitData = false;
+        for (String arg : args) {
+
+            if (this.MAIN_ARGS_RESET_DB.equals(arg)) {
+                isNeedResetDb = true;
+            }
+
+            if (this.MAIN_ARGS_IGNORE_INIT_DATA.equals(arg)) {
+                isIgnoreInitData = true;
+            }
+
+            int index = arg.indexOf(IGNORE_ENTITY_PREFIX);
+            if (index != -1) {
+                String entityNamePrefix = arg.substring(index + IGNORE_ENTITY_PREFIX.length()).trim();
+                if (entityNamePrefix.length() > 0) {
+                    ignoreEntityNamePrefixList.add(entityNamePrefix);
+                }
+            }
+        }
     }
 
     public void initMeta(String... args) throws IOException {
@@ -99,34 +134,27 @@ public class BootApplication implements CommandLineRunner, InitializingBean {
         //--2、业务规则
         BizManagerFactory.getBizRuleScriptManager("rule").setDao(dao);
         BizManagerFactory.getBizRuleScriptManager("rule").loadFiles(path + "/geelato/web/platform/rule/");
-        if (isNeedResetDb(args)) {
+        if (isNeedResetDb) {
             logger.info("收到重置数据库命令，开始创建表结构、初始化表数据。");
             //--3、创建表结构
-            dbGenerateDao.createAllTables(true);
+            dbGenerateDao.createAllTables(true, ignoreEntityNamePrefixList);
             //--4、初始化表数据
-            String filePaths = getProperty("geelato.init.sql", "/geelato/web/platform/data/init.sql");
-            String[] sqlFiles = filePaths.split(",");
-            for (String sqlFile : sqlFiles) {
-                InputStream is = this.getClass().getClassLoader().getResourceAsStream(sqlFile);
-                if (is == null) {
-                    // jar:file:/data/geelato-web-quickstart-1.0.0-SNAPSHOT.jar!/BOOT-INF/lib/geelato-web-platform-1.0.0-SNAPSHOT.jar!/geelato.web.platform/data/init.sql
+            if (!isIgnoreInitData) {
+                String filePaths = getProperty("geelato.init.sql", "/geelato/web/platform/data/init.sql");
+                String[] sqlFiles = filePaths.split(",");
+                for (String sqlFile : sqlFiles) {
+                    InputStream is = this.getClass().getClassLoader().getResourceAsStream(sqlFile);
+                    if (is == null) {
+                        // jar:file:/data/geelato-web-quickstart-1.0.0-SNAPSHOT.jar!/BOOT-INF/lib/geelato-web-platform-1.0.0-SNAPSHOT.jar!/geelato.web.platform/data/init.sql
+                    }
+                    SqlFiles.loadAndExecute(is, dao.getJdbcTemplate(), isWinOS);
                 }
-                SqlFiles.loadAndExecute(is, dao.getJdbcTemplate(), isWinOS);
             }
         } else {
             logger.info("未收到重置数据库命令，跳过创建表结构、跳过初始化表数据。");
         }
         BizManagerFactory.getBizMvelRuleManager("mvelRule").setDao(dao);
         BizManagerFactory.getBizMvelRuleManager("mvelRule").loadDb(null);
-    }
-
-    protected boolean isNeedResetDb(String... args) {
-        for (String arg : args) {
-            if (this.MAIN_ARGS_RESET_DB.equals(arg)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     /**
@@ -140,25 +168,26 @@ public class BootApplication implements CommandLineRunner, InitializingBean {
         //--2、业务规则
         BizManagerFactory.getBizRuleScriptManager("rule").setDao(dao);
         BizManagerFactory.getBizRuleScriptManager("rule").loadResource("/geelato/web/platform/rule/**/*.js");
-        if (isNeedResetDb(args)) {
+        if (isNeedResetDb) {
             //--3、创建表结构
-            dbGenerateDao.createAllTables(true);
+            dbGenerateDao.createAllTables(true, ignoreEntityNamePrefixList);
             //--4、初始化表数据
-            ResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
-            String filePaths = getProperty("geelato.init.sql", "/geelato/web/platform/data/init.sql");
-            String[] sqlFiles = filePaths.split(",");
-            for (String sqlFile : sqlFiles) {
-                try {
-                    Resource[] resources = resolver.getResources(sqlFile);
-                    for (Resource resource : resources) {
-                        InputStream is = resource.getInputStream();
-                        SqlFiles.loadAndExecute(is, dao.getJdbcTemplate(), isWinOS);
+            if (!isIgnoreInitData) {
+                ResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
+                String filePaths = getProperty("geelato.init.sql", "/geelato/web/platform/data/init.sql");
+                String[] sqlFiles = filePaths.split(",");
+                for (String sqlFile : sqlFiles) {
+                    try {
+                        Resource[] resources = resolver.getResources(sqlFile);
+                        for (Resource resource : resources) {
+                            InputStream is = resource.getInputStream();
+                            SqlFiles.loadAndExecute(is, dao.getJdbcTemplate(), isWinOS);
+                        }
+                    } catch (IOException e) {
+                        logger.error("加载、初始化数据（" + sqlFile + "）失败。", e);
                     }
-                } catch (IOException e) {
-                    logger.error("加载、初始化数据（" + sqlFile + "）失败。", e);
                 }
             }
-
         } else {
             logger.info("未收到重置数据库命令，跳过创建表结构、跳过初始化表数据。");
         }
