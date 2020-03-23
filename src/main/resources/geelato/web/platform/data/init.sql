@@ -61,3 +61,9 @@ INSERT INTO `platform_demo_entity` (id, create_at, creator, update_at, updater, 
 VALUES (3, NOW(), 1, NOW(), 1, '示例实体3', 'demoEntity3', 'demoEntityContent3', 'type3', '示例实体描述3');
 INSERT INTO `platform_demo_entity` (id, create_at, creator, update_at, updater, name, code, content, type, description)
 VALUES (4, NOW(), 1, NOW(), 1, '示例实体4', 'demoEntity4', 'demoEntityContent4', 'type4', '示例实体描述4');
+
+-- 初始化部门
+INSERT INTO `platform_org` (`bu`, `creator`, `code`, `seq_no`, `dept`, `description`, `update_at`, `pid`, `type`, `create_at`, `updater`, `name`, `del_status`, `id`)
+VALUES (NULL, '1', NULL, '0', NULL, NULL, '2020-03-23 15:49:10', NULL, NULL, '2020-03-23 15:49:19', '1', '研发部', '0', '1');
+INSERT INTO `platform_org_r_user` (`default_org`, `bu`, `creator`, `dept`, `del_status`, `update_at`, `id`, `user_id`, `org_id`, `create_at`, `updater`)
+VALUES ('0', NULL, '1', NULL, '0', '2020-03-23 15:48:23', NULL, '1', '1', '2020-03-23 15:48:20', '1');

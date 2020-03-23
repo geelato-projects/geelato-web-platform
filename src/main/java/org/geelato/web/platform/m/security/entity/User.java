@@ -30,6 +30,7 @@ public class User extends BaseSortableEntity {
     private String provinceCode;
     private String cityCode;
     private String description;
+    private String orgName;
 
 
     public User() {
@@ -60,7 +61,7 @@ public class User extends BaseSortableEntity {
     }
 
     @Title(title = "组织")
-    @Col(name = "org_id")
+    @Col(name = "org_id", foreignTables = "platform_org_r_user,platform_org", foreignColName = "platform_org.id")
     public long getOrgId() {
         return orgId;
     }
@@ -209,5 +210,15 @@ public class User extends BaseSortableEntity {
 
     public void setCityCode(String cityCode) {
         this.cityCode = cityCode;
+    }
+
+    @Title(title = "部门")
+    @Col(name = "orgName", isForeignColumn = true, foreignColName = "platform_org.name")
+    public String getOrgName() {
+        return orgName;
+    }
+
+    public void setOrgName(String orgName) {
+        this.orgName = orgName;
     }
 }
