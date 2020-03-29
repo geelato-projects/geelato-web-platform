@@ -61,7 +61,7 @@ public class User extends BaseSortableEntity {
     }
 
     @Title(title = "组织")
-    @Col(name = "org_id", foreignTables = "platform_org_r_user,platform_org", foreignColName = "platform_org.id")
+    @Col(name = "org_id", refTables = "platform_org_r_user,platform_org", refColName = "platform_org.id")
     public long getOrgId() {
         return orgId;
     }
@@ -213,7 +213,7 @@ public class User extends BaseSortableEntity {
     }
 
     @Title(title = "部门")
-    @Col(name = "orgName", isForeignColumn = true, foreignColName = "platform_org.name")
+    @Col(name = "orgName", isRefColumn = true, refLocalCol = "orgId", refColName = "platform_org.name")
     public String getOrgName() {
         return orgName;
     }
