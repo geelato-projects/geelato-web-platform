@@ -81,24 +81,20 @@ public class BootApplication implements CommandLineRunner, InitializingBean {
 
 
     private void parseStartArgs(String... args) {
-
         isNeedResetDb = false;
         isIgnoreInitData = false;
         for (String arg : args) {
-
             if (this.MAIN_ARGS_RESET_DB.equals(arg)) {
                 isNeedResetDb = true;
-            }
-
-            if (this.MAIN_ARGS_IGNORE_INIT_DATA.equals(arg)) {
+            } else if (this.MAIN_ARGS_IGNORE_INIT_DATA.equals(arg)) {
                 isIgnoreInitData = true;
-            }
-
-            int index = arg.indexOf(IGNORE_ENTITY_PREFIX);
-            if (index != -1) {
-                String entityNamePrefix = arg.substring(index + IGNORE_ENTITY_PREFIX.length()).trim();
-                if (entityNamePrefix.length() > 0) {
-                    ignoreEntityNamePrefixList.add(entityNamePrefix);
+            } else {
+                int index = arg.indexOf(IGNORE_ENTITY_PREFIX);
+                if (index != -1) {
+                    String entityNamePrefix = arg.substring(index + IGNORE_ENTITY_PREFIX.length()).trim();
+                    if (entityNamePrefix.length() > 0) {
+                        ignoreEntityNamePrefixList.add(entityNamePrefix);
+                    }
                 }
             }
         }
