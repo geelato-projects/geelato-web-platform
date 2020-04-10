@@ -13,69 +13,65 @@ import org.geelato.core.meta.model.entity.EntityEnableAble;
 @Title(title = "数据字典")
 public class Dict extends BaseSortableEntity implements EntityEnableAble {
 
-    //    private Long groupId;
-    private String groupCode;
-    private String name;
-    private String value;
-    private int enabled;
-    private String description;
+    private String dicCode;
+    private String dicName;
+    private int enableStatus;
+    private String tenantCode;
+    private String dicRemark;
 
-//    @Col(name = "group_id")
-//    @Title(title = "分组ID")
-//    public Long getGroupId() {
-//        return groupId;
-//    }
-//
-//
-//    public void setGroupId(Long groupId) {
-//        this.groupId = groupId;
-//    }
-
-    @Col(name = "group_code")
-    @Title(title = "分组编码")
-    public String getGroupCode() {
-        return groupCode;
+    @Col(name = "dic_code")
+    @Title(title = "字典编码")
+    public String getDicCode() {
+        return dicCode;
     }
 
-    public void setGroupCode(String groupCode) {
-        this.groupCode = groupCode;
+    public void setDicCode(String dicCode) {
+        this.dicCode = dicCode;
     }
 
-    @Title(title = "名称")
-    public String getName() {
-        return name;
+    @Col(name = "dic_name")
+    @Title(title = "字典名称")
+    public String getDicName() {
+        return dicName;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setDicName(String dicName) {
+        this.dicName = dicName;
     }
 
-    @Title(title = "值")
-    public String getValue() {
-        return value;
+    @Col(name = "tenant_code")
+    @Title(title = "租户")
+    public String getTenantCode() {
+        return tenantCode;
     }
 
-    public void setValue(String value) {
-        this.value = value;
+    public void setTenantCode(String tenantCode) {
+        this.tenantCode = tenantCode;
+    }
+
+    @Col(name = "dic_remark")
+    @Title(title = "字典备注")
+    public String getDicRemark() {
+        return dicRemark;
+    }
+
+    public void setDicRemark(String dicRemark) {
+        this.dicRemark = dicRemark;
     }
 
 
-    @Title(title = "启用状态", description = "1表示启用、0表示未启用")
-    @Col(name = "enabled", nullable = false, dataType = "tinyint", numericPrecision = 1)
+    @Col(name = "enable_status")
+    @Title(title = "启用状态")
+    @Override
     public int getEnableStatus() {
-        return enabled;
+        return this.enableStatus;
     }
 
-    public void setEnableStatus(int enabled) {
-        this.enabled = enabled;
-    }
-
-    @Title(title = "描述")
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
+    /**
+     * @param enableStatus
+     */
+    @Override
+    public void setEnableStatus(int enableStatus) {
+        this.enableStatus = enableStatus;
     }
 }
