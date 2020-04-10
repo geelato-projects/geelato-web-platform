@@ -142,7 +142,9 @@ public class AuthRestController {
     @ResponseBody
     public ApiResult getCurrentUserMenu(HttpServletRequest req) {
         // 菜单
-        List<Map<String, Object>> menuItemList = dao.queryForMapList("select_platform_menu", new HashMap<>());
+        Map map = new HashMap<>();
+        map.put("userId",1);
+        List<Map<String, Object>> menuItemList = dao.queryForMapList("select_platform_menu", map);
 
         ApiResult apiResult = new ApiResult();
         apiResult.setData(menuItemList);

@@ -6,19 +6,16 @@ import org.geelato.core.meta.annotation.Entity;
 import org.geelato.core.meta.annotation.ForeignKey;
 import org.geelato.core.meta.annotation.Title;
 import org.geelato.core.meta.model.entity.BaseEntity;
+import org.geelato.web.platform.m.base.entity.App;
 
-/**
- * Created by hongxq on 2015/6/17.
- */
-
-@Entity(name = "platform_role_r_user")
-@Title(title = "角色用户关系表")
-public class RoleUserMap extends BaseEntity {
+@Entity(name = "platform_role_r_app")
+@Title(title = "角色APP关系表")
+public class RoleAppMap extends BaseEntity {
     private Long roleId;
 
-    private Long userId;
+    private Long appId;
 
-    private String userName;
+    private String appName;
     private String roleName;
 
     @Title(title = "角色ID")
@@ -32,25 +29,25 @@ public class RoleUserMap extends BaseEntity {
         this.roleId = roleId;
     }
 
-    @Title(title = "用户ID")
-    @Col(name = "user_id", refTables = "platform_user", refColName = "platform_user.id")
-    @ForeignKey(fTable = User.class)
-    public Long getUserId() {
-        return userId;
+    @Title(title = "应用ID")
+    @Col(name = "app_id", refTables = "platform_app", refColName = "platform_app.id")
+    @ForeignKey(fTable = App.class)
+    public Long getAppId() {
+        return appId;
     }
 
-    public void setUserId(Long userId) {
-        this.userId = userId;
+    public void setAppId(Long appId) {
+        this.appId = appId;
     }
 
-    @Title(title = "用户名称")
-    @Col(name = "user_name", isRefColumn = true, refLocalCol = "userId", refColName = "platform_user.name")
-    public String getUserName() {
-        return userName;
+    @Title(title = "应用名称")
+    @Col(name = "app_name", isRefColumn = true, refLocalCol = "appId", refColName = "platform_app.name")
+    public String getAppName() {
+        return appName;
     }
 
-    public void setUserName(String userName) {
-        this.userName = userName;
+    public void setAppName(String appName) {
+        this.appName = appName;
     }
 
     @Title(title = "角色名称")
