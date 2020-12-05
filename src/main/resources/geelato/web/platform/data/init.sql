@@ -11,21 +11,6 @@
 /*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 
--- Dumping data for table geelato.crm_contact_info: ~0 rows (大约)
-/*!40000 ALTER TABLE `crm_contact_info` DISABLE KEYS */;
-/*!40000 ALTER TABLE `crm_contact_info` ENABLE KEYS */;
-
--- Dumping data for table geelato.crm_customer: ~6 rows (大约)
-/*!40000 ALTER TABLE `crm_customer` DISABLE KEYS */;
-INSERT INTO `crm_customer` (`bu`, `creator`, `level`, `dept`, `description`, `update_at`, `industry`, `create_at`, `updater`, `name`, `del_status`, `id`, `homepage`) VALUES
-	(NULL, 1, 1, NULL, '', '2020-10-15 11:23:47', 0, '2020-05-03 13:43:46', 1, 'test3', 0, 2025484089620467397, 'www.baidu.com'),
-	(NULL, 1, 1, NULL, '', '2020-09-04 09:20:50', 1, '2020-05-03 13:44:02', 1, 'test2', 0, 2025484363273637574, 'www.baidu.com'),
-	(NULL, 1, 1, NULL, '', '2020-10-09 09:12:07', 1, '2020-10-09 09:12:07', 1, '张三', 0, 2255689323536482787, 'www.baidu.com'),
-	(NULL, 1, 1, NULL, '', '2020-10-15 20:10:42', 1, '2020-10-15 20:10:42', 1, '张三2', 0, 2265049582507950401, ''),
-	(NULL, 1, 1, NULL, '', '2020-10-16 16:50:55', 0, '2020-10-16 16:50:55', 1, 'test', 0, 2266298033686224097, ''),
-	(NULL, 1, 1, NULL, '', '2020-10-16 22:48:56', 1, '2020-10-16 22:48:44', 1, '张三33', 0, 2266658212244135138, '');
-/*!40000 ALTER TABLE `crm_customer` ENABLE KEYS */;
-
 -- Dumping data for table geelato.platform_app: ~2 rows (大约)
 /*!40000 ALTER TABLE `platform_app` DISABLE KEYS */;
 INSERT INTO `platform_app` (`bu`, `creator`, `code`, `seq_no`, `tree`, `icon`, `dept`, `description`, `update_at`, `depend_app_code`, `create_at`, `updater`, `name`, `del_status`, `href`, `id`) VALUES
@@ -1334,7 +1319,7 @@ INSERT INTO `platform_tree_node` (`bu`, `parent`, `extend_id`, `creator`, `flag`
 /*!40000 ALTER TABLE `platform_user` DISABLE KEYS */;
 INSERT INTO `platform_user` (`seq_no`, `city_code`, `description`, `update_at`, `source`, `type`, `org_id`, `create_at`, `updater`, `password`, `post`, `login_name`, `id`, `email`, `bu`, `creator`, `salt`, `orgName`, `province_code`, `sex`, `dept`, `telephone`, `avatar`, `mobile_phone`, `name`, `del_status`) VALUES
 	(0, NULL, NULL, '2020-10-07 18:29:38', 0, 0, 0, '2020-10-07 18:29:38', 1, '1780a6e404d4d40c7f48cf3a9ad06529c70d7932', NULL, 'super_admin', 1, NULL, NULL, 1, '9305eae06a145483', NULL, NULL, 0, NULL, NULL, NULL, NULL, '超级管理员', 0),
-	(0, NULL, NULL, '2020-10-10 22:45:32', 1, 0, 0, '2020-10-10 22:45:32', 1, NULL, NULL, 'hongzs', 2257957686723779812, NULL, NULL, 1, NULL, NULL, NULL, 1, NULL, NULL, NULL, NULL, '洪智胜', 0);
+	(0, NULL, NULL, '2020-10-10 22:45:32', 1, 0, 0, '2020-10-10 22:45:32', 1, NULL, NULL, 'zhang3', 2257957686723779812, NULL, NULL, 1, NULL, NULL, NULL, 1, NULL, NULL, NULL, NULL, '张三', 0);
 /*!40000 ALTER TABLE `platform_user` ENABLE KEYS */;
 
 -- Dumping data for table geelato.platform_user_config: ~0 rows (大约)
@@ -1376,3 +1361,18 @@ INSERT INTO `platform_user` (`seq_no`, `city_code`, `description`, `update_at`, 
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;
 /*!40014 SET FOREIGN_KEY_CHECKS=IF(@OLD_FOREIGN_KEY_CHECKS IS NULL, 1, @OLD_FOREIGN_KEY_CHECKS) */;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+
+-- Dumping data for table geelato.crm_contact_info: ~0 rows (大约)
+/*!40000 ALTER TABLE `crm_contact_info` DISABLE KEYS */;
+/*!40000 ALTER TABLE `crm_contact_info` ENABLE KEYS */;
+
+-- Dumping data for table geelato.crm_customer: ~6 rows (大约)
+/*!40000 ALTER TABLE `crm_customer` DISABLE KEYS */;
+INSERT INTO `crm_customer` (`bu`, `creator`, `level`, `dept`, `description`, `update_at`, `industry`, `create_at`, `updater`, `name`, `del_status`, `id`, `homepage`) VALUES
+	(NULL, 1, 1, NULL, '', '2020-10-15 11:23:47', 0, '2020-05-03 13:43:46', 1, 'test3', 0, 2025484089620467397, 'www.baidu.com'),
+	(NULL, 1, 1, NULL, '', '2020-09-04 09:20:50', 1, '2020-05-03 13:44:02', 1, 'test2', 0, 2025484363273637574, 'www.baidu.com'),
+	(NULL, 1, 1, NULL, '', '2020-10-09 09:12:07', 1, '2020-10-09 09:12:07', 1, '张三', 0, 2255689323536482787, 'www.baidu.com'),
+	(NULL, 1, 1, NULL, '', '2020-10-15 20:10:42', 1, '2020-10-15 20:10:42', 1, '张三2', 0, 2265049582507950401, ''),
+	(NULL, 1, 1, NULL, '', '2020-10-16 16:50:55', 0, '2020-10-16 16:50:55', 1, 'test', 0, 2266298033686224097, ''),
+	(NULL, 1, 1, NULL, '', '2020-10-16 22:48:56', 1, '2020-10-16 22:48:44', 1, '张三33', 0, 2266658212244135138, '');
+/*!40000 ALTER TABLE `crm_customer` ENABLE KEYS */;
