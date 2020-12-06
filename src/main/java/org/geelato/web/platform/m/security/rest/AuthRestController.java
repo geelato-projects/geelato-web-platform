@@ -3,18 +3,20 @@ package org.geelato.web.platform.m.security.rest;
 import net.oschina.j2cache.CacheChannel;
 import net.oschina.j2cache.CacheObject;
 import net.oschina.j2cache.J2Cache;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.*;
 import org.apache.shiro.subject.Subject;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.orm.Dao;
+import org.geelato.web.platform.m.base.rest.RestException;
+import org.geelato.web.platform.m.base.service.RuleService;
 import org.geelato.web.platform.m.security.entity.User;
+import org.geelato.web.platform.m.security.service.AccountService;
+import org.geelato.web.platform.m.security.service.SecurityHelper;
 import org.geelato.web.platform.m.settings.entity.CommonConfig;
 import org.geelato.web.platform.m.settings.entity.Module;
 import org.geelato.web.platform.m.settings.entity.UserConfig;
-import org.geelato.web.platform.m.base.rest.RestException;
-import org.geelato.web.platform.m.security.service.SecurityHelper;
-import org.geelato.web.platform.m.base.service.RuleService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,6 +45,9 @@ public class AuthRestController {
 
     @Autowired
     protected RuleService ruleService;
+
+    @Autowired
+    protected AccountService accountService;
 
     private Function commonConfigLoader = (p) -> dao.queryForMapList(CommonConfig.class);
     private Function userConfigLoader = (userId) -> dao.queryForMapList(UserConfig.class, "creator", userId);
@@ -135,6 +140,7 @@ public class AuthRestController {
 
     /**
      * 获取当前用户的菜单 TODO 待按当前用户过滤
+     *
      * @param req
      * @return
      */
@@ -143,11 +149,30 @@ public class AuthRestController {
     public ApiResult getCurrentUserMenu(HttpServletRequest req) {
         // 菜单
         Map map = new HashMap<>();
-        map.put("userId",1);
+        map.put("userId", 1);
         List<Map<String, Object>> menuItemList = dao.queryForMapList("select_platform_menu", map);
 
         ApiResult apiResult = new ApiResult();
         apiResult.setData(menuItemList);
+        return apiResult;
+    }
+
+    /**
+     * 用于管理员重置密码
+     * @param userId 用户id
+     * @param passwordLength 默认为8位，最长为32位
+     * @return
+     */
+    @RequestMapping(value = "/resetPassword", method = {RequestMethod.POST, RequestMethod.GET})
+    @ResponseBody
+    public ApiResult resetPassword(@RequestParam Long userId, @RequestParam(defaultValue = "8", required = false) int passwordLength) {
+        User user = dao.queryForObject(User.class, userId);
+        String plainPassword = RandomStringUtils.randomAlphanumeric(passwordLength > 32 ? 32 : passwordLength);
+        user.setPlainPassword(plainPassword);
+        accountService.entryptPassword(user);
+        dao.save(user);
+        ApiResult apiResult = new ApiResult();
+        apiResult.setData(plainPassword);
         return apiResult;
     }
 
