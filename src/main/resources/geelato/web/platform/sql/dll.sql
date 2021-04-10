@@ -48,10 +48,14 @@ ALTER TABLE $.tableName
 -- @sql dropOneTable
 DROP TABLE IF EXISTS $.tableName;
 
+-- 查看列信息
+-- @sql showColumns
+show columns from $.tableName;
+
 
 -- 从数据库字典中同步表信息到平台的元数据表中
 -- @sql syncTableSchemaToConfig
-INSERT INTO xpm.platform_dev_table (
+INSERT INTO geelato.platform_dev_table (
   TABLE_SCHEMA,
   TABLE_NAME,
   TABLE_TYPE,
@@ -80,7 +84,7 @@ INSERT INTO xpm.platform_dev_table (
   FROM
     information_schema. TABLES
   WHERE
-    TABLE_SCHEMA = 'xpm'
+    TABLE_SCHEMA = 'geelato'
     AND TABLE_NAME NOT IN (
       SELECT
         table_name

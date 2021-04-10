@@ -17,7 +17,12 @@ public class App extends BaseSortableEntity {
     private String name;
     private String code;
     private String icon;
+    private String key;
+    private String token;
     private String tree;
+    private String logo;
+    private String theme;
+    private int watermark = 0;
     private String href;
     private String dependAppCode;
     private String description;
@@ -52,6 +57,55 @@ public class App extends BaseSortableEntity {
         this.icon = icon;
     }
 
+    @Col(name = "logo")
+    @Title(title = "Logo")
+    public String getLogo() {
+        return logo;
+    }
+
+    public void setLogo(String logo) {
+        this.logo = logo;
+    }
+
+    @Col(name = "theme")
+    @Title(title = "应用主题")
+    public String getTheme() {
+        return theme;
+    }
+
+    public void setTheme(String theme) {
+        this.theme = theme;
+    }
+
+    @Col(name = "watermark")
+    @Title(title = "应用水印",description = "是否启用应用水印，默认不启用。")
+    public int getWatermark() {
+        return watermark;
+    }
+
+    public void setWatermark(int watermark) {
+        this.watermark = watermark;
+    }
+
+    @Col(name = "key")
+    @Title(title = "应用秘钥")
+    public String getKey() {
+        return key;
+    }
+
+    public void setKey(String key) {
+        this.key = key;
+    }
+
+    @Col(name = "token")
+    @Title(title = "应用Token")
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
+    }
 
     @Col(name = "href")
     @Title(title = "首页链接",description = "加载模块之后打开的首页面")

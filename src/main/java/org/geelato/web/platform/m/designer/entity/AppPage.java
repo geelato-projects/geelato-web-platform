@@ -14,6 +14,7 @@ import org.geelato.core.meta.model.entity.BaseSortableEntity;
 public class AppPage extends BaseSortableEntity {
 
     private Long extendId;
+    private Long appId;
     private String type;
     private String code;
     private String sourceContent;
@@ -21,6 +22,15 @@ public class AppPage extends BaseSortableEntity {
     private String releaseContent;
     private String description;
 
+    @Col(name = "app_id", nullable = true)
+    @Title(title = "应用Id", description = "所属应用ID")
+    public Long getAppId() {
+        return appId;
+    }
+
+    public void setAppId(Long appId) {
+        this.appId = appId;
+    }
 
     @Col(name = "extend_id", nullable = true)
     @Title(title = "扩展信息", description = "扩展id，如对应的叶子节点id")

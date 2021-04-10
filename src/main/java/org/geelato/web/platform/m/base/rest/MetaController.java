@@ -115,6 +115,8 @@ public class MetaController implements InitializingBean {
         return result;
     }
 
+
+
     /**
      * e.g.:http://localhost:8080/api/meta/entityNames/
      * 获取实体名称列表
