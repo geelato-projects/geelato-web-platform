@@ -1,5 +1,6 @@
 package org.geelato.web.platform.m.base.rest;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.geelato.core.gql.execute.Page;
 import org.geelato.core.mvc.MediaTypes;
 import org.geelato.core.orm.Dao;
@@ -10,7 +11,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import javax.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 
 /**

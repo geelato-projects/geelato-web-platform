@@ -13,6 +13,7 @@ public class Org extends BaseSortableEntity {
     private String code;
     private long pid;
     private String type;
+    private int status;
     private String description;
 
     @Title(title = "编码")
@@ -51,6 +52,16 @@ public class Org extends BaseSortableEntity {
     public void setType(String type) {
         this.type = type;
     }
+
+    @Title(title = "状态", description = "0:停用|1:启用")
+    public int getStatus() {
+        return status;
+    }
+
+    public void setStatus(int status) {
+        this.status = status;
+    }
+
 
     @Title(title = "描述")
     @Col(name = "description", charMaxlength = 1024)

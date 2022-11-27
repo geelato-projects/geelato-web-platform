@@ -14,6 +14,7 @@ import org.geelato.core.meta.model.entity.BaseEntity;
 @Title(title = "文件")
 public class FileInfo extends BaseEntity {
     private String name;
+    private String savedName;
     private String relativePath;
     private int size;
     private String fileType;
@@ -37,6 +38,16 @@ public class FileInfo extends BaseEntity {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    @Col(name = "saved_name")
+    @Title(title = "保存名称")
+    public String getSavedName() {
+        return savedName;
+    }
+
+    public void setSavedName(String savedName) {
+        this.savedName = savedName;
     }
 
     @Col(name = "size")

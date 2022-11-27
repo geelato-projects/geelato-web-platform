@@ -1,6 +1,7 @@
 package org.geelato.web.platform.m.base.rest;
 
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.geelato.core.api.ApiMetaResult;
 import org.geelato.core.api.ApiMultiPagedResult;
 import org.geelato.core.api.ApiPagedResult;
@@ -17,7 +18,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletRequest;
 import java.io.BufferedReader;
 import java.io.IOException;
 
@@ -48,7 +48,7 @@ public class MetaController implements InitializingBean {
      * @param request
      * @return
      */
-    @RequestMapping(value = {"list", "list/*"}, method = RequestMethod.POST, produces = MediaTypes.JSON_UTF_8)
+    @RequestMapping(value = {"list", "list/*"}, method = {RequestMethod.POST,RequestMethod.GET}, produces = MediaTypes.JSON_UTF_8)
     @ResponseBody
     public ApiPagedResult list(@RequestParam(value = "withMeta", defaultValue = "true") boolean withMeta, HttpServletRequest request) {
         String gql = getGql(request);
@@ -81,7 +81,7 @@ public class MetaController implements InitializingBean {
     public ApiMetaResult save(@PathVariable("biz") String biz, HttpServletRequest request) {
         String gql = getGql(request);
         ApiMetaResult result = new ApiMetaResult();
-        result.setData(ruleService.save(biz, gql));
+        result.setResult(ruleService.save(biz, gql));
         return result;
     }
 
@@ -91,7 +91,7 @@ public class MetaController implements InitializingBean {
     public ApiMetaResult delete(@PathVariable("biz") String biz, HttpServletRequest request) {
         String gql = getGql(request);
         ApiMetaResult result = new ApiMetaResult();
-        result.setData(ruleService.delete(biz, gql));
+        result.setResult(ruleService.delete(biz, gql));
         return result;
     }
 
@@ -127,7 +127,7 @@ public class MetaController implements InitializingBean {
     @ResponseBody
     public ApiMetaResult entityNames() {
         ApiMetaResult result = new ApiMetaResult();
-        result.setData(metaManager.getAllEntityNames());
+        result.setResult(metaManager.getAllEntityNames());
         return result;
     }
 

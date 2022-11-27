@@ -1,8 +1,6 @@
 package org.geelato.web.platform.m.security.rest;
 
-import net.oschina.j2cache.CacheChannel;
-import net.oschina.j2cache.CacheObject;
-import net.oschina.j2cache.J2Cache;
+import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.*;
@@ -10,13 +8,9 @@ import org.apache.shiro.subject.Subject;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.orm.Dao;
 import org.geelato.web.platform.m.base.rest.RestException;
-import org.geelato.web.platform.m.base.service.RuleService;
 import org.geelato.web.platform.m.security.entity.User;
 import org.geelato.web.platform.m.security.service.AccountService;
 import org.geelato.web.platform.m.security.service.SecurityHelper;
-import org.geelato.web.platform.m.settings.entity.CommonConfig;
-import org.geelato.web.platform.m.settings.entity.Module;
-import org.geelato.web.platform.m.settings.entity.UserConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,11 +20,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 
 /**
  * Created by hongxq on 2014/5/10.
@@ -44,14 +36,8 @@ public class AuthRestController {
     private Dao dao;
 
     @Autowired
-    protected RuleService ruleService;
-
-    @Autowired
     protected AccountService accountService;
 
-    private Function commonConfigLoader = (p) -> dao.queryForMapList(CommonConfig.class);
-    private Function userConfigLoader = (userId) -> dao.queryForMapList(UserConfig.class, "creator", userId);
-    private CacheChannel cache = J2Cache.getChannel();
 
 //    @Autowired
 //    private ShiroDbRealm shiroDbRealm;
@@ -100,14 +86,14 @@ public class AuthRestController {
         } catch (EmptyResultDataAccessException e) {
             throw new RestException(HttpStatus.UNAUTHORIZED, "无效的用户名！");
         }
-        return wrap(user);
+        return accountService.wrapUser(user);
     }
 
     @RequestMapping(value = "/loginSecurity", method = RequestMethod.POST)
     @ResponseBody
     public ApiResult loginMD5(@RequestBody User user, HttpServletRequest req) {
         ApiResult apiResult = new ApiResult();
-        apiResult.setData(login(user, req));
+        apiResult.setResult(login(user, req));
         return apiResult;
     }
 
@@ -119,7 +105,7 @@ public class AuthRestController {
             user.setSalt("");
             user.setPassword("");
             user.setPlainPassword("");
-            return wrap(user);
+            return accountService.wrapUser(user);
         }
         return null;
     }
@@ -152,14 +138,13 @@ public class AuthRestController {
         map.put("userId", 1);
         List<Map<String, Object>> menuItemList = dao.queryForMapList("select_platform_menu", map);
 
-        ApiResult apiResult = new ApiResult();
-        apiResult.setData(menuItemList);
-        return apiResult;
+        return new ApiResult().setResult(menuItemList);
     }
 
     /**
      * 用于管理员重置密码
-     * @param userId 用户id
+     *
+     * @param userId         用户id
      * @param passwordLength 默认为8位，最长为32位
      * @return
      */
@@ -171,56 +156,7 @@ public class AuthRestController {
         user.setPlainPassword(plainPassword);
         accountService.entryptPassword(user);
         dao.save(user);
-        ApiResult apiResult = new ApiResult();
-        apiResult.setData(plainPassword);
-        return apiResult;
+        return new ApiResult().setResult(plainPassword);
     }
-
-    private Map wrap(User user) {
-        HashMap map = new HashMap(3);
-        map.put("user", user);
-        //user config
-//        if (cache.check("config", user.getId().toString()) == 0) {
-//            cache.set("config", user.getId().toString(), dao.queryForMapList(UserConfig.class, "creator", user.getId()));
-//        }
-//        if (cache.check("config", "commonConfig") == 0) {
-//            cache.set("config", "commonConfig", dao.queryForMapList(CommonConfig.class));
-//        }
-//        map.put("userConfig", cache.get("config", user.getId().toString()));
-//        map.put("commonConfig", cache.get("config", "commonConfig"));
-
-        CacheObject userConfigCacheObject = cache.get("config", user.getId().toString(), userConfigLoader);
-        HashMap userConfig = new HashMap();
-        if (userConfigCacheObject.getValue() != null) {
-            List<Map<String, Object>> list = (List<Map<String, Object>>) userConfigCacheObject.getValue();
-            list.forEach((item) -> {
-                userConfig.put(item.get("code"), item);
-            });
-        }
-        map.put("userConfig", userConfig);
-
-        CacheObject commonConfigCacheObject = cache.get("config", user.getId().toString(), userConfigLoader);
-        HashMap commonConfig = new HashMap();
-        if (userConfigCacheObject.getValue() != null) {
-            List<Map<String, Object>> list = (List<Map<String, Object>>) commonConfigCacheObject.getValue();
-            list.forEach((item) -> {
-                commonConfig.put(item.get("code"), item);
-            });
-        }
-        map.put("commonConfig", commonConfig);
-
-//        map.put("commonConfig", cache.get("config", "commonConfig", commonConfigLoader));
-        List<Map<String, Object>> moduleList = dao.queryForMapList(Module.class);
-        for (Map module : moduleList) {
-            long id = Long.parseLong(module.get("id").toString());
-            ApiResult<List<Map>> result = ruleService.queryForTree("platform_menu_item", id, "items");
-            List<Map> menuItemList = result.getData();
-            module.put("tree", menuItemList);
-        }
-        map.put("modules", moduleList);
-
-        return map;
-    }
-
 
 }

@@ -18,6 +18,7 @@
  */
 package org.geelato.web.platform.m.security.service;
 
+import jakarta.annotation.PostConstruct;
 import org.apache.shiro.authc.*;
 import org.apache.shiro.authc.credential.HashedCredentialsMatcher;
 import org.apache.shiro.authz.AuthorizationInfo;
@@ -33,7 +34,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.HashMap;

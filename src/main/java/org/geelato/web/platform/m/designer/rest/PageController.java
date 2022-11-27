@@ -1,8 +1,7 @@
 package org.geelato.web.platform.m.designer.rest;
 
-import org.geelato.core.mvc.MediaTypes;
 import org.geelato.core.api.ApiMetaResult;
-import org.geelato.core.api.ApiResultCode;
+import org.geelato.core.mvc.MediaTypes;
 import org.geelato.core.orm.Dao;
 import org.geelato.web.platform.m.designer.entity.AppPage;
 import org.slf4j.Logger;
@@ -31,14 +30,14 @@ public class PageController {
     public ApiMetaResult pageConfig(@PathVariable String pageCode) {
         ApiMetaResult apiMetaResult = new ApiMetaResult();
         try {
-            apiMetaResult.setData(dao.queryForObject(AppPage.class, "code", pageCode));
-            if (apiMetaResult.getData() == null) {
-                apiMetaResult.setCode(ApiResultCode.FAIL);
-                apiMetaResult.setMsg("未能获取到pageCode(" + pageCode + ")对应配置信息。");
+            apiMetaResult.setResult(dao.queryForObject(AppPage.class, "code", pageCode));
+            if (apiMetaResult.getResult() == null) {
+                apiMetaResult.error();
+                apiMetaResult.setMessage("未能获取到pageCode(" + pageCode + ")对应配置信息。");
             }
         } catch (Exception e) {
-            apiMetaResult.setCode(ApiResultCode.FAIL);
-            apiMetaResult.setMsg("未能获取到pageCode(" + pageCode + ")对应配置信息。");
+            apiMetaResult.error();
+            apiMetaResult.setMessage("未能获取到pageCode(" + pageCode + ")对应配置信息。");
             logger.error("pageCode：" + pageCode, e);
         }
         return apiMetaResult;

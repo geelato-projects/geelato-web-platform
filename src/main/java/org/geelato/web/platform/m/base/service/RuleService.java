@@ -23,6 +23,8 @@ import org.jeasy.rules.api.Facts;
 import org.jeasy.rules.api.Rules;
 import org.jeasy.rules.api.RulesEngine;
 import org.jeasy.rules.core.DefaultRulesEngine;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Component;
 
@@ -34,6 +36,8 @@ import java.util.*;
 @Component
 public class RuleService {
 
+    @Autowired
+    @Qualifier("primaryDao")
     private Dao dao;
     private GqlManager gqlManager = GqlManager.singleInstance();
     private SqlManager sqlManager = SqlManager.singleInstance();
@@ -84,15 +88,15 @@ public class RuleService {
     public ApiResult<List<Map>> queryForTreeNodeList(String entity, Long treeId) {
         ApiResult<List<Map>> result = new ApiResult<List<Map>>();
         if (!metaManager.containsEntity(entity)) {
-            result.setCode(ApiResultCode.FAIL);
-            result.setMsg("不存在该实体");
+            result.setCode(ApiResultCode.ERROR);
+            result.setMessage("不存在该实体");
             return result;
         }
         Map params = new HashedMap(2);
         EntityMeta entityMeta = metaManager.getByEntityName(entity);
         params.put("tableName", entityMeta.getTableName());
         params.put("treeId", treeId);
-        result.setData(dao.queryForMapList("select_tree_node_left_join", params));
+        result.setResult(dao.queryForMapList("select_tree_node_left_join", params));
         return result;
     }
 
@@ -106,7 +110,7 @@ public class RuleService {
         if (!result.isSuccess()) {
             return result;
         }
-        return new ApiResult().setData(toTree(result.getData(), treeId, childrenKey));
+        return new ApiResult().setResult(toTree(result.getResult(), treeId, childrenKey));
     }
 
     /**
@@ -156,7 +160,7 @@ public class RuleService {
             dataMap.put(command.getEntityName(), dao.queryForMapListToPageData(boundPageSql, withMeta));
         }
         ApiMultiPagedResult result = new ApiMultiPagedResult();
-        result.setData(dataMap);
+        result.setResult(dataMap);
         return result;
     }
 

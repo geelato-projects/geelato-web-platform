@@ -1,6 +1,7 @@
 package org.geelato.web.platform.m.base.rest;
 
 
+import jakarta.servlet.http.HttpServletRequest;
 import net.oschina.j2cache.CacheChannel;
 import net.oschina.j2cache.CacheObject;
 import net.oschina.j2cache.J2Cache;
@@ -19,7 +20,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import javax.servlet.http.HttpServletRequest;
 import java.util.*;
 
 /**
@@ -52,7 +52,7 @@ public class CacheController {
     @ResponseBody
     public ApiResult list(HttpServletRequest request) {
         ApiResult apiResult = new ApiResult();
-        apiResult.setData(cache.regions());
+        apiResult.setResult(cache.regions());
         List<CacheObject> list = new ArrayList();
         for (CacheChannel.Region region : cache.regions()) {
             for (String key : cache.keys(region.getName())) {
@@ -70,7 +70,7 @@ public class CacheController {
         page.setPage(1000);
         page.setSize(10);
         page.setTotal(1000);
-        page.setData(list);
+        page.setResult(list);
         page.setMeta(metaManager.get(CacheItemMeta.class).getSimpleFieldMetas(new String[]{"region", "key", "level", "value"}));
         return page;
     }
