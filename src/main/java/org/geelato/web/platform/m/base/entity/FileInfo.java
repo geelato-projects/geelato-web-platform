@@ -21,7 +21,7 @@ public class FileInfo extends BaseEntity {
     private String description;
 
     @Col(name = "path")
-    @Title(title = "相对路径")
+    @Title(title = "相对路径",description = "一般相对于文件存储根目录。")
     public String getRelativePath() {
         return relativePath;
     }
@@ -41,7 +41,7 @@ public class FileInfo extends BaseEntity {
     }
 
     @Col(name = "saved_name")
-    @Title(title = "保存名称")
+    @Title(title = "保存名称",description = "存储在磁盘的文件名称")
     public String getSavedName() {
         return savedName;
     }

@@ -45,8 +45,8 @@ public class FileController implements InitializingBean {
     @Autowired
     protected RuleService ruleService;
 
-    @Value(value = "${geelato.file.upload-root-path}")
-    protected String uploadRootPath;
+    @Value(value = "${geelato.file.root.path}")
+    protected String fileRootPath;
 
     private SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmm");
     private Random random = new Random();
@@ -72,7 +72,7 @@ public class FileController implements InitializingBean {
         System.out.println("getContentType-->" + contentType);*/
 //        String filePath = request.getSession().getServletContext().getRealPath("upload/");
         String relativePath = sdf.format(new Date());
-        String filePath = this.uploadRootPath + relativePath + "\\";
+        String filePath = this.fileRootPath +"\\upload\\"+ relativePath + "\\";
         String fileType = originalFilename.substring(originalFilename.lastIndexOf(".")+1);
         String savedFileName = System.currentTimeMillis() + "" + random.nextInt(9)+ random.nextInt(9)+"."+fileType;
 
