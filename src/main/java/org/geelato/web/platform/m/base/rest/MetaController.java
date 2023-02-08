@@ -125,9 +125,23 @@ public class MetaController implements InitializingBean {
      */
     @RequestMapping(value = {"entityNames"}, method = {RequestMethod.POST, RequestMethod.GET}, produces = MediaTypes.JSON_UTF_8)
     @ResponseBody
-    public ApiMetaResult entityNames() {
-        ApiMetaResult result = new ApiMetaResult();
+    public ApiResult entityNames(@RequestParam String appCode) {
+        ApiResult result = new ApiResult();
         result.setResult(metaManager.getAllEntityNames());
+        return result;
+    }
+
+    /**
+     * e.g.:http://localhost:8080/api/meta/entityLiteMetas/
+     * 获取指定应用下的精简版实体元数据信息列表
+     * @param appCode 应用编码
+     * @return
+     */
+    @RequestMapping(value = {"entityLiteMetas"}, method = {RequestMethod.POST, RequestMethod.GET}, produces = MediaTypes.JSON_UTF_8)
+    @ResponseBody
+    public ApiResult queryLiteEntities(@RequestParam String appCode) {
+        ApiResult result = new ApiResult();
+        result.setResult(metaManager.getAllEntityLiteMetas());
         return result;
     }
 
