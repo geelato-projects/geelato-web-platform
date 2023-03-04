@@ -81,7 +81,7 @@ public class MetaController implements InitializingBean {
     public ApiMetaResult save(@PathVariable("biz") String biz, HttpServletRequest request) {
         String gql = getGql(request);
         ApiMetaResult result = new ApiMetaResult();
-        result.setResult(ruleService.save(biz, gql));
+        result.setData(ruleService.save(biz, gql));
         return result;
     }
 
@@ -91,7 +91,7 @@ public class MetaController implements InitializingBean {
     public ApiMetaResult delete(@PathVariable("biz") String biz, HttpServletRequest request) {
         String gql = getGql(request);
         ApiMetaResult result = new ApiMetaResult();
-        result.setResult(ruleService.delete(biz, gql));
+        result.setData(ruleService.delete(biz, gql));
         return result;
     }
 
@@ -127,7 +127,7 @@ public class MetaController implements InitializingBean {
     @ResponseBody
     public ApiResult entityNames(@RequestParam String appCode) {
         ApiResult result = new ApiResult();
-        result.setResult(metaManager.getAllEntityNames());
+        result.setData(metaManager.getAllEntityNames());
         return result;
     }
 
@@ -141,7 +141,7 @@ public class MetaController implements InitializingBean {
     @ResponseBody
     public ApiResult queryLiteEntities(@RequestParam String appCode) {
         ApiResult result = new ApiResult();
-        result.setResult(metaManager.getAllEntityLiteMetas());
+        result.setData(metaManager.getAllEntityLiteMetas());
         return result;
     }
 

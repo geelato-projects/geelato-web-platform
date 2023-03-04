@@ -112,7 +112,7 @@ public class AccountService {
         for (Map module : moduleList) {
             long id = Long.parseLong(module.get("id").toString());
             ApiResult<List<Map>> result = ruleService.queryForTree("platform_menu_item", id, "items");
-            List<Map> menuItemList = result.getResult();
+            List<Map> menuItemList = result.getData();
             module.put("tree", menuItemList);
         }
         map.put("modules", moduleList);

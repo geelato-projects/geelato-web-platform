@@ -2,7 +2,6 @@ package org.geelato.web.platform.m.base.rest;
 
 
 import jakarta.servlet.http.HttpServletRequest;
-import org.geelato.core.api.ApiMetaResult;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.orm.Dao;
 import org.geelato.web.platform.m.base.entity.FileInfo;
@@ -89,13 +88,13 @@ public class FileController implements InitializingBean {
             fileInfo.setFileType(fileType);
             fileInfo.setSize(size);
             fileInfo.setDescription(null);
-            apiResult.setResult(dao.save(fileInfo));
+            apiResult.setData(dao.save(fileInfo));
             apiResult.success();
-            apiResult.setMessage("上传文件成功！");
+            apiResult.setMsg("上传文件成功！");
         } catch (IOException e) {
             logger.error("上传文件失败！", e);
             apiResult.error();
-            apiResult.setMessage("上传文件失败！");
+            apiResult.setMsg("上传文件失败！");
         }
         return apiResult;
     }

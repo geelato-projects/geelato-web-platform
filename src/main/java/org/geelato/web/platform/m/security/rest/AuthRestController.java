@@ -93,7 +93,7 @@ public class AuthRestController {
     @ResponseBody
     public ApiResult loginMD5(@RequestBody User user, HttpServletRequest req) {
         ApiResult apiResult = new ApiResult();
-        apiResult.setResult(login(user, req));
+        apiResult.setData(login(user, req));
         return apiResult;
     }
 
@@ -138,7 +138,7 @@ public class AuthRestController {
         map.put("userId", 1);
         List<Map<String, Object>> menuItemList = dao.queryForMapList("select_platform_menu", map);
 
-        return new ApiResult().setResult(menuItemList);
+        return new ApiResult().setData(menuItemList);
     }
 
     /**
@@ -156,7 +156,7 @@ public class AuthRestController {
         user.setPlainPassword(plainPassword);
         accountService.entryptPassword(user);
         dao.save(user);
-        return new ApiResult().setResult(plainPassword);
+        return new ApiResult().setData(plainPassword);
     }
 
 }

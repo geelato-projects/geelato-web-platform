@@ -1,9 +1,5 @@
 package org.geelato.web.platform.m.security.rest;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
-import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.geelato.core.api.ApiPagedResult;
@@ -13,7 +9,6 @@ import org.geelato.core.orm.Dao;
 import org.geelato.web.platform.m.base.rest.BaseController;
 import org.geelato.web.platform.m.security.entity.*;
 import org.geelato.web.platform.m.security.service.AccountService;
-import org.geelato.web.platform.m.security.service.JWTUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,7 +16,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -50,7 +44,7 @@ public class SystemRestController extends BaseController {
         //初始化返回值
         ApiPagedResult apiPageResult = new ApiPagedResult<DataItems>();
         List mapList = dao.queryForMapList(Role.class);
-        apiPageResult.setResult(new DataItems(mapList, mapList.size()));
+        apiPageResult.setData(new DataItems(mapList, mapList.size()));
         apiPageResult.success();
         apiPageResult.setTotal(mapList.size());
         return apiPageResult;
@@ -71,10 +65,10 @@ public class SystemRestController extends BaseController {
             loginResult.setHomePath("");
             loginResult.setDesc("");
 
-            return new ApiResult().success().setResult(loginResult);
+            return new ApiResult().success().setData(loginResult);
         } catch (Exception e) {
             logger.error("getUserInfo", e);
-            return new ApiResult().error().setMessage(e.getMessage());
+            return new ApiResult().error().setMsg(e.getMessage());
         }
     }
 
@@ -86,7 +80,7 @@ public class SystemRestController extends BaseController {
             // TODO 改从数据库中获取
             String[] permissionCodes = new String[]{"1000", "3000", "5000"};
 
-            return new ApiResult().success().setResult(permissionCodes);
+            return new ApiResult().success().setData(permissionCodes);
         } catch (Exception e) {
             return new ApiResult().error();
         }
@@ -101,7 +95,7 @@ public class SystemRestController extends BaseController {
             user.setSalt("");
             user.setPassword("");
             user.setPlainPassword("");
-            return result.setResult(accountService.wrapUser(user));
+            return result.setData(accountService.wrapUser(user));
         } catch (Exception e) {
             return result.error();
         }
@@ -134,7 +128,7 @@ public class SystemRestController extends BaseController {
         Map map = new HashMap<>();
         map.put("userId", user.getId());
         List<Map<String, Object>> menuItemList = dao.queryForMapList("select_platform_menu", map);
-        return new ApiResult().setResult(menuItemList);
+        return new ApiResult().setData(menuItemList);
     }
 
     /**
@@ -151,7 +145,7 @@ public class SystemRestController extends BaseController {
         user.setPlainPassword(plainPassword);
         accountService.entryptPassword(user);
         dao.save(user);
-        return new ApiResult().setResult(plainPassword);
+        return new ApiResult().setData(plainPassword);
     }
 
 

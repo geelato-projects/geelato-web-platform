@@ -40,7 +40,7 @@ public class Role extends BaseSortableEntity implements EntityEnableAble {
         this.name = name;
     }
 
-    @Title(title = "类型", description = "")
+    @Title(title = "类型", description = "app | platform，即应用级角色、平台级角色")
     public String getType() {
         return type;
     }

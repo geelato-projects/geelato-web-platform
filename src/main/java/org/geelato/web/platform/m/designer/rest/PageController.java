@@ -30,14 +30,14 @@ public class PageController {
     public ApiMetaResult pageConfig(@PathVariable String pageCode) {
         ApiMetaResult apiMetaResult = new ApiMetaResult();
         try {
-            apiMetaResult.setResult(dao.queryForObject(AppPage.class, "code", pageCode));
-            if (apiMetaResult.getResult() == null) {
+            apiMetaResult.setData(dao.queryForObject(AppPage.class, "code", pageCode));
+            if (apiMetaResult.getData() == null) {
                 apiMetaResult.error();
-                apiMetaResult.setMessage("未能获取到pageCode(" + pageCode + ")对应配置信息。");
+                apiMetaResult.setMsg("未能获取到pageCode(" + pageCode + ")对应配置信息。");
             }
         } catch (Exception e) {
             apiMetaResult.error();
-            apiMetaResult.setMessage("未能获取到pageCode(" + pageCode + ")对应配置信息。");
+            apiMetaResult.setMsg("未能获取到pageCode(" + pageCode + ")对应配置信息。");
             logger.error("pageCode：" + pageCode, e);
         }
         return apiMetaResult;

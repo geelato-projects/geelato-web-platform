@@ -1,6 +1,5 @@
 package org.geelato.web.platform.m.security.rest;
 
-import com.auth0.jwt.interfaces.DecodedJWT;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.geelato.core.api.ApiResult;
@@ -27,7 +26,7 @@ import java.util.Map;
  * Created by hongxq on 2022/5/1.
  */
 @Controller
-@RequestMapping(value = {"/api/sys/jwtauth", "/basic-api"})
+@RequestMapping(value = {"/api/sys/jwtauth", "/basic-api","/api/user"})
 public class JWTAuthRestController extends BaseController {
 
     //    @Autowired
@@ -52,7 +51,8 @@ public class JWTAuthRestController extends BaseController {
             if (loginUser != null && loginUser.getPassword().equals(accountService.entryptPassword(loginParams.getPassword(), loginUser.getSalt()))) {
                 //没有抛出异常表示正常
                 apiResult.success();
-                apiResult.setMessage("认证成功！");
+                apiResult.setMsg("认证成功！");
+                apiResult.setCode(20000);
 
                 //声明payload
                 Map<String, String> payload = new HashMap<>(2);
@@ -76,10 +76,10 @@ public class JWTAuthRestController extends BaseController {
                 loginResult.setRoles(roles);
 
                 //在响应结果中添加token
-                apiResult.setResult(loginResult);
+                apiResult.setData(loginResult);
             } else {
                 apiResult.error();
-                apiResult.setMessage("账号或密码不正确");
+                apiResult.setMsg("账号或密码不正确");
                 return apiResult;
             }
 
@@ -87,7 +87,7 @@ public class JWTAuthRestController extends BaseController {
             logger.error(exception.getMessage(), exception);
             //如果出现异常记录错误信息
             apiResult.error();
-            apiResult.setMessage(exception.getMessage());
+            apiResult.setMsg(exception.getMessage());
         }
         //返回结果
         return apiResult;
@@ -108,10 +108,10 @@ public class JWTAuthRestController extends BaseController {
             loginResult.setHomePath("");
             loginResult.setDesc("");
 
-            return new ApiResult().success().setResult(loginResult);
+            return new ApiResult().success().setData(loginResult);
         } catch (Exception e) {
             logger.error("getUserInfo", e);
-            return new ApiResult().error().setMessage(e.getMessage());
+            return new ApiResult().error().setMsg(e.getMessage());
         }
     }
 
@@ -123,7 +123,7 @@ public class JWTAuthRestController extends BaseController {
             // TODO 改从数据库中获取
             String[] permissionCodes = new String[]{"1000", "3000", "5000"};
 
-            return new ApiResult().success().setResult(permissionCodes);
+            return new ApiResult().success().setData(permissionCodes);
         } catch (Exception e) {
             return new ApiResult().error();
         }
@@ -138,7 +138,7 @@ public class JWTAuthRestController extends BaseController {
             user.setSalt("");
             user.setPassword("");
             user.setPlainPassword("");
-            return result.setResult(accountService.wrapUser(user));
+            return result.setData(accountService.wrapUser(user));
         } catch (Exception e) {
             return result.error();
         }
@@ -171,7 +171,7 @@ public class JWTAuthRestController extends BaseController {
         Map map = new HashMap<>();
         map.put("userId", user.getId());
         List<Map<String, Object>> menuItemList = dao.queryForMapList("select_platform_menu", map);
-        return new ApiResult().setResult(menuItemList);
+        return new ApiResult().setData(menuItemList);
     }
 
     /**
@@ -188,7 +188,7 @@ public class JWTAuthRestController extends BaseController {
         user.setPlainPassword(plainPassword);
         accountService.entryptPassword(user);
         dao.save(user);
-        return new ApiResult().setResult(plainPassword);
+        return new ApiResult().setData(plainPassword);
     }
 
 
@@ -200,6 +200,7 @@ public class JWTAuthRestController extends BaseController {
      * @throws Exception
      */
     private User getUserByToken(HttpServletRequest req) throws Exception {
+        // TODO
 //        String token = this.getToken(req);
         //验证令牌  如果令牌不正确会出现异常 被全局异常处理
 //        DecodedJWT verify = JWTUtil.verify(token);

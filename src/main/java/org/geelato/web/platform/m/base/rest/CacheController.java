@@ -52,7 +52,7 @@ public class CacheController {
     @ResponseBody
     public ApiResult list(HttpServletRequest request) {
         ApiResult apiResult = new ApiResult();
-        apiResult.setResult(cache.regions());
+        apiResult.setData(cache.regions());
         List<CacheObject> list = new ArrayList();
         for (CacheChannel.Region region : cache.regions()) {
             for (String key : cache.keys(region.getName())) {
@@ -70,7 +70,7 @@ public class CacheController {
         page.setPage(1000);
         page.setSize(10);
         page.setTotal(1000);
-        page.setResult(list);
+        page.setData(list);
         page.setMeta(metaManager.get(CacheItemMeta.class).getSimpleFieldMetas(new String[]{"region", "key", "level", "value"}));
         return page;
     }

@@ -89,14 +89,14 @@ public class RuleService {
         ApiResult<List<Map>> result = new ApiResult<List<Map>>();
         if (!metaManager.containsEntity(entity)) {
             result.setCode(ApiResultCode.ERROR);
-            result.setMessage("不存在该实体");
+            result.setMsg("不存在该实体");
             return result;
         }
         Map params = new HashedMap(2);
         EntityMeta entityMeta = metaManager.getByEntityName(entity);
         params.put("tableName", entityMeta.getTableName());
         params.put("treeId", treeId);
-        result.setResult(dao.queryForMapList("select_tree_node_left_join", params));
+        result.setData(dao.queryForMapList("select_tree_node_left_join", params));
         return result;
     }
 
@@ -110,7 +110,7 @@ public class RuleService {
         if (!result.isSuccess()) {
             return result;
         }
-        return new ApiResult().setResult(toTree(result.getResult(), treeId, childrenKey));
+        return new ApiResult().setData(toTree(result.getData(), treeId, childrenKey));
     }
 
     /**
@@ -160,7 +160,7 @@ public class RuleService {
             dataMap.put(command.getEntityName(), dao.queryForMapListToPageData(boundPageSql, withMeta));
         }
         ApiMultiPagedResult result = new ApiMultiPagedResult();
-        result.setResult(dataMap);
+        result.setData(dataMap);
         return result;
     }
 

@@ -7,7 +7,7 @@ import org.geelato.core.meta.model.entity.BaseSortableEntity;
 import org.geelato.core.meta.model.entity.EntityEnableAble;
 
 /**
- * @Description TODO
+ * @Description 应用参数配置，
  * @Date 2020/4/12 12:00 by liuwq
  */
 @Entity(name = "platform_sys_config")
@@ -15,7 +15,7 @@ import org.geelato.core.meta.model.entity.EntityEnableAble;
 public class SysConfig extends BaseSortableEntity implements EntityEnableAble {
 
     private String appId;
-    private String moduleCode;
+    private String configName;
     private String configCode;
     private String configValue;
     private int enableStatus;
@@ -31,14 +31,14 @@ public class SysConfig extends BaseSortableEntity implements EntityEnableAble {
         this.appId = appId;
     }
 
-    @Col(name = "module_code")
-    @Title(title = "模块编码")
-    public String getModuleCode() {
-        return moduleCode;
+    @Col(name = "config_name")
+    @Title(title = "配置名称")
+    public String getConfigName() {
+        return configName;
     }
 
-    public void setModuleCode(String moduleCode) {
-        this.moduleCode = moduleCode;
+    public void setConfigName(String configName) {
+        this.configName = configName;
     }
 
     @Col(name = "config_code")
