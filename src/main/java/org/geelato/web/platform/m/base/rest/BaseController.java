@@ -7,10 +7,12 @@ import org.geelato.core.orm.Dao;
 import org.geelato.web.platform.m.base.service.RuleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.context.ApplicationContext;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ModelAttribute;
+
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -46,6 +48,20 @@ public class BaseController {
         this.session = request.getSession(true);
 
         //可以在此处拿到当前登录的用户
+    }
+
+    public Map<String, Object> getQueryParameters(HttpServletRequest request) {
+        Map<String, Object> queryParamsMap = new LinkedHashMap<>();
+        for (Map.Entry<String, String[]> entry : request.getParameterMap().entrySet()) {
+            List<String> values = List.of(entry.getValue());
+            if (values.size() == 1) {
+                queryParamsMap.put(entry.getKey(), values.get(0));
+            } else {
+                queryParamsMap.put(entry.getKey(), values.toArray(new String[values.size()]));
+            }
+        }
+
+        return queryParamsMap;
     }
 
 //    /**
