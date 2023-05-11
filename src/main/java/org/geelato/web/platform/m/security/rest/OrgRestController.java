@@ -1,10 +1,14 @@
 package org.geelato.web.platform.m.security.rest;
 
 import jakarta.servlet.http.HttpServletRequest;
+import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
 import org.geelato.web.platform.m.base.rest.BaseController;
+import org.geelato.web.platform.m.security.entity.DataItems;
+import org.geelato.web.platform.m.security.entity.ErrorMsg;
 import org.geelato.web.platform.m.security.entity.Org;
+import org.geelato.web.platform.m.security.entity.User;
 import org.geelato.web.platform.m.security.service.OrgService;
 import org.geelato.web.platform.m.security.service.UserService;
 import org.slf4j.Logger;
@@ -13,37 +17,41 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
-/*
-    created by chengx
+/**
+ * @author diabl
  */
 @Controller
 @RequestMapping(value = "/api/security/org")
 public class OrgRestController extends BaseController {
-    private static final String ORG_ID_IS_NULL = "组织ID为空";
-    private static final String ORG_IS_NULL = "组织不存在";
-    private static final String ORG_FOR_USER = "组织已被引用";
-    private static final String ORG_CREATE_FAIL = "组织创建失败";
-    private static final String ORG_UPDATE_FAIL = "组织更新失败";
-    private static final String ORG_DELETE_FAIL = "组织删除失败";
-    private static final String ORG_QUERY_FAIL = "组织查询失败";
+    private final Logger logger = LoggerFactory.getLogger(OrgRestController.class);
     @Autowired
     private OrgService orgService;
     @Autowired
     private UserService userService;
-    private final Logger logger = LoggerFactory.getLogger(OrgRestController.class);
 
     @RequestMapping(value = "/pageQuery", method = RequestMethod.GET)
     @ResponseBody
-    public ApiPagedResult pageQueryOrg() {
+    public ApiPagedResult pageQuery(HttpServletRequest req) {
         ApiPagedResult result = new ApiPagedResult();
         try {
-            return orgService.pageQueryOrg();
+            int pageNum = Strings.isNotBlank(req.getParameter("current")) ? Integer.parseInt(req.getParameter("current")) : -1;
+            int pageSize = Strings.isNotBlank(req.getParameter("pageSize")) ? Integer.parseInt(req.getParameter("pageSize")) : -1;
+            Map<String, Object> params = this.getQueryParameters(Org.class, req);
+
+            List<Org> pageQueryList = orgService.pageQueryModel(Org.class, pageNum, pageSize, params);
+            List<Org> queryList = orgService.queryModel(Org.class, params);
+
+            result.setTotal(queryList != null ? queryList.size() : 0);
+            result.setData(new DataItems(pageQueryList, result.getTotal()));
+            result.setPage(pageNum);
+            result.setSize(pageSize);
+            result.setDataSize(pageQueryList != null ? pageQueryList.size() : 0);
         } catch (Exception e) {
             logger.error(e.getMessage());
-
-            result.error().setMsg(ORG_QUERY_FAIL);
+            result.error().setMsg(ErrorMsg.QUERY_FAIL);
         }
 
         return result;
@@ -51,14 +59,14 @@ public class OrgRestController extends BaseController {
 
     @RequestMapping(value = "/query", method = RequestMethod.GET)
     @ResponseBody
-    public ApiResult queryOrg(HttpServletRequest req) {
+    public ApiResult query(HttpServletRequest req) {
         ApiResult result = new ApiResult();
-        Map<String, Object> params = this.getQueryParameters(req);
         try {
-            return result.setData(orgService.queryOrg(params));
+            Map<String, Object> params = this.getQueryParameters(Org.class, req);
+            return result.setData(orgService.queryModel(Org.class, params));
         } catch (Exception e) {
             logger.error(e.getMessage());
-            result.error().setMsg(ORG_QUERY_FAIL);
+            result.error().setMsg(ErrorMsg.QUERY_FAIL);
         }
 
         return result;
@@ -66,13 +74,38 @@ public class OrgRestController extends BaseController {
 
     @RequestMapping(value = "/get/{id}", method = RequestMethod.GET)
     @ResponseBody
-    public ApiResult getOrg(@PathVariable(required = true) long id) {
+    public ApiResult get(@PathVariable(required = true) long id) {
         ApiResult result = new ApiResult();
         try {
-            return result.setData(orgService.getOrg(id));
+            return result.setData(orgService.getModel(Org.class, id));
         } catch (Exception e) {
             logger.error(e.getMessage());
-            result.error().setMsg(ORG_QUERY_FAIL);
+            result.error().setMsg(ErrorMsg.QUERY_FAIL);
+        }
+
+        return result;
+    }
+
+    @RequestMapping(value = "/createOrUpdate", method = RequestMethod.POST)
+    @ResponseBody
+    public ApiResult createOrUpdate(@RequestBody Org form) {
+        ApiResult result = new ApiResult();
+        try {
+            // ID为空方可插入
+            if (form.getId() != null && form.getId() > 0) {
+                // 存在，方可更新
+                if (orgService.isExist(Org.class, form.getId())) {
+                    form.setDelStatus(0);
+                    result.setData(orgService.updateModel(form));
+                } else {
+                    result.error().setMsg(ErrorMsg.IS_NULL);
+                }
+            } else {
+                result.setData(orgService.createModel(form));
+            }
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            result.error().setMsg(ErrorMsg.OPERATE_FAIL);
         }
 
         return result;
@@ -80,15 +113,15 @@ public class OrgRestController extends BaseController {
 
     @RequestMapping(value = "/create", method = RequestMethod.POST)
     @ResponseBody
-    public ApiResult createOrg(@RequestBody Org org) {
+    public ApiResult create(@RequestBody Org form) {
         ApiResult result = new ApiResult();
         try {
-            // 组织ID为空方可插入
-            org.setId(null);
-            return result.setData(orgService.createOrg(org));
+            // ID为空方可插入
+            form.setId(null);
+            return result.setData(orgService.createModel(form));
         } catch (Exception e) {
             logger.error(e.getMessage());
-            result.error().setMsg(ORG_CREATE_FAIL);
+            result.error().setMsg(ErrorMsg.CREATE_FAIL);
         }
 
         return result;
@@ -96,25 +129,18 @@ public class OrgRestController extends BaseController {
 
     @RequestMapping(value = "/update", method = RequestMethod.POST)
     @ResponseBody
-    public ApiResult updateOrg(@RequestBody Org org) {
+    public ApiResult update(@RequestBody Org form) {
         ApiResult result = new ApiResult();
         try {
-            // 组织ID不为空，方可更新
-            if (org.getId() != null && org.getId() > 0) {
-                // 组织存在，方可更新
-                Org orgResult = orgService.getOrg(org.getId());
-                if (orgResult != null) {
-                    return result.setData(orgService.updateOrg(org));
-                } else {
-                    result.setMsg(ORG_IS_NULL);
-                }
+            if (orgService.isExist(Org.class, form.getId())) {
+                form.setDelStatus(0);
+                result.setData(orgService.updateModel(form));
             } else {
-                result.setMsg(ORG_ID_IS_NULL);
+                result.error().setMsg(ErrorMsg.IS_NULL);
             }
-            result.error();
         } catch (Exception e) {
             logger.error(e.getMessage());
-            result.error().setMsg(ORG_UPDATE_FAIL);
+            result.error().setMsg(ErrorMsg.UPDATE_FAIL);
         }
 
         return result;
@@ -122,22 +148,41 @@ public class OrgRestController extends BaseController {
 
     @RequestMapping(value = "/delete/{id}", method = RequestMethod.DELETE)
     @ResponseBody
-    public ApiResult deleteOrg(@PathVariable(required = true) long id) {
+    public ApiResult delete(@PathVariable(required = true) long id) {
         ApiResult result = new ApiResult();
         try {
-            // 被用户引用时，不可删除
-            if (!userService.isExistUser(id)) {
-                orgService.deleteOrg(id);
-                result.success();
-            } else {
-                result.error().setMsg(ORG_FOR_USER);
-            }
+            orgService.deleteModel(Org.class, id);
+            result.success();
         } catch (Exception e) {
             logger.error(e.getMessage());
-            result.error().setMsg(ORG_DELETE_FAIL);
+            result.error().setMsg(ErrorMsg.DELETE_FAIL);
         }
 
         return result;
     }
 
+    @RequestMapping(value = "/isDelete/{id}", method = RequestMethod.DELETE)
+    @ResponseBody
+    public ApiResult isDelete(@PathVariable(required = true) long id) {
+        ApiResult result = new ApiResult();
+        try {
+            if (!userService.isExist(User.class, "orgId", id)) {
+                Org mResult = orgService.getModel(Org.class, id);
+                if (mResult != null) {
+                    mResult.setDelStatus(1);
+                    orgService.updateModel(mResult);
+                    result.success();
+                } else {
+                    result.error().setMsg(ErrorMsg.IS_NULL);
+                }
+            } else {
+                result.error().setMsg(ErrorMsg.FOR_FAIL);
+            }
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            result.error().setMsg(ErrorMsg.DELETE_FAIL);
+        }
+
+        return result;
+    }
 }

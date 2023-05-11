@@ -1,8 +1,8 @@
 package org.geelato.web.platform.m.security.service;
 
-import org.geelato.core.api.ApiPagedResult;
+import org.geelato.core.meta.model.entity.BaseSortableEntity;
 import org.geelato.core.orm.Dao;
-import org.geelato.web.platform.m.security.entity.Org;
+import org.geelato.web.platform.m.security.entity.Constants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
@@ -19,34 +19,36 @@ public class OrgService {
     @Qualifier("primaryDao")
     private Dao dao;
 
-    public ApiPagedResult pageQueryOrg() {
-        return null;
+
+    public <T> List<T> pageQueryModel(Class<T> entity, int pageNum, int pageSize, Map<String, Object> params) {
+        return dao.queryList(entity, pageNum, pageSize, params);
     }
 
-    public List<Org> queryOrg(Map<String, Object> params) {
-        return dao.queryList(Org.class, params);
+    public <T> List<T> queryModel(Class<T> entity, Map<String, Object> params) {
+        return dao.queryList(entity, params);
     }
 
-    public Org getOrg(long id) {
-        return dao.queryForObject(Org.class, id);
+    public <T> T getModel(Class<T> entity, long id) {
+        return dao.queryForObject(entity, id);
     }
 
-    public Map createOrg(Org org) {
-        return dao.save(org);
+    public <T extends BaseSortableEntity> Map createModel(T model) {
+        model.setSeqNo(model.getSeqNo() > 0 ? model.getSeqNo() : Constants.SEQ_NO_DEFAULT);
+        model.setDelStatus(0);
+        return dao.save(model);
     }
 
-    public Map updateOrg(Org org) {
-        return dao.save(org);
+    public <T extends BaseSortableEntity> Map updateModel(T model) {
+        return dao.save(model);
     }
 
-    public void deleteOrg(long id) {
-        dao.delete(Org.class, "id", id);
+    public void deleteModel(Class entity, long id) {
+        dao.delete(entity, "id", id);
     }
 
-    public boolean isExistOrg(long id) {
+    public boolean isExist(Class entity, long id) {
         if (id > 0) {
-            Org org = getOrg(id);
-            return org != null;
+            return dao.queryForObject(entity, id) != null;
         }
         return false;
     }
