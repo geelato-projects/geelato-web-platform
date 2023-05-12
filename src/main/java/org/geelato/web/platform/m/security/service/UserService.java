@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -14,11 +15,10 @@ import java.util.Map;
  * @author diabl
  */
 @Component
-public class OrgService {
+public class UserService {
     @Autowired
     @Qualifier("primaryDao")
     private Dao dao;
-
 
     public <T> List<T> pageQueryModel(Class<T> entity, int pageNum, int pageSize, Map<String, Object> params) {
         return dao.queryList(entity, pageNum, pageSize, params);
@@ -50,6 +50,17 @@ public class OrgService {
         if (id > 0) {
             return dao.queryForObject(entity, id) != null;
         }
+        return false;
+    }
+
+    public <T> boolean isExist(Class<T> entity, String fieldName, long id) {
+        if (id > 0) {
+            Map<String, Object> params = new HashMap<>();
+            params.put(fieldName, id);
+            List<T> userList = dao.queryList(entity, params);
+            return userList != null && !userList.isEmpty();
+        }
+
         return false;
     }
 }
