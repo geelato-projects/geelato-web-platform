@@ -97,7 +97,6 @@ public class UserRestController extends BaseController {
             if (form.getId() != null && form.getId() > 0) {
                 // 组织存在，方可更新
                 if (userService.isExist(User.class, form.getId())) {
-                    form.setDelStatus(0);
                     result.setData(userService.updateModel(form));
                 } else {
                     result.error().setMsg(ErrorMsg.IS_NULL);
@@ -142,7 +141,6 @@ public class UserRestController extends BaseController {
             if (userService.isExist(User.class, form.getId())) {
                 // 组织ID为空 或 组织ID不为空且组织存在，方可更新
                 if (orgService.isExist(Org.class, form.getOrgId())) {
-                    form.setDelStatus(0);
                     result.setData(userService.updateModel(form));
                 } else {
                     result.error().setMsg(ErrorMsg.OF_FAIL);
@@ -180,8 +178,7 @@ public class UserRestController extends BaseController {
         try {
             User mResult = userService.getModel(User.class, id);
             if (mResult != null) {
-                mResult.setDelStatus(1);
-                userService.updateModel(mResult);
+                userService.isDeleteModel(mResult);
                 result.success();
             } else {
                 result.error().setMsg(ErrorMsg.IS_NULL);

@@ -1,12 +1,15 @@
 package org.geelato.web.platform.m.security.service;
 
-import org.geelato.core.meta.model.entity.BaseSortableEntity;
-import org.geelato.core.orm.Dao;
-import org.geelato.web.platform.m.security.entity.Constants;
+import org.geelato.web.platform.m.base.service.BaseService;
+import org.geelato.web.platform.m.security.entity.Org;
+import org.geelato.web.platform.m.security.entity.OrgUserMap;
+import org.geelato.web.platform.m.security.entity.User;
+import org.geelato.web.platform.m.security.enums.DeleteStatusEnum;
+import org.geelato.web.platform.m.security.enums.IsDefaultOrgEnum;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -14,42 +17,40 @@ import java.util.Map;
  * @author diabl
  */
 @Component
-public class OrgService {
+public class OrgService extends BaseService {
     @Autowired
-    @Qualifier("primaryDao")
-    private Dao dao;
+    private OrgUserMapService orgUserMapService;
+    @Autowired
+    private UserService userService;
 
-
-    public <T> List<T> pageQueryModel(Class<T> entity, int pageNum, int pageSize, Map<String, Object> params) {
-        return dao.queryList(entity, pageNum, pageSize, params);
-    }
-
-    public <T> List<T> queryModel(Class<T> entity, Map<String, Object> params) {
-        return dao.queryList(entity, params);
-    }
-
-    public <T> T getModel(Class<T> entity, long id) {
-        return dao.queryForObject(entity, id);
-    }
-
-    public <T extends BaseSortableEntity> Map createModel(T model) {
-        model.setSeqNo(model.getSeqNo() > 0 ? model.getSeqNo() : Constants.SEQ_NO_DEFAULT);
-        model.setDelStatus(0);
-        return dao.save(model);
-    }
-
-    public <T extends BaseSortableEntity> Map updateModel(T model) {
-        return dao.save(model);
-    }
-
-    public void deleteModel(Class entity, long id) {
-        dao.delete(entity, "id", id);
-    }
-
-    public boolean isExist(Class entity, long id) {
-        if (id > 0) {
-            return dao.queryForObject(entity, id) != null;
+    /**
+     * 逻辑删除
+     *
+     * @param model
+     */
+    public void isDeleteModel(Org model) {
+        // 组织删除
+        model.setDelStatus(DeleteStatusEnum.NO.getCode());
+        dao.save(model);
+        // 清理 组织用户表
+        Map<String, Object> params = new HashMap<>();
+        params.put("orgId", model.getId());
+        List<OrgUserMap> oList = orgUserMapService.queryModel(OrgUserMap.class, params);
+        if (oList != null) {
+            for (OrgUserMap oModel : oList) {
+                oModel.setDefaultOrg(IsDefaultOrgEnum.NO.getCode());
+                oModel.setDelStatus(DeleteStatusEnum.IS.getCode());
+                dao.save(oModel);
+            }
         }
-        return false;
+        // 清理 用户表
+        List<User> uList = userService.queryModel(User.class, params);
+        if (oList != null) {
+            for (User uModel : uList) {
+                uModel.setOrgId(0);
+                uModel.setOrgName(null);
+                dao.save(uModel);
+            }
+        }
     }
 }
