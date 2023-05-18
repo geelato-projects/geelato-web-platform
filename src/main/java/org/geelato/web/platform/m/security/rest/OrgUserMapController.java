@@ -10,7 +10,6 @@ import org.geelato.web.platform.m.security.entity.ErrorMsg;
 import org.geelato.web.platform.m.security.entity.OrgUserMap;
 import org.geelato.web.platform.m.security.entity.User;
 import org.geelato.web.platform.m.security.service.OrgUserMapService;
-import org.geelato.web.platform.m.security.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,14 +23,11 @@ import java.util.Map;
  * @author diabl
  */
 @Controller
-@RequestMapping(value = "/api/security/orgUserMap")
+@RequestMapping(value = "/api/security/org/user")
 public class OrgUserMapController extends BaseController {
     private final Logger logger = LoggerFactory.getLogger(OrgUserMapController.class);
     @Autowired
     private OrgUserMapService orgUserMapService;
-    @Autowired
-    private UserService userService;
-
 
     @RequestMapping(value = "/pageQuery", method = RequestMethod.GET)
     @ResponseBody

@@ -14,7 +14,7 @@ import java.util.Map;
  * @author diabl
  */
 @Component
-public class DictService extends BaseService {
+public class DictService extends BaseSortableService {
     @Autowired
     private DictItemService dictItemService;
 
@@ -24,7 +24,8 @@ public class DictService extends BaseService {
      * @param model
      */
     public void isDeleteModel(Dict model) {
-        model.setDelStatus(DeleteStatusEnum.NO.getCode());
+        model.setDelStatus(DeleteStatusEnum.IS.getCode());
+        dao.save(model);
         // 清理 字典项
         Map<String, Object> params = new HashMap<>();
         params.put("dictId", model.getId());
@@ -35,7 +36,5 @@ public class DictService extends BaseService {
                 dao.save(iModel);
             }
         }
-
-        dao.save(model);
     }
 }

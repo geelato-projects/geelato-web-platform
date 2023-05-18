@@ -8,7 +8,6 @@ import org.geelato.web.platform.m.base.rest.BaseController;
 import org.geelato.web.platform.m.security.entity.DataItems;
 import org.geelato.web.platform.m.security.entity.ErrorMsg;
 import org.geelato.web.platform.m.security.entity.Org;
-import org.geelato.web.platform.m.security.entity.User;
 import org.geelato.web.platform.m.security.service.OrgService;
 import org.geelato.web.platform.m.security.service.UserService;
 import org.slf4j.Logger;
@@ -164,16 +163,12 @@ public class OrgRestController extends BaseController {
     public ApiResult isDelete(@PathVariable(required = true) long id) {
         ApiResult result = new ApiResult();
         try {
-            if (!userService.isExist(User.class, "orgId", id)) {
-                Org mResult = orgService.getModel(Org.class, id);
-                if (mResult != null) {
-                    orgService.isDeleteModel(mResult);
-                    result.success();
-                } else {
-                    result.error().setMsg(ErrorMsg.IS_NULL);
-                }
+            Org mResult = orgService.getModel(Org.class, id);
+            if (mResult != null) {
+                orgService.isDeleteModel(mResult);
+                result.success();
             } else {
-                result.error().setMsg(ErrorMsg.FOR_FAIL);
+                result.error().setMsg(ErrorMsg.IS_NULL);
             }
         } catch (Exception e) {
             logger.error(e.getMessage());

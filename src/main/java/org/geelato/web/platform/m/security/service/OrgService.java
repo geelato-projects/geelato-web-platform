@@ -1,6 +1,6 @@
 package org.geelato.web.platform.m.security.service;
 
-import org.geelato.web.platform.m.base.service.BaseService;
+import org.geelato.web.platform.m.base.service.BaseSortableService;
 import org.geelato.web.platform.m.security.entity.Org;
 import org.geelato.web.platform.m.security.entity.OrgUserMap;
 import org.geelato.web.platform.m.security.entity.User;
@@ -17,7 +17,7 @@ import java.util.Map;
  * @author diabl
  */
 @Component
-public class OrgService extends BaseService {
+public class OrgService extends BaseSortableService {
     @Autowired
     private OrgUserMapService orgUserMapService;
     @Autowired
@@ -30,7 +30,7 @@ public class OrgService extends BaseService {
      */
     public void isDeleteModel(Org model) {
         // 组织删除
-        model.setDelStatus(DeleteStatusEnum.NO.getCode());
+        model.setDelStatus(DeleteStatusEnum.IS.getCode());
         dao.save(model);
         // 清理 组织用户表
         Map<String, Object> params = new HashMap<>();

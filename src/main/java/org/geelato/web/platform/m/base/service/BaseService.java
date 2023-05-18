@@ -1,8 +1,7 @@
 package org.geelato.web.platform.m.base.service;
 
-import org.geelato.core.meta.model.entity.BaseSortableEntity;
+import org.geelato.core.meta.model.entity.BaseEntity;
 import org.geelato.core.orm.Dao;
-import org.geelato.web.platform.m.security.entity.Constants;
 import org.geelato.web.platform.m.security.enums.DeleteStatusEnum;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -66,8 +65,7 @@ public class BaseService {
      * @param <T>
      * @return
      */
-    public <T extends BaseSortableEntity> Map createModel(T model) {
-        model.setSeqNo(model.getSeqNo() > 0 ? model.getSeqNo() : Constants.SEQ_NO_DEFAULT);
+    public <T extends BaseEntity> Map createModel(T model) {
         model.setDelStatus(DeleteStatusEnum.NO.getCode());
         return dao.save(model);
     }
@@ -79,7 +77,7 @@ public class BaseService {
      * @param <T>
      * @return
      */
-    public <T extends BaseSortableEntity> Map updateModel(T model) {
+    public <T extends BaseEntity> Map updateModel(T model) {
         model.setDelStatus(DeleteStatusEnum.NO.getCode());
         return dao.save(model);
     }
@@ -90,8 +88,8 @@ public class BaseService {
      * @param model
      * @param <T>
      */
-    public <T extends BaseSortableEntity> void isDeleteModel(T model) {
-        model.setDelStatus(DeleteStatusEnum.NO.getCode());
+    public <T extends BaseEntity> void isDeleteModel(T model) {
+        model.setDelStatus(DeleteStatusEnum.IS.getCode());
         dao.save(model);
     }
 

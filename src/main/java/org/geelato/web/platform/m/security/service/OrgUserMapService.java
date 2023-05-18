@@ -5,6 +5,7 @@ import org.geelato.web.platform.m.security.entity.ErrorMsg;
 import org.geelato.web.platform.m.security.entity.Org;
 import org.geelato.web.platform.m.security.entity.OrgUserMap;
 import org.geelato.web.platform.m.security.entity.User;
+import org.geelato.web.platform.m.security.enums.DeleteStatusEnum;
 import org.geelato.web.platform.m.security.enums.IsDefaultOrgEnum;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -31,7 +32,7 @@ public class OrgUserMapService extends BaseService {
      * @return
      */
     public Map createModel(OrgUserMap model) {
-        model.setDelStatus(0);
+        model.setDelStatus(DeleteStatusEnum.NO.getCode());
         // 清理用户表单
         updateUserDefaultOrg(model);
 
@@ -45,7 +46,7 @@ public class OrgUserMapService extends BaseService {
      * @return
      */
     public Map updateModel(OrgUserMap model) {
-        model.setDelStatus(0);
+        model.setDelStatus(DeleteStatusEnum.NO.getCode());
         // 清理用户表单
         updateUserDefaultOrg(model);
 
@@ -58,8 +59,9 @@ public class OrgUserMapService extends BaseService {
      * @param model
      */
     public void isDeleteModel(OrgUserMap model) {
-        model.setDelStatus(1);
-        // 清理
+        model.setDelStatus(DeleteStatusEnum.IS.getCode());
+        dao.save(model);
+        // 清理 用户默认部门
         Map<String, Object> params = new HashMap<>();
         params.put("orgId", model.getOrgId());
         params.put("id", model.getUserId());
@@ -71,8 +73,6 @@ public class OrgUserMapService extends BaseService {
                 dao.save(uModel);
             }
         }
-
-        dao.save(model);
     }
 
     private void updateUserDefaultOrg(OrgUserMap model) {

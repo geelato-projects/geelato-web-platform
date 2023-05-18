@@ -6,6 +6,6 @@ import org.springframework.stereotype.Component;
  * @author diabl
  */
 @Component
-public class DictItemService extends BaseService {
+public class DictItemService extends BaseSortableService {
 
 }
