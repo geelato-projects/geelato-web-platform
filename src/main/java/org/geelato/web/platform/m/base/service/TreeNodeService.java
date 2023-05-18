@@ -5,6 +5,7 @@ import org.geelato.web.platform.m.security.entity.RoleTreeNodeMap;
 import org.geelato.web.platform.m.security.enums.DeleteStatusEnum;
 import org.geelato.web.platform.m.security.service.RoleTreeNodeMapService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
@@ -16,6 +17,7 @@ import java.util.Map;
  */
 @Component
 public class TreeNodeService extends BaseService {
+    @Lazy
     @Autowired
     private RoleTreeNodeMapService roleTreeNodeMapService;
 

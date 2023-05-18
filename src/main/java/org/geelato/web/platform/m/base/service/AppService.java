@@ -5,6 +5,7 @@ import org.geelato.web.platform.m.security.entity.RoleAppMap;
 import org.geelato.web.platform.m.security.enums.DeleteStatusEnum;
 import org.geelato.web.platform.m.security.service.RoleAppMapService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
@@ -16,6 +17,7 @@ import java.util.Map;
  */
 @Component
 public class AppService extends BaseSortableService {
+    @Lazy
     @Autowired
     private RoleAppMapService roleAppMapService;
 

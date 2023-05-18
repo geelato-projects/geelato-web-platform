@@ -7,6 +7,7 @@ import org.geelato.web.platform.m.security.entity.User;
 import org.geelato.web.platform.m.security.enums.DeleteStatusEnum;
 import org.geelato.web.platform.m.security.enums.IsDefaultOrgEnum;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
@@ -18,8 +19,10 @@ import java.util.Map;
  */
 @Component
 public class UserService extends BaseSortableService {
+    @Lazy
     @Autowired
     private OrgUserMapService orgUserMapService;
+    @Lazy
     @Autowired
     private RoleUserMapService roleUserMapService;
 
