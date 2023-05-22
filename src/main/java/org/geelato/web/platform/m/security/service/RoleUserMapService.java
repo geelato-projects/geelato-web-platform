@@ -30,9 +30,9 @@ public class RoleUserMapService extends BaseService {
      */
     public Map insertModel(RoleUserMap model) {
         Role rModel = roleService.getModel(Role.class, model.getRoleId());
-        Assert.isNull(rModel, ErrorMsg.IS_NULL);
+        Assert.notNull(rModel, ErrorMsg.IS_NULL);
         User uModel = userService.getModel(User.class, model.getUserId());
-        Assert.isNull(uModel, ErrorMsg.IS_NULL);
+        Assert.notNull(uModel, ErrorMsg.IS_NULL);
         // 构建
         model.setId(null);
         model.setRoleName(rModel.getName());

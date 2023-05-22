@@ -31,13 +31,13 @@ public class RoleTreeNodeMapService extends BaseService {
      */
     public Map insertModel(RoleTreeNodeMap model) {
         Role rModel = roleService.getModel(Role.class, model.getRoleId());
-        Assert.isNull(rModel, ErrorMsg.IS_NULL);
+        Assert.notNull(rModel, ErrorMsg.IS_NULL);
         TreeNode tModel = treeNodeService.getModel(TreeNode.class, model.getTreeNodeId());
-        Assert.isNull(tModel, ErrorMsg.IS_NULL);
+        Assert.notNull(tModel, ErrorMsg.IS_NULL);
         // 构建
         model.setId(null);
         model.setRoleName(rModel.getName());
-        model.setTreeNodeText(tModel.getTitle());
+        model.setTreeNodeText(tModel.getText());
         model.setDelStatus(DeleteStatusEnum.NO.getCode());
         return dao.save(model);
     }

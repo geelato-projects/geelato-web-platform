@@ -5,8 +5,6 @@ import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
 import org.geelato.web.platform.m.base.entity.Dict;
-import org.geelato.web.platform.m.base.entity.DictItem;
-import org.geelato.web.platform.m.base.service.DictItemService;
 import org.geelato.web.platform.m.base.service.DictService;
 import org.geelato.web.platform.m.security.entity.DataItems;
 import org.geelato.web.platform.m.security.entity.ErrorMsg;
@@ -28,8 +26,6 @@ public class DictController extends BaseController {
     private final Logger logger = LoggerFactory.getLogger(DictController.class);
     @Autowired
     private DictService dictService;
-    @Autowired
-    private DictItemService dictItemService;
 
     @RequestMapping(value = "/pageQuery", method = RequestMethod.GET)
     @ResponseBody
@@ -114,16 +110,12 @@ public class DictController extends BaseController {
     public ApiResult isDelete(@PathVariable(required = true) long id) {
         ApiResult result = new ApiResult();
         try {
-            if (!dictItemService.isExist(DictItem.class, "dictId", id)) {
-                Dict mResult = dictService.getModel(Dict.class, id);
-                if (mResult != null) {
-                    dictService.isDeleteModel(mResult);
-                    result.success();
-                } else {
-                    result.error().setMsg(ErrorMsg.IS_NULL);
-                }
+            Dict mResult = dictService.getModel(Dict.class, id);
+            if (mResult != null) {
+                dictService.isDeleteModel(mResult);
+                result.success();
             } else {
-                result.error().setMsg(ErrorMsg.FOR_FAIL);
+                result.error().setMsg(ErrorMsg.IS_NULL);
             }
         } catch (Exception e) {
             logger.error(e.getMessage());

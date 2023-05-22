@@ -55,4 +55,36 @@ public class UserService extends BaseSortableService {
             }
         }
     }
+
+    public void setDefaultOrg(Map<String, Object> model) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("userId", model.get("id"));
+        boolean isExit = false;
+        List<OrgUserMap> oList = orgUserMapService.queryModel(OrgUserMap.class, params);
+        if (oList != null) {
+            for (OrgUserMap oModel : oList) {
+                if (oModel.getOrgId() != null && oModel.getOrgId().equals(model.get("orgId"))) {
+                    isExit = true;
+                    if (IsDefaultOrgEnum.IS.getCode() != oModel.getDefaultOrg()) {
+                        oModel.setDefaultOrg(IsDefaultOrgEnum.IS.getCode());
+                        dao.save(oModel);
+                    }
+                } else if (IsDefaultOrgEnum.IS.getCode() == oModel.getDefaultOrg()) {
+                    oModel.setDefaultOrg(IsDefaultOrgEnum.NO.getCode());
+                    dao.save(oModel);
+                }
+            }
+        }
+        long orgId = Long.valueOf(String.valueOf(model.get("orgId"))).longValue();
+        if (!isExit && orgId > 0) {
+            OrgUserMap oModel = new OrgUserMap();
+            oModel.setUserId((Long) model.get("id"));
+            oModel.setUserName((String) model.get("name"));
+            oModel.setOrgId(orgId);
+            oModel.setOrgName((String) model.get("orgName"));
+            oModel.setDelStatus(DeleteStatusEnum.NO.getCode());
+            oModel.setDefaultOrg(IsDefaultOrgEnum.IS.getCode());
+            dao.save(oModel);
+        }
+    }
 }

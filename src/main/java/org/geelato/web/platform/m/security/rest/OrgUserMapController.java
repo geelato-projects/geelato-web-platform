@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -83,21 +84,19 @@ public class OrgUserMapController extends BaseController {
         return result;
     }
 
-    @RequestMapping(value = "/createOrUpdate", method = RequestMethod.POST)
+    @RequestMapping(value = "/insert", method = RequestMethod.POST)
     @ResponseBody
-    public ApiResult createOrUpdate(@RequestBody OrgUserMap form) {
+    public ApiResult insert(@RequestBody OrgUserMap form) {
         ApiResult result = new ApiResult();
         try {
-            // ID为空方可插入
-            if (form.getId() != null && form.getId() > 0) {
-                // 存在，方可更新
-                if (orgUserMapService.isExist(OrgUserMap.class, form.getId())) {
-                    result.setData(orgUserMapService.updateModel(form));
-                } else {
-                    result.error().setMsg(ErrorMsg.IS_NULL);
-                }
+            Map<String, Object> params = new HashMap<>();
+            params.put("userId", form.getUserId());
+            params.put("orgId", form.getOrgId());
+            List<OrgUserMap> oList = orgUserMapService.queryModel(OrgUserMap.class, params);
+            if (oList != null && !oList.isEmpty()) {
+                result.error().setMsg(ErrorMsg.IS_EXIST);
             } else {
-                result.setData(orgUserMapService.createModel(form));
+                orgUserMapService.insertModel(form);
             }
         } catch (Exception e) {
             logger.error(e.getMessage());

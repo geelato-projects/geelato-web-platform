@@ -31,25 +31,27 @@ public class OrgUserMapService extends BaseService {
      * @param model 实体数据
      * @return
      */
-    public Map createModel(OrgUserMap model) {
-        model.setDelStatus(DeleteStatusEnum.NO.getCode());
+    public Map insertModel(OrgUserMap model) {
+        User uModel = userService.getModel(User.class, model.getUserId());
+        Assert.notNull(uModel, ErrorMsg.IS_NULL);
+        Org oModel = orgService.getModel(Org.class, model.getOrgId());
+        Assert.notNull(oModel, ErrorMsg.IS_NULL);
         // 清理用户表单
-        updateUserDefaultOrg(model);
-
-        return dao.save(model);
-    }
-
-    /**
-     * 更新一条数据
-     *
-     * @param model 实体数据
-     * @return
-     */
-    public Map updateModel(OrgUserMap model) {
+        // 当前默认；原来默认
+        if (model.getDefaultOrg() == IsDefaultOrgEnum.IS.getCode()) {
+            uModel.setOrgId(oModel.getId());
+            uModel.setOrgName(oModel.getName());
+            dao.save(uModel);
+        } else if (oModel.getId().equals(uModel.getOrgId())) {
+            uModel.setOrgId(0);
+            uModel.setOrgName(null);
+            dao.save(uModel);
+        }
+        // 构建
+        model.setId(null);
+        model.setUserName(uModel.getName());
+        model.setOrgName(oModel.getName());
         model.setDelStatus(DeleteStatusEnum.NO.getCode());
-        // 清理用户表单
-        updateUserDefaultOrg(model);
-
         return dao.save(model);
     }
 
@@ -72,25 +74,6 @@ public class OrgUserMapService extends BaseService {
                 uModel.setOrgName(null);
                 dao.save(uModel);
             }
-        }
-    }
-
-    private void updateUserDefaultOrg(OrgUserMap model) {
-        // 用户
-        User uModel = userService.getModel(User.class, model.getUserId());
-        Assert.isNull(uModel, ErrorMsg.IS_NULL);
-        // 组织
-        Org oModel = orgService.getModel(Org.class, model.getOrgId());
-        Assert.isNull(oModel, ErrorMsg.IS_NULL);
-        // 当前默认；原来默认
-        if (model.getDefaultOrg() == IsDefaultOrgEnum.IS.getCode()) {
-            uModel.setOrgId(oModel.getId());
-            uModel.setOrgName(oModel.getName());
-            dao.save(uModel);
-        } else if (oModel.getId().equals(uModel.getOrgId())) {
-            uModel.setOrgId(0);
-            uModel.setOrgName(null);
-            dao.save(uModel);
         }
     }
 }

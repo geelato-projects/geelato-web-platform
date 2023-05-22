@@ -19,9 +19,9 @@ public class TreeNode extends BaseEntity {
     /**
      * 采用字符串格式，解决数字类型太大，在web端展示失真的问题
      */
-    private String pid;
+    private String parent;
     private String type;
-    private String title;
+    private String text;
     private String iconType;
     private String extendEntity;
     private Long extendId;
@@ -59,14 +59,14 @@ public class TreeNode extends BaseEntity {
         this.type = type;
     }
 
-    @Col(name = "title", nullable = false)
+    @Col(name = "text", nullable = false)
     @Title(title = "节点标题")
-    public String getTitle() {
-        return title;
+    public String getText() {
+        return text;
     }
 
-    public void setTitle(String title) {
-        this.title = title;
+    public void setText(String text) {
+        this.text = text;
     }
 
     @Col(name = "icon_type", nullable = true)
@@ -80,14 +80,14 @@ public class TreeNode extends BaseEntity {
     }
 
 
-    @Col(name = "pid", nullable = true)
+    @Col(name = "parent", nullable = true)
     @Title(title = "父节点Id")
-    public String getPid() {
-        return pid;
+    public String getParent() {
+        return parent;
     }
 
-    public void setPid(String pid) {
-        this.pid = pid;
+    public void setParent(String parent) {
+        this.parent = parent;
     }
 
 

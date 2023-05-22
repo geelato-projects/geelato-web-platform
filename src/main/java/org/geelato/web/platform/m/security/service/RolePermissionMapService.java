@@ -30,9 +30,9 @@ public class RolePermissionMapService extends BaseService {
      */
     public Map insertModel(RolePermissionMap model) {
         Role rModel = roleService.getModel(Role.class, model.getRoleId());
-        Assert.isNull(rModel, ErrorMsg.IS_NULL);
+        Assert.notNull(rModel, ErrorMsg.IS_NULL);
         Permission pModel = permissionService.getModel(Permission.class, model.getPermissionId());
-        Assert.isNull(pModel, ErrorMsg.IS_NULL);
+        Assert.notNull(pModel, ErrorMsg.IS_NULL);
         // 构建
         model.setId(null);
         model.setRoleName(rModel.getName());

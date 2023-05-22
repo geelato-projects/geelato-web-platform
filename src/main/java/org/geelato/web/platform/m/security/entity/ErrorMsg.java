@@ -13,4 +13,5 @@ public class ErrorMsg {
     public static final String UPDATE_FAIL = "更新失败";
     public static final String DELETE_FAIL = "删除失败";
     public static final String QUERY_FAIL = "查询失败";
+    public static final String IS_EXIST = "已存在";
 }

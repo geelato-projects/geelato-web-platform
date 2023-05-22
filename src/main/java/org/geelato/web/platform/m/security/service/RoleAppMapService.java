@@ -31,9 +31,9 @@ public class RoleAppMapService extends BaseService {
      */
     public Map insertModel(RoleAppMap model) {
         Role rModel = roleService.getModel(Role.class, model.getRoleId());
-        Assert.isNull(rModel, ErrorMsg.IS_NULL);
+        Assert.notNull(rModel, ErrorMsg.IS_NULL);
         App aModel = appService.getModel(App.class, model.getAppId());
-        Assert.isNull(aModel, ErrorMsg.IS_NULL);
+        Assert.notNull(aModel, ErrorMsg.IS_NULL);
         // 构建
         model.setId(null);
         model.setRoleName(rModel.getName());
