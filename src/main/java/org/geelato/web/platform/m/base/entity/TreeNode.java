@@ -4,7 +4,8 @@ package org.geelato.web.platform.m.base.entity;
 import org.geelato.core.meta.annotation.Col;
 import org.geelato.core.meta.annotation.Entity;
 import org.geelato.core.meta.annotation.Title;
-import org.geelato.core.meta.model.entity.BaseEntity;
+
+import org.geelato.core.meta.model.entity.BaseSortableEntity;
 
 /**
  * @author itechgee@126.com
@@ -12,14 +13,14 @@ import org.geelato.core.meta.model.entity.BaseEntity;
  */
 @Entity(name = "platform_tree_node", table = "platform_tree_node")
 @Title(title = "树节点")
-public class TreeNode extends BaseEntity {
+public class TreeNode extends BaseSortableEntity {
 
     private String treeEntity;
     private String treeId;
     /**
      * 采用字符串格式，解决数字类型太大，在web端展示失真的问题
      */
-    private String parent;
+    private String pid;
     private String type;
     private String text;
     private String iconType;
@@ -28,6 +29,21 @@ public class TreeNode extends BaseEntity {
     private String meta;
     private String flag;
     private String description;
+
+    private long seqNo;
+
+    @Title(title = "次序")
+    @Col(name = "seq_no")
+    @Override
+    public long getSeqNo() {
+        return seqNo;
+    }
+
+    @Override
+    public void setSeqNo(long seqNo) {
+        this.seqNo = seqNo;
+    }
+
 
     @Col(name = "tree_entity", nullable = true)
     @Title(title = "树实体", description = "节点所属树对应的业务实体，例如，对于项目文件树，该实体为项目（platform_project）。")
@@ -80,14 +96,14 @@ public class TreeNode extends BaseEntity {
     }
 
 
-    @Col(name = "parent", nullable = true)
+    @Col(name = "pid", nullable = true)
     @Title(title = "父节点Id")
-    public String getParent() {
-        return parent;
+    public String getPid() {
+        return pid;
     }
 
-    public void setParent(String parent) {
-        this.parent = parent;
+    public void setPid(String pid) {
+        this.pid = pid;
     }
 
 
