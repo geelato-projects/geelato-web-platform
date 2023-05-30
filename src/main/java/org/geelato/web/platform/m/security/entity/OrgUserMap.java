@@ -15,8 +15,10 @@ import org.geelato.core.meta.model.entity.BaseEntity;
 @Title(title = "组织用户关系表")
 public class OrgUserMap extends BaseEntity {
     private Long orgId;
+    private String orgName;
 
     private Long userId;
+    private String userName;
 
     //1-默认组织 0-兼职
     private int defaultOrg;
@@ -28,8 +30,19 @@ public class OrgUserMap extends BaseEntity {
         return orgId;
     }
 
-    public void setOrgId(Long roleId) {
+    public void setOrgId(Long orgId) {
         this.orgId = orgId;
+    }
+
+    @Title(title = "组织名称")
+    @Col(name = "org_name")
+    @ForeignKey(fTable = Org.class)
+    public String getOrgName() {
+        return orgName;
+    }
+
+    public void setOrgName(String orgName) {
+        this.orgName = orgName;
     }
 
     @Title(title = "用户ID")
@@ -41,6 +54,17 @@ public class OrgUserMap extends BaseEntity {
 
     public void setUserId(Long userId) {
         this.userId = userId;
+    }
+
+    @Title(title = "用户名称")
+    @Col(name = "user_name")
+    @ForeignKey(fTable = User.class)
+    public String getUserName() {
+        return userName;
+    }
+
+    public void setUserName(String userName) {
+        this.userName = userName;
     }
 
     @Title(title = "默认组织")

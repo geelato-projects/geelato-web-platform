@@ -17,6 +17,7 @@ public class DictItem extends BaseSortableEntity implements EntityEnableAble {
     private String itemCode;
     private String itemText;
     private String dataRemark;
+    private int enableStatus;
 
     @Col(name = "dic_id")
     @Title(title = "字典ID")
@@ -58,16 +59,15 @@ public class DictItem extends BaseSortableEntity implements EntityEnableAble {
         this.dataRemark = dataRemark;
     }
 
+    @Col(name = "enableStatus")
+    @Title(title = "启用状态")
     @Override
     public int getEnableStatus() {
-        return 0;
+        return enableStatus;
     }
 
-    /**
-     * @param enableStatus
-     */
     @Override
     public void setEnableStatus(int enableStatus) {
-
+        this.enableStatus = enableStatus;
     }
 }

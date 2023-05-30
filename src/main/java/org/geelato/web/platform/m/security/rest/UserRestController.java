@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
+import org.geelato.core.api.ApiResultStatus;
 import org.geelato.web.platform.m.base.rest.BaseController;
 import org.geelato.web.platform.m.security.entity.DataItems;
 import org.geelato.web.platform.m.security.entity.ErrorMsg;
@@ -18,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -93,17 +95,31 @@ public class UserRestController extends BaseController {
     public ApiResult createOrUpdate(@RequestBody User form) {
         ApiResult result = new ApiResult();
         try {
+            Map<String, Object> uMap = new HashMap<>();
+            // 组织
+            if (form.getOrgId() > 0) {
+                Org oForm = orgService.getModel(Org.class, form.getOrgId());
+                if (oForm != null) {
+                    form.setOrgName(oForm.getName());
+                } else {
+                    form.setOrgId(0);
+                    form.setOrgName(null);
+                }
+            }
             // 组织ID为空方可插入
             if (form.getId() != null && form.getId() > 0) {
                 // 组织存在，方可更新
                 if (userService.isExist(User.class, form.getId())) {
-                    form.setDelStatus(0);
-                    result.setData(userService.updateModel(form));
+                    uMap = userService.updateModel(form);
                 } else {
                     result.error().setMsg(ErrorMsg.IS_NULL);
                 }
             } else {
-                result.setData(userService.createModel(form));
+                uMap = userService.createModel(form);
+            }
+            if (ApiResultStatus.SUCCESS.equals(result.getStatus())) {
+                userService.setDefaultOrg(uMap);
+                result.setData(uMap);
             }
         } catch (Exception e) {
             logger.error(e.getMessage());
@@ -142,7 +158,6 @@ public class UserRestController extends BaseController {
             if (userService.isExist(User.class, form.getId())) {
                 // 组织ID为空 或 组织ID不为空且组织存在，方可更新
                 if (orgService.isExist(Org.class, form.getOrgId())) {
-                    form.setDelStatus(0);
                     result.setData(userService.updateModel(form));
                 } else {
                     result.error().setMsg(ErrorMsg.OF_FAIL);
@@ -180,8 +195,7 @@ public class UserRestController extends BaseController {
         try {
             User mResult = userService.getModel(User.class, id);
             if (mResult != null) {
-                mResult.setDelStatus(1);
-                userService.updateModel(mResult);
+                userService.isDeleteModel(mResult);
                 result.success();
             } else {
                 result.error().setMsg(ErrorMsg.IS_NULL);

@@ -4,7 +4,8 @@ package org.geelato.web.platform.m.base.entity;
 import org.geelato.core.meta.annotation.Col;
 import org.geelato.core.meta.annotation.Entity;
 import org.geelato.core.meta.annotation.Title;
-import org.geelato.core.meta.model.entity.BaseEntity;
+
+import org.geelato.core.meta.model.entity.BaseSortableEntity;
 
 /**
  * @author itechgee@126.com
@@ -12,7 +13,7 @@ import org.geelato.core.meta.model.entity.BaseEntity;
  */
 @Entity(name = "platform_tree_node", table = "platform_tree_node")
 @Title(title = "树节点")
-public class TreeNode extends BaseEntity {
+public class TreeNode extends BaseSortableEntity {
 
     private String treeEntity;
     private String treeId;
@@ -21,13 +22,28 @@ public class TreeNode extends BaseEntity {
      */
     private String pid;
     private String type;
-    private String title;
+    private String text;
     private String iconType;
     private String extendEntity;
     private Long extendId;
     private String meta;
     private String flag;
     private String description;
+
+    private long seqNo;
+
+    @Title(title = "次序")
+    @Col(name = "seq_no")
+    @Override
+    public long getSeqNo() {
+        return seqNo;
+    }
+
+    @Override
+    public void setSeqNo(long seqNo) {
+        this.seqNo = seqNo;
+    }
+
 
     @Col(name = "tree_entity", nullable = true)
     @Title(title = "树实体", description = "节点所属树对应的业务实体，例如，对于项目文件树，该实体为项目（platform_project）。")
@@ -59,14 +75,14 @@ public class TreeNode extends BaseEntity {
         this.type = type;
     }
 
-    @Col(name = "title", nullable = false)
+    @Col(name = "text", nullable = false)
     @Title(title = "节点标题")
-    public String getTitle() {
-        return title;
+    public String getText() {
+        return text;
     }
 
-    public void setTitle(String title) {
-        this.title = title;
+    public void setText(String text) {
+        this.text = text;
     }
 
     @Col(name = "icon_type", nullable = true)
