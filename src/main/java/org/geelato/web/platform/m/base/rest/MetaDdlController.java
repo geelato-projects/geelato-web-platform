@@ -13,10 +13,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
 /**
  *
@@ -49,14 +46,24 @@ public class MetaDdlController implements InitializingBean {
      * @param entity 实体名称
      * @return
      */
-    @RequestMapping(value = {"recreate/{entity}"}, method = {RequestMethod.POST, RequestMethod.GET}, produces = MediaTypes.JSON_UTF_8)
+    @RequestMapping(value = {"table/{entity}"}, method = {RequestMethod.POST}, produces = MediaTypes.JSON_UTF_8)
     @ResponseBody
     public ApiMetaResult recreate(@PathVariable("entity") String entity) {
         ApiMetaResult result = new ApiMetaResult();
         dbGenerateDao.createOrUpdateOneTable(entity, false);
         return result;
     }
-
+    /**
+     * 新建更新视图
+     * @return
+     */
+    @RequestMapping(value = {"view/{view}"}, method = {RequestMethod.POST}, produces = MediaTypes.JSON_UTF_8)
+    @ResponseBody
+    public ApiMetaResult recreate(@PathVariable("view") String view, @RequestBody  String sql) {
+        ApiMetaResult result = new ApiMetaResult();
+        dbGenerateDao.createOrUpdateView(view, sql);
+        return result;
+    }
 
     @Override
     public void afterPropertiesSet() throws Exception {
