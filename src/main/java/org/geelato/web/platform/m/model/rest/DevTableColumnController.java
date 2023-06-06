@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -121,6 +122,20 @@ public class DevTableColumnController extends BaseController {
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ErrorMsg.DELETE_FAIL);
+        }
+
+        return result;
+    }
+
+    @RequestMapping(value = "/validate", method = RequestMethod.GET)
+    @ResponseBody
+    public ApiResult<ColumnMeta> validate(String id,String tableId,String name) {
+        ApiResult<ColumnMeta> result = new ApiResult<>();
+        try {
+
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            result.error().setMsg(ErrorMsg.QUERY_FAIL);
         }
 
         return result;

@@ -4,7 +4,6 @@ package org.geelato.web.platform.m.base.entity;
 import org.geelato.core.meta.annotation.Col;
 import org.geelato.core.meta.annotation.Entity;
 import org.geelato.core.meta.annotation.Title;
-
 import org.geelato.core.meta.model.entity.BaseSortableEntity;
 
 /**
@@ -20,7 +19,7 @@ public class TreeNode extends BaseSortableEntity {
     /**
      * 采用字符串格式，解决数字类型太大，在web端展示失真的问题
      */
-    private String pid;
+    private Long pid;
     private String type;
     private String text;
     private String iconType;
@@ -98,11 +97,11 @@ public class TreeNode extends BaseSortableEntity {
 
     @Col(name = "pid", nullable = true)
     @Title(title = "父节点Id")
-    public String getPid() {
+    public Long getPid() {
         return pid;
     }
 
-    public void setPid(String pid) {
+    public void setPid(Long pid) {
         this.pid = pid;
     }
 
