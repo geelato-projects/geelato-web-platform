@@ -101,3 +101,12 @@ ALTER TABLE $.tableName ADD COLUMN $.name $.type
 @if $.defaultValue!=null
   DEFAULT $.defaultValue;
 @/if
+
+
+-- 在数据库中创建修改视图
+-- @sql createOneView
+CREATE OR REPLACE VIEW $.viewName
+    AS
+    $viewSql
+;
+

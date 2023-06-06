@@ -107,6 +107,9 @@ public class BootApplication implements CommandLineRunner, InitializingBean {
         for (String packageName : packageNames) {
             MetaManager.singleInstance().scanAndParse(packageName, false);
         }
+        MetaManager.singleInstance().parseDBMeta(dbGenerateDao.getDao());
+
+
         // 解析脚本：sql、业务规则
         if (this.getClass().getClassLoader() == null || this.getClass().getClassLoader().getResource("//") == null) {
             initFromFatJar(args);
@@ -201,14 +204,4 @@ public class BootApplication implements CommandLineRunner, InitializingBean {
         dbGenerateDao.setDao(dao);
     }
 
-    /**
-     * @param args reset_db:若参数中，带有该字符串，表示需要重置数据库结构、重新初始化数据，一般用于开发
-     */
-    public static void main(String[] args) {
-//        if (args.length == 0) {
-//            args = new String[1];
-//            args[0] = "false";
-//        }
-//        SpringApplication.run(BootApplication.class, args);
-    }
 }

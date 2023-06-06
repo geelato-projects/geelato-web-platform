@@ -6,7 +6,6 @@
         <artifactId>geelato-parent</artifactId>
         <groupId>org.geelato</groupId>
         <version>1.0.2-SNAPSHOT</version>
-        <relativePath>../geelato-parent</relativePath>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
@@ -94,24 +93,11 @@
             <artifactId>shiro-spring</artifactId>
             <version>${shiro.version}</version>
         </dependency>
-        <!--jwt-->
-        <!--<dependency>-->
-            <!--<groupId>com.auth0</groupId>-->
-            <!--<artifactId>java-jwt</artifactId>-->
-            <!--<version>3.19.1</version>-->
-        <!--</dependency>-->
         <dependency>
             <groupId>com.auth0</groupId>
             <artifactId>java-jwt</artifactId>
             <version>${java-jwt.version}</version>
         </dependency>
-        <!--<dependency>-->
-            <!--<groupId>io.jsonwebtoken</groupId>-->
-            <!--<artifactId>jjwt-impl</artifactId>-->
-            <!--<version>0.11.5</version>-->
-            <!--<scope>runtime</scope>-->
-        <!--</dependency>-->
-
         <!--utils.Encodes引入的两个包，待分析是否可以去除-->
         <dependency>
             <groupId>commons-codec</groupId>
@@ -141,33 +127,7 @@
             <version>4.0.1</version>
             <scope>provided</scope>
         </dependency>
-        <!--<dependency>-->
-        <!--<groupId>com.h2database</groupId>-->
-        <!--<artifactId>h2</artifactId>-->
-        <!--<scope>compile</scope>-->
-        <!--</dependency>-->
-        <!--<dependency>-->
-        <!--<groupId>org.hsqldb</groupId>-->
-        <!--<artifactId>hsqldb</artifactId>-->
-        <!--<scope>compile</scope>-->
-        <!--</dependency>-->
-        <!--<dependency>-->
-        <!--<groupId>com.microsoft.sqlserver</groupId>-->
-        <!--<artifactId>mssql-jdbc</artifactId>-->
-        <!--<scope>compile</scope>-->
-        <!--</dependency>-->
 
-        <!--轻量级的规则引擎-->
-        <!--<dependency>-->
-        <!--<groupId>org.jeasy</groupId>-->
-        <!--<artifactId>easy-rules-core</artifactId>-->
-        <!--<version>${easy-rules.version}</version>-->
-        <!--</dependency>-->
-        <!--<dependency>-->
-        <!--<groupId>org.jeasy</groupId>-->
-        <!--<artifactId>easy-rules-mvel</artifactId>-->
-        <!--<version>${easy-rules.version}</version>-->
-        <!--</dependency>-->
         <!--java性能高、内存占用小的序列化工具-->
         <dependency>
             <groupId>de.ruedigermoeller</groupId>
