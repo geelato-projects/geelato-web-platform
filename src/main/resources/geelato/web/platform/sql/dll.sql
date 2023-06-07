@@ -107,6 +107,6 @@ ALTER TABLE $.tableName ADD COLUMN $.name $.type
 -- @sql createOneView
 CREATE OR REPLACE VIEW $.viewName
     AS
-    $viewSql
+    $.viewSql
 ;
 
