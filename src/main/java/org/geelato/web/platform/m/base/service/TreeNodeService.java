@@ -16,7 +16,7 @@ import java.util.Map;
  * @author diabl
  */
 @Component
-public class TreeNodeService extends BaseService {
+public class TreeNodeService extends BaseSortableService {
     @Lazy
     @Autowired
     private RoleTreeNodeMapService roleTreeNodeMapService;
