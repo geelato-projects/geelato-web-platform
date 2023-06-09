@@ -2,7 +2,7 @@ package org.geelato.web.platform.m.base.rest;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.geelato.core.gql.execute.Page;
-import org.geelato.core.mvc.MediaTypes;
+import org.geelato.core.constants.MediaTypes;
 import org.geelato.core.orm.Dao;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;

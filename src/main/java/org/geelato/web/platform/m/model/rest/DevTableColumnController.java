@@ -4,18 +4,18 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
+import org.geelato.core.meta.MetaManager;
 import org.geelato.core.meta.model.field.ColumnMeta;
 import org.geelato.web.platform.m.base.rest.BaseController;
 import org.geelato.web.platform.m.model.service.DevTableColumnService;
 import org.geelato.web.platform.m.security.entity.DataItems;
-import org.geelato.web.platform.m.security.entity.ErrorMsg;
+import org.geelato.core.constants.ApiErrorMsg;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -48,7 +48,7 @@ public class DevTableColumnController extends BaseController {
             result.setDataSize(pageQueryList != null ? pageQueryList.size() : 0);
         } catch (Exception e) {
             logger.error(e.getMessage());
-            result.error().setMsg(ErrorMsg.QUERY_FAIL);
+            result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
         }
 
         return result;
@@ -63,7 +63,7 @@ public class DevTableColumnController extends BaseController {
             return result.setData(devTableColumnService.queryModel(ColumnMeta.class, params));
         } catch (Exception e) {
             logger.error(e.getMessage());
-            result.error().setMsg(ErrorMsg.QUERY_FAIL);
+            result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
         }
 
         return result;
@@ -77,7 +77,7 @@ public class DevTableColumnController extends BaseController {
             return result.setData(devTableColumnService.getModel(ColumnMeta.class, id));
         } catch (Exception e) {
             logger.error(e.getMessage());
-            result.error().setMsg(ErrorMsg.QUERY_FAIL);
+            result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
         }
 
         return result;
@@ -88,20 +88,21 @@ public class DevTableColumnController extends BaseController {
     public ApiResult<Map> createOrUpdate(@RequestBody ColumnMeta form) {
         ApiResult<Map> result = new ApiResult<>();
         try {
+            form.afterSet();
             // ID为空方可插入
             if (form.getId() != null && form.getId() > 0) {
                 // 存在，方可更新
                 if (devTableColumnService.isExist(ColumnMeta.class, form.getId())) {
                     result.setData(devTableColumnService.updateModel(form));
                 } else {
-                    result.error().setMsg(ErrorMsg.IS_NULL);
+                    result.error().setMsg(ApiErrorMsg.IS_NULL);
                 }
             } else {
                 result.setData(devTableColumnService.createModel(form));
             }
         } catch (Exception e) {
             logger.error(e.getMessage());
-            result.error().setMsg(ErrorMsg.OPERATE_FAIL);
+            result.error().setMsg(ApiErrorMsg.OPERATE_FAIL);
         }
 
         return result;
@@ -117,11 +118,28 @@ public class DevTableColumnController extends BaseController {
                 devTableColumnService.isDeleteModel(mResult);
                 result.success();
             } else {
-                result.error().setMsg(ErrorMsg.IS_NULL);
+                result.error().setMsg(ApiErrorMsg.IS_NULL);
             }
         } catch (Exception e) {
             logger.error(e.getMessage());
-            result.error().setMsg(ErrorMsg.DELETE_FAIL);
+            result.error().setMsg(ApiErrorMsg.DELETE_FAIL);
+        }
+
+        return result;
+    }
+
+    @RequestMapping(value = "/queryDefaultMeta", method = RequestMethod.GET)
+    @ResponseBody
+    public ApiResult<List<ColumnMeta>> queryDefaultMeta() {
+        ApiResult<List<ColumnMeta>> result = new ApiResult<>();
+        try {
+            List<ColumnMeta> defaultColumnMetaList = MetaManager.singleInstance().getDefualtColumnMeta();
+            List<ColumnMeta> defaultUniqueColumnMetaList = MetaManager.singleInstance().getDefaultUniqueColumnMeta();
+            defaultColumnMetaList.addAll(defaultUniqueColumnMetaList);
+            return result.setData(defaultColumnMetaList);
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
         }
 
         return result;
@@ -129,13 +147,13 @@ public class DevTableColumnController extends BaseController {
 
     @RequestMapping(value = "/validate", method = RequestMethod.GET)
     @ResponseBody
-    public ApiResult<ColumnMeta> validate(String id,String tableId,String name) {
+    public ApiResult<ColumnMeta> validate(String id, String tableId, String name) {
         ApiResult<ColumnMeta> result = new ApiResult<>();
         try {
 
         } catch (Exception e) {
             logger.error(e.getMessage());
-            result.error().setMsg(ErrorMsg.QUERY_FAIL);
+            result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
         }
 
         return result;

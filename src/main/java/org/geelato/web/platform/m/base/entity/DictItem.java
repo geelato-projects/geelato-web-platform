@@ -1,5 +1,6 @@
 package org.geelato.web.platform.m.base.entity;
 
+import org.geelato.core.constants.ColumnDefault;
 import org.geelato.core.meta.annotation.Col;
 import org.geelato.core.meta.annotation.Entity;
 import org.geelato.core.meta.annotation.Title;
@@ -17,7 +18,7 @@ public class DictItem extends BaseSortableEntity implements EntityEnableAble {
     private String itemCode;
     private String itemText;
     private String dataRemark;
-    private int enableStatus;
+    private int enableStatus = ColumnDefault.ENABLE_STATUS_VALUE;
 
     @Col(name = "dic_id")
     @Title(title = "字典ID")

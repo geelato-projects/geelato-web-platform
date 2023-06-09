@@ -3,7 +3,7 @@ package org.geelato.web.platform.m.base.rest;
 
 import org.geelato.core.api.ApiMetaResult;
 import org.geelato.core.meta.MetaManager;
-import org.geelato.core.mvc.MediaTypes;
+import org.geelato.core.constants.MediaTypes;
 import org.geelato.core.orm.Dao;
 import org.geelato.core.orm.DbGenerateDao;
 import org.geelato.web.platform.m.base.service.RuleService;

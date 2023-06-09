@@ -4,7 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.geelato.core.api.ApiResult;
 import org.geelato.web.platform.m.base.entity.TreeNode;
 import org.geelato.web.platform.m.base.service.TreeNodeService;
-import org.geelato.web.platform.m.security.entity.ErrorMsg;
+import org.geelato.core.constants.ApiErrorMsg;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,7 +36,7 @@ public class TreeNodeController extends BaseController {
             return result.setData(treeNodeService.queryModel(TreeNode.class, params));
         } catch (Exception e) {
             logger.error(e.getMessage());
-            result.error().setMsg(ErrorMsg.QUERY_FAIL);
+            result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
         }
 
         return result;
@@ -52,11 +52,11 @@ public class TreeNodeController extends BaseController {
                 treeNodeService.isDeleteModel(mResult);
                 result.success();
             } else {
-                result.error().setMsg(ErrorMsg.IS_NULL);
+                result.error().setMsg(ApiErrorMsg.IS_NULL);
             }
         } catch (Exception e) {
             logger.error(e.getMessage());
-            result.error().setMsg(ErrorMsg.DELETE_FAIL);
+            result.error().setMsg(ApiErrorMsg.DELETE_FAIL);
         }
 
         return result;

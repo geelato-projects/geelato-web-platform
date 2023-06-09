@@ -1,6 +1,7 @@
 package org.geelato.web.platform.m.security.entity;
 
 
+import org.geelato.core.constants.ColumnDefault;
 import org.geelato.core.meta.annotation.Col;
 import org.geelato.core.meta.annotation.Entity;
 import org.geelato.core.meta.annotation.Title;
@@ -17,7 +18,7 @@ public class Role extends BaseSortableEntity implements EntityEnableAble {
     private String name;
     private String code;
     private String type;
-    private int enableStatus = 1;
+    private int enableStatus  = ColumnDefault.ENABLE_STATUS_VALUE;
     //    private long treeNodeId;
     private String description;
 

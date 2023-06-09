@@ -13,6 +13,7 @@ public class Org extends BaseSortableEntity {
     private String code;
     private long pid;
     private String type;
+    private String category;
     private int status;
     private String description;
 
@@ -44,13 +45,24 @@ public class Org extends BaseSortableEntity {
         this.pid = pid;
     }
 
-    @Title(title = "类型", description = "")
+    @Title(title = "类型", description = "组织类型：department-部门，company-公司")
+    @Col(name = "type")
     public String getType() {
         return type;
     }
 
     public void setType(String type) {
         this.type = type;
+    }
+
+    @Title(title = "类别", description = "组织类别：inside-内部，outside-外部，virtual-虚拟")
+    @Col(name = "category")
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
     }
 
     @Title(title = "状态", description = "0:停用|1:启用")

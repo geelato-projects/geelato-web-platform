@@ -1,8 +1,8 @@
 package org.geelato.web.platform.m.base.service;
 
 import org.geelato.core.meta.model.entity.BaseSortableEntity;
-import org.geelato.web.platform.m.security.entity.Constants;
-import org.geelato.web.platform.m.security.enums.DeleteStatusEnum;
+import org.geelato.core.constants.ColumnDefault;
+import org.geelato.core.enums.DeleteStatusEnum;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
@@ -20,7 +20,7 @@ public class BaseSortableService extends BaseService {
      * @return
      */
     public <T extends BaseSortableEntity> Map createModel(T model) {
-        model.setSeqNo(model.getSeqNo() > 0 ? model.getSeqNo() : Constants.SEQ_NO_DEFAULT);
+        model.setSeqNo(model.getSeqNo() > 0 ? model.getSeqNo() : ColumnDefault.SEQ_NO_VALUE);
         model.setDelStatus(DeleteStatusEnum.NO.getCode());
         return dao.save(model);
     }

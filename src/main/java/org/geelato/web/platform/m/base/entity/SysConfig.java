@@ -1,5 +1,6 @@
 package org.geelato.web.platform.m.base.entity;
 
+import org.geelato.core.constants.ColumnDefault;
 import org.geelato.core.meta.annotation.Col;
 import org.geelato.core.meta.annotation.Entity;
 import org.geelato.core.meta.annotation.Title;
@@ -18,7 +19,7 @@ public class SysConfig extends BaseSortableEntity implements EntityEnableAble {
     private String configName;
     private String configCode;
     private String configValue;
-    private int enableStatus;
+    private int enableStatus = ColumnDefault.ENABLE_STATUS_VALUE;
     private String remark;
 
     @Col(name = "app_id")

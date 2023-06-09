@@ -4,12 +4,13 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
+import org.geelato.core.constants.ApiErrorMsg;
+import org.geelato.core.constants.ColumnDefault;
 import org.geelato.web.platform.m.base.entity.Dict;
 import org.geelato.web.platform.m.base.entity.DictItem;
 import org.geelato.web.platform.m.base.service.DictItemService;
 import org.geelato.web.platform.m.base.service.DictService;
 import org.geelato.web.platform.m.security.entity.DataItems;
-import org.geelato.web.platform.m.security.entity.ErrorMsg;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,8 +30,6 @@ import java.util.Map;
 public class DictItemController extends BaseController {
     private static final String DICT_CODE = "dicCode";
     private static final String DICT_ID = "dictId";
-    private static final String DICT_ITEM_STATUS = "enableStatus";
-    private static final int DICT_ITEM_STATUS_ENABLED = 1;
     private final Logger logger = LoggerFactory.getLogger(DictItemController.class);
     @Autowired
     private DictService dictService;
@@ -56,7 +55,7 @@ public class DictItemController extends BaseController {
             result.setDataSize(pageQueryList != null ? pageQueryList.size() : 0);
         } catch (Exception e) {
             logger.error(e.getMessage());
-            result.error().setMsg(ErrorMsg.QUERY_FAIL);
+            result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
         }
 
         return result;
@@ -71,7 +70,7 @@ public class DictItemController extends BaseController {
             return result.setData(dictItemService.queryModel(DictItem.class, params));
         } catch (Exception e) {
             logger.error(e.getMessage());
-            result.error().setMsg(ErrorMsg.QUERY_FAIL);
+            result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
         }
 
         return result;
@@ -85,7 +84,7 @@ public class DictItemController extends BaseController {
             return result.setData(dictItemService.getModel(DictItem.class, id));
         } catch (Exception e) {
             logger.error(e.getMessage());
-            result.error().setMsg(ErrorMsg.QUERY_FAIL);
+            result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
         }
 
         return result;
@@ -102,14 +101,14 @@ public class DictItemController extends BaseController {
                 if (dictItemService.isExist(DictItem.class, form.getId())) {
                     result.setData(dictItemService.updateModel(form));
                 } else {
-                    result.error().setMsg(ErrorMsg.IS_NULL);
+                    result.error().setMsg(ApiErrorMsg.IS_NULL);
                 }
             } else {
                 result.setData(dictItemService.createModel(form));
             }
         } catch (Exception e) {
             logger.error(e.getMessage());
-            result.error().setMsg(ErrorMsg.OPERATE_FAIL);
+            result.error().setMsg(ApiErrorMsg.OPERATE_FAIL);
         }
 
         return result;
@@ -125,11 +124,11 @@ public class DictItemController extends BaseController {
                 dictItemService.isDeleteModel(mResult);
                 result.success();
             } else {
-                result.error().setMsg(ErrorMsg.IS_NULL);
+                result.error().setMsg(ApiErrorMsg.IS_NULL);
             }
         } catch (Exception e) {
             logger.error(e.getMessage());
-            result.error().setMsg(ErrorMsg.DELETE_FAIL);
+            result.error().setMsg(ApiErrorMsg.DELETE_FAIL);
         }
 
         return result;
@@ -149,13 +148,13 @@ public class DictItemController extends BaseController {
             if (dResult != null && !dResult.isEmpty()) {
                 params.remove(DICT_CODE);
                 params.put(DICT_ID, dResult.get(0).getId());
-                params.put(DICT_ITEM_STATUS, DICT_ITEM_STATUS_ENABLED);
+                params.put(ColumnDefault.ENABLE_STATUS_FIELD, ColumnDefault.ENABLE_STATUS_VALUE);
                 iResult = dictItemService.queryModel(DictItem.class, params);
             }
             result.success().setData(iResult);
         } catch (Exception e) {
             logger.error(e.getMessage());
-            result.error().setMsg(ErrorMsg.DELETE_FAIL);
+            result.error().setMsg(ApiErrorMsg.DELETE_FAIL);
         }
 
         return result;

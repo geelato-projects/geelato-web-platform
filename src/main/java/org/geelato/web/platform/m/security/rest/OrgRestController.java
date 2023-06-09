@@ -6,7 +6,7 @@ import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
 import org.geelato.web.platform.m.base.rest.BaseController;
 import org.geelato.web.platform.m.security.entity.DataItems;
-import org.geelato.web.platform.m.security.entity.ErrorMsg;
+import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.web.platform.m.security.entity.Org;
 import org.geelato.web.platform.m.security.service.OrgService;
 import org.geelato.web.platform.m.security.service.UserService;
@@ -50,7 +50,7 @@ public class OrgRestController extends BaseController {
             result.setDataSize(pageQueryList != null ? pageQueryList.size() : 0);
         } catch (Exception e) {
             logger.error(e.getMessage());
-            result.error().setMsg(ErrorMsg.QUERY_FAIL);
+            result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
         }
 
         return result;
@@ -65,7 +65,7 @@ public class OrgRestController extends BaseController {
             return result.setData(orgService.queryModel(Org.class, params));
         } catch (Exception e) {
             logger.error(e.getMessage());
-            result.error().setMsg(ErrorMsg.QUERY_FAIL);
+            result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
         }
 
         return result;
@@ -79,7 +79,7 @@ public class OrgRestController extends BaseController {
             return result.setData(orgService.getModel(Org.class, id));
         } catch (Exception e) {
             logger.error(e.getMessage());
-            result.error().setMsg(ErrorMsg.QUERY_FAIL);
+            result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
         }
 
         return result;
@@ -96,14 +96,14 @@ public class OrgRestController extends BaseController {
                 if (orgService.isExist(Org.class, form.getId())) {
                     result.setData(orgService.updateModel(form));
                 } else {
-                    result.error().setMsg(ErrorMsg.IS_NULL);
+                    result.error().setMsg(ApiErrorMsg.IS_NULL);
                 }
             } else {
                 result.setData(orgService.createModel(form));
             }
         } catch (Exception e) {
             logger.error(e.getMessage());
-            result.error().setMsg(ErrorMsg.OPERATE_FAIL);
+            result.error().setMsg(ApiErrorMsg.OPERATE_FAIL);
         }
 
         return result;
@@ -119,7 +119,7 @@ public class OrgRestController extends BaseController {
             return result.setData(orgService.createModel(form));
         } catch (Exception e) {
             logger.error(e.getMessage());
-            result.error().setMsg(ErrorMsg.CREATE_FAIL);
+            result.error().setMsg(ApiErrorMsg.CREATE_FAIL);
         }
 
         return result;
@@ -133,11 +133,11 @@ public class OrgRestController extends BaseController {
             if (orgService.isExist(Org.class, form.getId())) {
                 result.setData(orgService.updateModel(form));
             } else {
-                result.error().setMsg(ErrorMsg.IS_NULL);
+                result.error().setMsg(ApiErrorMsg.IS_NULL);
             }
         } catch (Exception e) {
             logger.error(e.getMessage());
-            result.error().setMsg(ErrorMsg.UPDATE_FAIL);
+            result.error().setMsg(ApiErrorMsg.UPDATE_FAIL);
         }
 
         return result;
@@ -152,7 +152,7 @@ public class OrgRestController extends BaseController {
             result.success();
         } catch (Exception e) {
             logger.error(e.getMessage());
-            result.error().setMsg(ErrorMsg.DELETE_FAIL);
+            result.error().setMsg(ApiErrorMsg.DELETE_FAIL);
         }
 
         return result;
@@ -168,11 +168,11 @@ public class OrgRestController extends BaseController {
                 orgService.isDeleteModel(mResult);
                 result.success();
             } else {
-                result.error().setMsg(ErrorMsg.IS_NULL);
+                result.error().setMsg(ApiErrorMsg.IS_NULL);
             }
         } catch (Exception e) {
             logger.error(e.getMessage());
-            result.error().setMsg(ErrorMsg.DELETE_FAIL);
+            result.error().setMsg(ApiErrorMsg.DELETE_FAIL);
         }
 
         return result;

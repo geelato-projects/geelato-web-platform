@@ -3,10 +3,10 @@ package org.geelato.web.platform.m.security.service;
 import org.geelato.web.platform.m.base.entity.TreeNode;
 import org.geelato.web.platform.m.base.service.BaseService;
 import org.geelato.web.platform.m.base.service.TreeNodeService;
-import org.geelato.web.platform.m.security.entity.ErrorMsg;
+import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.web.platform.m.security.entity.Role;
 import org.geelato.web.platform.m.security.entity.RoleTreeNodeMap;
-import org.geelato.web.platform.m.security.enums.DeleteStatusEnum;
+import org.geelato.core.enums.DeleteStatusEnum;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
@@ -31,9 +31,9 @@ public class RoleTreeNodeMapService extends BaseService {
      */
     public Map insertModel(RoleTreeNodeMap model) {
         Role rModel = roleService.getModel(Role.class, model.getRoleId());
-        Assert.notNull(rModel, ErrorMsg.IS_NULL);
+        Assert.notNull(rModel, ApiErrorMsg.IS_NULL);
         TreeNode tModel = treeNodeService.getModel(TreeNode.class, model.getTreeNodeId());
-        Assert.notNull(tModel, ErrorMsg.IS_NULL);
+        Assert.notNull(tModel, ApiErrorMsg.IS_NULL);
         // 构建
         model.setId(null);
         model.setRoleName(rModel.getName());

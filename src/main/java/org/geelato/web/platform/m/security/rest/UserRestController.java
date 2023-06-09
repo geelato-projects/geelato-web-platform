@@ -5,10 +5,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
-import org.geelato.core.api.ApiResultStatus;
+import org.geelato.core.constants.ApiResultStatus;
 import org.geelato.web.platform.m.base.rest.BaseController;
 import org.geelato.web.platform.m.security.entity.DataItems;
-import org.geelato.web.platform.m.security.entity.ErrorMsg;
+import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.web.platform.m.security.entity.Org;
 import org.geelato.web.platform.m.security.entity.User;
 import org.geelato.web.platform.m.security.service.OrgService;
@@ -54,7 +54,7 @@ public class UserRestController extends BaseController {
             result.setDataSize(pageQueryList != null ? pageQueryList.size() : 0);
         } catch (Exception e) {
             logger.error(e.getMessage());
-            result.error().setMsg(ErrorMsg.QUERY_FAIL);
+            result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
         }
 
         return result;
@@ -70,7 +70,7 @@ public class UserRestController extends BaseController {
             return result.setData(userService.queryModel(User.class, params));
         } catch (Exception e) {
             logger.error(e.getMessage());
-            result.error().setMsg(ErrorMsg.QUERY_FAIL);
+            result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
         }
 
         return result;
@@ -84,7 +84,7 @@ public class UserRestController extends BaseController {
             return result.setData(userService.getModel(User.class, id));
         } catch (Exception e) {
             logger.error(e.getMessage());
-            result.error().setMsg(ErrorMsg.QUERY_FAIL);
+            result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
         }
 
         return result;
@@ -112,7 +112,7 @@ public class UserRestController extends BaseController {
                 if (userService.isExist(User.class, form.getId())) {
                     uMap = userService.updateModel(form);
                 } else {
-                    result.error().setMsg(ErrorMsg.IS_NULL);
+                    result.error().setMsg(ApiErrorMsg.IS_NULL);
                 }
             } else {
                 uMap = userService.createModel(form);
@@ -123,7 +123,7 @@ public class UserRestController extends BaseController {
             }
         } catch (Exception e) {
             logger.error(e.getMessage());
-            result.error().setMsg(ErrorMsg.OPERATE_FAIL);
+            result.error().setMsg(ApiErrorMsg.OPERATE_FAIL);
         }
 
         return result;
@@ -140,11 +140,11 @@ public class UserRestController extends BaseController {
             if (orgService.isExist(Org.class, form.getOrgId())) {
                 return result.setData(userService.createModel(form));
             } else {
-                result.error().setMsg(ErrorMsg.OF_FAIL);
+                result.error().setMsg(ApiErrorMsg.OF_FAIL);
             }
         } catch (Exception e) {
             logger.error(e.getMessage());
-            result.error().setMsg(ErrorMsg.CREATE_FAIL);
+            result.error().setMsg(ApiErrorMsg.CREATE_FAIL);
         }
 
         return result;
@@ -160,14 +160,14 @@ public class UserRestController extends BaseController {
                 if (orgService.isExist(Org.class, form.getOrgId())) {
                     result.setData(userService.updateModel(form));
                 } else {
-                    result.error().setMsg(ErrorMsg.OF_FAIL);
+                    result.error().setMsg(ApiErrorMsg.OF_FAIL);
                 }
             } else {
-                result.error().setMsg(ErrorMsg.IS_NULL);
+                result.error().setMsg(ApiErrorMsg.IS_NULL);
             }
         } catch (Exception e) {
             logger.error(e.getMessage());
-            result.error().setMsg(ErrorMsg.UPDATE_FAIL);
+            result.error().setMsg(ApiErrorMsg.UPDATE_FAIL);
         }
 
         return result;
@@ -182,7 +182,7 @@ public class UserRestController extends BaseController {
             result.success();
         } catch (Exception e) {
             logger.error(e.getMessage());
-            result.error().setMsg(ErrorMsg.DELETE_FAIL);
+            result.error().setMsg(ApiErrorMsg.DELETE_FAIL);
         }
 
         return result;
@@ -198,11 +198,11 @@ public class UserRestController extends BaseController {
                 userService.isDeleteModel(mResult);
                 result.success();
             } else {
-                result.error().setMsg(ErrorMsg.IS_NULL);
+                result.error().setMsg(ApiErrorMsg.IS_NULL);
             }
         } catch (Exception e) {
             logger.error(e.getMessage());
-            result.error().setMsg(ErrorMsg.DELETE_FAIL);
+            result.error().setMsg(ApiErrorMsg.DELETE_FAIL);
         }
 
         return result;

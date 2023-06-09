@@ -6,7 +6,7 @@ import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
 import org.geelato.web.platform.m.base.rest.BaseController;
 import org.geelato.web.platform.m.security.entity.DataItems;
-import org.geelato.web.platform.m.security.entity.ErrorMsg;
+import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.web.platform.m.security.entity.Role;
 import org.geelato.web.platform.m.security.service.RoleService;
 import org.slf4j.Logger;
@@ -47,7 +47,7 @@ public class RoleRestController extends BaseController {
             result.setDataSize(pageQueryList != null ? pageQueryList.size() : 0);
         } catch (Exception e) {
             logger.error(e.getMessage());
-            result.error().setMsg(ErrorMsg.QUERY_FAIL);
+            result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
         }
 
         return result;
@@ -62,7 +62,7 @@ public class RoleRestController extends BaseController {
             return result.setData(roleService.queryModel(Role.class, params));
         } catch (Exception e) {
             logger.error(e.getMessage());
-            result.error().setMsg(ErrorMsg.QUERY_FAIL);
+            result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
         }
 
         return result;
@@ -76,7 +76,7 @@ public class RoleRestController extends BaseController {
             return result.setData(roleService.getModel(Role.class, id));
         } catch (Exception e) {
             logger.error(e.getMessage());
-            result.error().setMsg(ErrorMsg.QUERY_FAIL);
+            result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
         }
 
         return result;
@@ -93,14 +93,14 @@ public class RoleRestController extends BaseController {
                 if (roleService.isExist(Role.class, form.getId())) {
                     result.setData(roleService.updateModel(form));
                 } else {
-                    result.error().setMsg(ErrorMsg.IS_NULL);
+                    result.error().setMsg(ApiErrorMsg.IS_NULL);
                 }
             } else {
                 result.setData(roleService.createModel(form));
             }
         } catch (Exception e) {
             logger.error(e.getMessage());
-            result.error().setMsg(ErrorMsg.OPERATE_FAIL);
+            result.error().setMsg(ApiErrorMsg.OPERATE_FAIL);
         }
 
         return result;
@@ -116,11 +116,11 @@ public class RoleRestController extends BaseController {
                 roleService.isDeleteModel(mResult);
                 result.success();
             } else {
-                result.error().setMsg(ErrorMsg.IS_NULL);
+                result.error().setMsg(ApiErrorMsg.IS_NULL);
             }
         } catch (Exception e) {
             logger.error(e.getMessage());
-            result.error().setMsg(ErrorMsg.DELETE_FAIL);
+            result.error().setMsg(ApiErrorMsg.DELETE_FAIL);
         }
 
         return result;

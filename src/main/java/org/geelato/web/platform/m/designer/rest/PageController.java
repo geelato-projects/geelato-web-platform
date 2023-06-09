@@ -1,7 +1,7 @@
 package org.geelato.web.platform.m.designer.rest;
 
 import org.geelato.core.api.ApiMetaResult;
-import org.geelato.core.mvc.MediaTypes;
+import org.geelato.core.constants.MediaTypes;
 import org.geelato.core.orm.Dao;
 import org.geelato.web.platform.m.designer.entity.AppPage;
 import org.slf4j.Logger;

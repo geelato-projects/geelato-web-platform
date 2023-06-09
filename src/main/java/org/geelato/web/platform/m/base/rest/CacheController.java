@@ -8,7 +8,7 @@ import net.oschina.j2cache.J2Cache;
 import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.meta.MetaManager;
-import org.geelato.core.mvc.MediaTypes;
+import org.geelato.core.constants.MediaTypes;
 import org.geelato.core.orm.Dao;
 import org.geelato.web.platform.m.base.entity.CacheItemMeta;
 import org.slf4j.Logger;

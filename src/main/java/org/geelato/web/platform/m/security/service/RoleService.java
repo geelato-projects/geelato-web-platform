@@ -2,7 +2,7 @@ package org.geelato.web.platform.m.security.service;
 
 import org.geelato.web.platform.m.base.service.BaseSortableService;
 import org.geelato.web.platform.m.security.entity.*;
-import org.geelato.web.platform.m.security.enums.DeleteStatusEnum;
+import org.geelato.core.enums.DeleteStatusEnum;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;

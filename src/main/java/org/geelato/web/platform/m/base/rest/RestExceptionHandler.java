@@ -2,7 +2,7 @@ package org.geelato.web.platform.m.base.rest;
 
 import com.alibaba.fastjson.JSONObject;
 import jakarta.validation.ConstraintViolationException;
-import org.geelato.core.mvc.MediaTypes;
+import org.geelato.core.constants.MediaTypes;
 import org.geelato.utils.BeanValidators;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpHeaders;

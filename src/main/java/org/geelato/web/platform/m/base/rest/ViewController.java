@@ -2,7 +2,7 @@ package org.geelato.web.platform.m.base.rest;
 
 import org.geelato.core.api.ApiMetaResult;
 import org.geelato.core.api.ApiPagedResult;
-import org.geelato.core.mvc.MediaTypes;
+import org.geelato.core.constants.MediaTypes;
 import org.geelato.web.platform.m.base.service.ViewService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
