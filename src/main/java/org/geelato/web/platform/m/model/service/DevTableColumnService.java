@@ -2,10 +2,10 @@ package org.geelato.web.platform.m.model.service;
 
 import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.constants.ApiErrorMsg;
+import org.geelato.core.enums.TableTypeEnum;
 import org.geelato.core.meta.MetaManager;
 import org.geelato.core.meta.model.entity.TableMeta;
 import org.geelato.core.meta.model.field.ColumnMeta;
-import org.geelato.core.enums.TableTypeEnum;
 import org.geelato.web.platform.m.base.service.BaseSortableService;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
@@ -21,7 +21,7 @@ public class DevTableColumnService extends BaseSortableService {
 
     public void createDefaultColumn(TableMeta tableMeta) {
         Assert.notNull(tableMeta, ApiErrorMsg.IS_NULL);
-        if (tableMeta.getId() <= 0 || Strings.isEmpty(tableMeta.getEntityName())) {
+        if (Strings.isBlank(tableMeta.getId()) || Strings.isBlank(tableMeta.getEntityName())) {
             throw new RuntimeException(ApiErrorMsg.ID_IS_NULL);
         }
         if (TableTypeEnum.TABLE.getCode().equals(tableMeta.getTableType())) {

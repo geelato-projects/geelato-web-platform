@@ -70,7 +70,7 @@ public class DevTableForeignController extends BaseController {
 
     @RequestMapping(value = "/get/{id}", method = RequestMethod.GET)
     @ResponseBody
-    public ApiResult<TableForeign> get(@PathVariable(required = true) long id) {
+    public ApiResult<TableForeign> get(@PathVariable(required = true) String id) {
         ApiResult<TableForeign> result = new ApiResult<>();
         try {
             return result.setData(devTableForeignService.getModel(TableForeign.class, id));
@@ -88,7 +88,7 @@ public class DevTableForeignController extends BaseController {
         ApiResult<Map> result = new ApiResult<>();
         try {
             // ID为空方可插入
-            if (form.getId() != null && form.getId() > 0) {
+            if (Strings.isNotBlank(form.getId())) {
                 // 存在，方可更新
                 if (devTableForeignService.isExist(TableForeign.class, form.getId())) {
                     result.setData(devTableForeignService.updateModel(form));
@@ -108,7 +108,7 @@ public class DevTableForeignController extends BaseController {
 
     @RequestMapping(value = "/isDelete/{id}", method = RequestMethod.DELETE)
     @ResponseBody
-    public ApiResult isDelete(@PathVariable(required = true) long id) {
+    public ApiResult isDelete(@PathVariable(required = true) String id) {
         ApiResult result = new ApiResult();
         try {
             TableForeign mResult = devTableForeignService.getModel(TableForeign.class, id);

@@ -14,9 +14,9 @@ import org.geelato.core.meta.model.entity.BaseEntity;
 @Entity(name = "platform_role_r_user")
 @Title(title = "角色用户关系表")
 public class RoleUserMap extends BaseEntity {
-    private Long roleId;
+    private String roleId;
 
-    private Long userId;
+    private String userId;
 
     private String userName;
     private String roleName;
@@ -24,22 +24,22 @@ public class RoleUserMap extends BaseEntity {
     @Title(title = "角色ID")
     @Col(name = "role_id", refTables = "platform_role", refColName = "platform_role.id")
     @ForeignKey(fTable = Role.class)
-    public Long getRoleId() {
+    public String getRoleId() {
         return roleId;
     }
 
-    public void setRoleId(Long roleId) {
+    public void setRoleId(String roleId) {
         this.roleId = roleId;
     }
 
     @Title(title = "用户ID")
     @Col(name = "user_id", refTables = "platform_user", refColName = "platform_user.id")
     @ForeignKey(fTable = User.class)
-    public Long getUserId() {
+    public String getUserId() {
         return userId;
     }
 
-    public void setUserId(Long userId) {
+    public void setUserId(String userId) {
         this.userId = userId;
     }
 

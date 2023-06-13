@@ -13,7 +13,7 @@ import org.geelato.core.meta.model.entity.BaseSortableEntity;
 @Title(title = "页面片段模板")
 public class AppSegmentTemplate extends BaseSortableEntity {
 
-    private Long extendId;
+    private String extendId;
     private String type;
     private String title;
     private String code;
@@ -25,11 +25,11 @@ public class AppSegmentTemplate extends BaseSortableEntity {
 
     @Col(name = "extend_id", nullable = true)
     @Title(title = "扩展信息", description = "扩展id，如对应的叶子节点id")
-    public Long getExtendId() {
+    public String getExtendId() {
         return extendId;
     }
 
-    public void setExtendId(Long extendId) {
+    public void setExtendId(String extendId) {
         this.extendId = extendId;
     }
 

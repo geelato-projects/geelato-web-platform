@@ -43,7 +43,7 @@ public class OrgUserMapService extends BaseService {
             uModel.setOrgName(oModel.getName());
             dao.save(uModel);
         } else if (oModel.getId().equals(uModel.getOrgId())) {
-            uModel.setOrgId(0);
+            uModel.setOrgId(null);
             uModel.setOrgName(null);
             dao.save(uModel);
         }
@@ -70,7 +70,7 @@ public class OrgUserMapService extends BaseService {
         List<User> uList = userService.queryModel(User.class, params);
         if (uList != null) {
             for (User uModel : uList) {
-                uModel.setOrgId(0);
+                uModel.setOrgId(null);
                 uModel.setOrgName(null);
                 dao.save(uModel);
             }

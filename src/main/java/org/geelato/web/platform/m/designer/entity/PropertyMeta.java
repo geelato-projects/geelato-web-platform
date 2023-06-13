@@ -12,7 +12,7 @@ import org.geelato.core.meta.model.entity.BaseSortableEntity;
 //@Title(title = "属性元数据")
 public class PropertyMeta extends BaseSortableEntity {
 
-    private Long componentMetaId;
+    private String componentMetaId;
     private String title;
     private String ComponentName;
     private String type;
@@ -27,11 +27,11 @@ public class PropertyMeta extends BaseSortableEntity {
     private String description;
 
     @Title(title="所属组件",description = "所属组件元数据Id")
-    public Long getComponentMetaId() {
+    public String getComponentMetaId() {
         return componentMetaId;
     }
 
-    public void setComponentMetaId(Long componentMetaId) {
+    public void setComponentMetaId(String componentMetaId) {
         this.componentMetaId = componentMetaId;
     }
 

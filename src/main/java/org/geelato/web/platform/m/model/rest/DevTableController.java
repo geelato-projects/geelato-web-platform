@@ -75,7 +75,7 @@ public class DevTableController extends BaseController {
 
     @RequestMapping(value = "/get/{id}", method = RequestMethod.GET)
     @ResponseBody
-    public ApiResult<TableMeta> get(@PathVariable(required = true) long id) {
+    public ApiResult<TableMeta> get(@PathVariable(required = true) String id) {
         ApiResult<TableMeta> result = new ApiResult<>();
         try {
             return result.setData(devTableService.getModel(TableMeta.class, id));
@@ -93,7 +93,7 @@ public class DevTableController extends BaseController {
         ApiResult<Map> result = new ApiResult<>();
         try {
             // ID为空方可插入
-            if (form.getId() != null && form.getId() > 0) {
+            if (Strings.isNotBlank(form.getId())) {
                 // 存在，方可更新
                 if (devTableService.isExist(TableMeta.class, form.getId())) {
                     result.setData(devTableService.updateModel(form));
@@ -102,7 +102,7 @@ public class DevTableController extends BaseController {
                 }
             } else {
                 Map<String, Object> resultMap = devTableService.createModel(form);
-                form.setId(Long.parseLong(resultMap.get("id").toString()));
+                form.setId(resultMap.get("id").toString());
                 result.setData(resultMap);
             }
             // 刷新实体缓存
@@ -120,7 +120,7 @@ public class DevTableController extends BaseController {
 
     @RequestMapping(value = "/isDelete/{id}", method = RequestMethod.DELETE)
     @ResponseBody
-    public ApiResult isDelete(@PathVariable(required = true) long id) {
+    public ApiResult isDelete(@PathVariable(required = true) String id) {
         ApiResult result = new ApiResult();
         try {
             TableMeta mResult = devTableService.getModel(TableMeta.class, id);

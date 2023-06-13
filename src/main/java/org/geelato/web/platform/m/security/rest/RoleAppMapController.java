@@ -84,7 +84,7 @@ public class RoleAppMapController extends BaseController {
 
     @RequestMapping(value = "/isDelete/{id}", method = RequestMethod.DELETE)
     @ResponseBody
-    public ApiResult isDelete(@PathVariable(required = true) long id) {
+    public ApiResult isDelete(@PathVariable(required = true) String id) {
         ApiResult result = new ApiResult();
         try {
             RoleAppMap rResult = roleAppMapService.getModel(RoleAppMap.class, id);

@@ -1,11 +1,12 @@
 package org.geelato.web.platform.m.security.service;
 
+import org.apache.logging.log4j.util.Strings;
+import org.geelato.core.enums.DeleteStatusEnum;
+import org.geelato.web.platform.enums.IsDefaultOrgEnum;
 import org.geelato.web.platform.m.base.service.BaseSortableService;
 import org.geelato.web.platform.m.security.entity.OrgUserMap;
 import org.geelato.web.platform.m.security.entity.RoleUserMap;
 import org.geelato.web.platform.m.security.entity.User;
-import org.geelato.core.enums.DeleteStatusEnum;
-import org.geelato.web.platform.enums.IsDefaultOrgEnum;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
@@ -75,10 +76,10 @@ public class UserService extends BaseSortableService {
                 }
             }
         }
-        long orgId = Long.valueOf(String.valueOf(model.get("orgId"))).longValue();
-        if (!isExit && orgId > 0) {
+        String orgId = String.valueOf(model.get("orgId"));
+        if (!isExit && Strings.isNotBlank(orgId)) {
             OrgUserMap oModel = new OrgUserMap();
-            oModel.setUserId((Long) model.get("id"));
+            oModel.setUserId((String) model.get("id"));
             oModel.setUserName((String) model.get("name"));
             oModel.setOrgId(orgId);
             oModel.setOrgName((String) model.get("orgName"));

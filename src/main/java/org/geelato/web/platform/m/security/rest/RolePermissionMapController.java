@@ -84,7 +84,7 @@ public class RolePermissionMapController extends BaseController {
 
     @RequestMapping(value = "/isDelete/{id}", method = RequestMethod.DELETE)
     @ResponseBody
-    public ApiResult isDelete(@PathVariable(required = true) long id) {
+    public ApiResult isDelete(@PathVariable(required = true) String id) {
         ApiResult result = new ApiResult();
         try {
             RolePermissionMap rResult = rolePermissionMapService.getModel(RolePermissionMap.class, id);

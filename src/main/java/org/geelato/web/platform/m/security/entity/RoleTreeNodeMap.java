@@ -15,9 +15,9 @@ import org.geelato.web.platform.m.base.entity.TreeNode;
 @Entity(name = "platform_role_r_tree_node")
 @Title(title = "角色菜单关系表")
 public class RoleTreeNodeMap extends BaseEntity {
-    private Long roleId;
+    private String roleId;
 
-    private Long treeNodeId;
+    private String treeNodeId;
 
     private String treeNodeText;
     private String roleName;
@@ -37,22 +37,22 @@ public class RoleTreeNodeMap extends BaseEntity {
     @Title(title = "角色ID")
     @Col(name = "role_id", refTables = "platform_role", refColName = "platform_role.id")
     @ForeignKey(fTable = Role.class)
-    public Long getRoleId() {
+    public String getRoleId() {
         return roleId;
     }
 
-    public void setRoleId(Long roleId) {
+    public void setRoleId(String roleId) {
         this.roleId = roleId;
     }
 
     @Title(title = "菜单ID")
     @Col(name = "tree_node_id", refTables = "platform_tree_node", refColName = "platform_tree_node.id")
     @ForeignKey(fTable = TreeNode.class)
-    public Long getTreeNodeId() {
+    public String getTreeNodeId() {
         return treeNodeId;
     }
 
-    public void setTreeNodeId(Long treeNodeId) {
+    public void setTreeNodeId(String treeNodeId) {
         this.treeNodeId = treeNodeId;
     }
 

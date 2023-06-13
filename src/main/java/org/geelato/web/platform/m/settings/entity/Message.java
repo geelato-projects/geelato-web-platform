@@ -8,7 +8,7 @@ import org.geelato.core.meta.model.entity.BaseEntity;
 import java.util.Date;
 
 /**
- *  平台消息
+ * 平台消息
  */
 @Entity(name = "platform_message")
 @Title(title = "消息")
@@ -16,8 +16,8 @@ public class Message extends BaseEntity {
 
     private String title;
     private String content;
-    private Long receiver;
-    private Long sender;
+    private String receiver;
+    private String sender;
     private Date sendTime;
     private String sendMethod;
 
@@ -43,21 +43,21 @@ public class Message extends BaseEntity {
 
     @Title(title = "接收者")
     @Col(name = "receiver")
-    public Long getReceiver() {
+    public String getReceiver() {
         return receiver;
     }
 
-    public void setReceiver(Long receiver) {
+    public void setReceiver(String receiver) {
         this.receiver = receiver;
     }
 
     @Title(title = "发送者")
     @Col(name = "sender")
-    public Long getSender() {
+    public String getSender() {
         return sender;
     }
 
-    public void setSender(Long sender) {
+    public void setSender(String sender) {
         this.sender = sender;
     }
 

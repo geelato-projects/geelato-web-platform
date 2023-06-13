@@ -19,12 +19,12 @@ public class TreeNode extends BaseSortableEntity {
     /**
      * 采用字符串格式，解决数字类型太大，在web端展示失真的问题
      */
-    private Long pid;
+    private String pid;
     private String type;
     private String text;
     private String iconType;
     private String extendEntity;
-    private Long extendId;
+    private String extendId;
     private String meta;
     private String flag;
     private String description;
@@ -97,11 +97,11 @@ public class TreeNode extends BaseSortableEntity {
 
     @Col(name = "pid", nullable = true)
     @Title(title = "父节点Id")
-    public Long getPid() {
+    public String getPid() {
         return pid;
     }
 
-    public void setPid(Long pid) {
+    public void setPid(String pid) {
         this.pid = pid;
     }
 
@@ -118,11 +118,11 @@ public class TreeNode extends BaseSortableEntity {
 
     @Col(name = "extend_id", nullable = true)
     @Title(title = "扩展实体ID", description = "扩展实体id，如叶子节点对应的文件id、表单id")
-    public Long getExtendId() {
+    public String getExtendId() {
         return extendId;
     }
 
-    public void setExtendId(Long extendId) {
+    public void setExtendId(String extendId) {
         this.extendId = extendId;
     }
 

@@ -18,7 +18,7 @@ public class Dict extends BaseSortableEntity implements EntityEnableAble {
     private String dicName;
     private int enableStatus = ColumnDefault.ENABLE_STATUS_VALUE;
     private String tenantCode;
-    private Long appId;
+    private String appId;
     private String dicRemark;
 
     @Col(name = "dic_code")
@@ -53,11 +53,11 @@ public class Dict extends BaseSortableEntity implements EntityEnableAble {
 
     @Title(title = "应用Id")
     @Col(name = "app_id")
-    public Long getAppId() {
+    public String getAppId() {
         return appId;
     }
 
-    public void setAppId(Long appId) {
+    public void setAppId(String appId) {
         this.appId = appId;
     }
 

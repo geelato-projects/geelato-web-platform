@@ -11,7 +11,7 @@ import org.geelato.core.meta.model.entity.BaseSortableEntity;
 public class Org extends BaseSortableEntity {
     private String name;
     private String code;
-    private long pid;
+    private String pid;
     private String type;
     private String category;
     private int status;
@@ -37,11 +37,11 @@ public class Org extends BaseSortableEntity {
     }
 
     @Title(title = "上级组织")
-    public long getPid() {
+    public String getPid() {
         return pid;
     }
 
-    public void setPid(long pid) {
+    public void setPid(String pid) {
         this.pid = pid;
     }
 

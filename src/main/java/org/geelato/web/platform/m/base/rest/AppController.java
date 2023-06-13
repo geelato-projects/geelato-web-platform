@@ -44,7 +44,7 @@ public class AppController extends BaseController {
 
     @RequestMapping(value = "/isDelete/{id}", method = RequestMethod.DELETE)
     @ResponseBody
-    public ApiResult<App> isDelete(@PathVariable(required = true) long id) {
+    public ApiResult<App> isDelete(@PathVariable(required = true) String id) {
         ApiResult<App> result = new ApiResult<>();
         try {
             App mResult = appService.getModel(App.class, id);

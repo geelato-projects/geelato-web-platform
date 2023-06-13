@@ -49,7 +49,7 @@ public class OrgService extends BaseSortableService {
         List<User> uList = userService.queryModel(User.class, params);
         if (oList != null) {
             for (User uModel : uList) {
-                uModel.setOrgId(0);
+                uModel.setOrgId(null);
                 uModel.setOrgName(null);
                 dao.save(uModel);
             }

@@ -1,8 +1,9 @@
 package org.geelato.web.platform.m.base.service;
 
+import org.apache.logging.log4j.util.Strings;
+import org.geelato.core.enums.DeleteStatusEnum;
 import org.geelato.core.meta.model.entity.BaseEntity;
 import org.geelato.core.orm.Dao;
-import org.geelato.core.enums.DeleteStatusEnum;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
@@ -54,7 +55,7 @@ public class BaseService {
      * @param <T>
      * @return
      */
-    public <T> T getModel(Class<T> entity, long id) {
+    public <T> T getModel(Class<T> entity, String id) {
         return dao.queryForObject(entity, id);
     }
 
@@ -99,7 +100,7 @@ public class BaseService {
      * @param entity 实体
      * @param id     实体id
      */
-    public void deleteModel(Class entity, long id) {
+    public void deleteModel(Class entity, String id) {
         dao.delete(entity, "id", id);
     }
 
@@ -110,8 +111,8 @@ public class BaseService {
      * @param id     实体id
      * @return
      */
-    public boolean isExist(Class entity, long id) {
-        if (id > 0) {
+    public boolean isExist(Class entity, String id) {
+        if (Strings.isNotBlank(id)) {
             return dao.queryForObject(entity, id) != null;
         }
         return false;

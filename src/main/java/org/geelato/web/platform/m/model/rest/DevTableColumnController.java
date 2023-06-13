@@ -72,7 +72,7 @@ public class DevTableColumnController extends BaseController {
 
     @RequestMapping(value = "/get/{id}", method = RequestMethod.GET)
     @ResponseBody
-    public ApiResult<ColumnMeta> get(@PathVariable(required = true) long id) {
+    public ApiResult<ColumnMeta> get(@PathVariable(required = true) String id) {
         ApiResult<ColumnMeta> result = new ApiResult<>();
         try {
             return result.setData(devTableColumnService.getModel(ColumnMeta.class, id));
@@ -91,7 +91,7 @@ public class DevTableColumnController extends BaseController {
         try {
             form.afterSet();
             // ID为空方可插入
-            if (form.getId() != null && form.getId() > 0) {
+            if (Strings.isNotBlank(form.getId())) {
                 // 存在，方可更新
                 if (devTableColumnService.isExist(ColumnMeta.class, form.getId())) {
                     result.setData(devTableColumnService.updateModel(form));
@@ -115,7 +115,7 @@ public class DevTableColumnController extends BaseController {
 
     @RequestMapping(value = "/isDelete/{id}", method = RequestMethod.DELETE)
     @ResponseBody
-    public ApiResult isDelete(@PathVariable(required = true) long id) {
+    public ApiResult isDelete(@PathVariable(required = true) String id) {
         ApiResult result = new ApiResult();
         try {
             ColumnMeta mResult = devTableColumnService.getModel(ColumnMeta.class, id);

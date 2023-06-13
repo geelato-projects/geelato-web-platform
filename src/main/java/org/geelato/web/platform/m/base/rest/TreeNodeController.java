@@ -44,7 +44,7 @@ public class TreeNodeController extends BaseController {
 
     @RequestMapping(value = "/isDelete/{id}", method = RequestMethod.DELETE)
     @ResponseBody
-    public ApiResult<TreeNode> isDelete(@PathVariable(required = true) long id) {
+    public ApiResult<TreeNode> isDelete(@PathVariable(required = true) String id) {
         ApiResult<TreeNode> result = new ApiResult<>();
         try {
             TreeNode mResult = treeNodeService.getModel(TreeNode.class, id);

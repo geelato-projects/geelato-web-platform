@@ -16,7 +16,7 @@ public class MenuItem extends BaseSortableEntity implements EntityTreeAble {
     private String linkType;
     private String href;
     private String pageCode;
-    private Long treeNodeId;
+    private String treeNodeId;
 
     @Title(title = "标题")
     @Col(name = "title", nullable = false)
@@ -82,12 +82,12 @@ public class MenuItem extends BaseSortableEntity implements EntityTreeAble {
     @Title(title = "树节点id")
     @Col(name = "tree_node_id")
     @Override
-    public Long getTreeNodeId() {
+    public String getTreeNodeId() {
         return treeNodeId;
     }
 
     @Override
-    public Long setTreeNodeId(Long treeNodeId) {
+    public String setTreeNodeId(String treeNodeId) {
         return this.treeNodeId = treeNodeId;
     }
 }

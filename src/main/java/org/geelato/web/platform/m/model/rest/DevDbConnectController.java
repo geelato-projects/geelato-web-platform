@@ -71,7 +71,7 @@ public class DevDbConnectController extends BaseController {
 
     @RequestMapping(value = "/get/{id}", method = RequestMethod.GET)
     @ResponseBody
-    public ApiResult<ConnectMeta> get(@PathVariable(required = true) long id) {
+    public ApiResult<ConnectMeta> get(@PathVariable(required = true) String id) {
         ApiResult<ConnectMeta> result = new ApiResult<>();
         try {
             return result.setData(devDbConnectService.getModel(ConnectMeta.class, id));
@@ -89,7 +89,7 @@ public class DevDbConnectController extends BaseController {
         ApiResult<Map> result = new ApiResult<>();
         try {
             // ID为空方可插入
-            if (form.getId() != null && form.getId() > 0) {
+            if (Strings.isNotBlank(form.getId())) {
                 // 存在，方可更新
                 if (devDbConnectService.isExist(ConnectMeta.class, form.getId())) {
                     form.afterSet();
@@ -110,7 +110,7 @@ public class DevDbConnectController extends BaseController {
 
     @RequestMapping(value = "/isDelete/{id}", method = RequestMethod.DELETE)
     @ResponseBody
-    public ApiResult isDelete(@PathVariable(required = true) long id) {
+    public ApiResult isDelete(@PathVariable(required = true) String id) {
         ApiResult result = new ApiResult();
         try {
             ConnectMeta mResult = devDbConnectService.getModel(ConnectMeta.class, id);

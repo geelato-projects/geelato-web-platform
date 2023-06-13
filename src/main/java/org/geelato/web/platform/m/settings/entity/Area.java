@@ -11,7 +11,7 @@ import org.geelato.core.meta.model.entity.BaseSortableEntity;
 public class Area extends BaseSortableEntity {
     private String name;
     private String code;
-    private Long cityId;
+    private String cityId;
     private String description;
 
     @Title(title = "编码")
@@ -35,11 +35,11 @@ public class Area extends BaseSortableEntity {
 
     @Title(title = "省份")
     @Col(name = "city_id", nullable = false)
-    public Long getProvinceId() {
+    public String getProvinceId() {
         return cityId;
     }
 
-    public void setProvinceId(Long cityId) {
+    public void setProvinceId(String cityId) {
         this.cityId = cityId;
     }
 

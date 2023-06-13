@@ -72,7 +72,7 @@ public class OrgUserMapController extends BaseController {
 
     @RequestMapping(value = "/get/{id}", method = RequestMethod.GET)
     @ResponseBody
-    public ApiResult get(@PathVariable(required = true) long id) {
+    public ApiResult get(@PathVariable(required = true) String id) {
         ApiResult result = new ApiResult();
         try {
             return result.setData(orgUserMapService.getModel(OrgUserMap.class, id));
@@ -108,7 +108,7 @@ public class OrgUserMapController extends BaseController {
 
     @RequestMapping(value = "/isDelete/{id}", method = RequestMethod.DELETE)
     @ResponseBody
-    public ApiResult isDelete(@PathVariable(required = true) long id) {
+    public ApiResult isDelete(@PathVariable(required = true) String id) {
         ApiResult result = new ApiResult();
         try {
             if (!orgUserMapService.isExist(User.class, "orgId", id)) {

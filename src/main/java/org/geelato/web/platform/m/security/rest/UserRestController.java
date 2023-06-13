@@ -5,10 +5,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
+import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.constants.ApiResultStatus;
 import org.geelato.web.platform.m.base.rest.BaseController;
 import org.geelato.web.platform.m.security.entity.DataItems;
-import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.web.platform.m.security.entity.Org;
 import org.geelato.web.platform.m.security.entity.User;
 import org.geelato.web.platform.m.security.service.OrgService;
@@ -78,7 +78,7 @@ public class UserRestController extends BaseController {
 
     @RequestMapping(value = "/get/{id}", method = RequestMethod.GET)
     @ResponseBody
-    public ApiResult get(@PathVariable(required = true) long id) {
+    public ApiResult get(@PathVariable(required = true) String id) {
         ApiResult result = new ApiResult();
         try {
             return result.setData(userService.getModel(User.class, id));
@@ -97,17 +97,17 @@ public class UserRestController extends BaseController {
         try {
             Map<String, Object> uMap = new HashMap<>();
             // 组织
-            if (form.getOrgId() > 0) {
+            if (Strings.isNotBlank(form.getOrgId())) {
                 Org oForm = orgService.getModel(Org.class, form.getOrgId());
                 if (oForm != null) {
                     form.setOrgName(oForm.getName());
                 } else {
-                    form.setOrgId(0);
+                    form.setOrgId(null);
                     form.setOrgName(null);
                 }
             }
             // 组织ID为空方可插入
-            if (form.getId() != null && form.getId() > 0) {
+            if (Strings.isNotBlank(form.getId())) {
                 // 组织存在，方可更新
                 if (userService.isExist(User.class, form.getId())) {
                     uMap = userService.updateModel(form);
@@ -175,7 +175,7 @@ public class UserRestController extends BaseController {
 
     @RequestMapping(value = "/delete/{id}", method = RequestMethod.DELETE)
     @ResponseBody
-    public ApiResult delete(@PathVariable(required = true) long id) {
+    public ApiResult delete(@PathVariable(required = true) String id) {
         ApiResult result = new ApiResult();
         try {
             userService.deleteModel(User.class, id);
@@ -190,7 +190,7 @@ public class UserRestController extends BaseController {
 
     @RequestMapping(value = "/isDelete/{id}", method = RequestMethod.DELETE)
     @ResponseBody
-    public ApiResult isDelete(@PathVariable(required = true) long id) {
+    public ApiResult isDelete(@PathVariable(required = true) String id) {
         ApiResult result = new ApiResult();
         try {
             User mResult = userService.getModel(User.class, id);

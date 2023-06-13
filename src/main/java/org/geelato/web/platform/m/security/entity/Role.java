@@ -19,7 +19,7 @@ public class Role extends BaseSortableEntity implements EntityEnableAble {
     private String code;
     private String type;
     private int enableStatus  = ColumnDefault.ENABLE_STATUS_VALUE;
-    //    private long treeNodeId;
+    //    private String treeNodeId;
     private String description;
 
     @Title(title = "编码")

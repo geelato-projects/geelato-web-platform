@@ -16,7 +16,7 @@ public class User extends BaseSortableEntity {
     private String name;
     private String loginName;
     private int sex;
-    private long orgId;
+    private String orgId;
     private String password;
     private String salt;
     private String avatar;
@@ -36,7 +36,7 @@ public class User extends BaseSortableEntity {
     public User() {
     }
 
-    public User(Long id) {
+    public User(String id) {
         this.setId(id);
     }
 
@@ -62,11 +62,11 @@ public class User extends BaseSortableEntity {
 
     @Title(title = "组织")
     @Col(name = "org_id", refTables = "platform_org_r_user,platform_org", refColName = "platform_org.id")
-    public long getOrgId() {
+    public String getOrgId() {
         return orgId;
     }
 
-    public void setOrgId(long orgId) {
+    public void setOrgId(String orgId) {
         this.orgId = orgId;
     }
 

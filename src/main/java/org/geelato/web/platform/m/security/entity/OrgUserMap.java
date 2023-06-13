@@ -14,10 +14,10 @@ import org.geelato.core.meta.model.entity.BaseEntity;
 @Entity(name = "platform_org_r_user")
 @Title(title = "组织用户关系表")
 public class OrgUserMap extends BaseEntity {
-    private Long orgId;
+    private String orgId;
     private String orgName;
 
-    private Long userId;
+    private String userId;
     private String userName;
 
     //1-默认组织 0-兼职
@@ -26,11 +26,11 @@ public class OrgUserMap extends BaseEntity {
     @Title(title = "组织ID")
     @Col(name = "org_id")
     @ForeignKey(fTable = Org.class)
-    public Long getOrgId() {
+    public String getOrgId() {
         return orgId;
     }
 
-    public void setOrgId(Long orgId) {
+    public void setOrgId(String orgId) {
         this.orgId = orgId;
     }
 
@@ -48,11 +48,11 @@ public class OrgUserMap extends BaseEntity {
     @Title(title = "用户ID")
     @Col(name = "user_id")
     @ForeignKey(fTable = User.class)
-    public Long getUserId() {
+    public String getUserId() {
         return userId;
     }
 
-    public void setUserId(Long userId) {
+    public void setUserId(String userId) {
         this.userId = userId;
     }
 

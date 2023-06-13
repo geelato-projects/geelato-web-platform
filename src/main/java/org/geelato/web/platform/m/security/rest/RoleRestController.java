@@ -70,7 +70,7 @@ public class RoleRestController extends BaseController {
 
     @RequestMapping(value = "/get/{id}", method = RequestMethod.GET)
     @ResponseBody
-    public ApiResult get(@PathVariable(required = true) long id) {
+    public ApiResult get(@PathVariable(required = true) String id) {
         ApiResult result = new ApiResult();
         try {
             return result.setData(roleService.getModel(Role.class, id));
@@ -88,7 +88,7 @@ public class RoleRestController extends BaseController {
         ApiResult result = new ApiResult();
         try {
             // ID为空方可插入
-            if (form.getId() != null && form.getId() > 0) {
+            if (Strings.isNotBlank(form.getId())) {
                 // 存在，方可更新
                 if (roleService.isExist(Role.class, form.getId())) {
                     result.setData(roleService.updateModel(form));
@@ -108,7 +108,7 @@ public class RoleRestController extends BaseController {
 
     @RequestMapping(value = "/isDelete/{id}", method = RequestMethod.DELETE)
     @ResponseBody
-    public ApiResult isDelete(@PathVariable(required = true) long id) {
+    public ApiResult isDelete(@PathVariable(required = true) String id) {
         ApiResult result = new ApiResult();
         try {
             Role mResult = roleService.getModel(Role.class, id);

@@ -11,9 +11,9 @@ import org.geelato.web.platform.m.base.entity.App;
 @Entity(name = "platform_role_r_app")
 @Title(title = "角色APP关系表")
 public class RoleAppMap extends BaseEntity {
-    private Long roleId;
+    private String roleId;
 
-    private Long appId;
+    private String appId;
 
     private String appName;
     private String roleName;
@@ -21,22 +21,22 @@ public class RoleAppMap extends BaseEntity {
     @Title(title = "角色ID")
     @Col(name = "role_id", refTables = "platform_role", refColName = "platform_role.id")
     @ForeignKey(fTable = Role.class)
-    public Long getRoleId() {
+    public String getRoleId() {
         return roleId;
     }
 
-    public void setRoleId(Long roleId) {
+    public void setRoleId(String roleId) {
         this.roleId = roleId;
     }
 
     @Title(title = "应用ID")
     @Col(name = "app_id", refTables = "platform_app", refColName = "platform_app.id")
     @ForeignKey(fTable = App.class)
-    public Long getAppId() {
+    public String getAppId() {
         return appId;
     }
 
-    public void setAppId(Long appId) {
+    public void setAppId(String appId) {
         this.appId = appId;
     }
 

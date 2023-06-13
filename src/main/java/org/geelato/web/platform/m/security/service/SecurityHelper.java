@@ -33,7 +33,7 @@ public class SecurityHelper {
         return user == null ? null : user.loginName;
     }
 
-    public static Long getCurrentUserId() {
+    public static String getCurrentUserId() {
         ShiroDbRealm.ShiroUser user = getCurrentUser();
         return user == null ? null : user.id;
     }
@@ -46,9 +46,12 @@ public class SecurityHelper {
         return SecurityUtils.getSubject().isPermitted(permission);
     }
 
-    public static boolean isAuthenticatedForCurrentUser(){
+    public static boolean isAuthenticatedForCurrentUser() {
         Subject currentUser = SecurityUtils.getSubject();
-        if (currentUser == null) return false;
-        else return currentUser.isAuthenticated();
+        if (currentUser == null) {
+            return false;
+        } else {
+            return currentUser.isAuthenticated();
+        }
     }
 }
