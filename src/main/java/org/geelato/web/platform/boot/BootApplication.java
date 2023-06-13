@@ -58,10 +58,11 @@ public class BootApplication implements CommandLineRunner, InitializingBean {
         Properties prop = System.getProperties();
         String os = prop.getProperty("os.name");
         logger.info("[操作系统]" + os);
-        if (os.toLowerCase().startsWith("win"))
+        if (os.toLowerCase().startsWith("win")) {
             isWinOS = true;
-        else
+        } else {
             isWinOS = false;
+        }
     }
 
     /**

@@ -23,7 +23,7 @@ public class CorsConfiguration extends BaseConfiguration {
         // spring boot 2.4.X配置有变化，allow-credentials: true 和 allowed-origins: “*” 不能共存，及当allow-credentials配置为true时，allowed-origins不能配置为 *
         corsConfiguration.setAllowCredentials(true);
         // 5 每次预检请求的通过的有效期为7200秒,即2小时
-        corsConfiguration.setMaxAge(7200l);
+        corsConfiguration.setMaxAge(7200L);
         return corsConfiguration;
     }
 

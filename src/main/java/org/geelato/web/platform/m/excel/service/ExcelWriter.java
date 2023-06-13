@@ -229,7 +229,7 @@ public class ExcelWriter {
             for (String key : rowMeta.getListCellMetaMap().keySet()) {
                 List<CellMeta> cellMetaList = rowMeta.getListCellMetaMap().get(key);
                 for (CellMeta cellMeta : cellMetaList) {
-                    if(cellMeta.getPlaceholderMeta().isMerge()){
+                    if (cellMeta.getPlaceholderMeta().isMerge()) {
                         CellRangeAddress region = new CellRangeAddress(rowIndex, rowIndex + newRowCount, cellMeta.getIndex(), cellMeta.getIndex());
                         // CellRangeAddress region  = new CellRangeAddress("A1:E10");
                         sheet.addMergedRegion(region);
@@ -242,7 +242,9 @@ public class ExcelWriter {
     }
 
     private PlaceholderMeta getPlaceholderMeta(HSSFCell cell, Map<String, PlaceholderMeta> placeholderMetaMap) {
-        if (cell == null) return null;
+        if (cell == null) {
+            return null;
+        }
         CellType cellType = cell.getCellType();
         String cellValue = cellType.equals(cellType) ? cell.getStringCellValue() : "";
         return placeholderMetaMap.get(cellValue);
@@ -366,7 +368,9 @@ public class ExcelWriter {
     }
 
     private boolean getBoolean(HSSFCell cell) {
-        if (cell == null) return false;
+        if (cell == null) {
+            return false;
+        }
         if (cell.getCellType() == CellType.BOOLEAN) {
             return cell.getBooleanCellValue();
         } else if (cell.getCellType() == CellType.NUMERIC) {

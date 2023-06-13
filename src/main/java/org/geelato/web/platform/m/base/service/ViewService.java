@@ -8,6 +8,7 @@ import java.util.Map;
 @Component
 public class ViewService extends  BaseService  {
 
+    @Override
     public <T> List<T> pageQueryModel(Class<T> entity, int pageNum, int pageSize, Map<String, Object> params) {
 
         //TODO 获取权限拼接

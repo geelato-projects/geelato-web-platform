@@ -23,7 +23,7 @@ import java.util.Map;
 @Controller
 @RequestMapping(value = "/api/app")
 public class AppController extends BaseController {
-    private final Logger logger = LoggerFactory.getLogger(DictController.class);
+    private final Logger logger = LoggerFactory.getLogger(AppController.class);
     @Autowired
     private AppService appService;
 

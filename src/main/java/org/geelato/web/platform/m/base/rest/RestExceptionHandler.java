@@ -1,5 +1,6 @@
 package org.geelato.web.platform.m.base.rest;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import jakarta.validation.ConstraintViolationException;
 import org.geelato.core.constants.MediaTypes;
@@ -32,7 +33,7 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(value = {ConstraintViolationException.class})
     public final ResponseEntity<?> handleException(ConstraintViolationException ex, WebRequest request) {
         Map<String, String> errors = BeanValidators.extractPropertyAndMessage(ex.getConstraintViolations());
-        String body = jo.toJSONString(errors);
+        String body = JSON.toJSONString(errors);
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.parseMediaType(MediaTypes.TEXT_PLAIN_UTF_8));
         return handleExceptionInternal(ex, body, headers, HttpStatus.BAD_REQUEST, request);

@@ -16,7 +16,6 @@ import org.geelato.web.platform.m.settings.entity.CommonConfig;
 import org.geelato.web.platform.m.settings.entity.Module;
 import org.geelato.web.platform.m.settings.entity.UserConfig;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
@@ -54,7 +53,9 @@ public class AccountService {
 
     public void registerUser(User user) {
         entryptPassword(user);
-        if (StringUtils.isBlank(user.getName())) user.setName(user.getLoginName());
+        if (StringUtils.isBlank(user.getName())) {
+            user.setName(user.getLoginName());
+        }
         dao.save(user);
 
         //注册之后自动登录
