@@ -4,12 +4,12 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
+import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.meta.MetaManager;
 import org.geelato.core.meta.model.field.ColumnMeta;
 import org.geelato.web.platform.m.base.rest.BaseController;
 import org.geelato.web.platform.m.model.service.DevTableColumnService;
 import org.geelato.web.platform.m.security.entity.DataItems;
-import org.geelato.core.constants.ApiErrorMsg;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +26,7 @@ import java.util.Map;
 @RequestMapping(value = "/api/model/table/column")
 public class DevTableColumnController extends BaseController {
     private final Logger logger = LoggerFactory.getLogger(DevTableColumnController.class);
+    private MetaManager metaManager = MetaManager.singleInstance();
     @Autowired
     private DevTableColumnService devTableColumnService;
 
@@ -100,6 +101,10 @@ public class DevTableColumnController extends BaseController {
             } else {
                 result.setData(devTableColumnService.createModel(form));
             }
+            // 刷新实体缓存
+            if (result.isSuccess() && Strings.isNotEmpty(form.getTableName())) {
+                metaManager.refreshDBMeta(form.getTableName());
+            }
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.OPERATE_FAIL);
@@ -133,9 +138,7 @@ public class DevTableColumnController extends BaseController {
     public ApiResult<List<ColumnMeta>> queryDefaultMeta() {
         ApiResult<List<ColumnMeta>> result = new ApiResult<>();
         try {
-            List<ColumnMeta> defaultColumnMetaList = MetaManager.singleInstance().getDefualtColumnMeta();
-            List<ColumnMeta> defaultUniqueColumnMetaList = MetaManager.singleInstance().getDefaultUniqueColumnMeta();
-            defaultColumnMetaList.addAll(defaultUniqueColumnMetaList);
+            List<ColumnMeta> defaultColumnMetaList = MetaManager.singleInstance().getDefaultColumn();
             return result.setData(defaultColumnMetaList);
         } catch (Exception e) {
             logger.error(e.getMessage());

@@ -4,11 +4,13 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
+import org.geelato.core.constants.ApiErrorMsg;
+import org.geelato.core.meta.MetaManager;
 import org.geelato.core.meta.model.entity.TableMeta;
 import org.geelato.web.platform.m.base.rest.BaseController;
+import org.geelato.web.platform.m.model.service.DevTableColumnService;
 import org.geelato.web.platform.m.model.service.DevTableService;
 import org.geelato.web.platform.m.security.entity.DataItems;
-import org.geelato.core.constants.ApiErrorMsg;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,8 +27,11 @@ import java.util.Map;
 @RequestMapping(value = "/api/model/table")
 public class DevTableController extends BaseController {
     private final Logger logger = LoggerFactory.getLogger(DevTableController.class);
+    private MetaManager metaManager = MetaManager.singleInstance();
     @Autowired
     private DevTableService devTableService;
+    @Autowired
+    private DevTableColumnService devTableColumnService;
 
     @RequestMapping(value = "/pageQuery", method = RequestMethod.GET)
     @ResponseBody
@@ -96,7 +101,14 @@ public class DevTableController extends BaseController {
                     result.error().setMsg(ApiErrorMsg.IS_NULL);
                 }
             } else {
-                result.setData(devTableService.createModel(form));
+                Map<String, Object> resultMap = devTableService.createModel(form);
+                form.setId(Long.parseLong(resultMap.get("id").toString()));
+                result.setData(resultMap);
+            }
+            // 刷新实体缓存
+            if (result.isSuccess() && Strings.isNotEmpty(form.getEntityName())) {
+                devTableColumnService.createDefaultColumn(form);
+                metaManager.refreshDBMeta(form.getEntityName());
             }
         } catch (Exception e) {
             logger.error(e.getMessage());

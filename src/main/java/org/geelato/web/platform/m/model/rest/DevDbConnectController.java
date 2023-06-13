@@ -4,11 +4,12 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
+import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.meta.model.connect.ConnectMeta;
+import org.geelato.core.util.ConnectUtils;
 import org.geelato.web.platform.m.base.rest.BaseController;
 import org.geelato.web.platform.m.model.service.DevDbConnectService;
 import org.geelato.web.platform.m.security.entity.DataItems;
-import org.geelato.core.constants.ApiErrorMsg;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -122,6 +123,21 @@ public class DevDbConnectController extends BaseController {
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.DELETE_FAIL);
+        }
+
+        return result;
+    }
+
+    @RequestMapping(value = "/jdbcConnect", method = RequestMethod.POST)
+    @ResponseBody
+    public ApiResult<Boolean> jdbcConnect(@RequestBody ConnectMeta form) {
+        ApiResult<Boolean> result = new ApiResult<>();
+        try {
+            Boolean isConnected = ConnectUtils.connectionTest(form);
+            result.success().setData(isConnected);
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            result.error().setMsg(ApiErrorMsg.OPERATE_FAIL);
         }
 
         return result;
