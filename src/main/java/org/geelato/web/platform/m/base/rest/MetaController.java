@@ -43,7 +43,6 @@ public class MetaController implements InitializingBean {
     private static Logger logger = LoggerFactory.getLogger(MetaController.class);
 
     /**
-     * e.g.:http://localhost:8080/api/meta/list/
      *
      * @param request
      * @return
@@ -70,7 +69,6 @@ public class MetaController implements InitializingBean {
     }
 
     /**
-     * e.g.:http://localhost:8080/api/meta/save/
      *
      * @param biz     业务代码
      * @param request HttpServletRequest
@@ -86,18 +84,16 @@ public class MetaController implements InitializingBean {
     }
 
 
-    @RequestMapping(value = {"delete/{biz}"}, method = RequestMethod.POST, produces = MediaTypes.JSON_UTF_8)
+    @RequestMapping(value = {"delete/{biz}/{id}"}, method = RequestMethod.POST, produces = MediaTypes.JSON_UTF_8)
     @ResponseBody
-    public ApiMetaResult delete(@PathVariable("biz") String biz, HttpServletRequest request) {
-        String gql = getGql(request);
+    public ApiMetaResult delete(@PathVariable("biz") String biz,@PathVariable("id")String id) {
         ApiMetaResult result = new ApiMetaResult();
-        result.setData(ruleService.delete(biz, gql));
+//        result.setData(ruleService.delete(biz,id));
         return result;
     }
 
 
     /**
-     * e.g.:http://localhost:8080/api/meta/defined/
      * 获取数据定义信息，即元数据信息
      *
      * @param entityOrQueryKey 实体名称或查询键
@@ -118,7 +114,6 @@ public class MetaController implements InitializingBean {
 
 
     /**
-     * e.g.:http://localhost:8080/api/meta/entityNames/
      * 获取实体名称列表
      *
      * @return
@@ -132,7 +127,6 @@ public class MetaController implements InitializingBean {
     }
 
     /**
-     * e.g.:http://localhost:8080/api/meta/entityLiteMetas/
      * 获取指定应用下的精简版实体元数据信息列表
      * @param appCode 应用编码
      * @return
@@ -160,6 +154,7 @@ public class MetaController implements InitializingBean {
         return ruleService.queryForTreeNodeList(entity, treeId);
     }
 
+
     private String getGql(HttpServletRequest request) {
         StringBuilder stringBuilder = new StringBuilder();
         BufferedReader br = null;
@@ -168,7 +163,6 @@ public class MetaController implements InitializingBean {
         } catch (IOException e) {
             logger.error("未能从httpServletRequest中获取gql的内容", e);
         }
-
         String str;
         try {
             while ((str = br.readLine()) != null) {

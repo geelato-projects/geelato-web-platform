@@ -91,12 +91,9 @@ public class ShiroConfiguration {
         filterChainDefinitionMap.put("/index.html", "authc");//authc
 
         filterChainDefinitionMap.put("/api/sys/auth/**", "anon");
-//        filterChainDefinitionMap.put("/api/**", "user");
         filterChainDefinitionMap.put("/api/**", "anon");
         filterChainDefinitionMap.put("/register/**", "anon");
         filterChainDefinitionMap.put("/admin/**", "roles[admin]");
-//        filterChainDefinitionMap.put("/login", "anon");
-//        AbstractAuthenticator ai;
         shiroFilterFactoryBean.setFilterChainDefinitionMap(filterChainDefinitionMap);
         return shiroFilterFactoryBean;
     }

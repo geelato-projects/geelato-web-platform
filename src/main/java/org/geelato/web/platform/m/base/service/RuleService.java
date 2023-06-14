@@ -249,11 +249,11 @@ public class RuleService {
      * <p>在删除之前，依据业务代码，从配置的业务规则库中读取规则，对command中的数据进行预处理，如更改相应的参数数据。</p>
      *
      * @param biz 业务代码
-     * @param gql geelato query language
      * @return 主健值
      */
-    public int delete(String biz, String gql) {
-        DeleteCommand command = gqlManager.generateDeleteSql(gql, getSessionCtx());
+    public int delete(String biz, String id) {
+        EntityMeta entityMeta=metaManager.getByEntityName(biz);
+        DeleteCommand command = gqlManager.generateDeleteSql(biz, getSessionCtx());
         Facts facts = new Facts();
         facts.put("deleteCommand", command);
         Rules rules = new Rules();
@@ -266,6 +266,7 @@ public class RuleService {
     }
 
 
+
     /**
      * @return 当前会话信息
      */
@@ -276,7 +277,4 @@ public class RuleService {
         return ctx;
     }
 
-    public static void main(String[] args) {
-
-    }
 }
