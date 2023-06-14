@@ -1,6 +1,7 @@
 package org.geelato.web.platform.m.settings.entity;
 
 
+import org.geelato.core.constants.ColumnDefault;
 import org.geelato.core.meta.annotation.Col;
 import org.geelato.core.meta.annotation.Entity;
 import org.geelato.core.meta.annotation.Title;
@@ -15,7 +16,7 @@ public class Module extends BaseSortableEntity implements EntityEnableAble {
     private String index;
     private String resize;
     private String html;
-    private int enabled;
+    private int enableStatus = ColumnDefault.ENABLE_STATUS_VALUE;
     private String description;
 
     @Title(title = "编码")
@@ -80,14 +81,14 @@ public class Module extends BaseSortableEntity implements EntityEnableAble {
     }
 
     @Title(title = "启用状态", description = "1表示启用、0表示未启用")
-    @Col(name = "enabled", nullable = false, dataType = "tinyint", numericPrecision = 1)
+    @Col(name = "enable_status", nullable = false, dataType = "tinyint", numericPrecision = 1)
     @Override
     public int getEnableStatus() {
-        return this.enabled;
+        return this.enableStatus;
     }
 
     @Override
     public void setEnableStatus(int enabled) {
-        this.enabled = enabled;
+        this.enableStatus = enabled;
     }
 }

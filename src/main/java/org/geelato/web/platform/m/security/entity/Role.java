@@ -18,7 +18,7 @@ public class Role extends BaseSortableEntity implements EntityEnableAble {
     private String name;
     private String code;
     private String type;
-    private int enableStatus  = ColumnDefault.ENABLE_STATUS_VALUE;
+    private int enableStatus = ColumnDefault.ENABLE_STATUS_VALUE;
     //    private String treeNodeId;
     private String description;
 
@@ -61,7 +61,7 @@ public class Role extends BaseSortableEntity implements EntityEnableAble {
     }
 
     @Title(title = "启用状态", description = "1表示启用、0表示未启用")
-    @Col(name = "enabled_status", nullable = false, dataType = "tinyint", numericPrecision = 2)
+    @Col(name = "enable_status", nullable = false, dataType = "tinyint", numericPrecision = 2)
     @Override
     public int getEnableStatus() {
         return this.enableStatus;

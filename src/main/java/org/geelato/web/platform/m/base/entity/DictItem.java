@@ -60,7 +60,7 @@ public class DictItem extends BaseSortableEntity implements EntityEnableAble {
         this.dataRemark = dataRemark;
     }
 
-    @Col(name = "enableStatus")
+    @Col(name = "enable_status")
     @Title(title = "启用状态")
     @Override
     public int getEnableStatus() {
