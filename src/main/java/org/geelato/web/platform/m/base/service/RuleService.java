@@ -11,6 +11,7 @@ import org.geelato.core.gql.GqlManager;
 import org.geelato.core.gql.execute.BoundPageSql;
 import org.geelato.core.gql.execute.BoundSql;
 import org.geelato.core.gql.parser.DeleteCommand;
+import org.geelato.core.gql.parser.FilterGroup;
 import org.geelato.core.gql.parser.QueryCommand;
 import org.geelato.core.gql.parser.SaveCommand;
 import org.geelato.core.meta.MetaManager;
@@ -253,15 +254,8 @@ public class RuleService {
      */
     public int delete(String biz, String id) {
         EntityMeta entityMeta=metaManager.getByEntityName(biz);
-        DeleteCommand command = gqlManager.generateDeleteSql(biz, getSessionCtx());
-        Facts facts = new Facts();
-        facts.put("deleteCommand", command);
-        Rules rules = new Rules();
-        rules.register(new EntityValidateRule());
-
-        rulesEngine.fire(rules, facts);
-
-        BoundSql boundSql = sqlManager.generateDeleteSql(command);
+        FilterGroup filterGroup = new FilterGroup().addFilter("id",id);
+        BoundSql boundSql = sqlManager.generateDeleteSql(entityMeta.getEntityType(),filterGroup);
         return dao.delete(boundSql);
     }
 

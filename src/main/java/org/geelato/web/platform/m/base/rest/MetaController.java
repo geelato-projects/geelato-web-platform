@@ -88,7 +88,7 @@ public class MetaController implements InitializingBean {
     @ResponseBody
     public ApiMetaResult delete(@PathVariable("biz") String biz,@PathVariable("id")String id) {
         ApiMetaResult result = new ApiMetaResult();
-//        result.setData(ruleService.delete(biz,id));
+       result.setData(ruleService.delete(biz,id));
         return result;
     }
 
