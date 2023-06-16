@@ -29,10 +29,6 @@ import java.util.Map;
 @RequestMapping(value = {"/api/sys/jwtauth", "/basic-api","/api/user"})
 public class JWTAuthRestController extends BaseController {
 
-    //    @Autowired
-//    @Qualifier("primaryDao")
-//    private Dao dao;
-//
     @Autowired
     protected AccountService accountService;
 
@@ -213,10 +209,5 @@ public class JWTAuthRestController extends BaseController {
         return req.getHeader("authorization");
     }
 
-//    @Override
-//    public void afterPropertiesSet() throws Exception {
-//        super.afterPropertiesSet();
-//        accountService.setDao(this.dao);
-//    }
 
 }
