@@ -2,8 +2,8 @@ package org.geelato.web.platform.m.base.rest;
 
 
 import org.geelato.core.api.ApiMetaResult;
-import org.geelato.core.meta.MetaManager;
 import org.geelato.core.constants.MediaTypes;
+import org.geelato.core.meta.MetaManager;
 import org.geelato.core.orm.Dao;
 import org.geelato.core.orm.DbGenerateDao;
 import org.geelato.web.platform.m.base.service.RuleService;
@@ -15,8 +15,10 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import java.sql.SQLException;
+import java.util.Map;
+
 /**
- *
  * @author itechgee@126.com
  * @date 2017/6/3.
  */
@@ -53,15 +55,31 @@ public class MetaDdlController implements InitializingBean {
         dbGenerateDao.createOrUpdateOneTable(entity, false);
         return result;
     }
+
     /**
      * 新建更新视图
+     *
      * @return
      */
     @RequestMapping(value = {"view/{view}"}, method = {RequestMethod.POST}, produces = MediaTypes.JSON_UTF_8)
     @ResponseBody
-    public ApiMetaResult recreate(@PathVariable("view") String view, @RequestBody  String sql) {
+    public ApiMetaResult recreate(@PathVariable("view") String view, @RequestBody Map<String, String> params) {
         ApiMetaResult result = new ApiMetaResult();
-        dbGenerateDao.createOrUpdateView(view, sql);
+        dbGenerateDao.createOrUpdateView(view, params.get("sql"));
+        return result;
+    }
+
+    @RequestMapping(value = {"view/valid/{connectId}"}, method = {RequestMethod.POST}, produces = MediaTypes.JSON_UTF_8)
+    @ResponseBody
+    public ApiMetaResult<Boolean> validateView(@PathVariable("connectId") String connectId, @RequestBody Map<String, String> params) {
+        ApiMetaResult<Boolean> result = new ApiMetaResult();
+        try {
+            boolean isValid = dbGenerateDao.validateViewSql(connectId, params.get("sql"));
+            result.success().setData(isValid);
+        } catch (SQLException e) {
+            logger.error(e.getMessage());
+            result.success().setData(false);
+        }
         return result;
     }
 

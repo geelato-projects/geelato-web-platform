@@ -2,21 +2,27 @@ package org.geelato.web.platform.m.model.rest;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.logging.log4j.util.Strings;
+import org.geelato.core.api.ApiMetaResult;
 import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiErrorMsg;
+import org.geelato.core.constants.MediaTypes;
+import org.geelato.core.enums.EnableStatusEnum;
 import org.geelato.core.meta.MetaManager;
 import org.geelato.core.meta.model.entity.TableMeta;
 import org.geelato.web.platform.m.base.rest.BaseController;
 import org.geelato.web.platform.m.model.service.DevTableColumnService;
 import org.geelato.web.platform.m.model.service.DevTableService;
+import org.geelato.web.platform.m.model.service.DevViewService;
 import org.geelato.web.platform.m.security.entity.DataItems;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -32,6 +38,8 @@ public class DevTableController extends BaseController {
     private DevTableService devTableService;
     @Autowired
     private DevTableColumnService devTableColumnService;
+    @Autowired
+    private DevViewService devViewService;
 
     @RequestMapping(value = "/pageQuery", method = RequestMethod.GET)
     @ResponseBody
@@ -103,12 +111,15 @@ public class DevTableController extends BaseController {
             } else {
                 Map<String, Object> resultMap = devTableService.createModel(form);
                 form.setId(resultMap.get("id").toString());
+                devTableColumnService.createDefaultColumn(form);
                 result.setData(resultMap);
             }
-            // 刷新实体缓存
             if (result.isSuccess() && Strings.isNotEmpty(form.getEntityName())) {
-                devTableColumnService.createDefaultColumn(form);
+                // 刷新实体缓存
                 metaManager.refreshDBMeta(form.getEntityName());
+                // 刷新默认视图
+                devViewService.createOrUpdateDefaultTableView(form, devTableColumnService.getDefaultViewSql(form.getEntityName()));
+
             }
         } catch (Exception e) {
             logger.error(e.getMessage());
@@ -135,6 +146,76 @@ public class DevTableController extends BaseController {
             result.error().setMsg(ApiErrorMsg.DELETE_FAIL);
         }
 
+        return result;
+    }
+
+    @RequestMapping(value = "/queryDefaultView/{entityName}", method = RequestMethod.GET)
+    @ResponseBody
+    public ApiResult<String> queryDefaultView(@PathVariable(required = true) String entityName) {
+        ApiResult<String> result = new ApiResult<>();
+        try {
+            return result.setData(devTableColumnService.getDefaultViewSql(entityName));
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
+        }
+
+        return result;
+    }
+
+    @RequestMapping(value = "/resetDefaultView", method = RequestMethod.POST)
+    @ResponseBody
+    public ApiResult<String> resetDefaultView(@RequestBody TableMeta form) {
+        ApiResult<String> result = new ApiResult<>();
+        try {
+            if (Strings.isNotBlank(form.getEntityName())) {
+                Assert.notNull(form, ApiErrorMsg.IS_NULL);
+                Map<String, Object> params = new HashMap<>();
+                params.put("id", form.getId());
+                params.put("connectId", form.getConnectId());
+                params.put("entityName", form.getEntityName());
+                List<TableMeta> tableMetaList = devTableService.queryModel(TableMeta.class, params);
+                if (tableMetaList != null && tableMetaList.size() > 0) {
+                    for (TableMeta meta : tableMetaList) {
+                        devViewService.createOrUpdateDefaultTableView(meta, devTableColumnService.getDefaultViewSql(meta.getEntityName()));
+                    }
+                }
+            } else {
+                result.error().setMsg(ApiErrorMsg.UPDATE_FAIL);
+            }
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            result.error().setMsg(ApiErrorMsg.UPDATE_FAIL);
+        }
+
+        return result;
+    }
+
+
+    @RequestMapping(value = {"/reset/{tableId}"}, method = {RequestMethod.POST}, produces = MediaTypes.JSON_UTF_8)
+    @ResponseBody
+    public ApiMetaResult resetModelFormTable(@PathVariable("tableId") String tableId) {
+        ApiMetaResult result = new ApiMetaResult();
+        try {
+            if (Strings.isNotBlank(tableId)) {
+                // dev_table
+                TableMeta tableMeta = devTableService.getModel(TableMeta.class, tableId);
+                Assert.notNull(tableMeta, ApiErrorMsg.IS_NULL);
+                // 禁用的不同步
+                if (EnableStatusEnum.DISABLED.getCode() == tableMeta.getEnableStatus()) {
+                    return (ApiMetaResult) result.error().setMsg(ApiErrorMsg.OBJECT_DISABLED);
+                }
+                /*if (Strings.isBlank(tableMeta.getTableName())) {
+                    return (ApiMetaResult) result.error().setMsg(ApiErrorMsg.UPDATE_FAIL);
+                }*/
+                devTableService.resetTableByDataBase(tableMeta);
+            } else {
+                result.error().setMsg(ApiErrorMsg.ID_IS_NULL);
+            }
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            result.error().setMsg(ApiErrorMsg.UPDATE_FAIL);
+        }
         return result;
     }
 }

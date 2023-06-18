@@ -1,8 +1,8 @@
 package org.geelato.web.platform.m.base.service;
 
-import org.geelato.core.meta.model.entity.BaseSortableEntity;
 import org.geelato.core.constants.ColumnDefault;
 import org.geelato.core.enums.DeleteStatusEnum;
+import org.geelato.core.meta.model.entity.BaseSortableEntity;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
@@ -45,6 +45,7 @@ public class BaseSortableService extends BaseService {
      */
     public <T extends BaseSortableEntity> void isDeleteModel(T model) {
         model.setDelStatus(DeleteStatusEnum.IS.getCode());
+        model.setSeqNo(ColumnDefault.SEQ_NO_DELETE);
         dao.save(model);
     }
 }
