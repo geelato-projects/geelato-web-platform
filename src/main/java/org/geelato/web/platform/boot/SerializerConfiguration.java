@@ -65,36 +65,5 @@ public class SerializerConfiguration {
         return objectMapper;
     }
 
-//    class LocalDateToLongSerializer extends JsonSerializer<LocalDate> {
-//        @Override
-//        public void serialize(LocalDate localDate, JsonGenerator jsonGenerator,
-//                              SerializerProvider serializerProvider) throws IOException {
-//            Instant instant = localDate.atZone(ZoneId.systemDefault()).toInstant();
-//            long millis = instant.toEpochMilli();
-//            jsonGenerator.writeNumber(millis);
-//        }
-//    }
-
-//    class LocalDateSerializer extends JsonSerializer<LocalDate> {
-//
-//        private static final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-//
-//        @Override
-//        public void serialize(LocalDate value, JsonGenerator jgen, SerializerProvider provider)
-//                throws IOException, JsonProcessingException {
-//            jgen.writeString(dateFormatter.format(value));
-//        }
-//    }
-
-
-//    class LocalDateTimeToLongSerializer extends JsonSerializer<LocalDateTime> {
-//        @Override
-//        public void serialize(LocalDateTime localDateTime, JsonGenerator jsonGenerator,
-//                SerializerProvider serializerProvider) throws IOException {
-//            Instant instant = localDateTime.atZone(ZoneId.systemDefault()).toInstant();
-//            long millis = instant.toEpochMilli();
-//            jsonGenerator.writeNumber(millis);
-//        }
-//    }
 
 }

@@ -11,6 +11,7 @@ import org.geelato.core.gql.GqlManager;
 import org.geelato.core.gql.execute.BoundPageSql;
 import org.geelato.core.gql.execute.BoundSql;
 import org.geelato.core.gql.parser.DeleteCommand;
+import org.geelato.core.gql.parser.FilterGroup;
 import org.geelato.core.gql.parser.QueryCommand;
 import org.geelato.core.gql.parser.SaveCommand;
 import org.geelato.core.meta.MetaManager;
@@ -249,21 +250,15 @@ public class RuleService {
      * <p>在删除之前，依据业务代码，从配置的业务规则库中读取规则，对command中的数据进行预处理，如更改相应的参数数据。</p>
      *
      * @param biz 业务代码
-     * @param gql geelato query language
      * @return 主健值
      */
-    public int delete(String biz, String gql) {
-        DeleteCommand command = gqlManager.generateDeleteSql(gql, getSessionCtx());
-        Facts facts = new Facts();
-        facts.put("deleteCommand", command);
-        Rules rules = new Rules();
-        rules.register(new EntityValidateRule());
-
-        rulesEngine.fire(rules, facts);
-
-        BoundSql boundSql = sqlManager.generateDeleteSql(command);
+    public int delete(String biz, String id) {
+        EntityMeta entityMeta=metaManager.getByEntityName(biz);
+        FilterGroup filterGroup = new FilterGroup().addFilter("id",id);
+        BoundSql boundSql = sqlManager.generateDeleteSql(entityMeta.getEntityType(),filterGroup);
         return dao.delete(boundSql);
     }
+
 
 
     /**
@@ -276,7 +271,4 @@ public class RuleService {
         return ctx;
     }
 
-    public static void main(String[] args) {
-
-    }
 }
