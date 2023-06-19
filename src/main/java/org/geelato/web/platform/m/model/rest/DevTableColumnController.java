@@ -5,6 +5,7 @@ import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiErrorMsg;
+import org.geelato.core.enums.EnableStatusEnum;
 import org.geelato.core.meta.MetaManager;
 import org.geelato.core.meta.model.field.ColumnMeta;
 import org.geelato.web.platform.m.base.rest.BaseController;
@@ -14,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -93,10 +95,14 @@ public class DevTableColumnController extends BaseController {
             // ID为空方可插入
             if (Strings.isNotBlank(form.getId())) {
                 // 存在，方可更新
-                if (devTableColumnService.isExist(ColumnMeta.class, form.getId())) {
-                    result.setData(devTableColumnService.updateModel(form));
+                ColumnMeta meta = devTableColumnService.getModel(ColumnMeta.class, form.getId());
+                Assert.notNull(meta, ApiErrorMsg.IS_NULL);
+                if (!meta.getName().equals(form.getName())) {
+                    devTableColumnService.isDeleteModel(meta);
+                    form.setId(null);
+                    devTableColumnService.createModel(form);
                 } else {
-                    result.error().setMsg(ApiErrorMsg.IS_NULL);
+                    result.setData(devTableColumnService.updateModel(form));
                 }
             } else {
                 result.setData(devTableColumnService.createModel(form));

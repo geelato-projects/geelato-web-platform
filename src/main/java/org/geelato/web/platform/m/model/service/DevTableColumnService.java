@@ -2,7 +2,9 @@ package org.geelato.web.platform.m.model.service;
 
 import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.constants.ApiErrorMsg;
+import org.geelato.core.constants.ColumnDefault;
 import org.geelato.core.constants.MetaDaoSql;
+import org.geelato.core.enums.DeleteStatusEnum;
 import org.geelato.core.enums.EnableStatusEnum;
 import org.geelato.core.enums.TableTypeEnum;
 import org.geelato.core.meta.MetaManager;
@@ -191,5 +193,24 @@ public class DevTableColumnService extends BaseSortableService {
                 updateModel(meta);
             }
         }
+    }
+
+    /**
+     * 逻辑删除
+     *
+     * @param model
+     */
+    public void isDeleteModel(ColumnMeta model) {
+        // 常用
+        model.setEnableStatus(EnableStatusEnum.DISABLED.getCode());
+        model.setDelStatus(DeleteStatusEnum.IS.getCode());
+        model.setSeqNo(ColumnDefault.SEQ_NO_DELETE);
+        // 去除 主键、必填、唯一约束
+        model.setKey(false);
+        model.setNullable(true);
+        model.setUniqued(false);
+
+        dao.save(model);
+
     }
 }

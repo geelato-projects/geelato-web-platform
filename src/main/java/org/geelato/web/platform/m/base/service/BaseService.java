@@ -1,7 +1,9 @@
 package org.geelato.web.platform.m.base.service;
 
 import org.apache.logging.log4j.util.Strings;
+import org.geelato.core.constants.ColumnDefault;
 import org.geelato.core.enums.DeleteStatusEnum;
+import org.geelato.core.gql.parser.FilterGroup;
 import org.geelato.core.meta.model.entity.BaseEntity;
 import org.geelato.core.orm.Dao;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +22,7 @@ public class BaseService {
     @Autowired
     @Qualifier("primaryDao")
     public Dao dao;
+    public FilterGroup filterGroup = new FilterGroup().addFilter(ColumnDefault.DEL_STATUS_FIELD, String.valueOf(DeleteStatusEnum.NO.getCode()));
 
     /**
      * 分页查询
@@ -32,6 +35,7 @@ public class BaseService {
      * @return
      */
     public <T> List<T> pageQueryModel(Class<T> entity, int pageNum, int pageSize, Map<String, Object> params) {
+        dao.SetDefaultFilter(true, filterGroup);
         return dao.queryList(entity, pageNum, pageSize, params);
     }
 
@@ -44,6 +48,7 @@ public class BaseService {
      * @return
      */
     public <T> List<T> queryModel(Class<T> entity, Map<String, Object> params) {
+        dao.SetDefaultFilter(true, filterGroup);
         return dao.queryList(entity, params);
     }
 
