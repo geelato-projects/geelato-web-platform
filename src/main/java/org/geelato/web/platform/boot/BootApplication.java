@@ -1,6 +1,7 @@
 package org.geelato.web.platform.boot;
 
 import org.geelato.core.biz.rules.BizManagerFactory;
+import org.geelato.core.env.EnvManager;
 import org.geelato.core.meta.MetaManager;
 import org.geelato.core.meta.MetaRelf;
 import org.geelato.core.orm.Dao;
@@ -77,6 +78,7 @@ public class BootApplication implements CommandLineRunner, InitializingBean {
         assertOS();
         parseStartArgs(args);
         initMeta(args);
+        initEnv();
         logger.info("[启动应用]...OK");
     }
 
@@ -101,6 +103,9 @@ public class BootApplication implements CommandLineRunner, InitializingBean {
         }
     }
 
+    public void initEnv(){
+        EnvManager.singleInstance().EnvInit();
+    }
     public void initMeta(String... args) throws IOException {
         // 解析元数据
         MetaRelf.setApplicationContext(applicationContext);

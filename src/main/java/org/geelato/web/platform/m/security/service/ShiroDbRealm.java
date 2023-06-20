@@ -51,7 +51,7 @@ public class ShiroDbRealm extends AuthorizingRealm {
      * 认证回调函数,登录时调用.
      */
     @Override
-    protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken authcToken) throws AuthenticationException {
+        protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken authcToken) throws AuthenticationException {
         UsernamePasswordToken token = (UsernamePasswordToken) authcToken;
         User user = dao.queryForObject(User.class, "loginName", token.getUsername());
         if (user != null) {
@@ -92,7 +92,7 @@ public class ShiroDbRealm extends AuthorizingRealm {
     /**
      * 自定义Authentication对象，使得Subject除了携带用户的登录名外还可以携带更多信息.
      */
-    public static class ShiroUser implements Serializable {
+    public class ShiroUser implements Serializable {
         private static final long serialVersionUID = -1373760761780840081L;
         public String id;
         public String loginName;

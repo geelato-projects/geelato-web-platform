@@ -3,7 +3,12 @@ package org.geelato.web.platform.m.base.interceptor;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.authc.UsernamePasswordToken;
+import org.apache.shiro.subject.Subject;
+import org.geelato.core.env.EnvManager;
 import org.geelato.core.meta.annotation.IgnoreJWTVerify;
+import org.geelato.core.mvc.Ctx;
 import org.geelato.web.platform.m.security.service.JWTUtil;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -46,10 +51,11 @@ public class JWTInterceptor implements HandlerInterceptor {
         String loginName = verify.getClaim("loginName").asString();
         String id = verify.getClaim("id").asString();
 
-        // 放入attribute以便后面调用
-        request.setAttribute("loginName", loginName);
-        request.setAttribute("id", id);
+        EnvManager.singleInstance().InitCurrentUser(id);
 
+        UsernamePasswordToken userToken = new UsernamePasswordToken(loginName, "123456");
+        Subject subject = SecurityUtils.getSubject();
+        subject.login(userToken);
         return true;
     }
 

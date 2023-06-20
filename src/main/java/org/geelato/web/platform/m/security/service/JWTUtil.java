@@ -19,9 +19,9 @@ public class JWTUtil {
     private static final String SIGN_KEY = "5A1332068BA9FD17";
 
     /**
-     * 默认的过期时间，30分钟
+     * 默认的过期时间，3000分钟
      */
-    private static final Integer DEFAULT_EXPIRES = 60 * 30;
+    private static final Integer DEFAULT_EXPIRES = 60 * 3000;
 
     /**
      * token默认的长度

@@ -7,6 +7,7 @@ import org.geelato.core.api.*;
 import org.geelato.core.biz.rules.BizManagerFactory;
 import org.geelato.core.biz.rules.common.EntityValidateRule;
 import org.geelato.core.constants.ApiResultCode;
+import org.geelato.core.env.entity.User;
 import org.geelato.core.gql.GqlManager;
 import org.geelato.core.gql.execute.BoundPageSql;
 import org.geelato.core.gql.execute.BoundSql;

@@ -4,6 +4,8 @@ import org.geelato.core.api.ApiMetaResult;
 import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.constants.MediaTypes;
 import org.geelato.web.platform.m.base.service.ViewService;
+import org.geelato.web.platform.m.security.service.SecurityHelper;
+import org.geelato.web.platform.m.security.service.ShiroDbRealm;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,11 +19,11 @@ public class ViewController {
     @Autowired
     private ViewService viewService;
 
-    @RequestMapping(value = {"pageQuery/{view_name}"}, method = {RequestMethod.POST}, produces = MediaTypes.JSON_UTF_8)
+    @RequestMapping(value = {"pageQuery/{entity}"}, method = {RequestMethod.POST}, produces = MediaTypes.JSON_UTF_8)
     @ResponseBody
     public ApiPagedResult pageQuery(@PathVariable("entity") String entity) {
         ApiPagedResult result = new ApiPagedResult();
-
+        ShiroDbRealm.ShiroUser  user= SecurityHelper.getCurrentUser();
         return result;
     }
 
