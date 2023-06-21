@@ -14,41 +14,30 @@ import org.geelato.core.meta.model.entity.EntityEnableAble;
 @Title(title = "数据字典")
 public class Dict extends BaseSortableEntity implements EntityEnableAble {
 
-    private String dicCode;
-    private String dicName;
-    private int enableStatus = ColumnDefault.ENABLE_STATUS_VALUE;
-    private String tenantCode;
     private String appId;
-    private String dicRemark;
+    private String dictCode;
+    private String dictName;
+    private String dictRemark;
+    private int enableStatus = ColumnDefault.ENABLE_STATUS_VALUE;
 
-    @Col(name = "dic_code")
+    @Col(name = "dict_code")
     @Title(title = "字典编码")
-    public String getDicCode() {
-        return dicCode;
+    public String getDictCode() {
+        return dictCode;
     }
 
-    public void setDicCode(String dicCode) {
-        this.dicCode = dicCode;
+    public void setDictCode(String dictCode) {
+        this.dictCode = dictCode;
     }
 
-    @Col(name = "dic_name")
+    @Col(name = "dict_name")
     @Title(title = "字典名称")
-    public String getDicName() {
-        return dicName;
+    public String getDictName() {
+        return dictName;
     }
 
-    public void setDicName(String dicName) {
-        this.dicName = dicName;
-    }
-
-    @Col(name = "tenant_code")
-    @Title(title = "租户")
-    public String getTenantCode() {
-        return tenantCode;
-    }
-
-    public void setTenantCode(String tenantCode) {
-        this.tenantCode = tenantCode;
+    public void setDictName(String dictName) {
+        this.dictName = dictName;
     }
 
     @Title(title = "应用Id")
@@ -61,14 +50,14 @@ public class Dict extends BaseSortableEntity implements EntityEnableAble {
         this.appId = appId;
     }
 
-    @Col(name = "dic_remark")
+    @Col(name = "dict_remark")
     @Title(title = "字典备注")
-    public String getDicRemark() {
-        return dicRemark;
+    public String getDictRemark() {
+        return dictRemark;
     }
 
-    public void setDicRemark(String dicRemark) {
-        this.dicRemark = dicRemark;
+    public void setDictRemark(String dictRemark) {
+        this.dictRemark = dictRemark;
     }
 
 

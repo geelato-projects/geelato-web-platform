@@ -28,7 +28,7 @@ import java.util.Map;
 @Controller
 @RequestMapping(value = "/api/dict/item")
 public class DictItemController extends BaseController {
-    private static final String DICT_CODE = "dicCode";
+    private static final String DICT_CODE = "dictCode";
     private static final String DICT_ID = "dictId";
     private final Logger logger = LoggerFactory.getLogger(DictItemController.class);
     @Autowired
@@ -134,14 +134,14 @@ public class DictItemController extends BaseController {
         return result;
     }
 
-    @RequestMapping(value = "/queryItemByDicCode/{dicCode}", method = RequestMethod.GET)
+    @RequestMapping(value = "/queryItemByDicCode/{dictCode}", method = RequestMethod.GET)
     @ResponseBody
-    public ApiResult queryItemByDicCode(@PathVariable(required = true) String dicCode) {
+    public ApiResult queryItemByDicCode(@PathVariable(required = true) String dictCode) {
         ApiResult result = new ApiResult();
         List<DictItem> iResult = new ArrayList<>();
         try {
             Map<String, Object> params = new HashMap<>();
-            params.put(DICT_CODE, dicCode);
+            params.put(DICT_CODE, dictCode);
             // 字典
             List<Dict> dResult = dictService.queryModel(Dict.class, params);
             // 字典项
