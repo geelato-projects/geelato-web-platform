@@ -1,4 +1,4 @@
-package org.geelato.web.platform.m.designer.entity;
+package org.geelato.web.platform.m.base.entity;
 
 import org.geelato.core.meta.annotation.Col;
 import org.geelato.core.meta.annotation.Entity;
