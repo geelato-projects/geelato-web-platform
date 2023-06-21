@@ -260,7 +260,11 @@ public class RuleService {
         return dao.delete(boundSql);
     }
 
-
+    public int deleteByGql(String biz, String gql) {
+        DeleteCommand command = gqlManager.generateDeleteSql(gql, getSessionCtx());
+        BoundSql boundSql = sqlManager.generateDeleteSql(command);
+        return dao.delete(boundSql);
+    }
 
     /**
      * @return 当前会话信息

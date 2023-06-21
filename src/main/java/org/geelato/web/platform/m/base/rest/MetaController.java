@@ -92,6 +92,14 @@ public class MetaController implements InitializingBean {
         return result;
     }
 
+    @RequestMapping(value = {"delete2/{biz}"}, method = RequestMethod.POST, produces = MediaTypes.JSON_UTF_8)
+    @ResponseBody
+    public ApiMetaResult delete(@PathVariable("biz") String biz,HttpServletRequest request) {
+        String gql = getGql(request);
+        ApiMetaResult result = new ApiMetaResult();
+        result.setData(ruleService.deleteByGql(biz,gql));
+        return result;
+    }
 
     /**
      * 获取数据定义信息，即元数据信息
