@@ -50,7 +50,7 @@ public class JWTInterceptor implements HandlerInterceptor {
         DecodedJWT verify = JWTUtil.verify(token);
         String loginName = verify.getClaim("loginName").asString();
         String id = verify.getClaim("id").asString();
-
+        //初始化Core中的当前用户
         EnvManager.singleInstance().InitCurrentUser(id);
 
         UsernamePasswordToken userToken = new UsernamePasswordToken(loginName, "123456");
