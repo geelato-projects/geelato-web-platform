@@ -1,6 +1,8 @@
 package org.geelato.web.platform.m.model.service;
 
 import org.apache.logging.log4j.util.Strings;
+import org.geelato.core.arco.select.SelectOptionData;
+import org.geelato.core.arco.select.SelectOptionGroup;
 import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.constants.ColumnDefault;
 import org.geelato.core.constants.MetaDaoSql;
@@ -10,6 +12,7 @@ import org.geelato.core.enums.TableTypeEnum;
 import org.geelato.core.meta.MetaManager;
 import org.geelato.core.meta.model.entity.TableMeta;
 import org.geelato.core.meta.model.field.ColumnMeta;
+import org.geelato.core.meta.model.field.ColumnSelectType;
 import org.geelato.core.meta.schema.SchemaColumn;
 import org.geelato.core.meta.schema.SchemaIndex;
 import org.geelato.core.util.SchemaUtils;
@@ -29,6 +32,46 @@ import java.util.*;
 @Component
 public class DevTableColumnService extends BaseSortableService {
     private static Logger logger = LoggerFactory.getLogger(MetaDdlController.class);
+
+    /**
+     * 自动生成对于字段
+     * org、user 需要 id、name
+     *
+     * @param model 实体数据
+     * @return
+     */
+    public void automaticGeneration(ColumnMeta model) {
+        Assert.notNull(model, ApiErrorMsg.IS_NULL);
+        if (!model.isAutoAdd() || Strings.isBlank(model.getAutoName())) {
+            return;
+        }
+        // 校验是否已经存在
+        Map<String, Object> params = new HashMap<>();
+        params.put("name", model.getAutoName());
+        params.put("tableId", model.getTableId());
+        params.put("tableName", model.getTableName());
+        List<ColumnMeta> metaList = queryModel(ColumnMeta.class, params);
+        if (metaList != null && !metaList.isEmpty()) {
+            ColumnMeta autoMeta = metaList.get(0);
+            autoMeta.setAutoAdd(true);
+            autoMeta.setAutoName(model.getName());
+            updateModel(autoMeta);
+            return;
+        }
+        // 创建
+        String modelAutoName = model.getName();
+        model.setId(null);
+        model.setName(model.getAutoName());
+        model.setFieldName(StringUtils.toCamelCase(model.getAutoName()));
+        model.setOrdinalPosition(model.getOrdinalPosition() + 1);
+        model.setDefaultValue(null);
+        model.setKey(false);
+        model.setUniqued(false);
+        model.setAutoAdd(true);
+        model.setAutoName(modelAutoName);
+        model.afterSet();
+        createModel(model);
+    }
 
     /**
      * 生成默认字段，表格类型：数据库表
@@ -211,6 +254,76 @@ public class DevTableColumnService extends BaseSortableService {
         model.setUniqued(false);
 
         dao.save(model);
+    }
 
+    /**
+     * 分组选择 select
+     *
+     * @param selectTypes
+     * @return
+     */
+    public List<SelectOptionGroup> getSelectOptionGroup(List<ColumnSelectType> selectTypes) {
+        List<SelectOptionGroup> groups = new ArrayList<>();
+        HashMap<String, List<SelectOptionData<ColumnSelectType>>> optionDataMap = getSelectOptionDataMap(selectTypes);
+        if (!optionDataMap.isEmpty()) {
+            for (Map.Entry map : optionDataMap.entrySet()) {
+                SelectOptionGroup group = new SelectOptionGroup();
+                group.setLabel((String) map.getKey());
+                group.setOptions(((List<SelectOptionData>) map.getValue()).toArray(new SelectOptionData[0]));
+                groups.add(group);
+            }
+        }
+
+        return groups;
+    }
+
+    /**
+     * 选择 select
+     *
+     * @param selectTypes
+     * @return
+     */
+    public List<SelectOptionData<ColumnSelectType>> getSelectOptionData(List<ColumnSelectType> selectTypes) {
+        List<SelectOptionData<ColumnSelectType>> selects = new ArrayList<>();
+        HashMap<String, List<SelectOptionData<ColumnSelectType>>> optionDataMap = getSelectOptionDataMap(selectTypes);
+        if (!optionDataMap.isEmpty()) {
+            for (Map.Entry map : optionDataMap.entrySet()) {
+                selects.addAll((List<SelectOptionData<ColumnSelectType>>) map.getValue());
+            }
+        }
+
+        return selects;
+    }
+
+    /**
+     * 解析 ColumnSelectType
+     *
+     * @param selectTypes
+     * @return
+     */
+    private HashMap<String, List<SelectOptionData<ColumnSelectType>>> getSelectOptionDataMap(List<ColumnSelectType> selectTypes) {
+        HashMap<String, List<SelectOptionData<ColumnSelectType>>> stringListMap = new HashMap<>();
+
+        if (selectTypes != null && !selectTypes.isEmpty()) {
+            // 设置分组
+            for (ColumnSelectType st1 : selectTypes) {
+                if (Strings.isNotBlank(st1.getGroup()) && !stringListMap.containsKey(st1.getGroup())) {
+                    // 实际选项
+                    List<SelectOptionData<ColumnSelectType>> optionDatas = new ArrayList<>();
+                    for (ColumnSelectType st2 : selectTypes) {
+                        if (st1.getGroup().equals(st2.getGroup())) {
+                            SelectOptionData optionData = new SelectOptionData();
+                            optionData.setLabel(st2.getLabel());
+                            optionData.setValue(st2.getValue());
+                            optionData.setDisabled(st2.getDisabled());
+                            optionData.setData(st2);
+                            optionDatas.add(optionData);
+                        }
+                    }
+                    stringListMap.put(st1.getGroup(), optionDatas);
+                }
+            }
+        }
+        return stringListMap;
     }
 }

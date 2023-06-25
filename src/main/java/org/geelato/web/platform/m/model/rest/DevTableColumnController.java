@@ -5,9 +5,9 @@ import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiErrorMsg;
-import org.geelato.core.enums.EnableStatusEnum;
 import org.geelato.core.meta.MetaManager;
 import org.geelato.core.meta.model.field.ColumnMeta;
+import org.geelato.core.meta.model.field.ColumnSelectType;
 import org.geelato.web.platform.m.base.rest.BaseController;
 import org.geelato.web.platform.m.model.service.DevTableColumnService;
 import org.geelato.web.platform.m.security.entity.DataItems;
@@ -107,6 +107,10 @@ public class DevTableColumnController extends BaseController {
             } else {
                 result.setData(devTableColumnService.createModel(form));
             }
+            // 选择类型为 组织、用户时
+            if (result.isSuccess()) {
+                devTableColumnService.automaticGeneration(form);
+            }
             // 刷新实体缓存
             if (result.isSuccess() && Strings.isNotEmpty(form.getTableName())) {
                 metaManager.refreshDBMeta(form.getTableName());
@@ -144,7 +148,7 @@ public class DevTableColumnController extends BaseController {
     public ApiResult<List<ColumnMeta>> queryDefaultMeta() {
         ApiResult<List<ColumnMeta>> result = new ApiResult<>();
         try {
-            List<ColumnMeta> defaultColumnMetaList = MetaManager.singleInstance().getDefaultColumn();
+            List<ColumnMeta> defaultColumnMetaList = metaManager.getDefaultColumn();
             return result.setData(defaultColumnMetaList);
         } catch (Exception e) {
             logger.error(e.getMessage());
@@ -160,6 +164,21 @@ public class DevTableColumnController extends BaseController {
         ApiResult<ColumnMeta> result = new ApiResult<>();
         try {
 
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
+        }
+
+        return result;
+    }
+
+    @RequestMapping(value = "/selectType", method = RequestMethod.GET)
+    @ResponseBody
+    public ApiResult<List<ColumnSelectType>> getSelectType() {
+        ApiResult<List<ColumnSelectType>> result = new ApiResult<>();
+        try {
+            List<ColumnSelectType> selectTypes = metaManager.getColumnSelectType();
+            return result.success().setData(selectTypes);
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.QUERY_FAIL);

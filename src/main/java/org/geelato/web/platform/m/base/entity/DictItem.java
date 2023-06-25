@@ -8,7 +8,8 @@ import org.geelato.core.meta.model.entity.BaseSortableEntity;
 import org.geelato.core.meta.model.entity.EntityEnableAble;
 
 /**
- * @Date 2020/4/10 18:12 by liuwq
+ * @author liuwq
+ * @Date 2020/4/10 18:12
  */
 @Entity(name = "platform_dict_item")
 @Title(title = "数据字典项")
@@ -16,11 +17,11 @@ public class DictItem extends BaseSortableEntity implements EntityEnableAble {
 
     private String dictId;
     private String itemCode;
-    private String itemText;
-    private String dataRemark;
+    private String itemName;
+    private String itemRemark;
     private int enableStatus = ColumnDefault.ENABLE_STATUS_VALUE;
 
-    @Col(name = "dic_id")
+    @Col(name = "dict_id")
     @Title(title = "字典ID")
     public String getDictId() {
         return dictId;
@@ -40,24 +41,24 @@ public class DictItem extends BaseSortableEntity implements EntityEnableAble {
         this.itemCode = itemCode;
     }
 
-    @Col(name = "item_text")
+    @Col(name = "item_name")
     @Title(title = "字典项文本")
-    public String getItemText() {
-        return itemText;
+    public String getItemName() {
+        return itemName;
     }
 
-    public void setItemText(String itemText) {
-        this.itemText = itemText;
+    public void setItemName(String itemName) {
+        this.itemName = itemName;
     }
 
-    @Col(name = "data_remark")
+    @Col(name = "item_remark")
     @Title(title = "描述")
-    public String getDataRemark() {
-        return dataRemark;
+    public String getItemRemark() {
+        return itemRemark;
     }
 
-    public void setDataRemark(String dataRemark) {
-        this.dataRemark = dataRemark;
+    public void setItemRemark(String itemRemark) {
+        this.itemRemark = itemRemark;
     }
 
     @Col(name = "enable_status")
