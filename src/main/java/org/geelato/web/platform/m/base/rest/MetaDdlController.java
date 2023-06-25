@@ -30,13 +30,9 @@ public class MetaDdlController implements InitializingBean {
     @Qualifier("primaryDao")
     protected Dao dao;
 
-    @Autowired
-    protected RuleService ruleService;
 
     @Autowired
     protected DbGenerateDao dbGenerateDao;
-
-    private MetaManager metaManager = MetaManager.singleInstance();
 
     private static Logger logger = LoggerFactory.getLogger(MetaDdlController.class);
 
@@ -85,7 +81,6 @@ public class MetaDdlController implements InitializingBean {
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        ruleService.setDao(dao);
         dbGenerateDao.setDao(dao);
     }
 }

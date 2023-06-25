@@ -5,7 +5,7 @@ import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiErrorMsg;
-import org.geelato.core.meta.model.entity.TableView;
+import org.geelato.core.meta.model.view.TableView;
 import org.geelato.web.platform.m.base.rest.BaseController;
 import org.geelato.web.platform.m.model.service.DevViewService;
 import org.geelato.web.platform.m.security.entity.DataItems;
