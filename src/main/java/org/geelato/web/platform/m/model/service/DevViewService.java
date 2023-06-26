@@ -5,7 +5,7 @@ import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.constants.ColumnDefault;
 import org.geelato.core.enums.ViewTypeEnum;
 import org.geelato.core.meta.model.entity.TableMeta;
-import org.geelato.core.meta.model.entity.TableView;
+import org.geelato.core.meta.model.view.TableView;
 import org.geelato.web.platform.m.base.service.BaseSortableService;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
@@ -25,8 +25,6 @@ public class DevViewService extends BaseSortableService {
     /**
      * 仅创建、更新默认视图
      *
-     * @param tableMeta
-     * @param defaultViewSql
      */
     public void createOrUpdateDefaultTableView(TableMeta tableMeta, String defaultViewSql) {
         Assert.notNull(tableMeta, ApiErrorMsg.IS_NULL);

@@ -107,15 +107,12 @@ public class BootApplication implements CommandLineRunner, InitializingBean {
         EnvManager.singleInstance().EnvInit();
     }
     public void initMeta(String... args) throws IOException {
-        // 解析元数据
         MetaRelf.setApplicationContext(applicationContext);
         String[] packageNames = getProperty("geelato.meta.scan-package-names", "org.geelato").split(",");
         for (String packageName : packageNames) {
             MetaManager.singleInstance().scanAndParse(packageName, false);
         }
         MetaManager.singleInstance().parseDBMeta(dbGenerateDao.getDao());
-
-
         // 解析脚本：sql、业务规则
         if (this.getClass().getClassLoader() == null || this.getClass().getClassLoader().getResource("//") == null) {
             initFromFatJar(args);

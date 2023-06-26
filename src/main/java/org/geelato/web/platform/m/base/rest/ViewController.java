@@ -23,7 +23,6 @@ public class ViewController {
     @ResponseBody
     public ApiPagedResult pageQuery(@PathVariable("entity") String entity) {
         ApiPagedResult result = new ApiPagedResult();
-        ShiroDbRealm.ShiroUser  user= SecurityHelper.getCurrentUser();
         return result;
     }
 
