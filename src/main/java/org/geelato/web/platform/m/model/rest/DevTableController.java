@@ -97,13 +97,15 @@ public class DevTableController extends BaseController {
 
     @RequestMapping(value = "/createOrUpdate", method = RequestMethod.POST)
     @ResponseBody
-    public ApiResult<Map> createOrUpdate(@RequestBody TableMeta form) {
+    public ApiResult<Map> createOrUpdate(@RequestBody TableMeta form, Boolean isAlter) {
         ApiResult<Map> result = new ApiResult<>();
         try {
             // ID为空方可插入
             if (Strings.isNotBlank(form.getId())) {
                 // 存在，方可更新
-                if (devTableService.isExist(TableMeta.class, form.getId())) {
+                TableMeta model = devTableService.getModel(TableMeta.class, form.getId());
+                if (model != null) {
+                    form = devTableService.handleForm(form, model);
                     result.setData(devTableService.updateModel(form));
                 } else {
                     result.error().setMsg(ApiErrorMsg.IS_NULL);
