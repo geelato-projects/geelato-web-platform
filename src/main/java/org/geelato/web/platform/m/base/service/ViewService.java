@@ -9,20 +9,9 @@ import java.util.Map;
 @Component
 public class ViewService extends  BaseService  {
 
-    @Override
-    public <T> List<T> pageQueryModel(Class<T> entity, int pageNum, int pageSize, Map<String, Object> params) {
-
-        //TODO 获取权限拼接
-        return dao.queryList(entity, pageNum, pageSize, params);
+    public  List<Map<String,Object>> pageQueryModel(String entity,String view, int pageNum, int pageSize, Map<String, Object> params) {
+        return dao.queryListByView(entity,view, pageNum, pageSize, params);
     }
 
 
-    private Map<String,Object> permissionFilterRule(){
-        Map<String, Object> filterRuleParams=new HashMap<>();
-
-        filterRuleParams.put("creator","");
-        filterRuleParams.put("org","");
-
-        return filterRuleParams;
-    }
 }
