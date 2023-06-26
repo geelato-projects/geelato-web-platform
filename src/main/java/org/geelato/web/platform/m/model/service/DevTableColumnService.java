@@ -1,5 +1,7 @@
 package org.geelato.web.platform.m.model.service;
 
+import com.alibaba.fastjson2.JSONObject;
+import org.apache.commons.beanutils.BeanUtils;
 import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.arco.select.SelectOptionData;
 import org.geelato.core.arco.select.SelectOptionGroup;
@@ -17,13 +19,14 @@ import org.geelato.core.meta.schema.SchemaColumn;
 import org.geelato.core.meta.schema.SchemaIndex;
 import org.geelato.core.util.SchemaUtils;
 import org.geelato.core.util.StringUtils;
-import org.geelato.web.platform.m.base.rest.MetaDdlController;
 import org.geelato.web.platform.m.base.service.BaseSortableService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
+import java.lang.reflect.InvocationTargetException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -31,7 +34,12 @@ import java.util.*;
  */
 @Component
 public class DevTableColumnService extends BaseSortableService {
-    private static Logger logger = LoggerFactory.getLogger(MetaDdlController.class);
+    private static final String DELETE_COMMENT_PREFIX = "已删除；";
+    private static final String DELETE_DESCRIPTION_PREFIX = "Already removed; ";
+    private static final String UPDATE_COMMENT_PREFIX = "已变更；";
+    private static final String UPDATE_DESCRIPTION_PREFIX = "Already updated; ";
+    private static final Logger logger = LoggerFactory.getLogger(DevTableColumnService.class);
+    private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     /**
      * 自动生成对于字段
@@ -95,7 +103,7 @@ public class DevTableColumnService extends BaseSortableService {
                 });
                 // 创建
                 for (ColumnMeta meta : metaList) {
-                    meta.setTableId(tableMeta.getId().toString());
+                    meta.setTableId(tableMeta.getId());
                     meta.setTableName(tableMeta.getEntityName());
                     meta.setTableCatalog(null);
                     meta.setTableSchema(null);
@@ -183,7 +191,7 @@ public class DevTableColumnService extends BaseSortableService {
             List<String> uniques = new ArrayList<>();
             if (schemaIndices != null && schemaIndices.size() > 0) {
                 for (SchemaIndex index : schemaIndices) {
-                    boolean isUnique = Strings.isBlank(index.getNonUnique()) ? false : !Boolean.parseBoolean(index.getNonUnique());
+                    boolean isUnique = !Strings.isBlank(index.getNonUnique()) && !Boolean.parseBoolean(index.getNonUnique());
                     if (Strings.isNotBlank(index.getColumnName()) && isUnique) {
                         uniques.add(index.getColumnName());
                     }
@@ -248,10 +256,23 @@ public class DevTableColumnService extends BaseSortableService {
         model.setEnableStatus(EnableStatusEnum.DISABLED.getCode());
         model.setDelStatus(DeleteStatusEnum.IS.getCode());
         model.setSeqNo(ColumnDefault.SEQ_NO_DELETE);
+        // 标记
+        model.setTitle(DELETE_COMMENT_PREFIX + model.getTitle());
+        model.setComment(DELETE_COMMENT_PREFIX + model.getComment());
+        model.setDescription(DELETE_DESCRIPTION_PREFIX + model.getDescription());
         // 去除 主键、必填、唯一约束
         model.setKey(false);
         model.setNullable(true);
         model.setUniqued(false);
+        model.afterSet();
+
+        Map<String, Object> sqlParams = new HashMap<>();
+        sqlParams.put("columnName", model.getName());
+        sqlParams.put("delStatus", DeleteStatusEnum.IS.getCode());
+        sqlParams.put("enableStatus", EnableStatusEnum.DISABLED.getCode());
+        sqlParams.put("remark", "delete column. \n");
+        // 修正：外键
+        dao.execute("metaDeleteColumn", sqlParams);
 
         dao.save(model);
     }
@@ -326,4 +347,51 @@ public class DevTableColumnService extends BaseSortableService {
         }
         return stringListMap;
     }
+
+    public ColumnMeta upgradeTable(ColumnMeta form, ColumnMeta model) throws InvocationTargetException, IllegalAccessException {
+        // 字段标识，是否变更
+        if (model.getName().equals(form.getName())) {
+            return form;
+        }
+        // 数据库表中是否有该字段
+        String filterSql = String.format(" AND TABLE_NAME='%s' AND COLUMN_NAME='%s' ", model.getTableName(), model.getName());
+        String columnSql = String.format(MetaDaoSql.INFORMATION_SCHEMA_COLUMNS, MetaDaoSql.TABLE_SCHEMA_METHOD, filterSql);
+        logger.info(columnSql);
+        List<Map<String, Object>> columnList = dao.getJdbcTemplate().queryForList(columnSql);
+        if (columnList == null || columnList.isEmpty()) {
+            return form;
+        }
+        // 复制字段
+        model.setId(null);
+        model.setEnableStatus(EnableStatusEnum.DISABLED.getCode());
+        model.setDelStatus(DeleteStatusEnum.IS.getCode());
+        model.setSeqNo(ColumnDefault.SEQ_NO_DELETE);
+        // 标记
+        model.setTitle(UPDATE_COMMENT_PREFIX + model.getTitle());
+        model.setComment(UPDATE_COMMENT_PREFIX + model.getComment());
+        model.setDescription(String.format("update %s to %s. \n", sdf.format(new Date()), form.getName()) + model.getDescription());
+        // 去除 主键、必填、唯一约束
+        model.setKey(false);
+        model.setNullable(true);
+        model.setUniqued(false);
+        model.afterSet();
+        // 数据库表直接修改
+        Map<String, Object> changeParams = new HashMap<>();
+        changeParams.putAll(getSqlParams(model, "model"));
+        changeParams.putAll(getSqlParams(form, "form"));
+        dao.execute("metaResetColumn", changeParams);
+        dao.save(model);
+
+        return form;
+    }
+
+    public Map<String, Object> getSqlParams(ColumnMeta model, String prefix) throws InvocationTargetException, IllegalAccessException {
+        Map<String, Object> maps = JSONObject.parseObject(JSONObject.toJSONString(model));
+        Map<String, Object> modelMaps = new HashMap<>();
+        for (Map.Entry map : maps.entrySet()) {
+            modelMaps.put(prefix + map.getKey(), map.getValue());
+        }
+        return modelMaps;
+    }
+
 }

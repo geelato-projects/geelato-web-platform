@@ -97,13 +97,8 @@ public class DevTableColumnController extends BaseController {
                 // 存在，方可更新
                 ColumnMeta meta = devTableColumnService.getModel(ColumnMeta.class, form.getId());
                 Assert.notNull(meta, ApiErrorMsg.IS_NULL);
-                if (!meta.getName().equals(form.getName())) {
-                    devTableColumnService.isDeleteModel(meta);
-                    form.setId(null);
-                    devTableColumnService.createModel(form);
-                } else {
-                    result.setData(devTableColumnService.updateModel(form));
-                }
+                form = devTableColumnService.upgradeTable(form, meta);
+                result.setData(devTableColumnService.updateModel(form));
             } else {
                 result.setData(devTableColumnService.createModel(form));
             }

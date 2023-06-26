@@ -134,9 +134,9 @@ public class DictItemController extends BaseController {
         return result;
     }
 
-    @RequestMapping(value = "/queryItemByDicCode/{dictCode}", method = RequestMethod.GET)
+    @RequestMapping(value = "/queryItemByDictCode/{dictCode}", method = RequestMethod.GET)
     @ResponseBody
-    public ApiResult queryItemByDicCode(@PathVariable(required = true) String dictCode) {
+    public ApiResult queryItemByDictCode(@PathVariable(required = true) String dictCode) {
         ApiResult result = new ApiResult();
         List<DictItem> iResult = new ArrayList<>();
         try {
