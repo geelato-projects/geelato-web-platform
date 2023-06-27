@@ -5,6 +5,7 @@ import org.geelato.core.enums.DeleteStatusEnum;
 import org.geelato.core.meta.model.entity.BaseSortableEntity;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -12,6 +13,22 @@ import java.util.Map;
  */
 @Component
 public class BaseSortableService extends BaseService {
+    private static final String DEFAULT_ORDER_BY = "seq_no ASC";
+
+    /**
+     * 全量查询
+     *
+     * @param entity 查询实体
+     * @param params 条件参数
+     * @param <T>
+     * @return
+     */
+    @Override
+    public <T> List<T> queryModel(Class<T> entity, Map<String, Object> params) {
+        dao.SetDefaultFilter(true, filterGroup);
+        return dao.queryList(entity, params, BaseSortableService.DEFAULT_ORDER_BY);
+    }
+
     /**
      * 创建一条数据
      *

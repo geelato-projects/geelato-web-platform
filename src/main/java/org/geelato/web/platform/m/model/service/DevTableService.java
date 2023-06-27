@@ -39,6 +39,20 @@ public class DevTableService extends BaseSortableService {
     private DevTableForeignService devTableForeignService;
 
     /**
+     * 全量查询
+     *
+     * @param entity 查询实体
+     * @param params 条件参数
+     * @param <T>
+     * @return
+     */
+    @Override
+    public <T> List<T> queryModel(Class<T> entity, Map<String, Object> params) {
+        dao.SetDefaultFilter(true, filterGroup);
+        return dao.queryList(entity, params, "entity_name ASC");
+    }
+
+    /**
      * 从数据库同步至模型
      *
      * @param tableMeta

@@ -19,6 +19,7 @@ import java.util.Map;
  */
 @Service
 public class BaseService {
+    private static final String DEFAULT_ORDER_BY = "update_at DESC";
     @Autowired
     @Qualifier("primaryDao")
     public Dao dao;
@@ -36,7 +37,7 @@ public class BaseService {
      */
     public <T> List<T> pageQueryModel(Class<T> entity, int pageNum, int pageSize, Map<String, Object> params) {
         dao.SetDefaultFilter(true, filterGroup);
-        return dao.queryList(entity, pageNum, pageSize, params);
+        return dao.queryList(entity, pageNum, pageSize, BaseService.DEFAULT_ORDER_BY, params);
     }
 
     /**
@@ -49,7 +50,7 @@ public class BaseService {
      */
     public <T> List<T> queryModel(Class<T> entity, Map<String, Object> params) {
         dao.SetDefaultFilter(true, filterGroup);
-        return dao.queryList(entity, params);
+        return dao.queryList(entity, params, BaseService.DEFAULT_ORDER_BY);
     }
 
     /**
@@ -136,7 +137,7 @@ public class BaseService {
         if (fieldValue != null) {
             Map<String, Object> params = new HashMap<>();
             params.put(fieldName, fieldValue);
-            List<T> userList = dao.queryList(entity, params);
+            List<T> userList = dao.queryList(entity, params, null);
             return userList != null && !userList.isEmpty();
         }
 
