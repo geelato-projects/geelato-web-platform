@@ -86,20 +86,4 @@ public class BaseController {
         return fieldsList;
     }
 
-
-//    /**
-//     * 获取application中的属性值
-//     * @param key
-//     * @param defaultValue
-//     * @return
-//     */
-//    protected String getProperty(String key, String defaultValue) {
-//        String value = applicationContext.getEnvironment().getProperty(key);
-//        return value == null ? defaultValue : value;
-//    }
-//  implements InitializingBean
-//    @Override
-//    public void afterPropertiesSet() throws Exception {
-//        ruleService.setDao(dao);
-//    }
 }

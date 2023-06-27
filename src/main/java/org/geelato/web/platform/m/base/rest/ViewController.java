@@ -1,11 +1,17 @@
 package org.geelato.web.platform.m.base.rest;
 
+import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.api.ApiMetaResult;
 import org.geelato.core.api.ApiPagedResult;
+import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.constants.MediaTypes;
+import org.geelato.core.meta.MetaManager;
+import org.geelato.core.meta.model.entity.EntityMeta;
+import org.geelato.web.platform.m.base.entity.DictItem;
 import org.geelato.web.platform.m.base.service.ViewService;
-import org.geelato.web.platform.m.security.service.SecurityHelper;
-import org.geelato.web.platform.m.security.service.ShiroDbRealm;
+import org.geelato.web.platform.m.security.entity.DataItems;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -13,16 +19,41 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import jakarta.servlet.http.HttpServletRequest;
+import java.util.List;
+import java.util.Map;
+
 @Controller
 @RequestMapping(value = "/api/view/")
-public class ViewController {
+public class ViewController  extends BaseController {
+    private final Logger logger = LoggerFactory.getLogger(ViewController.class);
     @Autowired
     private ViewService viewService;
 
-    @RequestMapping(value = {"pageQuery/{entity}"}, method = {RequestMethod.POST}, produces = MediaTypes.JSON_UTF_8)
+    private MetaManager metaManager;
+
+    @RequestMapping(value = {"pageQuery/{entity}/{view}"}, method = {RequestMethod.POST}, produces = MediaTypes.JSON_UTF_8)
     @ResponseBody
-    public ApiPagedResult pageQuery(@PathVariable("entity") String entity) {
+    public ApiPagedResult pageQuery(@PathVariable("entity") String entity, @PathVariable("view") String view, HttpServletRequest req) {
         ApiPagedResult result = new ApiPagedResult();
+        try {
+            int pageNum = Strings.isNotBlank(req.getParameter("current")) ? Integer.parseInt(req.getParameter("current")) : -1;
+            int pageSize = Strings.isNotBlank(req.getParameter("pageSize")) ? Integer.parseInt(req.getParameter("pageSize")) : -1;
+
+            EntityMeta entityMeta= MetaManager.singleInstance().get(entity);
+            Map<String, Object> params = this.getQueryParameters(entityMeta.getClass(), req);
+            List<Map<String,Object>> pageQueryList = viewService.pageQueryModel(entity,view, pageNum, pageSize, params);
+
+            result.setTotal(999);
+            result.setData(new DataItems(pageQueryList, result.getTotal()));
+            result.setPage(pageNum);
+            result.setSize(pageSize);
+            result.setDataSize(pageQueryList != null ? pageQueryList.size() : 0);
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
+        }
+
         return result;
     }
 
