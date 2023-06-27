@@ -6,10 +6,12 @@ import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.meta.MetaManager;
+import org.geelato.core.meta.model.entity.TableMeta;
 import org.geelato.core.meta.model.field.ColumnMeta;
 import org.geelato.core.meta.model.field.ColumnSelectType;
 import org.geelato.web.platform.m.base.rest.BaseController;
 import org.geelato.web.platform.m.model.service.DevTableColumnService;
+import org.geelato.web.platform.m.model.service.DevViewService;
 import org.geelato.web.platform.m.security.entity.DataItems;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,6 +33,8 @@ public class DevTableColumnController extends BaseController {
     private MetaManager metaManager = MetaManager.singleInstance();
     @Autowired
     private DevTableColumnService devTableColumnService;
+    @Autowired
+    private DevViewService devViewService;
 
     @RequestMapping(value = "/pageQuery", method = RequestMethod.GET)
     @ResponseBody
@@ -109,6 +113,8 @@ public class DevTableColumnController extends BaseController {
             // 刷新实体缓存
             if (result.isSuccess() && Strings.isNotEmpty(form.getTableName())) {
                 metaManager.refreshDBMeta(form.getTableName());
+                // 刷新默认视图
+                devViewService.createOrUpdateDefaultTableView(devTableColumnService.getModel(TableMeta.class, form.getTableId()), devTableColumnService.getDefaultViewSql(form.getTableName()));
             }
         } catch (Exception e) {
             logger.error(e.getMessage());
@@ -129,6 +135,12 @@ public class DevTableColumnController extends BaseController {
                 result.success();
             } else {
                 result.error().setMsg(ApiErrorMsg.IS_NULL);
+            }
+            // 刷新实体缓存
+            if (result.isSuccess() && Strings.isNotEmpty(mResult.getTableName())) {
+                metaManager.refreshDBMeta(mResult.getTableName());
+                // 刷新默认视图
+                devViewService.createOrUpdateDefaultTableView(devTableColumnService.getModel(TableMeta.class, mResult.getTableId()), devTableColumnService.getDefaultViewSql(mResult.getTableName()));
             }
         } catch (Exception e) {
             logger.error(e.getMessage());

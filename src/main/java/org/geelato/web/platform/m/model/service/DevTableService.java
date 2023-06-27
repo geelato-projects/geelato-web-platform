@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
+import java.lang.reflect.InvocationTargetException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -30,7 +31,6 @@ public class DevTableService extends BaseSortableService {
     private static final String UPDATE_COMMENT_PREFIX = "已变更；";
     private static final Logger logger = LoggerFactory.getLogger(DevTableService.class);
     private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-    private static final SimpleDateFormat simple = new SimpleDateFormat("yyyyMMddHHmmss");
     @Lazy
     @Autowired
     private DevTableColumnService devTableColumnService;
@@ -58,7 +58,7 @@ public class DevTableService extends BaseSortableService {
      * @param tableMeta
      * @throws ParseException
      */
-    public void resetTableByDataBase(TableMeta tableMeta) throws ParseException {
+    public void resetTableByDataBase(TableMeta tableMeta) throws ParseException, InvocationTargetException, IllegalAccessException {
         // database_table
         List<Map<String, Object>> tableList = queryInformationSchemaTables(tableMeta.getEntityName());
         List<SchemaTable> schemaTables = SchemaUtils.buildData(SchemaTable.class, tableList);
@@ -108,7 +108,7 @@ public class DevTableService extends BaseSortableService {
             form.setTableName(form.getEntityName());
         }
         // 修正当前表
-        form.setDescription(String.format("update %s from %s[%s]。\n", sdf.format(new Date()), model.getTitle(), model.getEntityName()) + form.getDescription());
+        //form.setDescription(String.format("update %s from %s[%s]。\n", sdf.format(new Date()), model.getTitle(), model.getEntityName()) + form.getDescription());
         // 备份原来的表
         model.setId(null);
         model.setLinked(LinkedEnum.NO.getValue());
@@ -120,7 +120,7 @@ public class DevTableService extends BaseSortableService {
         model.setEnableStatus(EnableStatusEnum.DISABLED.getCode());
         model.setDelStatus(DeleteStatusEnum.IS.getCode());
         model.setSeqNo(ColumnDefault.SEQ_NO_DELETE);
-        dao.save(model);
+        //dao.save(model);
         // 数据库表修正
         sqlParams.put("newEntityName", form.getEntityName());// 新
         sqlParams.put("entityName", model.getEntityName());// 旧
@@ -140,7 +140,7 @@ public class DevTableService extends BaseSortableService {
      */
     public void isDeleteModel(TableMeta model) {
         // 格式：table_name_20230625141315
-        String newTableName = String.format("%s_d%s", model.getEntityName(), simple.format(new Date()));
+        String newTableName = String.format("%s_d%s", model.getEntityName(), System.currentTimeMillis());
         String newTitle = DELETE_COMMENT_PREFIX + model.getTitle();
         String newComment = DELETE_COMMENT_PREFIX + (Strings.isNotBlank(model.getTableComment()) ? model.getTableComment() : model.getTitle());
         // delete 2023-06-25 13:14:15 用户[user]=>[user_2023...]。

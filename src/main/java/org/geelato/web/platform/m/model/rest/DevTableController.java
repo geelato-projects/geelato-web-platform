@@ -121,7 +121,6 @@ public class DevTableController extends BaseController {
                 metaManager.refreshDBMeta(form.getEntityName());
                 // 刷新默认视图
                 devViewService.createOrUpdateDefaultTableView(form, devTableColumnService.getDefaultViewSql(form.getEntityName()));
-
             }
         } catch (Exception e) {
             logger.error(e.getMessage());
@@ -142,6 +141,10 @@ public class DevTableController extends BaseController {
                 result.success();
             } else {
                 result.error().setMsg(ApiErrorMsg.IS_NULL);
+            }
+            if (result.isSuccess() && Strings.isNotEmpty(mResult.getEntityName())) {
+                // 刷新实体缓存
+                metaManager.refreshDBMeta(mResult.getEntityName());
             }
         } catch (Exception e) {
             logger.error(e.getMessage());

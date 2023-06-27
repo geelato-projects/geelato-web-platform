@@ -1,7 +1,6 @@
 package org.geelato.web.platform.m.model.service;
 
 import com.alibaba.fastjson2.JSONObject;
-import org.apache.commons.beanutils.BeanUtils;
 import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.arco.select.SelectOptionData;
 import org.geelato.core.arco.select.SelectOptionGroup;
@@ -162,7 +161,7 @@ public class DevTableColumnService extends BaseSortableService {
      * @param tableMeta
      * @param deleteAll
      */
-    public void resetTableColumnByDataBase(TableMeta tableMeta, boolean deleteAll) {
+    public void resetTableColumnByDataBase(TableMeta tableMeta, boolean deleteAll) throws InvocationTargetException, IllegalAccessException {
         Map<String, Object> queryParams = new HashMap<>();
         queryParams.put("tableId", tableMeta.getId());
         queryParams.put("tableName", tableMeta.getEntityName());
@@ -221,7 +220,7 @@ public class DevTableColumnService extends BaseSortableService {
      * @param metaMap
      * @param schemaMap
      */
-    private void compareHashMapKeys(TableMeta tableMeta, HashMap<String, ColumnMeta> metaMap, Map<String, SchemaColumn> schemaMap) {
+    private void compareHashMapKeys(TableMeta tableMeta, HashMap<String, ColumnMeta> metaMap, Map<String, SchemaColumn> schemaMap) throws InvocationTargetException, IllegalAccessException {
         // 遍历 metaMap 的键 不存在：删除
         for (String key : metaMap.keySet()) {
             if (!schemaMap.containsKey(key)) {
@@ -251,15 +250,21 @@ public class DevTableColumnService extends BaseSortableService {
      *
      * @param model
      */
-    public void isDeleteModel(ColumnMeta model) {
+    public void isDeleteModel(ColumnMeta model) throws InvocationTargetException, IllegalAccessException {
+        // 重命名
+        String newColumnName = String.format("%s_d%s", model.getName(), System.currentTimeMillis());
+        String newTitle = DELETE_COMMENT_PREFIX + model.getTitle();
+        String newComment = DELETE_COMMENT_PREFIX + (Strings.isNotBlank(model.getComment()) ? model.getComment() : model.getTitle());
+        // delete 2023-06-25 13:14:15 用户[user]=>[user_2023...]。
+        String newDescription = String.format("delete %s %s[%s]=>[%s]。\n", sdf.format(new Date()), model.getTitle(), model.getName(), newColumnName) + model.getDescription();
         // 常用
         model.setEnableStatus(EnableStatusEnum.DISABLED.getCode());
         model.setDelStatus(DeleteStatusEnum.IS.getCode());
         model.setSeqNo(ColumnDefault.SEQ_NO_DELETE);
         // 标记
-        model.setTitle(DELETE_COMMENT_PREFIX + model.getTitle());
-        model.setComment(DELETE_COMMENT_PREFIX + model.getComment());
-        model.setDescription(DELETE_DESCRIPTION_PREFIX + model.getDescription());
+        model.setTitle(newTitle);
+        model.setComment(newComment);
+        model.setDescription(newDescription);
         // 去除 主键、必填、唯一约束
         model.setKey(false);
         model.setNullable(true);
@@ -267,13 +272,23 @@ public class DevTableColumnService extends BaseSortableService {
         model.afterSet();
 
         Map<String, Object> sqlParams = new HashMap<>();
-        sqlParams.put("columnName", model.getName());
-        sqlParams.put("delStatus", DeleteStatusEnum.IS.getCode());
-        sqlParams.put("enableStatus", EnableStatusEnum.DISABLED.getCode());
         sqlParams.put("remark", "delete column. \n");
+        sqlParams.put("newName", newColumnName);
+        sqlParams.putAll(getSqlParams(model, ""));
+        // 数据库表中是否有该字段
+        String filterSql = String.format(" AND TABLE_NAME='%s' AND COLUMN_NAME='%s' ", model.getTableName(), model.getName());
+        String columnSql = String.format(MetaDaoSql.INFORMATION_SCHEMA_COLUMNS, MetaDaoSql.TABLE_SCHEMA_METHOD, filterSql);
+        logger.info(columnSql);
+        List<Map<String, Object>> columnList = dao.getJdbcTemplate().queryForList(columnSql);
+        if (columnList == null || columnList.isEmpty()) {
+            sqlParams.put("isColumn", false);
+        } else {
+            sqlParams.put("isColumn", true);
+        }
         // 修正：外键
         dao.execute("metaDeleteColumn", sqlParams);
 
+        model.setName(newColumnName);
         dao.save(model);
     }
 
@@ -353,14 +368,6 @@ public class DevTableColumnService extends BaseSortableService {
         if (model.getName().equals(form.getName())) {
             return form;
         }
-        // 数据库表中是否有该字段
-        String filterSql = String.format(" AND TABLE_NAME='%s' AND COLUMN_NAME='%s' ", model.getTableName(), model.getName());
-        String columnSql = String.format(MetaDaoSql.INFORMATION_SCHEMA_COLUMNS, MetaDaoSql.TABLE_SCHEMA_METHOD, filterSql);
-        logger.info(columnSql);
-        List<Map<String, Object>> columnList = dao.getJdbcTemplate().queryForList(columnSql);
-        if (columnList == null || columnList.isEmpty()) {
-            return form;
-        }
         // 复制字段
         model.setId(null);
         model.setEnableStatus(EnableStatusEnum.DISABLED.getCode());
@@ -379,8 +386,21 @@ public class DevTableColumnService extends BaseSortableService {
         Map<String, Object> changeParams = new HashMap<>();
         changeParams.putAll(getSqlParams(model, "model"));
         changeParams.putAll(getSqlParams(form, "form"));
+        // 不进行字段复制
+        changeParams.put("isCopy", false);
+        // 数据库表中是否有该字段
+        String filterSql = String.format(" AND TABLE_NAME='%s' AND COLUMN_NAME='%s' ", model.getTableName(), model.getName());
+        String columnSql = String.format(MetaDaoSql.INFORMATION_SCHEMA_COLUMNS, MetaDaoSql.TABLE_SCHEMA_METHOD, filterSql);
+        logger.info(columnSql);
+        List<Map<String, Object>> columnList = dao.getJdbcTemplate().queryForList(columnSql);
+        if (columnList == null || columnList.isEmpty()) {
+            changeParams.put("isColumn", false);
+        } else {
+            form.setComment(Strings.isNotBlank(form.getComment()) ? form.getComment() : form.getTitle());
+            changeParams.put("isColumn", true);
+        }
         dao.execute("metaResetColumn", changeParams);
-        dao.save(model);
+        //dao.save(model);
 
         return form;
     }
