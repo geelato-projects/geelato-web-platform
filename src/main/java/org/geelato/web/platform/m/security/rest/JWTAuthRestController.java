@@ -2,9 +2,6 @@ package org.geelato.web.platform.m.security.rest;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.apache.shiro.SecurityUtils;
-import org.apache.shiro.authc.UsernamePasswordToken;
-import org.apache.shiro.subject.Subject;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.meta.annotation.IgnoreJWTVerify;
 import org.geelato.web.platform.m.base.rest.BaseController;
@@ -29,7 +26,7 @@ import java.util.Map;
  * Created by hongxq on 2022/5/1.
  */
 @Controller
-@RequestMapping(value = {"/api/sys/jwtauth", "/basic-api","/api/user"})
+@RequestMapping(value = {"/api/sys/jwtauth", "/basic-api", "/api/user"})
 public class JWTAuthRestController extends BaseController {
 
     @Autowired
@@ -46,13 +43,13 @@ public class JWTAuthRestController extends BaseController {
         try {
             //用户登录校验
             User loginUser = dao.queryForObject(User.class, "loginName", loginParams.getUsername());
-            Boolean checkPsdRst=CheckPsd(loginUser,loginParams);
+            Boolean checkPsdRst = CheckPsd(loginUser, loginParams);
             if (loginUser != null && checkPsdRst) {
                 apiResult.success();
                 apiResult.setMsg("认证成功！");
                 apiResult.setCode(20000);
 
-                String userId=loginUser.getId().toString();
+                String userId = loginUser.getId().toString();
 
                 Map<String, String> payload = new HashMap<>(2);
                 payload.put("id", userId);
@@ -94,9 +91,11 @@ public class JWTAuthRestController extends BaseController {
         roles.add(new LoginRoleInfo("Super Admin", "super"));
         return roles;
     }
+
     private String getAvatar(String id) {
         return "https://q1.qlogo.cn/g?b=qq&nk=339449197&s=640";
     }
+
     @RequestMapping(value = "/getUserInfo", method = RequestMethod.GET)
     @ResponseBody
     public ApiResult getUserInfo(HttpServletRequest req) {
@@ -170,11 +169,12 @@ public class JWTAuthRestController extends BaseController {
     @RequestMapping(value = "/getMenuList", method = {RequestMethod.POST, RequestMethod.GET})
     @ResponseBody
     public ApiResult getCurrentUserMenu(HttpServletRequest req) throws Exception {
-        User user = this.getUserByToken(req);
+        // User user = this.getUserByToken(req);
         // 菜单
         Map map = new HashMap<>();
-        map.put("userId", user.getId());
-        List<Map<String, Object>> menuItemList = dao.queryForMapList("select_platform_menu", map);
+        // map.put("userId", user.getId());
+        map.put("appId", req.getParameter("appId"));
+        List<Map<String, Object>> menuItemList = dao.queryForMapList("select_platform_tree_node_app_page", map);
         return new ApiResult().setData(menuItemList);
     }
 
