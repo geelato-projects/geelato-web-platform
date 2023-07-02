@@ -159,7 +159,8 @@ public class DevTableController extends BaseController {
     public ApiResult<String> queryDefaultView(@PathVariable(required = true) String entityName) {
         ApiResult<String> result = new ApiResult<>();
         try {
-            return result.setData(devTableColumnService.getDefaultViewSql(entityName));
+            Map<String, Object> viewParams = devTableColumnService.getDefaultViewSql(entityName);
+            return result.setData((String) viewParams.get("viewConstruct"));
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.QUERY_FAIL);

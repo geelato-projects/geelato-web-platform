@@ -24,11 +24,12 @@ public class DevViewService extends BaseSortableService {
 
     /**
      * 仅创建、更新默认视图
-     *
      */
-    public void createOrUpdateDefaultTableView(TableMeta tableMeta, String defaultViewSql) {
+    public void createOrUpdateDefaultTableView(TableMeta tableMeta, Map<String, Object> viewParams) {
         Assert.notNull(tableMeta, ApiErrorMsg.IS_NULL);
-        if (Strings.isBlank(defaultViewSql)) {
+        String viewColumns = (String) viewParams.get("viewColumns");
+        String viewConstruct = (String) viewParams.get("viewConstruct");
+        if (Strings.isBlank(viewColumns) || Strings.isBlank(viewConstruct)) {
             return;
         }
         Map<String, Object> params = new HashMap<>();
@@ -44,7 +45,8 @@ public class DevViewService extends BaseSortableService {
                     deleteModel(TableView.class, tableViewList.get(i).getId());
                 }
             }
-            meta.setViewConstruct(defaultViewSql);
+            meta.setViewConstruct(viewConstruct);
+            meta.setViewColumn(viewColumns);
             meta.setTitle(String.format("%s的默认视图", tableMeta.getTitle()));
             meta.setViewName(String.format("v_%s", tableMeta.getEntityName()));
             updateModel(meta);
@@ -55,7 +57,8 @@ public class DevViewService extends BaseSortableService {
             meta.setTitle(String.format("%s的默认视图", tableMeta.getTitle()));
             meta.setViewName(String.format("v_%s", tableMeta.getEntityName()));
             meta.setViewType(ViewTypeEnum.DEFAULT.getCode());
-            meta.setViewConstruct(defaultViewSql);
+            meta.setViewConstruct(viewConstruct);
+            meta.setViewColumn(viewColumns);
             meta.setLinked(tableMeta.getLinked());
             meta.setSeqNo(ColumnDefault.SEQ_NO_FIRST);
             createModel(meta);

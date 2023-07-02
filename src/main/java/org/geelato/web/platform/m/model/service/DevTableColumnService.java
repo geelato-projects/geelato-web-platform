@@ -1,5 +1,6 @@
 package org.geelato.web.platform.m.model.service;
 
+import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.arco.select.SelectOptionData;
@@ -14,6 +15,7 @@ import org.geelato.core.meta.MetaManager;
 import org.geelato.core.meta.model.entity.TableMeta;
 import org.geelato.core.meta.model.field.ColumnMeta;
 import org.geelato.core.meta.model.field.ColumnSelectType;
+import org.geelato.core.meta.model.view.ViewColumn;
 import org.geelato.core.meta.schema.SchemaColumn;
 import org.geelato.core.meta.schema.SchemaIndex;
 import org.geelato.core.util.SchemaUtils;
@@ -118,9 +120,10 @@ public class DevTableColumnService extends BaseSortableService {
      * @param entityName
      * @return
      */
-    public String getDefaultViewSql(String entityName) {
+    public Map<String, Object> getDefaultViewSql(String entityName) {
+        Map<String, Object> viewParams = new HashMap<>();
         if (Strings.isBlank(entityName)) {
-            return null;
+            return viewParams;
         }
         Map<String, Object> params = new HashMap<>();
         params.put("tableName", entityName);
@@ -141,18 +144,23 @@ public class DevTableColumnService extends BaseSortableService {
                 }
             }
             // 拼接
+            List<ViewColumn> viewColumns = new ArrayList<>();
             if (!columnMetaMap.isEmpty()) {
                 List<String> asList = new ArrayList<>();
                 for (Map.Entry<String, ColumnMeta> metaMap : columnMetaMap.entrySet()) {
                     ColumnMeta meta = metaMap.getValue();
                     asList.add(meta.getName());
+                    // 保存视图字段
+                    viewColumns.add(ViewColumn.fromColumnMeta(meta));
                 }
-                return String.format(MetaDaoSql.SQL_TABLE_DEFAULT_VIEW, String.join(",", asList), entityName);
+                viewParams.put("viewColumns", JSON.toJSONString(viewColumns));
+                viewParams.put("viewConstruct", String.format(MetaDaoSql.SQL_TABLE_DEFAULT_VIEW, String.join(",", asList), entityName));
+                return viewParams;
             }
         }
-        String defaultViewSql = String.format(MetaDaoSql.SQL_TABLE_DEFAULT_VIEW, "*", entityName);
+        viewParams.put("viewConstruct", String.format(MetaDaoSql.SQL_TABLE_DEFAULT_VIEW, "*", entityName));
 
-        return defaultViewSql;
+        return viewParams;
     }
 
     /**

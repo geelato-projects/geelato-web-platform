@@ -173,6 +173,7 @@ public class JWTAuthRestController extends BaseController {
         // 菜单
         Map map = new HashMap<>();
         // map.put("userId", user.getId());
+        map.put("flag", req.getParameter("flag"));
         map.put("appId", req.getParameter("appId"));
         List<Map<String, Object>> menuItemList = dao.queryForMapList("select_platform_tree_node_app_page", map);
         return new ApiResult().setData(menuItemList);
