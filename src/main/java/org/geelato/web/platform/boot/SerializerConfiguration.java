@@ -46,7 +46,7 @@ public class SerializerConfiguration {
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.registerModule(simpleModule);
         objectMapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
-
+        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
         // 解决 jdk8 java.time.LocalDateTime 时间转换等问题
         JavaTimeModule javaTimeModule = new JavaTimeModule();
         javaTimeModule.addSerializer(LocalDateTime.class, new LocalDateTimeSerializer(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
