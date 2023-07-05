@@ -254,9 +254,8 @@ public class RuleService {
      * @return 主健值
      */
     public int delete(String biz, String id) {
-        EntityMeta entityMeta=metaManager.getByEntityName(biz);
         FilterGroup filterGroup = new FilterGroup().addFilter("id",id);
-        BoundSql boundSql = sqlManager.generateDeleteSql(entityMeta.getEntityType(),filterGroup);
+        BoundSql boundSql = sqlManager.generateDeleteSql(biz,filterGroup);
         return dao.delete(boundSql);
     }
 
