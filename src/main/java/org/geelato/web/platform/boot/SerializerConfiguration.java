@@ -31,9 +31,7 @@ import java.time.format.DateTimeFormatter;
 @Configuration
 public class SerializerConfiguration {
 
-    private static final Logger logger = LoggerFactory.getLogger(SerializerConfiguration.class);
-
-    /**
+       /**
      * 防止json时出现错误FAIL_ON_EMPTY_BEANS
      *
      * @return
@@ -46,7 +44,7 @@ public class SerializerConfiguration {
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.registerModule(simpleModule);
         objectMapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
-
+        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
         // 解决 jdk8 java.time.LocalDateTime 时间转换等问题
         JavaTimeModule javaTimeModule = new JavaTimeModule();
         javaTimeModule.addSerializer(LocalDateTime.class, new LocalDateTimeSerializer(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
@@ -56,10 +54,7 @@ public class SerializerConfiguration {
         javaTimeModule.addDeserializer(LocalDateTime.class, new LocalDateTimeDeserializer(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
         javaTimeModule.addDeserializer(LocalDate.class, new LocalDateDeserializer(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
         javaTimeModule.addDeserializer(LocalTime.class, new LocalTimeDeserializer(DateTimeFormatter.ofPattern("HH:mm:ss")));
-        // 自定义 全局把时间转为 时间戳
-//        javaTimeModule.addSerializer(Date.class, new DateToLongSerializer());
-//        javaTimeModule.addSerializer(LocalDate.class, new LocalDateToLongSerializer());
-//        javaTimeModule.addSerializer(LocalDateTime.class, new LocalDateTimeToLongSerializer());
+
         objectMapper.registerModule(javaTimeModule);
 
         return objectMapper;
