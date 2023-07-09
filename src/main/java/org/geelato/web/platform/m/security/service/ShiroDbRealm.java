@@ -107,7 +107,6 @@ public class ShiroDbRealm extends AuthorizingRealm {
         public String getName() {
             return name;
         }
-
         /**
          * 本函数输出将作为默认的<shiro:principal/>输出.
          */
