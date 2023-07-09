@@ -2,7 +2,7 @@ package org.geelato.web.platform.m.security.rest;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.meta.annotation.IgnoreJWTVerify;
 import org.geelato.web.platform.m.base.rest.BaseController;
@@ -99,7 +99,7 @@ public class JWTAuthRestController extends BaseController {
         return "https://q1.qlogo.cn/g?b=qq&nk=339449197&s=640";
     }
 
-    @RequestMapping(value = "/info", method = RequestMethod.GET)
+    @RequestMapping(value = "/getUserInfo", method = RequestMethod.GET)
     @ResponseBody
     public ApiResult getUserInfo(HttpServletRequest req) {
         try {
@@ -172,13 +172,21 @@ public class JWTAuthRestController extends BaseController {
     @RequestMapping(value = "/getMenuList", method = {RequestMethod.POST, RequestMethod.GET})
     @ResponseBody
     public ApiResult getCurrentUserMenu(HttpServletRequest req) throws Exception {
+        ApiResult result = new ApiResult();
         // User user = this.getUserByToken(req);
-        // 菜单
-        Map map = new HashMap<>();
-        // map.put("userId", user.getId());
-        map.put("flag", req.getParameter("flag"));
-        map.put("appId", req.getParameter("appId"));
-        List<Map<String, Object>> menuItemList = dao.queryForMapList("select_platform_tree_node_app_page", map);
+        List<Map<String, Object>> menuItemList = new ArrayList<>();
+        String appId = req.getParameter("appId");
+        String tenantCode = req.getParameter("tenantCode");
+        if (Strings.isNotBlank(appId) && Strings.isNotBlank(tenantCode)) {
+            // 菜单
+            Map map = new HashMap<>();
+            // map.put("userId", user.getId());
+            map.put("flag", req.getParameter("flag"));
+            map.put("appId", req.getParameter("appId"));
+            map.put("tenantCode", req.getParameter("tenantCode"));
+            menuItemList = dao.queryForMapList("select_platform_tree_node_app_page", map);
+        }
+
         return new ApiResult().setData(menuItemList);
     }
 
@@ -208,11 +216,7 @@ public class JWTAuthRestController extends BaseController {
      * @throws Exception
      */
     private User getUserByToken(HttpServletRequest req) throws Exception {
-        ShiroDbRealm.ShiroUser  user= SecurityHelper.getCurrentUser();
-        Object requetLoginName=req.getAttribute("loginName");
-        String loginName=(requetLoginName!=null)?requetLoginName.toString():"admin";;
-        loginName=(user!=null)?user.loginName:"admin";;
-        return dao.queryForObject(User.class, "loginName", loginName);
+        return dao.queryForObject(User.class, "loginName", req.getAttribute("loginName"));
     }
 
     private String getToken(HttpServletRequest req) {

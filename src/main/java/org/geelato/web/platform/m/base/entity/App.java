@@ -14,18 +14,20 @@ import org.geelato.core.meta.model.entity.BaseSortableEntity;
 @Title(title = "应用")
 public class App extends BaseSortableEntity {
 
-    private String name;
-    private String code;
-    private String icon;
-    private String key;
+    private String name;// 应用名称
+    private String code;// 应用编码
+    private String icon;// 图标
+    private String appKey;
     private String token;
     private String tree;
-    private String logo;
+    private String logo;// 标识
     private String theme;
-    private int watermark = 0;
-    private String href;
+    private int watermark = 0;//应用水印
+    private String href;//首页链接
     private String dependAppCode;
-    private String description;
+    private String powerInfo;
+    private String versionInfo;
+    private String description;// 描述
 
     @Col(name = "name", nullable = false)
     @Title(title = "应用名称")
@@ -37,7 +39,7 @@ public class App extends BaseSortableEntity {
         this.name = name;
     }
 
-    @Col(name = "code",unique = true)
+    @Col(name = "code", unique = true)
     @Title(title = "编码")
     public String getCode() {
         return code;
@@ -78,7 +80,7 @@ public class App extends BaseSortableEntity {
     }
 
     @Col(name = "watermark")
-    @Title(title = "应用水印",description = "是否启用应用水印，默认不启用。")
+    @Title(title = "应用水印", description = "是否启用应用水印，默认不启用。")
     public int getWatermark() {
         return watermark;
     }
@@ -87,14 +89,14 @@ public class App extends BaseSortableEntity {
         this.watermark = watermark;
     }
 
-    @Col(name = "key")
+    @Col(name = "app_key")
     @Title(title = "应用秘钥")
-    public String getKey() {
-        return key;
+    public String getAppKey() {
+        return appKey;
     }
 
-    public void setKey(String key) {
-        this.key = key;
+    public void setAppKey(String appKey) {
+        this.appKey = appKey;
     }
 
     @Col(name = "token")
@@ -108,7 +110,7 @@ public class App extends BaseSortableEntity {
     }
 
     @Col(name = "href")
-    @Title(title = "首页链接",description = "加载模块之后打开的首页面")
+    @Title(title = "首页链接", description = "加载模块之后打开的首页面")
     public String getHref() {
         return href;
     }
@@ -129,13 +131,33 @@ public class App extends BaseSortableEntity {
 
 
     @Col(name = "depend_app_code")
-    @Title(title = "依赖的应用",description = "依赖的应用模块编码，可多个，格式如：dev,sys")
+    @Title(title = "依赖的应用", description = "依赖的应用模块编码，可多个，格式如：dev,sys")
     public String getDependAppCode() {
         return dependAppCode;
     }
 
     public void setDependAppCode(String dependAppCode) {
         this.dependAppCode = dependAppCode;
+    }
+
+    @Col(name = "power_info")
+    @Title(title = "权限信息", description = "页面底部的网站说明")
+    public String getPowerInfo() {
+        return powerInfo;
+    }
+
+    public void setPowerInfo(String powerInfo) {
+        this.powerInfo = powerInfo;
+    }
+
+    @Col(name = "version_info")
+    @Title(title = "版本信息")
+    public String getVersionInfo() {
+        return versionInfo;
+    }
+
+    public void setVersionInfo(String versionInfo) {
+        this.versionInfo = versionInfo;
     }
 
     @Col(name = "description")
