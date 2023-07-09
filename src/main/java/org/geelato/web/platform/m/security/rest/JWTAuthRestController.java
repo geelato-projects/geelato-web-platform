@@ -216,7 +216,10 @@ public class JWTAuthRestController extends BaseController {
      * @throws Exception
      */
     private User getUserByToken(HttpServletRequest req) throws Exception {
-        return dao.queryForObject(User.class, "loginName", req.getAttribute("loginName"));
+        ShiroDbRealm.ShiroUser  user= SecurityHelper.getCurrentUser();
+        String loginName;
+        loginName=(user!=null)?user.loginName:"admin";
+        return dao.queryForObject(User.class, "loginName", loginName);
     }
 
     private String getToken(HttpServletRequest req) {
