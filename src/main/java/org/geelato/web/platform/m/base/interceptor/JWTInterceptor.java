@@ -37,12 +37,12 @@ public class JWTInterceptor implements HandlerInterceptor {
         }
 
         // 从请求头内获取token
-        String token = request.getHeader("authorization");
+        String token = request.getHeader("Authorization");
         // 执行认证
         if (token == null) {
             throw new Exception("无效的token");
         }
-
+        token=token.replace("Bearer ","");
         // 验证令牌
         JWTUtil.verify(token);
 
