@@ -99,7 +99,7 @@ public class JWTAuthRestController extends BaseController {
         return "https://q1.qlogo.cn/g?b=qq&nk=339449197&s=640";
     }
 
-    @RequestMapping(value = "/info", method = RequestMethod.GET)
+    @RequestMapping(value = "/info", method = {RequestMethod.POST, RequestMethod.GET})
     @ResponseBody
     public ApiResult getUserInfo(HttpServletRequest req) {
         try {
