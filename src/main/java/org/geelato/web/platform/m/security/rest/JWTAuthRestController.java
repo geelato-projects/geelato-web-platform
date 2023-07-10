@@ -29,7 +29,7 @@ import java.util.Map;
  * Created by hongxq on 2022/5/1.
  */
 @Controller
-@RequestMapping(value = {"/api/sys/jwtauth", "/basic-api", "/api/user"})
+@RequestMapping(value = {"/api/user"})
 public class JWTAuthRestController extends BaseController {
 
     @Autowired
