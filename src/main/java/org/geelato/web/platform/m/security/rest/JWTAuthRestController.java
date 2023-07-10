@@ -12,6 +12,8 @@ import org.geelato.web.platform.m.security.entity.LoginRoleInfo;
 import org.geelato.web.platform.m.security.entity.User;
 import org.geelato.web.platform.m.security.service.AccountService;
 import org.geelato.web.platform.m.security.service.JWTUtil;
+import org.geelato.web.platform.m.security.service.SecurityHelper;
+import org.geelato.web.platform.m.security.service.ShiroDbRealm;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -97,7 +99,7 @@ public class JWTAuthRestController extends BaseController {
         return "https://q1.qlogo.cn/g?b=qq&nk=339449197&s=640";
     }
 
-    @RequestMapping(value = "/getUserInfo", method = RequestMethod.GET)
+    @RequestMapping(value = "/info", method = {RequestMethod.POST, RequestMethod.GET})
     @ResponseBody
     public ApiResult getUserInfo(HttpServletRequest req) {
         try {
@@ -214,7 +216,10 @@ public class JWTAuthRestController extends BaseController {
      * @throws Exception
      */
     private User getUserByToken(HttpServletRequest req) throws Exception {
-        return dao.queryForObject(User.class, "loginName", req.getAttribute("loginName"));
+        ShiroDbRealm.ShiroUser  user= SecurityHelper.getCurrentUser();
+        String loginName;
+        loginName=(user!=null)?user.loginName:"admin";
+        return dao.queryForObject(User.class, "loginName", loginName);
     }
 
     private String getToken(HttpServletRequest req) {
