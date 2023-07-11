@@ -24,7 +24,7 @@ import java.util.Map;
  * Created by hongxq on 2022/10/1
  */
 @Controller
-@RequestMapping(value = {"/api/sys", "/basic-api/system"})
+@RequestMapping(value = {"/api/sys"})
 public class SystemRestController extends BaseController {
 
     @Autowired

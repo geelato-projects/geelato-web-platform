@@ -29,7 +29,7 @@ import java.util.Map;
  * Created by hongxq on 2022/5/1.
  */
 @Controller
-@RequestMapping(value = {"/api/sys/jwtauth", "/basic-api", "/api/user"})
+@RequestMapping(value = {"/api/user"})
 public class JWTAuthRestController extends BaseController {
 
     @Autowired
@@ -54,9 +54,10 @@ public class JWTAuthRestController extends BaseController {
 
                 String userId = loginUser.getId().toString();
 
-                Map<String, String> payload = new HashMap<>(2);
+                Map<String, String> payload = new HashMap<>(3);
                 payload.put("id", userId);
                 payload.put("loginName", loginUser.getLoginName());
+                payload.put("passWord", loginParams.getPassword());
                 String token = JWTUtil.getToken(payload);
 
                 LoginResult loginResult = new LoginResult();
@@ -104,6 +105,9 @@ public class JWTAuthRestController extends BaseController {
     public ApiResult getUserInfo(HttpServletRequest req) {
         try {
             User user = this.getUserByToken(req);
+            if(user==null){
+                return new ApiResult().error().setMsg("获取用户失败");
+            }
             LoginResult loginResult = new LoginResult();
             loginResult.setUserId(user.getId().toString());
             loginResult.setAvatar(user.getAvatar());
@@ -216,10 +220,12 @@ public class JWTAuthRestController extends BaseController {
      * @throws Exception
      */
     private User getUserByToken(HttpServletRequest req) throws Exception {
-        ShiroDbRealm.ShiroUser  user= SecurityHelper.getCurrentUser();
-        String loginName;
-        loginName=(user!=null)?user.loginName:"admin";
-        return dao.queryForObject(User.class, "loginName", loginName);
+        ShiroDbRealm.ShiroUser  shiroUser= SecurityHelper.getCurrentUser();
+        User user=null;
+        if(shiroUser!=null){
+            user=dao.queryForObject(User.class, "loginName", shiroUser.loginName);
+        }
+        return user;
     }
 
     private String getToken(HttpServletRequest req) {
