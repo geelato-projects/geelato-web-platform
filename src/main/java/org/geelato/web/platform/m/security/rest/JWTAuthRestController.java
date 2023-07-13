@@ -6,7 +6,7 @@ import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.meta.annotation.IgnoreJWTVerify;
-import org.geelato.web.platform.enums.ResetPwdValidType;
+import org.geelato.web.platform.enums.ValidTypeEnum;
 import org.geelato.web.platform.m.base.rest.BaseController;
 import org.geelato.web.platform.m.security.entity.LoginParams;
 import org.geelato.web.platform.m.security.entity.LoginResult;
@@ -214,9 +214,9 @@ public class JWTAuthRestController extends BaseController {
         return new ApiResult().setData(plainPassword);
     }
 
-    @RequestMapping(value = "/resetPwdValid", method = RequestMethod.POST)
+    @RequestMapping(value = "/forgetValid", method = RequestMethod.POST)
     @ResponseBody
-    public ApiResult resetPwdValid(@RequestBody Map<String, Object> params) {
+    public ApiResult forgetValid(@RequestBody Map<String, Object> params) {
         ApiResult result = new ApiResult();
         params = params != null ? params : new HashMap<>();
         try {
@@ -224,11 +224,11 @@ public class JWTAuthRestController extends BaseController {
             String validType = (String) params.get("validType");
             String mobilePrefix = (String) params.get("prefix");
             Map<String, Object> map = new HashMap<>();
-            if (Strings.isBlank(validBox) || ResetPwdValidType.getLabel(validType) == null) {
+            if (Strings.isBlank(validBox) || ValidTypeEnum.getLabel(validType) == null) {
                 return result.error();
             }
-            map.put(ResetPwdValidType.getLabel(validType), validBox);
-            if (ResetPwdValidType.MOBILE.getValue().equals(validType)) {
+            map.put(ValidTypeEnum.getLabel(validType), validBox);
+            if (ValidTypeEnum.MOBILE.getValue().equals(validType)) {
                 if (Strings.isBlank(mobilePrefix)) {
                     return result.error();
                 }
@@ -247,9 +247,9 @@ public class JWTAuthRestController extends BaseController {
         return result;
     }
 
-    @RequestMapping(value = "/resetPwd", method = RequestMethod.POST)
+    @RequestMapping(value = "/forget", method = RequestMethod.POST)
     @ResponseBody
-    public ApiResult resetPwd(@RequestBody Map<String, Object> params) {
+    public ApiResult forgetPassword(@RequestBody Map<String, Object> params) {
         ApiResult result = new ApiResult();
         params = params != null ? params : new HashMap<>();
         try {

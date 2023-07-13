@@ -7,13 +7,13 @@ import org.apache.logging.log4j.util.Strings;
  * @description: TODO
  * @date 2023/7/13 15:04
  */
-public enum ResetPwdValidType {
+public enum ValidTypeEnum {
     MOBILE("mobilePhone", "1"), MAIL("email", "2");
 
     private final String label;//选项内容
     private final String value;//选项值
 
-    ResetPwdValidType(String label, String value) {
+    ValidTypeEnum(String label, String value) {
         this.label = label;
         this.value = value;
     }
@@ -28,7 +28,7 @@ public enum ResetPwdValidType {
 
     public static String getLabel(String value) {
         if (Strings.isNotBlank(value)) {
-            for (ResetPwdValidType validType : ResetPwdValidType.values()) {
+            for (ValidTypeEnum validType : ValidTypeEnum.values()) {
                 if (validType.getValue().equals(value)) {
                     return validType.getLabel();
                 }
