@@ -21,6 +21,7 @@ public class User extends BaseSortableEntity {
     private String salt;
     private String avatar;
     private String plainPassword;
+    private String mobilePrefix;
     private String mobilePhone;
     private String telephone;
     private String email;
@@ -128,6 +129,16 @@ public class User extends BaseSortableEntity {
 
     public void setPlainPassword(String plainPassword) {
         this.plainPassword = plainPassword;
+    }
+
+    @Title(title = "手机")
+    @Col(name = "mobile_prefix", charMaxlength = 16)
+    public String getMobilePrefix() {
+        return mobilePrefix;
+    }
+
+    public void setMobilePrefix(String mobilePrefix) {
+        this.mobilePrefix = mobilePrefix;
     }
 
     @Title(title = "手机")

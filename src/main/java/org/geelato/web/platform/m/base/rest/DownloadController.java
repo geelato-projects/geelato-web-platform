@@ -25,7 +25,7 @@ import java.net.URLEncoder;
  * @date 2023/7/5 14:00
  */
 @Controller
-@RequestMapping(value = "/api/download")
+@RequestMapping(value = "/resources")
 public class DownloadController extends BaseController {
     private final Logger logger = LoggerFactory.getLogger(DownloadController.class);
     @Autowired
