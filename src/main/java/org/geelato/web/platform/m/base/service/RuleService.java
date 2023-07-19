@@ -254,7 +254,14 @@ public class RuleService {
      * @return 主健值
      */
     public int delete(String biz, String id) {
-        FilterGroup filterGroup = new FilterGroup().addFilter("id",id);
+        FilterGroup filterGroup;
+
+        if(id.contains(",")){
+            filterGroup = new FilterGroup().addFilter("id", FilterGroup.Operator.in,id);
+        }else{
+            filterGroup = new FilterGroup().addFilter("id",id);
+        }
+
         BoundSql boundSql = sqlManager.generateDeleteSql(biz,filterGroup);
         return dao.delete(boundSql);
     }
