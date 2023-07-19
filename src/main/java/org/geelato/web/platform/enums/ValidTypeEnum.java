@@ -8,7 +8,9 @@ import org.apache.logging.log4j.util.Strings;
  * @date 2023/7/13 15:04
  */
 public enum ValidTypeEnum {
-    MOBILE("mobilePhone", "1"), MAIL("email", "2");
+    MOBILE("mobilePhone", "1"),
+    MAIL("email", "2"),
+    PASSWORD("'password'", "3");
 
     private final String label;//选项内容
     private final String value;//选项值

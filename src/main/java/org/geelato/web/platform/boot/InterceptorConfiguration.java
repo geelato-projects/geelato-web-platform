@@ -19,6 +19,7 @@ public class InterceptorConfiguration implements WebMvcConfigurer {
                 .excludePathPatterns("/api/user/forgetValid")
                 .excludePathPatterns("/api/user/forget")
                 .excludePathPatterns("/api/user/menu")
+                .excludePathPatterns("/api/code/generate")
                 .excludePathPatterns("/swagger-ui/index.html")
                 .excludePathPatterns("/v3/**")
                 .excludePathPatterns("/resources/**");
