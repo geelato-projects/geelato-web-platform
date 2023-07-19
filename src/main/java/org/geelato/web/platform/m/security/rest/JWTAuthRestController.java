@@ -4,7 +4,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.api.ApiResult;
+import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.meta.annotation.IgnoreJWTVerify;
+import org.geelato.web.platform.enums.ValidTypeEnum;
 import org.geelato.web.platform.m.base.rest.BaseController;
 import org.geelato.web.platform.m.security.entity.LoginParams;
 import org.geelato.web.platform.m.security.entity.LoginResult;
@@ -18,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -105,7 +108,7 @@ public class JWTAuthRestController extends BaseController {
     public ApiResult getUserInfo(HttpServletRequest req) {
         try {
             User user = this.getUserByToken(req);
-            if(user==null){
+            if (user == null) {
                 return new ApiResult().error().setMsg("获取用户失败");
             }
             LoginResult loginResult = new LoginResult();
@@ -140,7 +143,7 @@ public class JWTAuthRestController extends BaseController {
     }
 
 
-    @RequestMapping(value = "/logout", method = RequestMethod.GET)
+    @RequestMapping(value = "/logout", method = RequestMethod.POST)
     @ResponseBody
     public ApiResult logout(HttpServletRequest req) {
         try {
@@ -156,24 +159,24 @@ public class JWTAuthRestController extends BaseController {
     /**
      * 获取当前用户的菜单
      *
-     * @param req
      * @return
      */
-    @RequestMapping(value = "/getMenuList", method = {RequestMethod.POST, RequestMethod.GET})
+    @RequestMapping(value = "/menu", method = {RequestMethod.POST, RequestMethod.GET})
     @ResponseBody
-    public ApiResult getCurrentUserMenu(HttpServletRequest req) throws Exception {
+    public ApiResult getCurrentUserMenu(@RequestBody Map<String, Object> params, HttpServletRequest request) throws Exception {
         ApiResult result = new ApiResult();
         // User user = this.getUserByToken(req);
         List<Map<String, Object>> menuItemList = new ArrayList<>();
-        String appId = req.getParameter("appId");
-        String tenantCode = req.getParameter("tenantCode");
+
+        String appId = (String) params.get("appId");
+        String tenantCode = (String) params.get("tenantCode");
         if (Strings.isNotBlank(appId) && Strings.isNotBlank(tenantCode)) {
             // 菜单
             Map map = new HashMap<>();
             // map.put("userId", user.getId());
-            map.put("flag", req.getParameter("flag"));
-            map.put("appId", req.getParameter("appId"));
-            map.put("tenantCode", req.getParameter("tenantCode"));
+            map.put("flag", (String) params.get("flag"));
+            map.put("appId", appId);
+            map.put("tenantCode", tenantCode);
             menuItemList = dao.queryForMapList("select_platform_tree_node_app_page", map);
         }
 
@@ -197,6 +200,62 @@ public class JWTAuthRestController extends BaseController {
         return new ApiResult().setData(plainPassword);
     }
 
+    @RequestMapping(value = "/forgetValid", method = RequestMethod.POST)
+    @ResponseBody
+    public ApiResult forgetValid(@RequestBody Map<String, Object> params) {
+        ApiResult result = new ApiResult();
+        params = params != null ? params : new HashMap<>();
+        try {
+            String validBox = (String) params.get("validBox");
+            String validType = (String) params.get("validType");
+            String mobilePrefix = (String) params.get("prefix");
+            Map<String, Object> map = new HashMap<>();
+            if (Strings.isBlank(validBox) || ValidTypeEnum.getLabel(validType) == null) {
+                return result.error();
+            }
+            map.put(ValidTypeEnum.getLabel(validType), validBox);
+            if (ValidTypeEnum.MOBILE.getValue().equals(validType)) {
+                if (Strings.isBlank(mobilePrefix)) {
+                    return result.error();
+                }
+                map.put("mobilePrefix", mobilePrefix);
+            }
+            List<User> users = dao.queryList(User.class, map, null);
+            if (users != null && users.size() == 1) {
+                return result.success().setData(users.get(0));
+            }
+            result.error();
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            result.error().setMsg(ApiErrorMsg.UPDATE_FAIL);
+        }
+
+        return result;
+    }
+
+    @RequestMapping(value = "/forget", method = RequestMethod.POST)
+    @ResponseBody
+    public ApiResult forgetPassword(@RequestBody Map<String, Object> params) {
+        ApiResult result = new ApiResult();
+        params = params != null ? params : new HashMap<>();
+        try {
+            String userId = (String) params.get("userId");
+            String password = (String) params.get("password");
+            if (Strings.isBlank(userId) || Strings.isBlank(password)) {
+                return result.error();
+            }
+            User user = dao.queryForObject(User.class, userId);
+            Assert.notNull(user, ApiErrorMsg.IS_NULL);
+            user.setPlainPassword(password);
+            accountService.entryptPassword(user);
+            dao.save(user);
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            result.error().setMsg(ApiErrorMsg.UPDATE_FAIL);
+        }
+
+        return result;
+    }
 
     /**
      * 通过token获取用户信息
@@ -206,10 +265,10 @@ public class JWTAuthRestController extends BaseController {
      * @throws Exception
      */
     private User getUserByToken(HttpServletRequest req) throws Exception {
-        ShiroDbRealm.ShiroUser  shiroUser= SecurityHelper.getCurrentUser();
-        User user=null;
-        if(shiroUser!=null){
-            user=dao.queryForObject(User.class, "loginName", shiroUser.loginName);
+        ShiroDbRealm.ShiroUser shiroUser = SecurityHelper.getCurrentUser();
+        User user = null;
+        if (shiroUser != null) {
+            user = dao.queryForObject(User.class, "loginName", shiroUser.loginName);
         }
         return user;
     }

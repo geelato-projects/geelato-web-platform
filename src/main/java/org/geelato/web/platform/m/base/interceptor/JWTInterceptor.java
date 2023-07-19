@@ -8,11 +8,9 @@ import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.subject.Subject;
 import org.geelato.core.env.EnvManager;
 import org.geelato.core.meta.annotation.IgnoreJWTVerify;
-import org.geelato.core.mvc.Ctx;
 import org.geelato.web.platform.m.security.service.JWTUtil;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
-
 
 import java.lang.reflect.Method;
 
@@ -23,7 +21,6 @@ public class JWTInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-
 
         // 如果不是映射到方法直接通过
         if (!(handler instanceof HandlerMethod)) {
@@ -42,7 +39,7 @@ public class JWTInterceptor implements HandlerInterceptor {
         if (token == null) {
             throw new Exception("无效的token");
         }
-        token=token.replace("Bearer ","");
+        token = token.replace("Bearer ", "");
         // 验证令牌
         JWTUtil.verify(token);
 

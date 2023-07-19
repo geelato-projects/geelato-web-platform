@@ -114,6 +114,20 @@ public class DictItemController extends BaseController {
         return result;
     }
 
+    @RequestMapping(value = "/batchCreateOrUpdate", method = RequestMethod.POST)
+    @ResponseBody
+    public ApiResult batchCreateOrUpdate(@RequestBody List<DictItem> forms, String dictId) {
+        ApiResult result = new ApiResult();
+        try {
+            dictItemService.batchCreateOrUpdate(dictId, forms);
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            result.error().setMsg(ApiErrorMsg.OPERATE_FAIL);
+        }
+
+        return result;
+    }
+
     @RequestMapping(value = "/isDelete/{id}", method = RequestMethod.DELETE)
     @ResponseBody
     public ApiResult isDelete(@PathVariable(required = true) String id) {
