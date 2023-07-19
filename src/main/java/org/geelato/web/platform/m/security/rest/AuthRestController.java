@@ -99,18 +99,6 @@ public class AuthRestController {
         return apiResult;
     }
 
-    @RequestMapping(value = "/isLogged")
-    @ResponseBody
-    public Map isLogged() {
-        if (SecurityHelper.isAuthenticatedForCurrentUser()) {
-            User user = dao.queryForObject(User.class, SecurityHelper.getCurrentUserId());
-            user.setSalt("");
-            user.setPassword("");
-            user.setPlainPassword("");
-            return accountService.wrapUser(user);
-        }
-        return null;
-    }
 
     @RequestMapping(value = "/logout")
     @ResponseStatus(HttpStatus.NO_CONTENT)
