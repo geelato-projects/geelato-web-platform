@@ -1,12 +1,17 @@
 package org.geelato.web.platform.m.base.rest;
 
+import com.alibaba.fastjson2.JSONArray;
+import com.alibaba.fastjson2.JSONObject;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.api.ApiMetaResult;
 import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.constants.MediaTypes;
 import org.geelato.core.meta.MetaManager;
+import org.geelato.core.meta.ViewManager;
 import org.geelato.core.meta.model.entity.EntityMeta;
+import org.geelato.core.meta.model.view.ViewMeta;
 import org.geelato.web.platform.m.base.entity.DictItem;
 import org.geelato.web.platform.m.base.service.ViewService;
 import org.geelato.web.platform.m.security.entity.DataItems;
@@ -30,19 +35,18 @@ public class ViewController  extends BaseController {
     @Autowired
     private ViewService viewService;
 
-    private MetaManager metaManager;
 
-    @RequestMapping(value = {"pageQuery/{entity}/{view}"}, method = {RequestMethod.POST}, produces = MediaTypes.JSON_UTF_8)
+    @RequestMapping(value = {"pageQuery/{view_name}"}, method = {RequestMethod.POST}, produces = MediaTypes.JSON_UTF_8)
     @ResponseBody
-    public ApiPagedResult pageQuery(@PathVariable("entity") String entity, @PathVariable("view") String view, HttpServletRequest req) {
+    public ApiPagedResult pageQuery(@PathVariable("view_name") String viewName, HttpServletRequest req) {
         ApiPagedResult result = new ApiPagedResult();
         try {
             int pageNum = Strings.isNotBlank(req.getParameter("current")) ? Integer.parseInt(req.getParameter("current")) : -1;
             int pageSize = Strings.isNotBlank(req.getParameter("pageSize")) ? Integer.parseInt(req.getParameter("pageSize")) : -1;
-
-            EntityMeta entityMeta= MetaManager.singleInstance().get(entity);
+            ViewMeta viewMeta= ViewManager.singleInstance().getByViewName(viewName);
+            EntityMeta entityMeta= MetaManager.singleInstance().get(viewMeta.getSubjectEntity());
             Map<String, Object> params = this.getQueryParameters(entityMeta.getClass(), req);
-            List<Map<String,Object>> pageQueryList = viewService.pageQueryModel(entity,view, pageNum, pageSize, params);
+            List<Map<String,Object>> pageQueryList = viewService.pageQueryModel(entityMeta.getEntityName(),viewName, pageNum, pageSize, params);
 
             result.setTotal(999);
             result.setData(new DataItems(pageQueryList, result.getTotal()));
@@ -57,10 +61,18 @@ public class ViewController  extends BaseController {
         return result;
     }
 
-    @RequestMapping(value = {"export/{view_name}"}, method = {RequestMethod.POST}, produces = MediaTypes.JSON_UTF_8)
+    @RequestMapping(value = {"defined/{view_name}"}, method = {RequestMethod.GET}, produces = MediaTypes.JSON_UTF_8)
     @ResponseBody
-    public ApiMetaResult export(@PathVariable("entity") String entity) {
+    public ApiMetaResult export(@PathVariable("view_name") String viewName) {
         ApiMetaResult result = new ApiMetaResult();
+        ViewMeta viewMeta= ViewManager.singleInstance().getByViewName(viewName);
+        String viewColumnJson=viewMeta.getViewColumn();
+        if(!StringUtils.isBlank(viewColumnJson)){
+            JSONArray jsonArray = JSONArray.parse(viewMeta.getViewColumn());
+            result.setMeta(jsonArray);
+        }else{
+            result.setMeta(viewColumnJson);
+        }
         return result;
     }
 }

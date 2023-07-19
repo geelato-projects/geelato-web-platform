@@ -86,20 +86,6 @@ public class SystemRestController extends BaseController {
         }
     }
 
-    @RequestMapping(value = "/isLogged")
-    @ResponseBody
-    public ApiResult isLogged(HttpServletRequest req) {
-        ApiResult result = new ApiResult();
-        try {
-            User user = this.getUserByToken(req);
-            user.setSalt("");
-            user.setPassword("");
-            user.setPlainPassword("");
-            return result.setData(accountService.wrapUser(user));
-        } catch (Exception e) {
-            return result.error();
-        }
-    }
 
     @RequestMapping(value = "/logout", method = RequestMethod.GET)
     @ResponseBody
