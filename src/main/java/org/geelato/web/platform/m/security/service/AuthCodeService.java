@@ -29,15 +29,33 @@ import java.util.concurrent.TimeUnit;
  */
 @Component
 public class AuthCodeService {
-    private final Logger logger = LoggerFactory.getLogger(AuthCodeService.class);
     private static final String NUMBERS = "0123456789";
     private static final int LENGTH = 6;
     private static final int CODE_EXPIRATION_TIME = 5;
+    private final Logger logger = LoggerFactory.getLogger(AuthCodeService.class);
     @Autowired
     @Qualifier("primaryDao")
     public Dao dao;
+    @Autowired
+    private EmailService emailService;
     @Resource
     private RedisTemplate<String, Object> redisTemplate;
+
+    /**
+     * 生成六位纯数字，验证码
+     *
+     * @return
+     */
+    public static String generateCode() {
+        StringBuilder sb = new StringBuilder(LENGTH);
+        Random random = new Random();
+        for (int i = 0; i < LENGTH; i++) {
+            int index = random.nextInt(NUMBERS.length());
+            char randomChar = NUMBERS.charAt(index);
+            sb.append(randomChar);
+        }
+        return sb.toString();
+    }
 
     /**
      * 验证码，生成
@@ -71,9 +89,13 @@ public class AuthCodeService {
         }
         // 验证码
         String authCode = AuthCodeService.generateCode();
+        form.setAuthCode(authCode);
         logger.info("authCode：" + authCode);
         // 发送信息
-        // todo
+        boolean sendAuthCode = action(form);
+        if (!sendAuthCode) {
+            return false;
+        }
         // 加密
         String saltCode = form.getRedisValue(authCode);
         if (Strings.isBlank(saltCode)) {
@@ -88,20 +110,21 @@ public class AuthCodeService {
     public boolean action(AuthCodeParams form) {
         String action = form.getAction().toUpperCase(Locale.ENGLISH);
         if (ValidTypeEnum.MOBILE.getValue().equals(form.getValidType())) {
-
+            return sendMobile();
         } else if (ValidTypeEnum.MAIL.getValue().equals(form.getValidType())) {
-
+            sendEmail(form.getValidBox(), "Geelato Admin AuthCode", form.getAuthCode());
         }
 
         return true;
     }
 
-    public void sendMobile() {
-
+    public void sendEmail(String to, String subject, String authCode) {
+        String text = String.format("本次验证码是 %s，请在 %d 分钟内输入验证码进行下一步操作。", authCode, CODE_EXPIRATION_TIME);
+        emailService.sendHtmlMail(to, subject, text);
     }
 
-    public void sendEmail() {
-
+    public boolean sendMobile() {
+        return true;
     }
 
     /**
@@ -121,22 +144,6 @@ public class AuthCodeService {
         String redisCode = (String) redisTemplate.opsForValue().get(redisKey);
         logger.info("redisKey-redisCode: " + redisKey + "[" + redisCode + "]");
         return saltCode.equals(redisCode);
-    }
-
-    /**
-     * 生成六位纯数字，验证码
-     *
-     * @return
-     */
-    public static String generateCode() {
-        StringBuilder sb = new StringBuilder(LENGTH);
-        Random random = new Random();
-        for (int i = 0; i < LENGTH; i++) {
-            int index = random.nextInt(NUMBERS.length());
-            char randomChar = NUMBERS.charAt(index);
-            sb.append(randomChar);
-        }
-        return sb.toString();
     }
 
 
