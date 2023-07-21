@@ -57,7 +57,7 @@ public class EmailService {
      * @param subject 主题
      * @param content 内容
      */
-    public void sendHtmlMail(String to, String subject, String content) {
+    public boolean sendHtmlMail(String to, String subject, String content) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper messageHelper = new MimeMessageHelper(message, true);
@@ -68,9 +68,11 @@ public class EmailService {
             messageHelper.setText(content, true);
             mailSender.send(message);
             logger.info("邮件发送成功！");
+            return true;
         } catch (MessagingException e) {
             logger.error("发送邮件时发生异常！", e);
         }
+        return false;
     }
 
     /**

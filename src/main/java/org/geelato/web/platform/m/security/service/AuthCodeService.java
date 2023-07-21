@@ -1,9 +1,11 @@
 package org.geelato.web.platform.m.security.service;
 
 import jakarta.annotation.Resource;
+import org.apache.commons.collections4.map.HashedMap;
 import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.orm.Dao;
+import org.geelato.core.util.AliMobileUtils;
 import org.geelato.web.platform.enums.AuthCodeAction;
 import org.geelato.web.platform.enums.ValidTypeEnum;
 import org.geelato.web.platform.m.security.entity.AuthCodeParams;
@@ -19,6 +21,7 @@ import org.springframework.util.Assert;
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
@@ -91,14 +94,14 @@ public class AuthCodeService {
         String authCode = AuthCodeService.generateCode();
         form.setAuthCode(authCode);
         logger.info("authCode：" + authCode);
-        // 发送信息
-        boolean sendAuthCode = action(form);
-        if (!sendAuthCode) {
-            return false;
-        }
         // 加密
         String saltCode = form.getRedisValue(authCode);
         if (Strings.isBlank(saltCode)) {
+            return false;
+        }
+        // 发送信息
+        boolean sendAuthCode = action(form);
+        if (!sendAuthCode) {
             return false;
         }
         // 存入缓存中
@@ -110,21 +113,32 @@ public class AuthCodeService {
     public boolean action(AuthCodeParams form) {
         String action = form.getAction().toUpperCase(Locale.ENGLISH);
         if (ValidTypeEnum.MOBILE.getValue().equals(form.getValidType())) {
-            return sendMobile();
+            return sendMobile(form.getPrefix(), form.getValidBox(), form.getAuthCode());
         } else if (ValidTypeEnum.MAIL.getValue().equals(form.getValidType())) {
-            sendEmail(form.getValidBox(), "Geelato Admin AuthCode", form.getAuthCode());
+            return sendEmail(form.getValidBox(), "Geelato Admin AuthCode", form.getAuthCode());
         }
-
         return true;
     }
 
-    public void sendEmail(String to, String subject, String authCode) {
+    public boolean sendEmail(String to, String subject, String authCode) {
         String text = String.format("本次验证码是 %s，请在 %d 分钟内输入验证码进行下一步操作。", authCode, CODE_EXPIRATION_TIME);
-        emailService.sendHtmlMail(to, subject, text);
+        return emailService.sendHtmlMail(to, subject, text);
     }
 
-    public boolean sendMobile() {
-        return true;
+    public boolean sendMobile(String mobilePrefix, String mobilePhone, String authCode) {
+        String phoneNumbers = mobilePhone;
+        if (Strings.isNotBlank(mobilePrefix) && !"+86".equals(mobilePrefix)) {
+            phoneNumbers = mobilePrefix + phoneNumbers;
+        }
+        String text = String.format("验证码：%s，%d 分钟内有效。如非本人操作，请忽略。", authCode, CODE_EXPIRATION_TIME);
+        try {
+            Map<String, Object> params = new HashedMap<>();
+            params.put("code", authCode);
+            return AliMobileUtils.sendMobile(phoneNumbers, params);
+        } catch (Exception e) {
+            logger.error("发送短信时发生异常", e);
+        }
+        return false;
     }
 
     /**
