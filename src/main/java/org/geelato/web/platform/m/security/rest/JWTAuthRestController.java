@@ -8,7 +8,10 @@ import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.meta.annotation.IgnoreJWTVerify;
 import org.geelato.web.platform.enums.ValidTypeEnum;
+import org.geelato.web.platform.m.base.entity.Attach;
 import org.geelato.web.platform.m.base.rest.BaseController;
+import org.geelato.web.platform.m.base.service.AttachService;
+import org.geelato.web.platform.m.base.service.UploadService;
 import org.geelato.web.platform.m.security.entity.*;
 import org.geelato.web.platform.m.security.service.*;
 import org.slf4j.Logger;
@@ -17,7 +20,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -34,9 +40,13 @@ public class JWTAuthRestController extends BaseController {
     protected AccountService accountService;
     @Autowired
     protected AuthCodeService authCodeService;
+    @Autowired
+    private UploadService uploadService;
+    @Autowired
+    private AttachService attachService;
 
     private Logger logger = LoggerFactory.getLogger(JWTAuthRestController.class);
-
+    private static final String ROOT_AVATAR_DIRECTORY = "upload/avatar";
 
     @IgnoreJWTVerify
     @RequestMapping(value = "/login", method = RequestMethod.POST, produces = {"application/json;charset=UTF-8"})
@@ -115,6 +125,36 @@ public class JWTAuthRestController extends BaseController {
             logger.error("getUserInfo", e);
             return new ApiResult().error().setMsg(e.getMessage());
         }
+    }
+
+    @RequestMapping(value = "/avatar/{userId}", method = {RequestMethod.POST, RequestMethod.GET})
+    @ResponseBody
+    public ApiResult uploadAvatar(@PathVariable(required = true) String userId, @RequestParam("file") MultipartFile file) {
+        ApiResult result = new ApiResult();
+        try {
+            // 用户信息
+            if (Strings.isBlank(userId)) {
+                return result.error().setMsg(ApiErrorMsg.OPERATE_FAIL);
+            }
+            User user = dao.queryForObject(User.class, userId);
+            Assert.notNull(user, ApiErrorMsg.IS_NULL);
+            // 头像
+            if (file == null || file.isEmpty()) {
+                return result.error().setMsg(ApiErrorMsg.OPERATE_FAIL);
+            }
+            Attach attach = new Attach(file);
+            attach.setUrl(uploadService.getSavePath(ROOT_AVATAR_DIRECTORY, attach.getName(), true));
+            byte[] bytes = file.getBytes();
+            Files.write(Paths.get(attach.getUrl()), bytes);
+            Map<String, Object> attachMap = attachService.createModel(attach);
+            user.setAvatar(String.valueOf(attachMap.get("id")));
+            dao.save(user);
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            result.error().setMsg(ApiErrorMsg.OPERATE_FAIL);
+        }
+
+        return result;
     }
 
     @RequestMapping(value = "/getPermCode")
