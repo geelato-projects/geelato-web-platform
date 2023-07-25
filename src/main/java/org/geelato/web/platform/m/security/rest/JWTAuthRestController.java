@@ -1,28 +1,30 @@
 package org.geelato.web.platform.m.security.rest;
 
 import jakarta.servlet.http.HttpServletRequest;
+import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.meta.annotation.IgnoreJWTVerify;
 import org.geelato.web.platform.enums.ValidTypeEnum;
+import org.geelato.web.platform.m.base.entity.Attach;
 import org.geelato.web.platform.m.base.rest.BaseController;
-import org.geelato.web.platform.m.security.entity.LoginParams;
-import org.geelato.web.platform.m.security.entity.LoginResult;
-import org.geelato.web.platform.m.security.entity.LoginRoleInfo;
-import org.geelato.web.platform.m.security.entity.User;
-import org.geelato.web.platform.m.security.service.AccountService;
-import org.geelato.web.platform.m.security.service.JWTUtil;
-import org.geelato.web.platform.m.security.service.SecurityHelper;
-import org.geelato.web.platform.m.security.service.ShiroDbRealm;
+import org.geelato.web.platform.m.base.service.AttachService;
+import org.geelato.web.platform.m.base.service.UploadService;
+import org.geelato.web.platform.m.security.entity.*;
+import org.geelato.web.platform.m.security.service.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.lang.reflect.Field;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -37,9 +39,15 @@ public class JWTAuthRestController extends BaseController {
 
     @Autowired
     protected AccountService accountService;
+    @Autowired
+    protected AuthCodeService authCodeService;
+    @Autowired
+    private UploadService uploadService;
+    @Autowired
+    private AttachService attachService;
 
     private Logger logger = LoggerFactory.getLogger(JWTAuthRestController.class);
-
+    private static final String ROOT_AVATAR_DIRECTORY = "upload/avatar";
 
     @IgnoreJWTVerify
     @RequestMapping(value = "/login", method = RequestMethod.POST, produces = {"application/json;charset=UTF-8"})
@@ -63,13 +71,9 @@ public class JWTAuthRestController extends BaseController {
                 payload.put("passWord", loginParams.getPassword());
                 String token = JWTUtil.getToken(payload);
 
-                LoginResult loginResult = new LoginResult();
-                loginResult.setUserId(userId);
-                loginResult.setRealName(loginUser.getName());
-                loginResult.setUsername(loginUser.getLoginName());
-
+                LoginResult loginResult = LoginResult.formatLoginResult(loginUser);
                 loginResult.setToken(token);
-                loginResult.setAvatar(getAvatar(userId));
+                loginResult.setHomePath("");
                 loginResult.setRoles(getRoles(userId));
 
                 //TODO 将token 写入域名下的cookies
@@ -111,21 +115,76 @@ public class JWTAuthRestController extends BaseController {
             if (user == null) {
                 return new ApiResult().error().setMsg("获取用户失败");
             }
-            LoginResult loginResult = new LoginResult();
-            loginResult.setUserId(user.getId().toString());
-            loginResult.setAvatar(user.getAvatar());
-            loginResult.setRoles(null);
+
+            LoginResult loginResult = LoginResult.formatLoginResult(user);
             loginResult.setToken(this.getToken(req));
-            loginResult.setUsername(user.getLoginName());
-            loginResult.setRealName(user.getName());
             loginResult.setHomePath("");
-            loginResult.setDesc("");
+            loginResult.setRoles(null);
 
             return new ApiResult().success().setData(loginResult);
         } catch (Exception e) {
             logger.error("getUserInfo", e);
             return new ApiResult().error().setMsg(e.getMessage());
         }
+    }
+
+    @RequestMapping(value = "/avatar/{userId}", method = {RequestMethod.POST, RequestMethod.GET})
+    @ResponseBody
+    public ApiResult uploadAvatar(@PathVariable(required = true) String userId, @RequestParam("file") MultipartFile file) {
+        ApiResult result = new ApiResult();
+        try {
+            // 用户信息
+            if (Strings.isBlank(userId)) {
+                return result.error().setMsg(ApiErrorMsg.OPERATE_FAIL);
+            }
+            User user = dao.queryForObject(User.class, userId);
+            Assert.notNull(user, ApiErrorMsg.IS_NULL);
+            // 头像
+            if (file == null || file.isEmpty()) {
+                return result.error().setMsg(ApiErrorMsg.OPERATE_FAIL);
+            }
+            Attach attach = new Attach(file);
+            attach.setUrl(uploadService.getSavePath(ROOT_AVATAR_DIRECTORY, attach.getName(), true));
+            byte[] bytes = file.getBytes();
+            Files.write(Paths.get(attach.getUrl()), bytes);
+            Map<String, Object> attachMap = attachService.createModel(attach);
+            user.setAvatar(String.valueOf(attachMap.get("id")));
+            dao.save(user);
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            result.error().setMsg(ApiErrorMsg.OPERATE_FAIL);
+        }
+
+        return result;
+    }
+
+    @RequestMapping(value = "/update/{userId}", method = {RequestMethod.POST, RequestMethod.GET})
+    @ResponseBody
+    public ApiResult updateUserInfo(@PathVariable(required = true) String userId, @RequestBody Map<String, Object> params) {
+        ApiResult result = new ApiResult();
+        try {
+            // 用户信息
+            if (Strings.isBlank(userId)) {
+                return result.error().setMsg(ApiErrorMsg.OPERATE_FAIL);
+            }
+            User user = dao.queryForObject(User.class, userId);
+            Assert.notNull(user, ApiErrorMsg.IS_NULL);
+            // 基础信息更新
+            for (Map.Entry<String, Object> param : params.entrySet()) {
+                String key = param.getKey();
+                Object value = param.getValue();
+                Class<?> clazz = user.getClass();
+                Field labelField = clazz.getDeclaredField(key);
+                labelField.setAccessible(true);
+                labelField.set(user, value);
+            }
+            dao.save(user);
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            result.error().setMsg(ApiErrorMsg.OPERATE_FAIL);
+        }
+
+        return result;
     }
 
     @RequestMapping(value = "/getPermCode")
@@ -204,25 +263,26 @@ public class JWTAuthRestController extends BaseController {
     @ResponseBody
     public ApiResult forgetValid(@RequestBody Map<String, Object> params) {
         ApiResult result = new ApiResult();
-        params = params != null ? params : new HashMap<>();
         try {
-            String validBox = (String) params.get("validBox");
-            String validType = (String) params.get("validType");
-            String mobilePrefix = (String) params.get("prefix");
+            ForgetPasswordParams form = new ForgetPasswordParams();
+            BeanUtils.populate(form, params);
             Map<String, Object> map = new HashMap<>();
-            if (Strings.isBlank(validBox) || ValidTypeEnum.getLabel(validType) == null) {
+            String validLabel = ValidTypeEnum.getLabel(form.getValidType());
+            if (Strings.isBlank(form.getValidBox()) || Strings.isBlank(validLabel)) {
                 return result.error();
             }
-            map.put(ValidTypeEnum.getLabel(validType), validBox);
-            if (ValidTypeEnum.MOBILE.getValue().equals(validType)) {
-                if (Strings.isBlank(mobilePrefix)) {
+            map.put(validLabel, form.getValidBox());
+            if (ValidTypeEnum.MOBILE.getValue().equals(form.getValidType())) {
+                if (Strings.isBlank(form.getPrefix())) {
                     return result.error();
                 }
-                map.put("mobilePrefix", mobilePrefix);
+                map.put("mobilePrefix", form.getPrefix());
             }
             List<User> users = dao.queryList(User.class, map, null);
             if (users != null && users.size() == 1) {
-                return result.success().setData(users.get(0));
+                User user = new User();
+                user.setId(users.get(0).getId());
+                return result.success().setData(user);
             }
             result.error();
         } catch (Exception e) {
@@ -237,18 +297,115 @@ public class JWTAuthRestController extends BaseController {
     @ResponseBody
     public ApiResult forgetPassword(@RequestBody Map<String, Object> params) {
         ApiResult result = new ApiResult();
-        params = params != null ? params : new HashMap<>();
         try {
-            String userId = (String) params.get("userId");
-            String password = (String) params.get("password");
-            if (Strings.isBlank(userId) || Strings.isBlank(password)) {
-                return result.error();
+            ForgetPasswordParams form = new ForgetPasswordParams();
+            BeanUtils.populate(form, params);
+            // 用户、密码
+            if (Strings.isBlank(form.getUserId()) || Strings.isBlank(form.getPassword())) {
+                return result.error().setMsg(ApiErrorMsg.PARAMETER_MISSING);
             }
-            User user = dao.queryForObject(User.class, userId);
+            // 验证码
+            AuthCodeParams code = AuthCodeParams.buildAuthCodeParams(form);
+            if (!authCodeService.validate(code)) {
+                return result.error().setMsg(ApiErrorMsg.AUTH_CODE_ERROR);
+            }
+            // 修改密码
+            User user = dao.queryForObject(User.class, form.getUserId());
             Assert.notNull(user, ApiErrorMsg.IS_NULL);
-            user.setPlainPassword(password);
+            user.setPlainPassword(form.getPassword());
             accountService.entryptPassword(user);
             dao.save(user);
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            result.error().setMsg(ApiErrorMsg.UPDATE_FAIL);
+        }
+
+        return result;
+    }
+
+    @RequestMapping(value = "/validate", method = RequestMethod.POST)
+    @ResponseBody
+    public ApiResult validateUser(@RequestBody Map<String, Object> params) {
+        ApiResult result = new ApiResult();
+        try {
+            AuthCodeParams form = new AuthCodeParams();
+            BeanUtils.populate(form, params);
+            // 用户、密码
+            if (Strings.isBlank(form.getValidType()) || Strings.isBlank(form.getUserId()) || Strings.isBlank(form.getAuthCode())) {
+                return result.error().setMsg(ApiErrorMsg.PARAMETER_MISSING);
+            }
+            // 用户验证
+            User user = dao.queryForObject(User.class, form.getUserId());
+            Assert.notNull(user, ApiErrorMsg.IS_NULL);
+            // 验证方式：密码、手机、邮箱
+            if (ValidTypeEnum.PASSWORD.getValue().equals(form.getValidType())) {
+                if (Strings.isNotBlank(user.getPassword()) && Strings.isNotBlank(user.getSalt())) {
+                    String pwd = accountService.entryptPassword(form.getAuthCode(), user.getSalt());
+                    if (user.getPassword().equals(pwd)) {
+                        return result.success();
+                    }
+                }
+                return result.error().setMsg(ApiErrorMsg.VALIDATE_USER_PASSWORD);
+            } else if (ValidTypeEnum.MOBILE.getValue().equals(form.getValidType())) {
+                // action、userId、validType、authCode
+                if (authCodeService.validate(form)) {
+                    return result.success();
+                }
+                return result.error().setMsg(ApiErrorMsg.VALIDATE_USER_MOBILE);
+            } else if (ValidTypeEnum.MAIL.getValue().equals(form.getValidType())) {
+                if (authCodeService.validate(form)) {
+                    return result.success();
+                }
+                return result.error().setMsg(ApiErrorMsg.VALIDATE_USER_EMAIL);
+            }
+            return result.error().setMsg(ApiErrorMsg.VALIDATE_USER);
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            result.error().setMsg(ApiErrorMsg.UPDATE_FAIL);
+        }
+
+        return result;
+    }
+
+    @RequestMapping(value = "/bindAccount", method = RequestMethod.POST)
+    @ResponseBody
+    public ApiResult bindAccount(@RequestBody Map<String, Object> params) {
+        ApiResult result = new ApiResult();
+        try {
+            AuthCodeParams form = new AuthCodeParams();
+            BeanUtils.populate(form, params);
+            // 用户、密码
+            if (Strings.isBlank(form.getValidType()) || Strings.isBlank(form.getUserId()) || Strings.isBlank(form.getAuthCode()) || Strings.isBlank(form.getValidBox())) {
+                return result.error().setMsg(ApiErrorMsg.PARAMETER_MISSING);
+            }
+            // 用户验证
+            User user = dao.queryForObject(User.class, form.getUserId());
+            Assert.notNull(user, ApiErrorMsg.IS_NULL);
+            // 账号绑定
+            if (ValidTypeEnum.PASSWORD.getValue().equals(form.getValidType())) {
+                user.setPlainPassword(form.getValidBox());
+                accountService.entryptPassword(user);
+                dao.save(user);
+                return result.success();
+            } else if (ValidTypeEnum.MOBILE.getValue().equals(form.getValidType())) {
+                if (authCodeService.validate(form)) {
+                    user.setMobilePhone(form.getValidBox());
+                    user.setMobilePrefix(form.getPrefix());
+                    dao.save(user);
+                    return result.success();
+                } else {
+                    return result.error().setMsg(ApiErrorMsg.AUTH_CODE_ERROR);
+                }
+            } else if (ValidTypeEnum.MAIL.getValue().equals(form.getValidType())) {
+                if (authCodeService.validate(form)) {
+                    user.setEmail(form.getValidBox());
+                    dao.save(user);
+                    return result.success();
+                } else {
+                    return result.error().setMsg(ApiErrorMsg.AUTH_CODE_ERROR);
+                }
+            }
+            return result.error().setMsg(ApiErrorMsg.OPERATE_FAIL);
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.UPDATE_FAIL);

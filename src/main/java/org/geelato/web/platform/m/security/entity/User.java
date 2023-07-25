@@ -28,8 +28,10 @@ public class User extends BaseSortableEntity {
     private String post;
     private int type;
     private int source;
+    private String nationCode;
     private String provinceCode;
     private String cityCode;
+    private String address;
     private String description;
     private String orgName;
 
@@ -203,6 +205,16 @@ public class User extends BaseSortableEntity {
         this.type = type;
     }
 
+    @Title(title = "国家")
+    @Col(name = "nation_code")
+    public String getNationCode() {
+        return nationCode;
+    }
+
+    public void setNationCode(String nationCode) {
+        this.nationCode = nationCode;
+    }
+
     @Title(title = "省份")
     @Col(name = "province_code")
     public String getProvinceCode() {
@@ -221,6 +233,16 @@ public class User extends BaseSortableEntity {
 
     public void setCityCode(String cityCode) {
         this.cityCode = cityCode;
+    }
+
+    @Title(title = "详细地址")
+    @Col(name = "address")
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
     }
 
     @Title(title = "部门")

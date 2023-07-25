@@ -7,14 +7,20 @@ import org.geelato.core.api.ApiResult;
 import org.geelato.core.meta.annotation.IgnoreJWTVerify;
 import org.geelato.core.orm.Dao;
 import org.geelato.web.platform.m.base.rest.BaseController;
-import org.geelato.web.platform.m.security.entity.*;
+import org.geelato.web.platform.m.security.entity.DataItems;
+import org.geelato.web.platform.m.security.entity.LoginResult;
+import org.geelato.web.platform.m.security.entity.Role;
+import org.geelato.web.platform.m.security.entity.User;
 import org.geelato.web.platform.m.security.service.AccountService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.HashMap;
 import java.util.List;
@@ -55,15 +61,10 @@ public class SystemRestController extends BaseController {
     public ApiResult getUserInfo(HttpServletRequest req) {
         try {
             User user = this.getUserByToken(req);
-            LoginResult loginResult = new LoginResult();
-            loginResult.setUserId(user.getId().toString());
-            loginResult.setAvatar(user.getAvatar());
-            loginResult.setRoles(null);
+            LoginResult loginResult = LoginResult.formatLoginResult(user);
             loginResult.setToken(this.getToken(req));
-            loginResult.setUsername(user.getLoginName());
-            loginResult.setRealName(user.getName());
             loginResult.setHomePath("");
-            loginResult.setDesc("");
+            loginResult.setRoles(null);
 
             return new ApiResult().success().setData(loginResult);
         } catch (Exception e) {
