@@ -22,6 +22,7 @@ import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -148,6 +149,35 @@ public class JWTAuthRestController extends BaseController {
             Files.write(Paths.get(attach.getUrl()), bytes);
             Map<String, Object> attachMap = attachService.createModel(attach);
             user.setAvatar(String.valueOf(attachMap.get("id")));
+            dao.save(user);
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            result.error().setMsg(ApiErrorMsg.OPERATE_FAIL);
+        }
+
+        return result;
+    }
+
+    @RequestMapping(value = "/update/{userId}", method = {RequestMethod.POST, RequestMethod.GET})
+    @ResponseBody
+    public ApiResult updateUserInfo(@PathVariable(required = true) String userId, @RequestBody Map<String, Object> params) {
+        ApiResult result = new ApiResult();
+        try {
+            // 用户信息
+            if (Strings.isBlank(userId)) {
+                return result.error().setMsg(ApiErrorMsg.OPERATE_FAIL);
+            }
+            User user = dao.queryForObject(User.class, userId);
+            Assert.notNull(user, ApiErrorMsg.IS_NULL);
+            // 基础信息更新
+            for (Map.Entry<String, Object> param : params.entrySet()) {
+                String key = param.getKey();
+                Object value = param.getValue();
+                Class<?> clazz = user.getClass();
+                Field labelField = clazz.getDeclaredField(key);
+                labelField.setAccessible(true);
+                labelField.set(user, value);
+            }
             dao.save(user);
         } catch (Exception e) {
             logger.error(e.getMessage());
@@ -345,8 +375,7 @@ public class JWTAuthRestController extends BaseController {
             AuthCodeParams form = new AuthCodeParams();
             BeanUtils.populate(form, params);
             // 用户、密码
-            if (Strings.isBlank(form.getValidType()) || Strings.isBlank(form.getUserId()) ||
-                    Strings.isBlank(form.getAuthCode()) || Strings.isBlank(form.getValidBox())) {
+            if (Strings.isBlank(form.getValidType()) || Strings.isBlank(form.getUserId()) || Strings.isBlank(form.getAuthCode()) || Strings.isBlank(form.getValidBox())) {
                 return result.error().setMsg(ApiErrorMsg.PARAMETER_MISSING);
             }
             // 用户验证

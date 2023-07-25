@@ -17,6 +17,10 @@ public class LoginResult {
     private Date registrationDate;
     private String orgId;
     private String orgName;
+    private String nationCode;
+    private String provinceCode;
+    private String cityCode;
+    private String address;
     private String description;
     private String tenantCode;
 
@@ -104,6 +108,38 @@ public class LoginResult {
         this.orgName = orgName;
     }
 
+    public String getNationCode() {
+        return nationCode;
+    }
+
+    public void setNationCode(String nationCode) {
+        this.nationCode = nationCode;
+    }
+
+    public String getProvinceCode() {
+        return provinceCode;
+    }
+
+    public void setProvinceCode(String provinceCode) {
+        this.provinceCode = provinceCode;
+    }
+
+    public String getCityCode() {
+        return cityCode;
+    }
+
+    public void setCityCode(String cityCode) {
+        this.cityCode = cityCode;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
     public String getDescription() {
         return description;
     }
@@ -162,6 +198,10 @@ public class LoginResult {
         loginResult.setRegistrationDate(user.getCreateAt());
         loginResult.setOrgId(user.getOrgId());
         loginResult.setOrgName(user.getOrgName());
+        loginResult.setNationCode(user.getNationCode());
+        loginResult.setProvinceCode(user.getProvinceCode());
+        loginResult.setCityCode(user.getCityCode());
+        loginResult.setAddress(user.getAddress());
         loginResult.setDescription(user.getDescription());
         loginResult.setTenantCode(user.getTenantCode());
 
