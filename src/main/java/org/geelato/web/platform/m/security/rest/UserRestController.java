@@ -11,12 +11,14 @@ import org.geelato.web.platform.m.base.rest.BaseController;
 import org.geelato.web.platform.m.security.entity.DataItems;
 import org.geelato.web.platform.m.security.entity.Org;
 import org.geelato.web.platform.m.security.entity.User;
+import org.geelato.web.platform.m.security.service.AccountService;
 import org.geelato.web.platform.m.security.service.OrgService;
 import org.geelato.web.platform.m.security.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -30,10 +32,13 @@ import java.util.Map;
 @RequestMapping(value = "/api/security/user")
 public class UserRestController extends BaseController {
     private final Logger logger = LoggerFactory.getLogger(UserRestController.class);
+    private static final String DEFAULT_PASSWORD = "123456";
     @Autowired
     private UserService userService;
     @Autowired
     private OrgService orgService;
+    @Autowired
+    protected AccountService accountService;
 
     @RequestMapping(value = "/pageQuery", method = RequestMethod.GET)
     @ResponseBody
@@ -81,7 +86,10 @@ public class UserRestController extends BaseController {
     public ApiResult get(@PathVariable(required = true) String id) {
         ApiResult result = new ApiResult();
         try {
-            return result.setData(userService.getModel(User.class, id));
+            User user = userService.getModel(User.class, id);
+            user.setSalt(null);
+            user.setPassword(null);
+            return result.setData(user);
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
@@ -109,12 +117,17 @@ public class UserRestController extends BaseController {
             // 组织ID为空方可插入
             if (Strings.isNotBlank(form.getId())) {
                 // 组织存在，方可更新
-                if (userService.isExist(User.class, form.getId())) {
+                User user = userService.getModel(User.class, form.getId());
+                if (user != null) {
+                    form.setPassword(user.getPassword());
+                    form.setSalt(user.getSalt());
                     uMap = userService.updateModel(form);
                 } else {
                     result.error().setMsg(ApiErrorMsg.IS_NULL);
                 }
             } else {
+                form.setPlainPassword(DEFAULT_PASSWORD);
+                accountService.entryptPassword(form);
                 uMap = userService.createModel(form);
             }
             if (ApiResultStatus.SUCCESS.equals(result.getStatus())) {
@@ -168,6 +181,28 @@ public class UserRestController extends BaseController {
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.UPDATE_FAIL);
+        }
+
+        return result;
+    }
+
+    @RequestMapping(value = "/resetPwd/{id}", method = RequestMethod.POST)
+    @ResponseBody
+    public ApiResult resetPassword(@PathVariable(required = true) String id) {
+        ApiResult result = new ApiResult();
+        try {
+            if (Strings.isNotBlank(id)) {
+                User user = userService.getModel(User.class, id);
+                Assert.notNull(user, ApiErrorMsg.IS_NULL);
+                user.setPlainPassword(DEFAULT_PASSWORD);
+                accountService.entryptPassword(user);
+                result.setData(userService.updateModel(user));
+            } else {
+                result.error().setMsg(ApiErrorMsg.ID_IS_NULL);
+            }
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            result.error().setMsg(ApiErrorMsg.OPERATE_FAIL);
         }
 
         return result;

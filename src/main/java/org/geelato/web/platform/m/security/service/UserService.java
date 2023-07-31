@@ -79,7 +79,7 @@ public class UserService extends BaseSortableService {
         String orgId = String.valueOf(model.get("orgId"));
         if (!isExit && Strings.isNotBlank(orgId)) {
             OrgUserMap oModel = new OrgUserMap();
-            oModel.setUserId((String) model.get("id"));
+            oModel.setUserId(String.valueOf(model.get("id")));
             oModel.setUserName((String) model.get("name"));
             oModel.setOrgId(orgId);
             oModel.setOrgName((String) model.get("orgName"));
