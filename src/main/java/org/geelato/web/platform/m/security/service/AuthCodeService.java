@@ -5,7 +5,6 @@ import org.apache.commons.collections4.map.HashedMap;
 import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.orm.Dao;
-import org.geelato.core.util.AliMobileUtils;
 import org.geelato.web.platform.enums.AuthCodeAction;
 import org.geelato.web.platform.enums.ValidTypeEnum;
 import org.geelato.web.platform.m.security.entity.AuthCodeParams;
@@ -41,6 +40,8 @@ public class AuthCodeService {
     public Dao dao;
     @Autowired
     private EmailService emailService;
+    @Autowired
+    private AliMobileService aliMobileService;
     @Resource
     private RedisTemplate<String, Object> redisTemplate;
 
@@ -134,7 +135,7 @@ public class AuthCodeService {
         try {
             Map<String, Object> params = new HashedMap<>();
             params.put("code", authCode);
-            return AliMobileUtils.sendMobile(phoneNumbers, params);
+            return aliMobileService.sendMobile(phoneNumbers, params);
         } catch (Exception e) {
             logger.error("发送短信时发生异常", e);
         }
