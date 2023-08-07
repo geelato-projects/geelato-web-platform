@@ -7,6 +7,7 @@ import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.constants.ApiResultStatus;
+import org.geelato.core.util.UUIDUtils;
 import org.geelato.web.platform.m.base.rest.BaseController;
 import org.geelato.web.platform.m.security.entity.DataItems;
 import org.geelato.web.platform.m.security.entity.Org;
@@ -31,14 +32,15 @@ import java.util.Map;
 @Controller
 @RequestMapping(value = "/api/security/user")
 public class UserRestController extends BaseController {
+    private static final String DEFAULT_PASSWORD = "12345678";
+    private static final int DEFAULT_PASSWORD_DIGIT = 8;
     private final Logger logger = LoggerFactory.getLogger(UserRestController.class);
-    private static final String DEFAULT_PASSWORD = "123456";
+    @Autowired
+    protected AccountService accountService;
     @Autowired
     private UserService userService;
     @Autowired
     private OrgService orgService;
-    @Autowired
-    protected AccountService accountService;
 
     @RequestMapping(value = "/pageQuery", method = RequestMethod.GET)
     @ResponseBody
@@ -126,9 +128,10 @@ public class UserRestController extends BaseController {
                     result.error().setMsg(ApiErrorMsg.IS_NULL);
                 }
             } else {
-                form.setPlainPassword(DEFAULT_PASSWORD);
+                form.setPlainPassword(UUIDUtils.generatePassword(DEFAULT_PASSWORD_DIGIT));
                 accountService.entryptPassword(form);
                 uMap = userService.createModel(form);
+                uMap.put("plainPassword", form.getPlainPassword());
             }
             if (ApiResultStatus.SUCCESS.equals(result.getStatus())) {
                 userService.setDefaultOrg(uMap);
@@ -194,9 +197,10 @@ public class UserRestController extends BaseController {
             if (Strings.isNotBlank(id)) {
                 User user = userService.getModel(User.class, id);
                 Assert.notNull(user, ApiErrorMsg.IS_NULL);
-                user.setPlainPassword(DEFAULT_PASSWORD);
+                user.setPlainPassword(UUIDUtils.generatePassword(DEFAULT_PASSWORD_DIGIT));
                 accountService.entryptPassword(user);
-                result.setData(userService.updateModel(user));
+                userService.updateModel(user);
+                result.setData(user.getPlainPassword());
             } else {
                 result.error().setMsg(ApiErrorMsg.ID_IS_NULL);
             }
