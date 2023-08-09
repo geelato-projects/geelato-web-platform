@@ -8,7 +8,6 @@ import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.meta.annotation.IgnoreJWTVerify;
 import org.geelato.web.platform.enums.ValidTypeEnum;
-import org.geelato.web.platform.m.base.entity.Attach;
 import org.geelato.web.platform.m.base.rest.BaseController;
 import org.geelato.web.platform.m.base.service.AttachService;
 import org.geelato.web.platform.m.base.service.UploadService;
@@ -23,12 +22,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.lang.reflect.Field;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by hongxq on 2022/5/1.
@@ -48,6 +42,7 @@ public class JWTAuthRestController extends BaseController {
 
     private Logger logger = LoggerFactory.getLogger(JWTAuthRestController.class);
     private static final String ROOT_AVATAR_DIRECTORY = "upload/avatar";
+    private static final String AVATAR_BASE64_PREFIX = "data:image/png;base64,";
 
     @IgnoreJWTVerify
     @RequestMapping(value = "/login", method = RequestMethod.POST, produces = {"application/json;charset=UTF-8"})
@@ -143,12 +138,16 @@ public class JWTAuthRestController extends BaseController {
             if (file == null || file.isEmpty()) {
                 return result.error().setMsg(ApiErrorMsg.OPERATE_FAIL);
             }
-            Attach attach = new Attach(file);
-            attach.setUrl(uploadService.getSavePath(ROOT_AVATAR_DIRECTORY, attach.getName(), true));
-            byte[] bytes = file.getBytes();
-            Files.write(Paths.get(attach.getUrl()), bytes);
-            Map<String, Object> attachMap = attachService.createModel(attach);
-            user.setAvatar(String.valueOf(attachMap.get("id")));
+            // 存入附件表
+            // Attach attach = new Attach(file);
+            // attach.setUrl(uploadService.getSavePath(ROOT_AVATAR_DIRECTORY, attach.getName(), true));
+            // byte[] bytes = file.getBytes();
+            // Files.write(Paths.get(attach.getUrl()), bytes);
+            // Map<String, Object> attachMap = attachService.createModel(attach);
+            // Base64，存数据库
+            byte[] fileBytes = file.getBytes();
+            String base64String = Base64.getEncoder().encodeToString(fileBytes);
+            user.setAvatar(AVATAR_BASE64_PREFIX + base64String);
             dao.save(user);
         } catch (Exception e) {
             logger.error(e.getMessage());
