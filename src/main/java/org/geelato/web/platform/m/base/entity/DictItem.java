@@ -15,11 +15,22 @@ import org.geelato.core.meta.model.entity.EntityEnableAble;
 @Title(title = "数据字典项")
 public class DictItem extends BaseSortableEntity implements EntityEnableAble {
 
+    private String pid;
     private String dictId;
     private String itemCode;
     private String itemName;
     private String itemRemark;
     private int enableStatus = ColumnDefault.ENABLE_STATUS_VALUE;
+
+    @Col(name = "pid")
+    @Title(title = "字典项父级")
+    public String getPid() {
+        return pid;
+    }
+
+    public void setPid(String pid) {
+        this.pid = pid;
+    }
 
     @Col(name = "dict_id")
     @Title(title = "字典ID")
