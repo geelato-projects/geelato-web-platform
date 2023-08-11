@@ -7,6 +7,7 @@ import org.geelato.core.enums.EnableStatusEnum;
 import org.geelato.web.platform.m.base.entity.DictItem;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -75,5 +76,71 @@ public class DictItemService extends BaseSortableService {
                 dao.save(item);
             }
         }
+    }
+
+    /**
+     * 更新一条数据
+     *
+     * @param model 实体数据
+     * @return
+     */
+    public Map updateModel(DictItem model) {
+        model.setDelStatus(DeleteStatusEnum.NO.getCode());
+        Map<String, Object> map = dao.save(model);
+
+        if (EnableStatusEnum.DISABLED.getCode() == model.getEnableStatus()) {
+            Map<String, Object> params = new HashMap<>();
+            params.put("dictId", model.getDictId());
+            List<DictItem> list = queryModel(DictItem.class, params);
+            if (list != null && !list.isEmpty()) {
+                List<DictItem> childs = childIteration(list, model.getId());
+                if (childs != null && !childs.isEmpty()) {
+                    for (DictItem item : childs) {
+                        item.setEnableStatus(EnableStatusEnum.DISABLED.getCode());
+                        item.setDelStatus(DeleteStatusEnum.NO.getCode());
+                        dao.save(item);
+                    }
+                }
+            }
+        }
+        return map;
+    }
+
+    /**
+     * 逻辑删除
+     *
+     * @param model
+     */
+    public void isDeleteModel(DictItem model) {
+        List<DictItem> childs = new ArrayList<>();
+        childs.add(model);
+
+        Map<String, Object> params = new HashMap<>();
+        params.put("dictId", model.getDictId());
+        List<DictItem> list = queryModel(DictItem.class, params);
+        if (list != null && !list.isEmpty()) {
+            childs.addAll(childIteration(list, model.getId()));
+            if (childs != null && !childs.isEmpty()) {
+                for (DictItem item : childs) {
+                    item.setEnableStatus(EnableStatusEnum.DISABLED.getCode());
+                    item.setDelStatus(DeleteStatusEnum.IS.getCode());
+                    dao.save(item);
+                }
+            }
+        }
+    }
+
+    private List<DictItem> childIteration(List<DictItem> list, String pid) {
+        List<DictItem> result = new ArrayList<>();
+        for (DictItem item : list) {
+            if (Strings.isNotBlank(item.getPid()) && item.getPid().equals(pid)) {
+                // 如果当前节点是指定id的父节点，则将其添加到结果中并继续递归查找其子集
+                result.add(item);
+                result.addAll(childIteration(list, item.getId()));
+                // 继续递归查找子集并添加到结果中
+            }
+        }
+
+        return result;
     }
 }

@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * @author diabl
@@ -165,12 +166,30 @@ public class DictItemController extends BaseController {
                 params.put(ColumnDefault.ENABLE_STATUS_FIELD, ColumnDefault.ENABLE_STATUS_VALUE);
                 iResult = dictItemService.queryModel(DictItem.class, params);
             }
-            result.success().setData(iResult);
+            result.success().setData(buildTree(iResult));
         } catch (Exception e) {
             logger.error(e.getMessage());
-            result.error().setMsg(ApiErrorMsg.DELETE_FAIL);
+            result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
         }
 
         return result;
+    }
+
+    public List<DictItem> buildTree(List<DictItem> pidList) {
+        boolean isChild = false;
+        if (pidList != null && !pidList.isEmpty()) {
+            for (DictItem item : pidList) {
+                if (Strings.isNotBlank(item.getPid())) {
+                    isChild = true;
+                }
+            }
+        }
+        if (!isChild) {
+            return pidList;
+        }
+        Map<String, List<DictItem>> pidListMap = pidList.stream().collect(Collectors.groupingBy(DictItem::getPid));
+        pidList.forEach(item -> item.setChildren(pidListMap.get(item.getId())));
+        //返回结果也改为返回顶层节点的list
+        return pidListMap.get("");
     }
 }
