@@ -4,8 +4,11 @@ import org.geelato.core.constants.ColumnDefault;
 import org.geelato.core.meta.annotation.Col;
 import org.geelato.core.meta.annotation.Entity;
 import org.geelato.core.meta.annotation.Title;
+import org.geelato.core.meta.annotation.Transient;
 import org.geelato.core.meta.model.entity.BaseSortableEntity;
 import org.geelato.core.meta.model.entity.EntityEnableAble;
+
+import java.util.List;
 
 /**
  * @author liuwq
@@ -21,6 +24,7 @@ public class DictItem extends BaseSortableEntity implements EntityEnableAble {
     private String itemName;
     private String itemRemark;
     private int enableStatus = ColumnDefault.ENABLE_STATUS_VALUE;
+    private List<DictItem> children;
 
     @Col(name = "pid")
     @Title(title = "字典项父级")
@@ -82,5 +86,15 @@ public class DictItem extends BaseSortableEntity implements EntityEnableAble {
     @Override
     public void setEnableStatus(int enableStatus) {
         this.enableStatus = enableStatus;
+    }
+
+    @Title(title = "字典项子集")
+    @Transient
+    public List<DictItem> getChildren() {
+        return children;
+    }
+
+    public void setChildren(List<DictItem> children) {
+        this.children = children;
     }
 }
