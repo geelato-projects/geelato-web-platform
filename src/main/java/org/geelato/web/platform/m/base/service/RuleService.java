@@ -276,10 +276,7 @@ public class RuleService {
      * @return 当前会话信息
      */
     protected Ctx getSessionCtx() {
-        Ctx ctx = new Ctx();
-        // TODO 从会话中获取
-        ctx.put("userId", String.valueOf(1));
-        return ctx;
+        return new Ctx();
     }
 
 }
