@@ -31,6 +31,7 @@ import java.util.stream.Collectors;
 public class DictItemController extends BaseController {
     private static final String DICT_CODE = "dictCode";
     private static final String DICT_ID = "dictId";
+    private static final String ROOT_PARENT_ID = "";
     private final Logger logger = LoggerFactory.getLogger(DictItemController.class);
     @Autowired
     private DictService dictService;
@@ -181,6 +182,8 @@ public class DictItemController extends BaseController {
             for (DictItem item : pidList) {
                 if (Strings.isNotBlank(item.getPid())) {
                     isChild = true;
+                } else {
+                    item.setPid(ROOT_PARENT_ID);
                 }
             }
         }
@@ -190,6 +193,6 @@ public class DictItemController extends BaseController {
         Map<String, List<DictItem>> pidListMap = pidList.stream().collect(Collectors.groupingBy(DictItem::getPid));
         pidList.forEach(item -> item.setChildren(pidListMap.get(item.getId())));
         //返回结果也改为返回顶层节点的list
-        return pidListMap.get("");
+        return pidListMap.get(ROOT_PARENT_ID);
     }
 }
