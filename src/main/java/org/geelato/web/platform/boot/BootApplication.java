@@ -105,6 +105,7 @@ public class BootApplication implements CommandLineRunner, InitializingBean {
 
     public void initEnv(){
         EnvManager.singleInstance().EnvInit();
+        EnvManager.singleInstance().SetDao(dbGenerateDao.getDao());
     }
     public void initMeta(String... args) throws IOException {
         MetaRelf.setApplicationContext(applicationContext);

@@ -16,7 +16,6 @@ import org.geelato.utils.UIDGenerator;
 import org.geelato.web.platform.aop.annotation.OpLog;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 
