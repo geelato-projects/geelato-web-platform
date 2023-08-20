@@ -3,6 +3,7 @@ package org.geelato.web.platform.m.base.service;
 import net.oschina.j2cache.CacheChannel;
 import net.oschina.j2cache.J2Cache;
 import org.apache.commons.collections.map.HashedMap;
+import  org.geelato.web.platform.aop.annotation.OpLog;
 import org.geelato.core.api.*;
 import org.geelato.core.biz.rules.BizManagerFactory;
 import org.geelato.core.biz.rules.common.EntityValidateRule;
@@ -181,6 +182,7 @@ public class RuleService {
      * @param gql geelato query language
      * @return 第一个saveCommand执行的返回主健值（saveCommand内可能有子saveCommand）
      */
+    @OpLog(type="save")
     public String save(String biz, String gql) {
         SaveCommand command = gqlManager.generateSaveSql(gql, getSessionCtx());
         Facts facts = new Facts();
