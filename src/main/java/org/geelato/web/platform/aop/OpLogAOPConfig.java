@@ -1,4 +1,5 @@
 package  org.geelato.web.platform.aop;
+import com.alibaba.fastjson2.JSONArray;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.*;
 import org.aspectj.lang.reflect.MethodSignature;
@@ -21,6 +22,7 @@ import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Map;
 
@@ -70,14 +72,16 @@ public class OpLogAOPConfig {
             opDataId=ret.toString();
             if (saveCommand.getCommandType() == CommandType.Update) {
                 opType = "u";
+                ArrayList<String> filedChangeRecods= new ArrayList<String>();
                 for (Map.Entry<String, Object> entry : saveCommand.getValueMap().entrySet()) {
-                    String filedKey = entry.getKey();
-                    String filedName = entityMeta.getFieldMeta(filedKey).getTitle();
-                    String filedValue = entry.getValue().toString();
+                    String fieldKey = entry.getKey();
+                    String fieldName = entityMeta.getFieldMeta(fieldKey).getTitle();
+                    String fieldValue = entry.getValue().toString();
                     //todo 如需改为“原值”修改为“目标值”,需多一次数据库，暂定不实现。
-                    String filedChangeRecod = String.format("%s修改为%s", filedName, filedValue);
-                    opRecord = opRecord + "," + filedChangeRecod;
+                    String filedChangeRecod = String.format("%s修改为%s", fieldName, fieldValue);
+                    filedChangeRecods.add(filedChangeRecod);
                 }
+                opRecord= JSONArray.toJSONString(filedChangeRecods);
             } else if (saveCommand.getCommandType() == CommandType.Insert) {
                 opType = "c";
                 opRecord = "新增记录";
