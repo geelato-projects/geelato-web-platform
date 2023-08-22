@@ -76,10 +76,15 @@ public class OpLogAOPConfig {
                 for (Map.Entry<String, Object> entry : saveCommand.getValueMap().entrySet()) {
                     String fieldKey = entry.getKey();
                     String fieldName = entityMeta.getFieldMeta(fieldKey).getTitle();
-                    String fieldValue = entry.getValue().toString();
-                    //todo 如需改为“原值”修改为“目标值”,需多一次数据库，暂定不实现。
-                    String filedChangeRecod = String.format("%s修改为%s", fieldName, fieldValue);
-                    filedChangeRecods.add(filedChangeRecod);
+                    String fieldValue=null;
+                    if(entry.getValue()!=null){
+                        fieldValue = entry.getValue().toString();
+                    }
+                    if(fieldName!=null&&fieldValue!=null){
+                        //todo 如需改为“原值”修改为“目标值”,需多一次数据库，暂定不实现。
+                        String filedChangeRecod = String.format("%s修改为%s", fieldName, fieldValue);
+                        filedChangeRecods.add(filedChangeRecod);
+                    }
                 }
                 opRecord= JSONArray.toJSONString(filedChangeRecods);
             } else if (saveCommand.getCommandType() == CommandType.Insert) {
