@@ -1,11 +1,11 @@
 package org.geelato.web.platform.m.security.service;
 
+import org.geelato.core.enums.DeleteStatusEnum;
+import org.geelato.web.platform.enums.IsDefaultOrgEnum;
 import org.geelato.web.platform.m.base.service.BaseSortableService;
 import org.geelato.web.platform.m.security.entity.Org;
 import org.geelato.web.platform.m.security.entity.OrgUserMap;
 import org.geelato.web.platform.m.security.entity.User;
-import org.geelato.core.enums.DeleteStatusEnum;
-import org.geelato.web.platform.enums.IsDefaultOrgEnum;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
@@ -54,5 +54,15 @@ public class OrgService extends BaseSortableService {
                 dao.save(uModel);
             }
         }
+    }
+
+    /**
+     * 全量查询
+     *
+     * @param params 条件参数
+     * @return
+     */
+    public List<Map<String, Object>> queryTree(Map<String, Object> params) {
+        return dao.queryForMapList("query_tree_platform_org", params);
     }
 }

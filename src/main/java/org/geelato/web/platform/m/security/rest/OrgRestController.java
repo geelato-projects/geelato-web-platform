@@ -4,9 +4,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
+import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.web.platform.m.base.rest.BaseController;
 import org.geelato.web.platform.m.security.entity.DataItems;
-import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.web.platform.m.security.entity.Org;
 import org.geelato.web.platform.m.security.service.OrgService;
 import org.geelato.web.platform.m.security.service.UserService;
@@ -63,6 +63,21 @@ public class OrgRestController extends BaseController {
         try {
             Map<String, Object> params = this.getQueryParameters(Org.class, req);
             return result.setData(orgService.queryModel(Org.class, params));
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
+        }
+
+        return result;
+    }
+
+    @RequestMapping(value = "/queryTree", method = RequestMethod.GET)
+    @ResponseBody
+    public ApiResult queryTree(HttpServletRequest req) {
+        ApiResult result = new ApiResult();
+        try {
+            Map<String, Object> params = this.getQueryParameters(Org.class, req);
+            return result.setData(orgService.queryTree(params));
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
