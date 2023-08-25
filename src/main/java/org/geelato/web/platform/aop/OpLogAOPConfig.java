@@ -63,6 +63,7 @@ public class OpLogAOPConfig {
         SaveCommand saveCommand = gqlManager.generateSaveSql(gql, new Ctx());
         EntityMeta entityMeta= MetaManager.singleInstance().get(saveCommand.getEntityName());
         String opUser= EnvManager.singleInstance().getCurrentUser().getUserName();
+        String opUserId=EnvManager.singleInstance().getCurrentUser().getUserId();
         String opDataId="";
         String opType="";
         String opRecord="";
@@ -91,17 +92,24 @@ public class OpLogAOPConfig {
                 opType = "c";
                 opRecord = "新增记录";
             }
-            String baseSql = "insert into platform_oprecord (id,op_data_id,op_type,op_time,op_user,op_description) values ('%s','%s','%s','%s','%s','%s')";
-            String saveSql = String.format(baseSql,
+            //String baseSql = "insert into platform_oprecord (id,op_data_id,op_type,op_time,op_user,op_description) values ('%s','%s','%s','%s','%s','%s')";
+//            String saveSql = String.format(baseSql,
+//                    UIDGenerator.generate(0),
+//                    opDataId,
+//                    opType,
+//                    formatter.format(date),
+//                    opUser,
+//                    opRecord
+//            );
+            String baseSql="insert into platform_oprecord (id,op_data_id,op_type,op_time,op_user,op_user_id,op_description) values (?,?,?,?,?,?,?)";
+            dao.getJdbcTemplate().update(baseSql,
                     UIDGenerator.generate(0),
                     opDataId,
                     opType,
                     formatter.format(date),
                     opUser,
-                    opRecord
-            );
-
-            dao.getJdbcTemplate().update(saveSql);
+                    opUserId,
+                    opRecord);
         }
 
     }
