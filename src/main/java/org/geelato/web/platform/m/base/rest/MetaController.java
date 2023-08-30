@@ -1,13 +1,16 @@
 package org.geelato.web.platform.m.base.rest;
 
 
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONObject;
 import jakarta.servlet.http.HttpServletRequest;
+import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.api.ApiMetaResult;
 import org.geelato.core.api.ApiMultiPagedResult;
 import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
-import org.geelato.core.meta.MetaManager;
 import org.geelato.core.constants.MediaTypes;
+import org.geelato.core.meta.MetaManager;
 import org.geelato.core.orm.Dao;
 import org.geelato.web.platform.m.base.service.RuleService;
 import org.slf4j.Logger;
@@ -43,11 +46,10 @@ public class MetaController implements InitializingBean {
     private static Logger logger = LoggerFactory.getLogger(MetaController.class);
 
     /**
-     *
      * @param request
      * @return
      */
-    @RequestMapping(value = {"list", "list/*"}, method = {RequestMethod.POST,RequestMethod.GET}, produces = MediaTypes.JSON_UTF_8)
+    @RequestMapping(value = {"list", "list/*"}, method = {RequestMethod.POST, RequestMethod.GET}, produces = MediaTypes.JSON_UTF_8)
     @ResponseBody
     public ApiPagedResult list(@RequestParam(value = "withMeta", defaultValue = "true") boolean withMeta, HttpServletRequest request) {
         String gql = getGql(request);
@@ -69,7 +71,6 @@ public class MetaController implements InitializingBean {
     }
 
     /**
-     *
      * @param biz     业务代码
      * @param request HttpServletRequest
      * @return SaveResult
@@ -86,18 +87,18 @@ public class MetaController implements InitializingBean {
 
     @RequestMapping(value = {"delete/{biz}/{id}"}, method = RequestMethod.POST, produces = MediaTypes.JSON_UTF_8)
     @ResponseBody
-    public ApiMetaResult delete(@PathVariable("biz") String biz,@PathVariable("id")String id) {
+    public ApiMetaResult delete(@PathVariable("biz") String biz, @PathVariable("id") String id) {
         ApiMetaResult result = new ApiMetaResult();
-       result.setData(ruleService.delete(biz,id));
+        result.setData(ruleService.delete(biz, id));
         return result;
     }
 
     @RequestMapping(value = {"delete2/{biz}"}, method = RequestMethod.POST, produces = MediaTypes.JSON_UTF_8)
     @ResponseBody
-    public ApiMetaResult delete(@PathVariable("biz") String biz,HttpServletRequest request) {
+    public ApiMetaResult delete(@PathVariable("biz") String biz, HttpServletRequest request) {
         String gql = getGql(request);
         ApiMetaResult result = new ApiMetaResult();
-        result.setData(ruleService.deleteByGql(biz,gql));
+        result.setData(ruleService.deleteByGql(biz, gql));
         return result;
     }
 
@@ -120,7 +121,6 @@ public class MetaController implements InitializingBean {
     }
 
 
-
     /**
      * 获取实体名称列表
      *
@@ -136,6 +136,7 @@ public class MetaController implements InitializingBean {
 
     /**
      * 获取指定应用下的精简版实体元数据信息列表
+     *
      * @param appCode 应用编码
      * @return
      */
@@ -185,5 +186,33 @@ public class MetaController implements InitializingBean {
     @Override
     public void afterPropertiesSet() throws Exception {
         ruleService.setDao(dao);
+    }
+
+    /**
+     * 唯一性校验
+     *
+     * @param request
+     * @return
+     */
+    @RequestMapping(value = {"uniqueness"}, method = {RequestMethod.POST, RequestMethod.GET}, produces = MediaTypes.JSON_UTF_8)
+    @ResponseBody
+    public ApiResult uniqueness(HttpServletRequest request) {
+        ApiResult result = new ApiResult();
+        String gql = getGql(request);
+        if (Strings.isNotBlank(gql)) {
+            JSONObject jo = JSON.parseObject(gql);
+            String key = jo.keySet().iterator().next();
+            JSONObject value = jo.getJSONObject(key);
+            if (!value.containsKey("@fs")) {
+                jo.getJSONObject(key).put("@fs", "id");
+            }
+            if (!value.containsKey("@p")) {
+                jo.getJSONObject(key).put("@p", "1,10");
+            }
+            gql = JSON.toJSONString(jo);
+        }
+        ApiPagedResult page = ruleService.queryForMapList(gql, false);
+        result.setData(page.getTotal() == 0);
+        return result;
     }
 }
