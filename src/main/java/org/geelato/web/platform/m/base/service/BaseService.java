@@ -1,5 +1,7 @@
 package org.geelato.web.platform.m.base.service;
 
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONObject;
 import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.constants.ColumnDefault;
 import org.geelato.core.enums.DeleteStatusEnum;
@@ -10,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -142,5 +145,30 @@ public class BaseService {
         }
 
         return false;
+    }
+
+
+    public boolean validate(String tableName, String id, Map<String, String> params) {
+        Map<String, Object> map = new HashMap<>();
+        // 查询表格
+        if (Strings.isBlank(tableName)) {
+            return false;
+        }
+        map.put("tableName", tableName);
+        // 排除本身
+        map.put("id", Strings.isNotBlank(id) ? id : null);
+        // 条件限制
+        List<JSONObject> list = new ArrayList<>();
+        for (Map.Entry<String, String> param : params.entrySet()) {
+            Map<String, String> jParams = new HashMap<>();
+            if (Strings.isNotBlank(param.getKey())) {
+                jParams.put("key", param.getKey());
+                jParams.put("value", param.getValue());
+                list.add(JSONObject.parseObject(JSON.toJSONString(jParams)));
+            }
+        }
+        map.put("condition", list);
+        List<Map<String, Object>> vlist = dao.queryForMapList("platform_validate", map);
+        return vlist.isEmpty();
     }
 }

@@ -4,16 +4,18 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
+import org.geelato.core.constants.ApiErrorMsg;
+import org.geelato.core.enums.DeleteStatusEnum;
 import org.geelato.web.platform.m.base.entity.Dict;
 import org.geelato.web.platform.m.base.service.DictService;
 import org.geelato.web.platform.m.security.entity.DataItems;
-import org.geelato.core.constants.ApiErrorMsg;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -120,6 +122,25 @@ public class DictController extends BaseController {
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.DELETE_FAIL);
+        }
+
+        return result;
+    }
+
+    @RequestMapping(value = "/validate", method = RequestMethod.POST)
+    @ResponseBody
+    public ApiResult validate(@RequestBody Dict form) {
+        ApiResult result = new ApiResult();
+        try {
+            Map<String, String> params = new HashMap<>();
+            params.put("dict_code", form.getDictCode());
+            params.put("del_status", String.valueOf(DeleteStatusEnum.NO.getCode()));
+            params.put("app_id", form.getAppId());
+            params.put("tenant_code", form.getTenantCode());
+            result.setData(dictService.validate("platform_dict", form.getId(), params));
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            result.error().setMsg(ApiErrorMsg.VALIDATE_FAIL);
         }
 
         return result;

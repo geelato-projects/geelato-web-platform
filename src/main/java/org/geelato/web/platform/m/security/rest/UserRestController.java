@@ -7,6 +7,7 @@ import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.constants.ApiResultStatus;
+import org.geelato.core.enums.DeleteStatusEnum;
 import org.geelato.core.util.UUIDUtils;
 import org.geelato.web.platform.m.base.rest.BaseController;
 import org.geelato.web.platform.m.security.entity.DataItems;
@@ -242,6 +243,33 @@ public class UserRestController extends BaseController {
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.DELETE_FAIL);
+        }
+
+        return result;
+    }
+
+    @RequestMapping(value = "/validate/{type}", method = RequestMethod.POST)
+    @ResponseBody
+    public ApiResult validate(@PathVariable(required = true) String type, @RequestBody User form) {
+        ApiResult result = new ApiResult();
+        try {
+            if (Strings.isNotBlank(type)) {
+                Map<String, String> params = new HashMap<>();
+                if ("loginName".equals(type)) {
+                    params.put("login_name", form.getLoginName());
+                } else if ("mobilePhone".equals(type)) {
+                    params.put("mobile_phone", form.getMobilePhone());
+                    params.put("mobile_prefix", form.getMobilePrefix());
+                }
+                params.put("del_status", String.valueOf(DeleteStatusEnum.NO.getCode()));
+                params.put("tenant_code", form.getTenantCode());
+                result.setData(userService.validate("platform_user", form.getId(), params));
+            } else {
+                result.error().setMsg(ApiErrorMsg.PARAMETER_MISSING);
+            }
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            result.error().setMsg(ApiErrorMsg.VALIDATE_FAIL);
         }
 
         return result;
