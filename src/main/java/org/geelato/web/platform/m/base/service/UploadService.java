@@ -38,7 +38,8 @@ public class UploadService {
         SimpleDateFormat MMFt = new SimpleDateFormat("MM");
         SimpleDateFormat ddFt = new SimpleDateFormat("dd");
         SimpleDateFormat HHFt = new SimpleDateFormat("HH");
-        String datePath = String.format("%s/%s/%s/%s/", yyyyFt.format(date), MMFt.format(date), ddFt.format(date), HHFt.format(date));
+        SimpleDateFormat mmFt = new SimpleDateFormat("mm");
+        String datePath = String.format("%s/%s/%s/%s/%s/", yyyyFt.format(date), MMFt.format(date), ddFt.format(date), HHFt.format(date), mmFt.format(date));
 
         // 处理文件名称
         if (isRename) {
