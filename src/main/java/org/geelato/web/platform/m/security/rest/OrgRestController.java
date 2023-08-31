@@ -4,9 +4,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
+import org.geelato.core.constants.ApiErrorMsg;
+import org.geelato.core.enums.DeleteStatusEnum;
 import org.geelato.web.platform.m.base.rest.BaseController;
 import org.geelato.web.platform.m.security.entity.DataItems;
-import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.web.platform.m.security.entity.Org;
 import org.geelato.web.platform.m.security.service.OrgService;
 import org.geelato.web.platform.m.security.service.UserService;
@@ -16,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -63,6 +65,21 @@ public class OrgRestController extends BaseController {
         try {
             Map<String, Object> params = this.getQueryParameters(Org.class, req);
             return result.setData(orgService.queryModel(Org.class, params));
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
+        }
+
+        return result;
+    }
+
+    @RequestMapping(value = "/queryTree", method = RequestMethod.GET)
+    @ResponseBody
+    public ApiResult queryTree(HttpServletRequest req) {
+        ApiResult result = new ApiResult();
+        try {
+            Map<String, Object> params = this.getQueryParameters(Org.class, req);
+            return result.setData(orgService.queryTree(params));
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
@@ -173,6 +190,24 @@ public class OrgRestController extends BaseController {
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.DELETE_FAIL);
+        }
+
+        return result;
+    }
+
+    @RequestMapping(value = "/validate", method = RequestMethod.POST)
+    @ResponseBody
+    public ApiResult validate(@RequestBody Org form) {
+        ApiResult result = new ApiResult();
+        try {
+            Map<String, String> params = new HashMap<>();
+            params.put("code", form.getCode());
+            params.put("del_status", String.valueOf(DeleteStatusEnum.NO.getCode()));
+            params.put("tenant_code", form.getTenantCode());
+            result.setData(orgService.validate("platform_org", form.getId(), params));
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            result.error().setMsg(ApiErrorMsg.VALIDATE_FAIL);
         }
 
         return result;

@@ -6,6 +6,7 @@ import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.constants.ColumnDefault;
+import org.geelato.core.enums.DeleteStatusEnum;
 import org.geelato.web.platform.m.base.entity.Dict;
 import org.geelato.web.platform.m.base.entity.DictItem;
 import org.geelato.web.platform.m.base.service.DictItemService;
@@ -194,5 +195,24 @@ public class DictItemController extends BaseController {
         pidList.forEach(item -> item.setChildren(pidListMap.get(item.getId())));
         //返回结果也改为返回顶层节点的list
         return pidListMap.get(ROOT_PARENT_ID);
+    }
+
+    @RequestMapping(value = "/validate", method = RequestMethod.POST)
+    @ResponseBody
+    public ApiResult validate(@RequestBody DictItem form) {
+        ApiResult result = new ApiResult();
+        try {
+            Map<String, String> params = new HashMap<>();
+            params.put("item_code", form.getItemCode());
+            params.put("dict_id", form.getDictId());
+            params.put("del_status", String.valueOf(DeleteStatusEnum.NO.getCode()));
+            params.put("tenant_code", form.getTenantCode());
+            result.setData(dictService.validate("platform_dict_item", form.getId(), params));
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            result.error().setMsg(ApiErrorMsg.VALIDATE_FAIL);
+        }
+
+        return result;
     }
 }

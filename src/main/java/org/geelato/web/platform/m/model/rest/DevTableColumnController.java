@@ -5,6 +5,7 @@ import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiErrorMsg;
+import org.geelato.core.enums.DeleteStatusEnum;
 import org.geelato.core.meta.MetaManager;
 import org.geelato.core.meta.model.entity.TableMeta;
 import org.geelato.core.meta.model.field.ColumnMeta;
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -165,20 +167,6 @@ public class DevTableColumnController extends BaseController {
         return result;
     }
 
-    @RequestMapping(value = "/validate", method = RequestMethod.GET)
-    @ResponseBody
-    public ApiResult<ColumnMeta> validate(String id, String tableId, String name) {
-        ApiResult<ColumnMeta> result = new ApiResult<>();
-        try {
-
-        } catch (Exception e) {
-            logger.error(e.getMessage());
-            result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
-        }
-
-        return result;
-    }
-
     @RequestMapping(value = "/selectType", method = RequestMethod.GET)
     @ResponseBody
     public ApiResult<List<ColumnSelectType>> getSelectType() {
@@ -189,6 +177,25 @@ public class DevTableColumnController extends BaseController {
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
+        }
+
+        return result;
+    }
+
+    @RequestMapping(value = "/validate", method = RequestMethod.POST)
+    @ResponseBody
+    public ApiResult validate(@RequestBody ColumnMeta form) {
+        ApiResult result = new ApiResult();
+        try {
+            Map<String, String> params = new HashMap<>();
+            params.put("column_name", form.getName());
+            params.put("table_id", form.getTableId());
+            params.put("del_status", String.valueOf(DeleteStatusEnum.NO.getCode()));
+            params.put("tenant_code", form.getTenantCode());
+            result.setData(devTableColumnService.validate("platform_dev_column", form.getId(), params));
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            result.error().setMsg(ApiErrorMsg.VALIDATE_FAIL);
         }
 
         return result;

@@ -7,6 +7,7 @@ import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.constants.MediaTypes;
+import org.geelato.core.enums.DeleteStatusEnum;
 import org.geelato.core.enums.EnableStatusEnum;
 import org.geelato.core.meta.MetaManager;
 import org.geelato.core.meta.model.entity.TableMeta;
@@ -222,6 +223,25 @@ public class DevTableController extends BaseController {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.UPDATE_FAIL);
         }
+        return result;
+    }
+
+    @RequestMapping(value = "/validate", method = RequestMethod.POST)
+    @ResponseBody
+    public ApiResult validate(@RequestBody TableMeta form) {
+        ApiResult result = new ApiResult();
+        try {
+            Map<String, String> params = new HashMap<>();
+            params.put("entity_name", form.getEntityName());
+            params.put("connect_id", form.getConnectId());
+            params.put("del_status", String.valueOf(DeleteStatusEnum.NO.getCode()));
+            params.put("tenant_code", form.getTenantCode());
+            result.setData(devTableService.validate("platform_dev_table", form.getId(), params));
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            result.error().setMsg(ApiErrorMsg.VALIDATE_FAIL);
+        }
+
         return result;
     }
 }

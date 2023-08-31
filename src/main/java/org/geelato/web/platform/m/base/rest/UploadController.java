@@ -1,5 +1,6 @@
 package org.geelato.web.platform.m.base.rest;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.web.platform.m.base.entity.Attach;
@@ -15,7 +16,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 
-import jakarta.servlet.http.HttpServletRequest;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
@@ -43,7 +43,7 @@ public class UploadController extends BaseController {
         }
         try {
             Attach attach = new Attach(file);
-            attach.setUrl(uploadService.getSavePath(ROOT_DIRECTORY, attach.getName(), isRename));
+            attach.setUrl(uploadService.getSavePath(ROOT_DIRECTORY, attach.getName(), true));
             byte[] bytes = file.getBytes();
             Files.write(Paths.get(attach.getUrl()), bytes);
             result.success().setData(attachService.createModel(attach));
