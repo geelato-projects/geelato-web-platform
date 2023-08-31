@@ -28,6 +28,8 @@ public class App extends BaseSortableEntity {
     private String powerInfo;
     private String versionInfo;
     private String description;// 描述
+    private int applyStatus = 1;
+    private int designStatus = 1;
 
     @Col(name = "name", nullable = false)
     @Title(title = "应用名称")
@@ -168,5 +170,25 @@ public class App extends BaseSortableEntity {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    @Col(name = "apply_status")
+    @Title(title = "应用站点状态", description = "1:启用；0:禁用")
+    public int getApplyStatus() {
+        return applyStatus;
+    }
+
+    public void setApplyStatus(int applyStatus) {
+        this.applyStatus = applyStatus;
+    }
+
+    @Col(name = "design_status")
+    @Title(title = "设计站点状态", description = "1:启用；0:禁用")
+    public int getDesignStatus() {
+        return designStatus;
+    }
+
+    public void setDesignStatus(int designStatus) {
+        this.designStatus = designStatus;
     }
 }

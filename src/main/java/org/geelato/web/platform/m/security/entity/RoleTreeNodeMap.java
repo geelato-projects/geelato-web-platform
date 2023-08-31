@@ -1,7 +1,10 @@
 package org.geelato.web.platform.m.security.entity;
 
 
-import org.geelato.core.meta.annotation.*;
+import org.geelato.core.meta.annotation.Col;
+import org.geelato.core.meta.annotation.Entity;
+import org.geelato.core.meta.annotation.ForeignKey;
+import org.geelato.core.meta.annotation.Title;
 import org.geelato.core.meta.model.entity.BaseEntity;
 import org.geelato.web.platform.m.base.entity.TreeNode;
 
@@ -24,8 +27,7 @@ public class RoleTreeNodeMap extends BaseEntity {
     private String title;
 
     @Title(title = "树ID")
-    // @Col(name = "tree_id", nullable = false)
-    @Transient
+    @Col(name = "tree_id", nullable = false)
     public String getTreeId() {
         return treeId;
     }
