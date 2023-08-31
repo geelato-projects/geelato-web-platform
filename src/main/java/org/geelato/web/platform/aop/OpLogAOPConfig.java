@@ -92,16 +92,7 @@ public class OpLogAOPConfig {
                 opType = "c";
                 opRecord = "新增记录";
             }
-            //String baseSql = "insert into platform_oprecord (id,op_data_id,op_type,op_time,op_user,op_description) values ('%s','%s','%s','%s','%s','%s')";
-//            String saveSql = String.format(baseSql,
-//                    UIDGenerator.generate(0),
-//                    opDataId,
-//                    opType,
-//                    formatter.format(date),
-//                    opUser,
-//                    opRecord
-//            );
-            String baseSql="insert into platform_oprecord (id,op_data_id,op_type,op_time,op_user,op_user_id,op_description) values (?,?,?,?,?,?,?)";
+            String baseSql="insert into platform_oprecord (id,op_data_id,op_type,op_time,op_user,op_user_id,op_description,tenant_code) values (?,?,?,?,?,?,?,?)";
             dao.getJdbcTemplate().update(baseSql,
                     UIDGenerator.generate(0),
                     opDataId,
@@ -109,7 +100,8 @@ public class OpLogAOPConfig {
                     formatter.format(date),
                     opUser,
                     opUserId,
-                    opRecord);
+                    opRecord,
+                    EnvManager.singleInstance().getCurrentTenantCode());
         }
 
     }
