@@ -71,6 +71,9 @@ public class OpLogAOPConfig {
         Date date = new Date(System.currentTimeMillis());
         if(ret!=null) {
             opDataId=ret.toString();
+            if(opDataId.length()>32){
+                return;
+            }
             if (saveCommand.getCommandType() == CommandType.Update) {
                 opType = "u";
                 ArrayList<String> filedChangeRecods= new ArrayList<String>();
