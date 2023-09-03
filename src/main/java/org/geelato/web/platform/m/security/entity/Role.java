@@ -5,6 +5,7 @@ import org.geelato.core.constants.ColumnDefault;
 import org.geelato.core.meta.annotation.Col;
 import org.geelato.core.meta.annotation.Entity;
 import org.geelato.core.meta.annotation.Title;
+import org.geelato.core.meta.annotation.Transient;
 import org.geelato.core.meta.model.entity.BaseSortableEntity;
 import org.geelato.core.meta.model.entity.EntityEnableAble;
 
@@ -15,12 +16,33 @@ import org.geelato.core.meta.model.entity.EntityEnableAble;
 @Entity(name = "platform_role")
 @Title(title = "角色")
 public class Role extends BaseSortableEntity implements EntityEnableAble {
+    private String appId;
+    private String appName;
     private String name;
     private String code;
     private String type;
     private int enableStatus = ColumnDefault.ENABLE_STATUS_VALUE;
     //    private String treeNodeId;
     private String description;
+
+    @Title(title = "应用")
+    @Col(name = "app_id")
+    public String getAppId() {
+        return appId;
+    }
+
+    public void setAppId(String appId) {
+        this.appId = appId;
+    }
+
+    @Transient
+    public String getAppName() {
+        return appName;
+    }
+
+    public void setAppName(String appName) {
+        this.appName = appName;
+    }
 
     @Title(title = "编码")
     public String getCode() {

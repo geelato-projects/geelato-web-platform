@@ -6,7 +6,9 @@ import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.enums.DeleteStatusEnum;
+import org.geelato.web.platform.m.base.entity.App;
 import org.geelato.web.platform.m.base.rest.BaseController;
+import org.geelato.web.platform.m.base.service.AppService;
 import org.geelato.web.platform.m.security.entity.DataItems;
 import org.geelato.web.platform.m.security.entity.Role;
 import org.geelato.web.platform.m.security.service.RoleService;
@@ -29,6 +31,8 @@ public class RoleRestController extends BaseController {
     private final Logger logger = LoggerFactory.getLogger(RoleRestController.class);
     @Autowired
     private RoleService roleService;
+    @Autowired
+    private AppService appService;
 
     @RequestMapping(value = "/pageQuery", method = RequestMethod.GET)
     @ResponseBody
@@ -75,7 +79,14 @@ public class RoleRestController extends BaseController {
     public ApiResult get(@PathVariable(required = true) String id) {
         ApiResult result = new ApiResult();
         try {
-            return result.setData(roleService.getModel(Role.class, id));
+            Role role = roleService.getModel(Role.class, id);
+            if (Strings.isNotBlank(role.getAppId())) {
+                App app = appService.getModel(App.class, role.getAppId());
+                if (app != null) {
+                    role.setAppName(app.getName());
+                }
+            }
+            return result.setData(role);
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
@@ -135,6 +146,7 @@ public class RoleRestController extends BaseController {
         try {
             Map<String, String> params = new HashMap<>();
             params.put("code", form.getCode());
+            params.put("app_id", form.getAppId());
             params.put("del_status", String.valueOf(DeleteStatusEnum.NO.getCode()));
             params.put("tenant_code", form.getTenantCode());
             result.setData(roleService.validate("platform_role", form.getId(), params));
