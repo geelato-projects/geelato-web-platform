@@ -196,6 +196,11 @@ public class RuleService {
         return recursiveSave(command);
     }
 
+    public Object batchSave(String biz, String gql) {
+        List<SaveCommand> commandList = gqlManager.generateBatchSaveSql(gql, getSessionCtx());
+        List<BoundSql> boundSqlList = sqlManager.generateBatchSaveSql(commandList);
+        return  dao.batchSave(boundSqlList);
+    }
     /**
      * 递归执行，存在需解析依赖变更的情况
      * 不执行业务规则检查
@@ -206,7 +211,7 @@ public class RuleService {
     public String recursiveSave(SaveCommand command) {
         // 如果更新了个人配置，则去除缓存
         if ("platform_user_config".equals(command.getEntityName()) && SecurityHelper.getCurrentUser() != null) {
-            cache.evict("config", SecurityHelper.getCurrentUser().id.toString());
+            cache.evict("config", SecurityHelper.getCurrentUser().id);
         }
         BoundSql boundSql = sqlManager.generateSaveSql(command);
         String pkValue = dao.save(boundSql);
@@ -280,5 +285,6 @@ public class RuleService {
     protected Ctx getSessionCtx() {
         return new Ctx();
     }
+
 
 }

@@ -83,7 +83,19 @@ public class MetaController implements InitializingBean {
         result.setData(ruleService.save(biz, gql));
         return result;
     }
-
+    /**
+     * @param biz     业务代码
+     * @param request HttpServletRequest
+     * @return SaveResult
+     */
+    @RequestMapping(value = {"batchSave/{biz}"}, method = RequestMethod.POST, produces = MediaTypes.JSON_UTF_8)
+    @ResponseBody
+    public ApiMetaResult batchSave(@PathVariable("biz") String biz, HttpServletRequest request) {
+        String gql = getGql(request);
+        ApiMetaResult result = new ApiMetaResult();
+        result.setData(ruleService.batchSave(biz, gql));
+        return result;
+    }
 
     @RequestMapping(value = {"delete/{biz}/{id}"}, method = RequestMethod.POST, produces = MediaTypes.JSON_UTF_8)
     @ResponseBody
