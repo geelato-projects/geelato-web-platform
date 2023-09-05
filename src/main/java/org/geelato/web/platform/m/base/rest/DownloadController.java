@@ -1,11 +1,14 @@
 package org.geelato.web.platform.m.base.rest;
 
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.logging.log4j.util.Strings;
 import org.geelato.web.platform.m.base.entity.Attach;
 import org.geelato.web.platform.m.base.service.AttachService;
 import org.geelato.web.platform.m.base.service.DownloadService;
+import org.geelato.web.platform.m.base.service.UploadService;
+import org.geelato.web.platform.m.excel.entity.OfficeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,15 +30,18 @@ import java.net.URLEncoder;
 @Controller
 @RequestMapping(value = "/resources")
 public class DownloadController extends BaseController {
+    private static final String ROOT_DIRECTORY = "upload";
     private final Logger logger = LoggerFactory.getLogger(DownloadController.class);
     @Autowired
     private DownloadService downloadService;
+    @Autowired
+    private UploadService uploadService;
     @Autowired
     private AttachService attachService;
 
     @RequestMapping(value = "/file", method = RequestMethod.GET)
     @ResponseBody
-    public void downloadFile(String id, String name, String path, HttpServletRequest request, HttpServletResponse response) throws Exception {
+    public void downloadFile(String id, String name, String path, boolean isPdf, HttpServletRequest request, HttpServletResponse response) throws Exception {
         OutputStream out = null;
         FileInputStream in = null;
         try {
@@ -47,6 +53,14 @@ public class DownloadController extends BaseController {
             } else if (Strings.isNotBlank(path)) {
                 file = downloadService.downloadFile(name, path);
                 name = Strings.isNotBlank(name) ? name : file.getName();
+            }
+            if (isPdf) {
+                String ext = name.substring(name.lastIndexOf("."));
+                name = Strings.isNotBlank(name) ? name.replace(ext, ".pdf") : null;
+                String outputPath = uploadService.getSavePath(ROOT_DIRECTORY, "word-to-pdf.pdf", true);
+                OfficeUtils.wordToPdf(file.getAbsolutePath(), outputPath, ext);
+                File pFile = new File(outputPath);
+                file = pFile.exists() ? pFile : null;
             }
             if (file != null && Strings.isNotBlank(name)) {
                 out = response.getOutputStream();
