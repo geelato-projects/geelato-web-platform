@@ -7,6 +7,7 @@ import org.geelato.core.constants.ColumnDefault;
 import org.geelato.core.enums.DeleteStatusEnum;
 import org.geelato.core.gql.parser.FilterGroup;
 import org.geelato.core.meta.model.entity.BaseEntity;
+import org.geelato.core.mvc.Ctx;
 import org.geelato.core.orm.Dao;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -77,6 +78,9 @@ public class BaseService {
      */
     public <T extends BaseEntity> Map createModel(T model) {
         model.setDelStatus(DeleteStatusEnum.NO.getCode());
+        if (Strings.isBlank(model.getTenantCode())) {
+            model.setTenantCode(getSessionTenantCode());
+        }
         return dao.save(model);
     }
 
@@ -170,5 +174,13 @@ public class BaseService {
         map.put("condition", list);
         List<Map<String, Object>> vlist = dao.queryForMapList("platform_validate", map);
         return vlist.isEmpty();
+    }
+
+    /**
+     * @return 当前会话信息
+     */
+    protected String getSessionTenantCode() {
+        Ctx ctx = new Ctx();
+        return ctx.getCurrentTenantCode();
     }
 }
