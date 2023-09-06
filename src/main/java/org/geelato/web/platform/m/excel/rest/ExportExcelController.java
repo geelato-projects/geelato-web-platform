@@ -6,8 +6,9 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.apache.logging.log4j.util.Strings;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import org.apache.poi.poifs.filesystem.POIFSFileSystem;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.geelato.core.api.ApiPagedResult;
+import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.web.platform.m.base.entity.Attach;
 import org.geelato.web.platform.m.base.rest.BaseController;
@@ -80,9 +81,19 @@ public class ExportExcelController extends BaseController {
         return result;
     }
 
-    @RequestMapping(value = "/excel", method = {RequestMethod.POST, RequestMethod.GET})
+    /**
+     * 导出excel
+     *
+     * @param req
+     * @param response
+     * @param dataType   数据来源，mql、data
+     * @param templateId 模板id
+     * @param fileName   导出文件名称
+     */
+    @RequestMapping(value = "/excel/{dataType}/{templateId}", method = {RequestMethod.POST, RequestMethod.GET})
     @ResponseBody
-    public void exportBill(HttpServletRequest req, HttpServletResponse response, @PathVariable String fileName, @PathVariable String templateId) {
+    public ApiResult exportBill(HttpServletRequest req, HttpServletResponse response, @PathVariable String dataType, @PathVariable String templateId, String fileName) {
+        ApiResult result = new ApiResult();
         try {
             // 表单数据
             String gql = getGql(request);
@@ -96,11 +107,12 @@ public class ExportExcelController extends BaseController {
 
             FileInputStream templateFileInputStream = new FileInputStream(templateFilePath);
             BufferedInputStream bufferedInputStream = new BufferedInputStream(templateFileInputStream);
-            POIFSFileSystem fileSystem = new POIFSFileSystem(bufferedInputStream);
-            HSSFWorkbook templateWorkbook = new HSSFWorkbook(fileSystem);
+            //POIFSFileSystem fileSystem = new POIFSFileSystem(bufferedInputStream);
+            //HSSFWorkbook templateWorkbook = new HSSFWorkbook(fileSystem);
+            XSSFWorkbook templateWorkbook = new XSSFWorkbook(bufferedInputStream);
 
             // 如果多组数据写在一个Sheet中
-            writeSheet(templateWorkbook, resultList);
+            // writeSheet(templateWorkbook, resultList);
 
             // 生成文件
             String directory = uploadService.getSavePath(ROOT_DIRECTORY, fileName, true);
@@ -122,8 +134,11 @@ public class ExportExcelController extends BaseController {
             attach.setUrl(directory);
             attachService.createModel(attach);
         } catch (Exception e) {
-            logger.error("基于Yida的表单信息导出Excel出错。", e);
+            logger.error("表单信息导出Excel出错。", e);
+            result.error().setMsg("表单信息导出Excel出错。");
         }
+
+        return result;
     }
 
     /**
