@@ -1,11 +1,14 @@
 package org.geelato.web.platform.m.excel.rest;
 
-import com.aliyun.dingtalkyida_1_0.models.BatchGetFormDataByIdListResponseBody;
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONObject;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.logging.log4j.util.Strings;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.poifs.filesystem.POIFSFileSystem;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
@@ -17,6 +20,7 @@ import org.geelato.web.platform.m.base.service.UploadService;
 import org.geelato.web.platform.m.excel.entity.ExportTemplate;
 import org.geelato.web.platform.m.excel.entity.PlaceholderMeta;
 import org.geelato.web.platform.m.excel.service.ExcelWriter;
+import org.geelato.web.platform.m.excel.service.ExcelXSSFWriter;
 import org.geelato.web.platform.m.excel.service.ExportTemplateService;
 import org.geelato.web.platform.m.security.entity.DataItems;
 import org.slf4j.Logger;
@@ -32,10 +36,9 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.regex.Pattern;
 
 /**
  * @author diabl
@@ -46,11 +49,17 @@ import java.util.Map;
 @RequestMapping(value = "/api/export/file")
 public class ExportExcelController extends BaseController {
     private static final String ROOT_DIRECTORY = "upload";
+    private static final String EXCEL_XLS_CONTENT_TYPE = "application/vnd.ms-excel";
+    private static final String EXCEL_XLSX_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+    private static final Pattern pattern = Pattern.compile("^[a-zA-Z0-9_\\-]+\\.[a-zA-Z0-9]{1,5}$");
     private final Logger logger = LoggerFactory.getLogger(ExportExcelController.class);
+    private final SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
     @Autowired
     private ExportTemplateService exportTemplateService;
     @Autowired
     private ExcelWriter excelWriter;
+    @Autowired
+    private ExcelXSSFWriter excelXSSFWriter;
     @Autowired
     private UploadService uploadService;
     @Autowired
@@ -84,7 +93,7 @@ public class ExportExcelController extends BaseController {
     /**
      * 导出excel
      *
-     * @param req
+     * @param request
      * @param response
      * @param dataType   数据来源，mql、data
      * @param templateId 模板id
@@ -92,37 +101,50 @@ public class ExportExcelController extends BaseController {
      */
     @RequestMapping(value = "/excel/{dataType}/{templateId}", method = {RequestMethod.POST, RequestMethod.GET})
     @ResponseBody
-    public ApiResult exportBill(HttpServletRequest req, HttpServletResponse response, @PathVariable String dataType, @PathVariable String templateId, String fileName) {
+    public ApiResult exportBill(HttpServletRequest request, HttpServletResponse response, @PathVariable String dataType, @PathVariable String templateId, String fileName) {
         ApiResult result = new ApiResult();
         try {
             // 表单数据
-            String gql = getGql(request);
-            List<BatchGetFormDataByIdListResponseBody.BatchGetFormDataByIdListResponseBodyResult> resultList = null;
+            String jsonText = getGql(request);
+            List<Map> valueMapList = new ArrayList<>();
+            Map valueMap = new HashMap();
+            // List<BatchGetFormDataByIdListResponseBody.BatchGetFormDataByIdListResponseBodyResult> resultList = null;
+            if ("mql".equals(dataType)) {
+                // todo 查询接口
+            } else if ("data".equals(dataType)) {
+                JSONObject jo = JSON.parseObject(jsonText);
+                valueMapList = (List<Map>) jo.get("valueMapList");
+                valueMap = (Map) jo.get("valueMap");
+            } else {
+                throw new RuntimeException("暂不支持解析该数据类型！");
+            }
             // 模型
             ExportTemplate exportTemplate = exportTemplateService.getModel(ExportTemplate.class, templateId);
-            Assert.notNull(exportTemplate, "object can't be null");
-
-            // 模板文件
-            File templateFilePath = getFile(exportTemplate.getTemplate());
-
-            FileInputStream templateFileInputStream = new FileInputStream(templateFilePath);
-            BufferedInputStream bufferedInputStream = new BufferedInputStream(templateFileInputStream);
-            //POIFSFileSystem fileSystem = new POIFSFileSystem(bufferedInputStream);
-            //HSSFWorkbook templateWorkbook = new HSSFWorkbook(fileSystem);
-            XSSFWorkbook templateWorkbook = new XSSFWorkbook(bufferedInputStream);
-
-            // 如果多组数据写在一个Sheet中
-            // writeSheet(templateWorkbook, resultList);
-
-            // 生成文件
+            Assert.notNull(exportTemplate, "导出模板不存在");
+            // 模板
+            Attach templateAttach = getFile(exportTemplate.getTemplate());
+            Assert.notNull(templateAttach, "导出模板不存在");
+            // 实体文件名称
+            String templateExt = templateAttach.getName().substring(templateAttach.getName().lastIndexOf("."));
+            String templateName = templateAttach.getName().substring(0, templateAttach.getName().lastIndexOf("."));
+            if (Strings.isNotBlank(fileName)) {
+                if (pattern.matcher(fileName).matches()) {
+                    fileName = fileName.substring(0, fileName.lastIndexOf("."));
+                }
+                fileName = fileName + templateExt;
+            } else {
+                fileName = String.format("%s_%s%s", templateName, sdf.format(new Date()), templateExt);
+            }
+            // 实体文件
             String directory = uploadService.getSavePath(ROOT_DIRECTORY, fileName, true);
             File exportFile = new File(directory);
-            OutputStream outputStream = new FileOutputStream(exportFile);
-            templateWorkbook.removeSheetAt(0);
-            templateWorkbook.write(outputStream);
-            outputStream.close();
-
-            bufferedInputStream.close();
+            // 模板源数据
+            Attach templateRuleAttach = getFile(exportTemplate.getTemplateRule());
+            Assert.notNull(templateRuleAttach, "导出模板源数据不存在");
+            // 读取，模板源数据
+            Map<String, PlaceholderMeta> metaMap = getPlaceholderMeta(new File(templateRuleAttach.getUrl()));
+            // 生成实体文件
+            generateEntityFile(new File(templateAttach.getUrl()), exportFile, metaMap, valueMapList, valueMap);
 
             // 保存文件信息
             BasicFileAttributes attributes = Files.readAttributes(exportFile.toPath(), BasicFileAttributes.class);
@@ -135,28 +157,108 @@ public class ExportExcelController extends BaseController {
             attachService.createModel(attach);
         } catch (Exception e) {
             logger.error("表单信息导出Excel出错。", e);
-            result.error().setMsg("表单信息导出Excel出错。");
+            result.error().setMsg(e.getMessage());
         }
 
         return result;
     }
 
     /**
-     * 多组数据写在一个Sheet中，对于指定需要迭代的行，将多组数据的拼接形成多行列表
+     * 占位符元数据
      *
-     * @param templateWorkbook
-     * @param resultList       多组数据
+     * @param file
+     * @return
+     * @throws IOException
      */
-    private void writeSheet(HSSFWorkbook templateWorkbook, List<BatchGetFormDataByIdListResponseBody.BatchGetFormDataByIdListResponseBodyResult> resultList) {
-        HSSFSheet placeholderMetaSheet = templateWorkbook.getSheetAt(0);
-        Map<String, PlaceholderMeta> placeholderMetaMap = excelWriter.readPlaceholderMeta(placeholderMetaSheet);
-        HSSFSheet sheet = templateWorkbook.getSheetAt(1);
+    private Map<String, PlaceholderMeta> getPlaceholderMeta(File file) throws IOException {
+        Map<String, PlaceholderMeta> metaMap = new HashMap<>();
+        FileInputStream fileInputStream = null;
+        BufferedInputStream bufferedInputStream = null;
+        try {
+            // excel文件类型
+            String contentType = Files.probeContentType(file.toPath());
+            // 读取文件
+            fileInputStream = new FileInputStream(file);
+            bufferedInputStream = new BufferedInputStream(fileInputStream);
+            if (EXCEL_XLS_CONTENT_TYPE.equals(contentType)) {
+                POIFSFileSystem fileSystem = new POIFSFileSystem(bufferedInputStream);
+                HSSFWorkbook workbook = new HSSFWorkbook(fileSystem);
+                HSSFSheet sheet = workbook.getSheetAt(0);
+                metaMap = excelWriter.readPlaceholderMeta(sheet);
+            } else if (EXCEL_XLSX_CONTENT_TYPE.equals(contentType)) {
+                XSSFWorkbook templateWorkbook = new XSSFWorkbook(bufferedInputStream);
+                XSSFSheet sheet = templateWorkbook.getSheetAt(0);
+                metaMap = excelXSSFWriter.readPlaceholderMeta(sheet);
+            } else {
+                throw new RuntimeException("暂不支持导出该格式文件！");
+            }
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
+        } finally {
+            if (bufferedInputStream != null) {
+                bufferedInputStream.close();
+            }
+            if (fileInputStream != null) {
+                fileInputStream.close();
+            }
+        }
 
-        List<Map> valueMapList = new ArrayList<>();
-        // 取多项数据中的其中一项作为非列表单元格的变量数据（因为多项数据中非列表数据的值应是一致的，这里只取第一项数据）
-        Map valueMap = new HashMap();
+        return metaMap;
+    }
 
-        excelWriter.writeSheet(sheet, placeholderMetaMap, valueMapList, valueMap);
+    /**
+     * 生成实体文件
+     *
+     * @param templateFile 模板文件
+     * @param exportFile   实体文件（路径）
+     * @param metaMap      占位符
+     * @param valueMapList 集合数据
+     * @param valueMap     单个数据
+     * @throws IOException
+     */
+    private void generateEntityFile(File templateFile, File exportFile, Map<String, PlaceholderMeta> metaMap, List<Map> valueMapList, Map valueMap) throws IOException {
+        FileInputStream fileInputStream = null;
+        BufferedInputStream bufferedInputStream = null;
+        OutputStream outputStream = null;
+        try {
+            // excel文件类型
+            String contentType = Files.probeContentType(templateFile.toPath());
+            // 读取文件
+            fileInputStream = new FileInputStream(templateFile);
+            bufferedInputStream = new BufferedInputStream(fileInputStream);
+            if (EXCEL_XLS_CONTENT_TYPE.equals(contentType)) {
+                POIFSFileSystem fileSystem = new POIFSFileSystem(bufferedInputStream);
+                HSSFWorkbook workbook = new HSSFWorkbook(fileSystem);
+                // 如果多组数据写在一个Sheet中
+                HSSFSheet sheet = workbook.getSheetAt(0);
+                excelWriter.writeSheet(sheet, metaMap, valueMapList, valueMap);
+                // 写入文件
+                outputStream = new FileOutputStream(exportFile);
+                workbook.write(outputStream);
+            } else if (EXCEL_XLSX_CONTENT_TYPE.equals(contentType)) {
+                XSSFWorkbook workbook = new XSSFWorkbook(bufferedInputStream);
+                // 如果多组数据写在一个Sheet中
+                XSSFSheet sheet = workbook.getSheetAt(0);
+                excelXSSFWriter.writeSheet(sheet, metaMap, valueMapList, valueMap);
+                // 写入文件
+                outputStream = new FileOutputStream(exportFile);
+                workbook.write(outputStream);
+            } else {
+                throw new RuntimeException("暂不支持导出该格式文件！");
+            }
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
+        } finally {
+            if (outputStream != null) {
+                outputStream.close();
+            }
+            if (bufferedInputStream != null) {
+                bufferedInputStream.close();
+            }
+            if (fileInputStream != null) {
+                fileInputStream.close();
+            }
+        }
     }
 
     /**
@@ -165,13 +267,12 @@ public class ExportExcelController extends BaseController {
      * @param attachId
      * @return
      */
-    private File getFile(String attachId) {
+    private Attach getFile(String attachId) {
         if (Strings.isNotBlank(attachId)) {
             Attach attach = attachService.getModel(Attach.class, attachId);
-            Assert.notNull(attach, "object can't be null");
             File file = new File(attach.getUrl());
             if (file.exists()) {
-                return file;
+                return attach;
             }
         }
 

@@ -1,10 +1,10 @@
 package org.geelato.web.platform.m.excel.service;
 
-import org.apache.poi.hssf.usermodel.HSSFCell;
-import org.apache.poi.hssf.usermodel.HSSFRow;
-import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.xssf.usermodel.XSSFCell;
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.geelato.core.script.js.JsProvider;
 import org.geelato.core.util.StringUtils;
 import org.geelato.web.platform.m.excel.entity.CellMeta;
@@ -19,12 +19,12 @@ import java.util.*;
 import java.util.regex.Pattern;
 
 @Component
-public class ExcelWriter {
+public class ExcelXSSFWriter {
 
     // 示例：${xxx}
     private static final Pattern cellMetaPattern = Pattern.compile("\\$\\{[\\\u4e00-\\\u9fa5,\\w,\\.]+\\}");
     private static final Pattern rowMetaPattern = Pattern.compile("\\$\\{rowMeta\\.[\\w,\\.,\\=]+\\}");
-    private final Logger logger = LoggerFactory.getLogger(ExcelWriter.class);
+    private final Logger logger = LoggerFactory.getLogger(ExcelXSSFWriter.class);
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
     private final SimpleDateFormat dateTimeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
@@ -39,12 +39,12 @@ public class ExcelWriter {
      * @param placeholderMetaMap
      * @param valueMapList
      */
-    public void writeSheet(HSSFSheet sheet, Map<String, PlaceholderMeta> placeholderMetaMap, List<Map> valueMapList, Map valueMap) {
+    public void writeSheet(XSSFSheet sheet, Map<String, PlaceholderMeta> placeholderMetaMap, List<Map> valueMapList, Map valueMap) {
         System.out.println("writeData:" + sheet.getSheetName());
         int lastRowIndex = sheet.getLastRowNum();
         for (int rowIndex = 0; rowIndex <= lastRowIndex; rowIndex++) {
             // 按行扫描处理
-            HSSFRow row = sheet.getRow(rowIndex);
+            XSSFRow row = sheet.getRow(rowIndex);
             if (row == null) {
                 break;
             }
@@ -85,12 +85,12 @@ public class ExcelWriter {
      * @param placeholderMetaMap
      * @param valueMap
      */
-    public void writeSheet(HSSFSheet sheet, Map<String, PlaceholderMeta> placeholderMetaMap, Map valueMap) {
+    public void writeSheet(XSSFSheet sheet, Map<String, PlaceholderMeta> placeholderMetaMap, Map valueMap) {
         System.out.println("writeData:" + sheet.getSheetName());
         int lastRowIndex = sheet.getLastRowNum();
         for (int rowIndex = 0; rowIndex <= lastRowIndex; rowIndex++) {
             // 按行扫描处理
-            HSSFRow row = sheet.getRow(rowIndex);
+            XSSFRow row = sheet.getRow(rowIndex);
             if (row == null) {
                 break;
             }
@@ -105,7 +105,7 @@ public class ExcelWriter {
         }
     }
 
-    private RowMeta parseTemplateRow(HSSFRow row, Map<String, PlaceholderMeta> placeholderMetaMap) {
+    private RowMeta parseTemplateRow(XSSFRow row, Map<String, PlaceholderMeta> placeholderMetaMap) {
         RowMeta rowMeta = new RowMeta();
         // 将列表与非列表cellMeta分组，存在不同的ArrayList中
         // 列表类占位符单元格索引位置Map，列表变量名为key，列表为value
@@ -114,7 +114,7 @@ public class ExcelWriter {
         List<CellMeta> notListCellIndexes = new LinkedList<>();
         short lastCellNum = row.getLastCellNum();
         for (int cellIndex = 0; cellIndex < lastCellNum; cellIndex++) {
-            HSSFCell cell = row.getCell(cellIndex);
+            XSSFCell cell = row.getCell(cellIndex);
             if (cell != null && cell.getCellType().equals(CellType.STRING)) {
                 String cellValue = cell.getStringCellValue();
                 // 找到占位符
@@ -173,8 +173,8 @@ public class ExcelWriter {
      * @param valueMap
      * @return 返回创建的新行数
      */
-    private int setRowValue(HSSFSheet sheet, int rowIndex, RowMeta rowMeta, Map valueMap) {
-        HSSFRow row = sheet.getRow(rowIndex);
+    private int setRowValue(XSSFSheet sheet, int rowIndex, RowMeta rowMeta, Map valueMap) {
+        XSSFRow row = sheet.getRow(rowIndex);
         // ----1 设置类型为非list的cell
         for (CellMeta cellMeta : rowMeta.getNotListCellIndexes()) {
             setCellValue(row.getCell(cellMeta.getIndex()), cellMeta.getPlaceholderMeta(), valueMap, null);
@@ -195,12 +195,12 @@ public class ExcelWriter {
         int newRowCount = 0;
         while (newRowCount < listMaxRowCount - 1) {
             newRowCount++;
-            HSSFRow newRow = createRowWithPreRowStyle(sheet, rowIndex + newRowCount);
+            XSSFRow newRow = createRowWithPreRowStyle(sheet, rowIndex + newRowCount);
 //            newRow.setHeight(row.getHeight());
 //            for (int cellIndex = 0; cellIndex < row.getLastCellNum(); cellIndex++) {
-//                HSSFCell templateCell = row.getCell(cellIndex);
+//                XSSFCell templateCell = row.getCell(cellIndex);
 //                // 这里里要createCell，否则getCell返回空值
-//                HSSFCell newCell = newRow.createCell(cellIndex);
+//                XSSFCell newCell = newRow.createCell(cellIndex);
 //                newCell.setCellStyle(templateCell.getCellStyle());
 //            }
             // lastRowIndex++;
@@ -215,11 +215,11 @@ public class ExcelWriter {
             // 设置列表每行数据的值
             if (valueList != null) {
                 for (Map listValueMap : valueList) {
-                    HSSFRow newRow = sheet.getRow(rowIndex + currentRowIndexInList);
+                    XSSFRow newRow = sheet.getRow(rowIndex + currentRowIndexInList);
                     currentRowIndexInList++;
                     if (cellMetaList != null) {
                         for (CellMeta cellMeta : cellMetaList) {
-                            HSSFCell cell = newRow.getCell(cellMeta.getIndex());
+                            XSSFCell cell = newRow.getCell(cellMeta.getIndex());
                             setCellValue(cell, cellMeta.getPlaceholderMeta(), valueMap, listValueMap);
                         }
                     }
@@ -244,7 +244,7 @@ public class ExcelWriter {
         return newRowCount;
     }
 
-    private PlaceholderMeta getPlaceholderMeta(HSSFCell cell, Map<String, PlaceholderMeta> placeholderMetaMap) {
+    private PlaceholderMeta getPlaceholderMeta(XSSFCell cell, Map<String, PlaceholderMeta> placeholderMetaMap) {
         if (cell == null) {
             return null;
         }
@@ -254,7 +254,7 @@ public class ExcelWriter {
     }
 
 
-    private void setCellValue(HSSFCell cell, PlaceholderMeta meta, Map valueMap, Map listValueMap) {
+    private void setCellValue(XSSFCell cell, PlaceholderMeta meta, Map valueMap, Map listValueMap) {
         // 不是列表，且是变更
         if (meta.isValueComputeModeVar()) {
             if (meta.isList()) {
@@ -274,7 +274,7 @@ public class ExcelWriter {
         }
     }
 
-    private void setCellValueByValueType(HSSFCell cell, PlaceholderMeta meta, Object value) {
+    private void setCellValueByValueType(XSSFCell cell, PlaceholderMeta meta, Object value) {
         if (value != null) {
             if (meta.isValueTypeNumber()) {
                 if (value.toString().indexOf(".") == -1) {
@@ -307,8 +307,8 @@ public class ExcelWriter {
      * @param rowIndex
      * @return
      */
-    private HSSFRow createRow(HSSFSheet sheet, int rowIndex) {
-        HSSFRow row = null;
+    private XSSFRow createRow(XSSFSheet sheet, int rowIndex) {
+        XSSFRow row = null;
         if (sheet.getRow(rowIndex) != null) {
             int lastRowNo = sheet.getLastRowNum();
             sheet.shiftRows(rowIndex, lastRowNo, 1);
@@ -318,14 +318,14 @@ public class ExcelWriter {
         return row;
     }
 
-    public HSSFRow createRowWithPreRowStyle(HSSFSheet sheet, Integer rowIndex) {
-        HSSFRow preRow = sheet.getRow(rowIndex - 1);
-        HSSFRow newRow = createRow(sheet, rowIndex);
+    public XSSFRow createRowWithPreRowStyle(XSSFSheet sheet, Integer rowIndex) {
+        XSSFRow preRow = sheet.getRow(rowIndex - 1);
+        XSSFRow newRow = createRow(sheet, rowIndex);
         newRow.setHeight(preRow.getHeight());
         for (int cellIndex = 0; cellIndex < preRow.getLastCellNum(); cellIndex++) {
-            HSSFCell templateCell = preRow.getCell(cellIndex);
+            XSSFCell templateCell = preRow.getCell(cellIndex);
             // 这里里要createCell，否则getCell返回空值
-            HSSFCell newCell = newRow.createCell(cellIndex);
+            XSSFCell newCell = newRow.createCell(cellIndex);
             newCell.setCellStyle(templateCell.getCellStyle());
         }
         return newRow;
@@ -337,13 +337,13 @@ public class ExcelWriter {
      * @param sheet
      * @return
      */
-    public Map<String, PlaceholderMeta> readPlaceholderMeta(HSSFSheet sheet) {
+    public Map<String, PlaceholderMeta> readPlaceholderMeta(XSSFSheet sheet) {
         int lastRowIndex = sheet.getLastRowNum();
         System.out.println(lastRowIndex);
         Map<String, PlaceholderMeta> map = new HashMap<String, PlaceholderMeta>(lastRowIndex);
         // 跳过第一行，标题行
         for (int i = 1; i <= lastRowIndex; i++) {
-            HSSFRow row = sheet.getRow(i);
+            XSSFRow row = sheet.getRow(i);
             if (row == null) {
                 break;
             }
@@ -370,7 +370,7 @@ public class ExcelWriter {
         return true;
     }
 
-    private boolean getBoolean(HSSFCell cell) {
+    private boolean getBoolean(XSSFCell cell) {
         if (cell == null) {
             return false;
         }
