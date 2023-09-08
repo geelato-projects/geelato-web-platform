@@ -32,7 +32,7 @@ public class AppService extends BaseSortableService {
         dao.save(model);
         //
         Map<String, Object> params = new HashMap<>();
-        params.put("permissionId", model.getId());
+        params.put("appId", model.getId());
         List<RoleAppMap> rList = roleAppMapService.queryModel(RoleAppMap.class, params);
         if (rList != null) {
             for (RoleAppMap oModel : rList) {

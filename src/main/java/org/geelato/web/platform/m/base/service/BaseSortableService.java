@@ -1,5 +1,6 @@
 package org.geelato.web.platform.m.base.service;
 
+import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.constants.ColumnDefault;
 import org.geelato.core.enums.DeleteStatusEnum;
 import org.geelato.core.meta.model.entity.BaseSortableEntity;
@@ -39,6 +40,9 @@ public class BaseSortableService extends BaseService {
     public <T extends BaseSortableEntity> Map createModel(T model) {
         model.setSeqNo(model.getSeqNo() > 0 ? model.getSeqNo() : ColumnDefault.SEQ_NO_VALUE);
         model.setDelStatus(DeleteStatusEnum.NO.getCode());
+        if (Strings.isBlank(model.getTenantCode())) {
+            model.setTenantCode(getSessionTenantCode());
+        }
         return dao.save(model);
     }
 

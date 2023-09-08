@@ -21,14 +21,12 @@ import java.util.regex.Pattern;
 @Component
 public class ExcelWriter {
 
-    private Logger logger = LoggerFactory.getLogger(ExcelWriter.class);
-
     // 示例：${xxx}
-    private static Pattern cellMetaPattern = Pattern.compile("\\$\\{[\\\u4e00-\\\u9fa5,\\w,\\.]+\\}");
-    private static Pattern rowMetaPattern = Pattern.compile("\\$\\{rowMeta\\.[\\w,\\.,\\=]+\\}");
-
-    private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-    private SimpleDateFormat dateTimeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    private static final Pattern cellMetaPattern = Pattern.compile("\\$\\{[\\\u4e00-\\\u9fa5,\\w,\\.]+\\}");
+    private static final Pattern rowMetaPattern = Pattern.compile("\\$\\{rowMeta\\.[\\w,\\.,\\=]+\\}");
+    private final Logger logger = LoggerFactory.getLogger(ExcelWriter.class);
+    private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+    private final SimpleDateFormat dateTimeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     /**
      * 按多组值写入一个sheet
@@ -188,6 +186,7 @@ public class ExcelWriter {
         for (String key : rowMeta.getListCellMetaMap().keySet()) {
             List valueList = (List) valueMap.get(key);
             if (valueList == null) {
+                valueList = new ArrayList<>();
                 logger.error("从valueMap中，获取key(" + key + ")的值为null。");
             }
             listMaxRowCount = Math.max(valueList.size(), listMaxRowCount);
@@ -214,12 +213,16 @@ public class ExcelWriter {
             List<CellMeta> cellMetaList = rowMeta.getListCellMetaMap().get(key);
             int currentRowIndexInList = 0;
             // 设置列表每行数据的值
-            for (Map listValueMap : valueList) {
-                HSSFRow newRow = sheet.getRow(rowIndex + currentRowIndexInList);
-                currentRowIndexInList++;
-                for (CellMeta cellMeta : cellMetaList) {
-                    HSSFCell cell = newRow.getCell(cellMeta.getIndex());
-                    setCellValue(cell, cellMeta.getPlaceholderMeta(), valueMap, listValueMap);
+            if (valueList != null) {
+                for (Map listValueMap : valueList) {
+                    HSSFRow newRow = sheet.getRow(rowIndex + currentRowIndexInList);
+                    currentRowIndexInList++;
+                    if (cellMetaList != null) {
+                        for (CellMeta cellMeta : cellMetaList) {
+                            HSSFCell cell = newRow.getCell(cellMeta.getIndex());
+                            setCellValue(cell, cellMeta.getPlaceholderMeta(), valueMap, listValueMap);
+                        }
+                    }
                 }
             }
         }

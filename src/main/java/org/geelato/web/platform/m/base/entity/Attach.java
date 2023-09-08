@@ -18,6 +18,7 @@ public class Attach extends BaseEntity {
     private String appId;
     private String name;
     private String type;
+    private String genre;
     private Long size;
     private String path;
     private String url;
@@ -60,6 +61,16 @@ public class Attach extends BaseEntity {
 
     public void setType(String type) {
         this.type = type;
+    }
+
+    @Col(name = "genre")
+    @Title(title = "类别")
+    public String getGenre() {
+        return genre;
+    }
+
+    public void setGenre(String genre) {
+        this.genre = genre;
     }
 
     @Col(name = "size")
