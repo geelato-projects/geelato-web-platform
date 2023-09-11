@@ -9,6 +9,7 @@ import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.constants.MediaTypes;
 import org.geelato.core.enums.DeleteStatusEnum;
 import org.geelato.core.enums.EnableStatusEnum;
+import org.geelato.core.gql.parser.FilterGroup;
 import org.geelato.core.meta.MetaManager;
 import org.geelato.core.meta.model.entity.TableMeta;
 import org.geelato.web.platform.m.base.rest.BaseController;
@@ -23,9 +24,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author diabl
@@ -33,8 +32,15 @@ import java.util.Map;
 @Controller
 @RequestMapping(value = "/api/model/table")
 public class DevTableController extends BaseController {
+    private static final Map<String, List<String>> OPERATORMAP = new LinkedHashMap<>();
+
+    static {
+        OPERATORMAP.put("contains", Arrays.asList("title", "tableName", "entityName", "description"));
+        OPERATORMAP.put("intervals", Arrays.asList("createAt", "updateAt"));
+    }
+
     private final Logger logger = LoggerFactory.getLogger(DevTableController.class);
-    private MetaManager metaManager = MetaManager.singleInstance();
+    private final MetaManager metaManager = MetaManager.singleInstance();
     @Autowired
     private DevTableService devTableService;
     @Autowired
@@ -50,9 +56,10 @@ public class DevTableController extends BaseController {
             int pageNum = Strings.isNotBlank(req.getParameter("current")) ? Integer.parseInt(req.getParameter("current")) : -1;
             int pageSize = Strings.isNotBlank(req.getParameter("pageSize")) ? Integer.parseInt(req.getParameter("pageSize")) : -1;
             Map<String, Object> params = this.getQueryParameters(TableMeta.class, req);
+            FilterGroup filterGroup = this.getFilterGroup(params, OPERATORMAP);
 
-            List<TableMeta> pageQueryList = devTableService.pageQueryModel(TableMeta.class, pageNum, pageSize, params);
-            List<TableMeta> queryList = devTableService.queryModel(TableMeta.class, params);
+            List<TableMeta> pageQueryList = devTableService.pageQueryModel(TableMeta.class, pageNum, pageSize, filterGroup);
+            List<TableMeta> queryList = devTableService.queryModel(TableMeta.class, filterGroup);
 
             result.setTotal(queryList != null ? queryList.size() : 0);
             result.setData(new DataItems(pageQueryList, result.getTotal()));

@@ -6,6 +6,7 @@ import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.enums.DeleteStatusEnum;
+import org.geelato.core.gql.parser.FilterGroup;
 import org.geelato.web.platform.m.base.entity.App;
 import org.geelato.web.platform.m.base.rest.BaseController;
 import org.geelato.web.platform.m.base.service.AppService;
@@ -18,9 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author diabl
@@ -28,6 +27,13 @@ import java.util.Map;
 @Controller
 @RequestMapping(value = "/api/security/role")
 public class RoleRestController extends BaseController {
+    private static final Map<String, List<String>> OPERATORMAP = new LinkedHashMap<>();
+
+    static {
+        OPERATORMAP.put("contains", Arrays.asList("name", "code", "appName", "description"));
+        OPERATORMAP.put("intervals", Arrays.asList("createAt", "updateAt"));
+    }
+
     private final Logger logger = LoggerFactory.getLogger(RoleRestController.class);
     @Autowired
     private RoleService roleService;
@@ -42,9 +48,10 @@ public class RoleRestController extends BaseController {
             int pageNum = Strings.isNotBlank(req.getParameter("current")) ? Integer.parseInt(req.getParameter("current")) : -1;
             int pageSize = Strings.isNotBlank(req.getParameter("pageSize")) ? Integer.parseInt(req.getParameter("pageSize")) : -1;
             Map<String, Object> params = this.getQueryParameters(Role.class, req);
+            FilterGroup filterGroup = this.getFilterGroup(params, OPERATORMAP);
 
-            List<Role> pageQueryList = roleService.pageQueryModel(Role.class, pageNum, pageSize, params);
-            List<Role> queryList = roleService.queryModel(Role.class, params);
+            List<Role> pageQueryList = roleService.pageQueryModel(Role.class, pageNum, pageSize, filterGroup);
+            List<Role> queryList = roleService.queryModel(Role.class, filterGroup);
 
             result.setTotal(queryList != null ? queryList.size() : 0);
             result.setData(new DataItems(pageQueryList, result.getTotal()));

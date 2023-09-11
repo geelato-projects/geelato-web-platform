@@ -3,6 +3,7 @@ package org.geelato.web.platform.m.base.service;
 import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.constants.ColumnDefault;
 import org.geelato.core.enums.DeleteStatusEnum;
+import org.geelato.core.gql.parser.FilterGroup;
 import org.geelato.core.meta.model.entity.BaseSortableEntity;
 import org.springframework.stereotype.Component;
 
@@ -25,9 +26,35 @@ public class BaseSortableService extends BaseService {
      * @return
      */
     @Override
-    public <T> List<T> queryModel(Class<T> entity, Map<String, Object> params) {
+    public <T> List<T> queryModel(Class<T> entity, Map<String, Object> params, String orderBy) {
         dao.SetDefaultFilter(true, filterGroup);
-        return dao.queryList(entity, params, BaseSortableService.DEFAULT_ORDER_BY);
+        orderBy = Strings.isNotBlank(orderBy) ? orderBy : BaseSortableService.DEFAULT_ORDER_BY;
+        return dao.queryList(entity, params, orderBy);
+    }
+
+    @Override
+    public <T> List<T> queryModel(Class<T> entity, Map<String, Object> params) {
+        return queryModel(entity, params, BaseSortableService.DEFAULT_ORDER_BY);
+    }
+
+    /**
+     * 全量查询
+     *
+     * @param entity 查询实体
+     * @param filter 条件参数
+     * @param <T>
+     * @return
+     */
+    @Override
+    public <T> List<T> queryModel(Class<T> entity, FilterGroup filter, String orderBy) {
+        dao.SetDefaultFilter(true, filterGroup);
+        orderBy = Strings.isNotBlank(orderBy) ? orderBy : BaseSortableService.DEFAULT_ORDER_BY;
+        return dao.queryList(entity, filter, orderBy);
+    }
+
+    @Override
+    public <T> List<T> queryModel(Class<T> entity, FilterGroup filter) {
+        return queryModel(entity, filter, BaseSortableService.DEFAULT_ORDER_BY);
     }
 
     /**

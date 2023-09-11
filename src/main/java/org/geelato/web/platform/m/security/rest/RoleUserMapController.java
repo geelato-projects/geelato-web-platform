@@ -4,9 +4,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
+import org.geelato.core.constants.ApiErrorMsg;
+import org.geelato.core.gql.parser.FilterGroup;
 import org.geelato.web.platform.m.base.rest.BaseController;
 import org.geelato.web.platform.m.security.entity.DataItems;
-import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.web.platform.m.security.entity.RoleUserMap;
 import org.geelato.web.platform.m.security.service.RoleUserMapService;
 import org.slf4j.Logger;
@@ -15,6 +16,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -24,6 +27,13 @@ import java.util.Map;
 @Controller
 @RequestMapping(value = "/api/security/role/user")
 public class RoleUserMapController extends BaseController {
+    private static final Map<String, List<String>> OPERATORMAP = new LinkedHashMap<>();
+
+    static {
+        OPERATORMAP.put("contains", Arrays.asList("roleName", "userName"));
+        OPERATORMAP.put("intervals", Arrays.asList("createAt", "updateAt"));
+    }
+
     private final Logger logger = LoggerFactory.getLogger(RoleUserMapController.class);
     @Autowired
     private RoleUserMapService roleUserMapService;
@@ -36,9 +46,10 @@ public class RoleUserMapController extends BaseController {
             int pageNum = Strings.isNotBlank(req.getParameter("current")) ? Integer.parseInt(req.getParameter("current")) : -1;
             int pageSize = Strings.isNotBlank(req.getParameter("pageSize")) ? Integer.parseInt(req.getParameter("pageSize")) : -1;
             Map<String, Object> params = this.getQueryParameters(RoleUserMap.class, req);
+            FilterGroup filterGroup = this.getFilterGroup(params, OPERATORMAP);
 
-            List<RoleUserMap> pageQueryList = roleUserMapService.pageQueryModel(RoleUserMap.class, pageNum, pageSize, params);
-            List<RoleUserMap> queryList = roleUserMapService.queryModel(RoleUserMap.class, params);
+            List<RoleUserMap> pageQueryList = roleUserMapService.pageQueryModel(RoleUserMap.class, pageNum, pageSize, filterGroup);
+            List<RoleUserMap> queryList = roleUserMapService.queryModel(RoleUserMap.class, filterGroup);
 
             result.setTotal(queryList != null ? queryList.size() : 0);
             result.setData(new DataItems(pageQueryList, result.getTotal()));

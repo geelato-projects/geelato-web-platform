@@ -6,20 +6,18 @@ import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.enums.DeleteStatusEnum;
+import org.geelato.core.gql.parser.FilterGroup;
 import org.geelato.web.platform.m.base.rest.BaseController;
 import org.geelato.web.platform.m.security.entity.DataItems;
 import org.geelato.web.platform.m.security.entity.Org;
 import org.geelato.web.platform.m.security.service.OrgService;
-import org.geelato.web.platform.m.security.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author diabl
@@ -27,11 +25,16 @@ import java.util.Map;
 @Controller
 @RequestMapping(value = "/api/security/org")
 public class OrgRestController extends BaseController {
+    private static final Map<String, List<String>> OPERATORMAP = new LinkedHashMap<>();
+
+    static {
+        OPERATORMAP.put("contains", Arrays.asList("name", "code", "description"));
+        OPERATORMAP.put("intervals", Arrays.asList("createAt", "updateAt"));
+    }
+
     private final Logger logger = LoggerFactory.getLogger(OrgRestController.class);
     @Autowired
     private OrgService orgService;
-    @Autowired
-    private UserService userService;
 
     @RequestMapping(value = "/pageQuery", method = RequestMethod.GET)
     @ResponseBody
@@ -41,9 +44,10 @@ public class OrgRestController extends BaseController {
             int pageNum = Strings.isNotBlank(req.getParameter("current")) ? Integer.parseInt(req.getParameter("current")) : -1;
             int pageSize = Strings.isNotBlank(req.getParameter("pageSize")) ? Integer.parseInt(req.getParameter("pageSize")) : -1;
             Map<String, Object> params = this.getQueryParameters(Org.class, req);
+            FilterGroup filterGroup = this.getFilterGroup(params, OPERATORMAP);
 
-            List<Org> pageQueryList = orgService.pageQueryModel(Org.class, pageNum, pageSize, params);
-            List<Org> queryList = orgService.queryModel(Org.class, params);
+            List<Org> pageQueryList = orgService.pageQueryModel(Org.class, pageNum, pageSize, filterGroup);
+            List<Org> queryList = orgService.queryModel(Org.class, filterGroup);
 
             result.setTotal(queryList != null ? queryList.size() : 0);
             result.setData(new DataItems(pageQueryList, result.getTotal()));

@@ -8,6 +8,7 @@ import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.constants.ApiResultStatus;
 import org.geelato.core.enums.DeleteStatusEnum;
+import org.geelato.core.gql.parser.FilterGroup;
 import org.geelato.core.util.UUIDUtils;
 import org.geelato.web.platform.m.base.rest.BaseController;
 import org.geelato.web.platform.m.security.entity.DataItems;
@@ -23,9 +24,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author diabl
@@ -35,6 +34,14 @@ import java.util.Map;
 public class UserRestController extends BaseController {
     private static final String DEFAULT_PASSWORD = "12345678";
     private static final int DEFAULT_PASSWORD_DIGIT = 8;
+
+    private static final Map<String, List<String>> OPERATORMAP = new LinkedHashMap<>();
+
+    static {
+        OPERATORMAP.put("contains", Arrays.asList("name", "loginName", "orgName", "description"));
+        OPERATORMAP.put("intervals", Arrays.asList("createAt", "updateAt"));
+    }
+
     private final Logger logger = LoggerFactory.getLogger(UserRestController.class);
     @Autowired
     protected AccountService accountService;
@@ -51,9 +58,10 @@ public class UserRestController extends BaseController {
             int pageNum = Strings.isNotBlank(req.getParameter("current")) ? Integer.parseInt(req.getParameter("current")) : -1;
             int pageSize = Strings.isNotBlank(req.getParameter("pageSize")) ? Integer.parseInt(req.getParameter("pageSize")) : -1;
             Map<String, Object> params = this.getQueryParameters(User.class, req);
+            FilterGroup filterGroup = this.getFilterGroup(params, OPERATORMAP);
 
-            List<User> pageQueryList = userService.pageQueryModel(User.class, pageNum, pageSize, params);
-            List<User> queryList = userService.queryModel(User.class, params);
+            List<User> pageQueryList = userService.pageQueryModel(User.class, pageNum, pageSize, filterGroup);
+            List<User> queryList = userService.queryModel(User.class, filterGroup);
 
             result.setTotal(queryList != null ? queryList.size() : 0);
             result.setData(new DataItems(pageQueryList, result.getTotal()));

@@ -4,17 +4,20 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
+import org.geelato.core.constants.ApiErrorMsg;
+import org.geelato.core.gql.parser.FilterGroup;
 import org.geelato.core.meta.model.entity.TableForeign;
 import org.geelato.web.platform.m.base.rest.BaseController;
 import org.geelato.web.platform.m.model.service.DevTableForeignService;
 import org.geelato.web.platform.m.security.entity.DataItems;
-import org.geelato.core.constants.ApiErrorMsg;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -24,6 +27,13 @@ import java.util.Map;
 @Controller
 @RequestMapping(value = "/api/model/table/foreign")
 public class DevTableForeignController extends BaseController {
+    private static final Map<String, List<String>> OPERATORMAP = new LinkedHashMap<>();
+
+    static {
+        OPERATORMAP.put("contains", Arrays.asList("mainTableSchema", "mainTable", "mainTableCol", "foreignTableSchema", "foreignTable", "foreignTableCol", "description"));
+        OPERATORMAP.put("intervals", Arrays.asList("createAt", "updateAt"));
+    }
+
     private final Logger logger = LoggerFactory.getLogger(DevTableForeignController.class);
     @Autowired
     private DevTableForeignService devTableForeignService;
@@ -36,9 +46,10 @@ public class DevTableForeignController extends BaseController {
             int pageNum = Strings.isNotBlank(req.getParameter("current")) ? Integer.parseInt(req.getParameter("current")) : -1;
             int pageSize = Strings.isNotBlank(req.getParameter("pageSize")) ? Integer.parseInt(req.getParameter("pageSize")) : -1;
             Map<String, Object> params = this.getQueryParameters(TableForeign.class, req);
+            FilterGroup filterGroup = this.getFilterGroup(params, OPERATORMAP);
 
-            List<TableForeign> pageQueryList = devTableForeignService.pageQueryModel(TableForeign.class, pageNum, pageSize, params);
-            List<TableForeign> queryList = devTableForeignService.queryModel(TableForeign.class, params);
+            List<TableForeign> pageQueryList = devTableForeignService.pageQueryModel(TableForeign.class, pageNum, pageSize, filterGroup);
+            List<TableForeign> queryList = devTableForeignService.queryModel(TableForeign.class, filterGroup);
 
             result.setTotal(queryList != null ? queryList.size() : 0);
             result.setData(new DataItems(pageQueryList, result.getTotal()));

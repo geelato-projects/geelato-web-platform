@@ -17,23 +17,6 @@ import java.util.Map;
  */
 @Component
 public class DictItemService extends BaseSortableService {
-    private static final String DEFAULT_ORDER_BY = "seq_no ASC";
-
-    /**
-     * 分页查询
-     *
-     * @param entity   查询实体
-     * @param pageNum  页码
-     * @param pageSize 分页数量
-     * @param params   条件参数
-     * @param <T>
-     * @return
-     */
-    @Override
-    public <T> List<T> pageQueryModel(Class<T> entity, int pageNum, int pageSize, Map<String, Object> params) {
-        dao.SetDefaultFilter(true, filterGroup);
-        return dao.queryList(entity, pageNum, pageSize, DictItemService.DEFAULT_ORDER_BY, params);
-    }
 
     /**
      * 批量插入和更新

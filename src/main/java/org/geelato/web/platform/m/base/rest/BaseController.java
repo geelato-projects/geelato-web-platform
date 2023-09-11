@@ -3,6 +3,8 @@ package org.geelato.web.platform.m.base.rest;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import org.apache.logging.log4j.util.Strings;
+import org.geelato.core.gql.parser.FilterGroup;
 import org.geelato.core.orm.Dao;
 import org.geelato.web.platform.m.base.service.RuleService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +13,8 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ModelAttribute;
 
 import java.lang.reflect.Field;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 
@@ -19,11 +23,9 @@ import java.util.*;
  */
 @ControllerAdvice
 public class BaseController {
-
     @Autowired
     @Qualifier("primaryDao")
     protected Dao dao;
-
     @Autowired
     protected RuleService ruleService;
     /**
@@ -63,6 +65,7 @@ public class BaseController {
             }
         }
 
+
         return queryParamsMap;
     }
 
@@ -86,4 +89,49 @@ public class BaseController {
         return fieldsList;
     }
 
+    /**
+     * 构建查询条件
+     *
+     * @param params
+     * @param operatorMap
+     * @return
+     * @throws ParseException
+     */
+    public FilterGroup getFilterGroup(Map<String, Object> params, Map<String, List<String>> operatorMap) throws ParseException {
+        FilterGroup filterGroup = new FilterGroup();
+        if (params != null && !params.isEmpty()) {
+            if (operatorMap != null && !operatorMap.isEmpty()) {
+                // 模糊查询
+                List<String> contains = operatorMap.get("contains");
+                if (contains != null && !contains.isEmpty()) {
+                    for (String list : contains) {
+                        if (Strings.isNotBlank((String) params.get(list))) {
+                            filterGroup.addFilter(list, FilterGroup.Operator.contains, (String) params.get(list));
+                            params.remove(list);
+                        }
+                    }
+                }
+                // 时间查询
+                List<String> intervals = operatorMap.get("intervals");
+                if (intervals != null && !intervals.isEmpty()) {
+                    for (String list : intervals) {
+                        String[] times = (String[]) params.get(list);
+                        if (times != null && Strings.isNotBlank(times[1]) && Strings.isNotBlank(times[1])) {
+                            filterGroup.addFilter(list, FilterGroup.Operator.gte, new SimpleDateFormat("yyyy-MM-dd 00:00:00").format(new SimpleDateFormat("yyyy-MM-dd").parse(times[0])));
+                            filterGroup.addFilter(list, FilterGroup.Operator.lte, new SimpleDateFormat("yyyy-MM-dd 23:59:59").format(new SimpleDateFormat("yyyy-MM-dd").parse(times[1])));
+                            params.remove(list);
+                        }
+                    }
+                }
+            }
+            // 对等查询
+            for (Map.Entry<String, Object> entry : params.entrySet()) {
+                if (entry.getValue() != null && Strings.isNotBlank(entry.getValue().toString())) {
+                    filterGroup.addFilter(entry.getKey(), entry.getValue().toString());
+                }
+            }
+        }
+
+        return filterGroup;
+    }
 }
