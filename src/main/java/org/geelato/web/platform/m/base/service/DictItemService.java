@@ -56,6 +56,9 @@ public class DictItemService extends BaseSortableService {
                 item.setSeqNo(i + 1);
                 item.setDictId(Strings.isBlank(item.getDictId()) ? dictId : item.getDictId());
                 item.setDelStatus(DeleteStatusEnum.NO.getCode());
+                if (Strings.isBlank(item.getId()) && Strings.isBlank(item.getTenantCode())) {
+                    item.setTenantCode(getSessionTenantCode());
+                }
                 dao.save(item);
             }
         }

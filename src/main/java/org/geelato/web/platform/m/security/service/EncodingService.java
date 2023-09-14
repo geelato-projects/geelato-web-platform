@@ -166,6 +166,9 @@ public class EncodingService extends BaseService {
         String separator = Strings.isNotBlank(form.getSeparators()) ? form.getSeparators() : "";
         encodingLog.setExample(String.join(separator, examples));
         logger.info(redisItemKey + " 记录：" + JSON.toJSONString(encodingLog));
+        if (Strings.isBlank(encodingLog.getId()) && Strings.isBlank(encodingLog.getTenantCode())) {
+            encodingLog.setTenantCode(getSessionTenantCode());
+        }
         dao.save(encodingLog);
         if (Strings.isNotBlank(encodingLog.getExampleSerial())) {
             redisTemplate.opsForList().rightPush(redisItemKey, encodingLog.getExampleSerial());
