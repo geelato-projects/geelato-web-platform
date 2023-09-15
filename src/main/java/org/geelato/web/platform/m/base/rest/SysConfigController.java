@@ -1,4 +1,4 @@
-package org.geelato.web.platform.m.security.rest;
+package org.geelato.web.platform.m.base.rest;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.logging.log4j.util.Strings;
@@ -7,10 +7,9 @@ import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.enums.DeleteStatusEnum;
 import org.geelato.core.gql.parser.FilterGroup;
-import org.geelato.web.platform.m.base.rest.BaseController;
+import org.geelato.web.platform.m.base.entity.SysConfig;
+import org.geelato.web.platform.m.base.service.SysConfigService;
 import org.geelato.web.platform.m.security.entity.DataItems;
-import org.geelato.web.platform.m.security.entity.Permission;
-import org.geelato.web.platform.m.security.service.PermissionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,20 +20,22 @@ import java.util.*;
 
 /**
  * @author diabl
+ * @description: TODO
+ * @date 2023/9/15 10:49
  */
 @Controller
-@RequestMapping(value = "/api/security/permission")
-public class PermissionController extends BaseController {
+@RequestMapping(value = "/api/sys/config")
+public class SysConfigController extends BaseController {
     private static final Map<String, List<String>> OPERATORMAP = new LinkedHashMap<>();
 
     static {
-        OPERATORMAP.put("contains", Arrays.asList("name", "code", "rule", "description"));
+        OPERATORMAP.put("contains", Arrays.asList("configKey", "configValue", "remark"));
         OPERATORMAP.put("intervals", Arrays.asList("createAt", "updateAt"));
     }
 
-    private final Logger logger = LoggerFactory.getLogger(PermissionController.class);
+    private final Logger logger = LoggerFactory.getLogger(SysConfigController.class);
     @Autowired
-    private PermissionService permissionService;
+    private SysConfigService sysConfigService;
 
     @RequestMapping(value = "/pageQuery", method = RequestMethod.GET)
     @ResponseBody
@@ -43,11 +44,11 @@ public class PermissionController extends BaseController {
         try {
             int pageNum = Strings.isNotBlank(req.getParameter("current")) ? Integer.parseInt(req.getParameter("current")) : -1;
             int pageSize = Strings.isNotBlank(req.getParameter("pageSize")) ? Integer.parseInt(req.getParameter("pageSize")) : -1;
-            Map<String, Object> params = this.getQueryParameters(Permission.class, req);
+            Map<String, Object> params = this.getQueryParameters(SysConfig.class, req);
             FilterGroup filterGroup = this.getFilterGroup(params, OPERATORMAP);
 
-            List<Permission> pageQueryList = permissionService.pageQueryModel(Permission.class, pageNum, pageSize, filterGroup);
-            List<Permission> queryList = permissionService.queryModel(Permission.class, filterGroup);
+            List<SysConfig> pageQueryList = sysConfigService.pageQueryModel(SysConfig.class, pageNum, pageSize, filterGroup);
+            List<SysConfig> queryList = sysConfigService.queryModel(SysConfig.class, filterGroup);
 
             result.setTotal(queryList != null ? queryList.size() : 0);
             result.setData(new DataItems(pageQueryList, result.getTotal()));
@@ -64,11 +65,11 @@ public class PermissionController extends BaseController {
 
     @RequestMapping(value = "/query", method = RequestMethod.GET)
     @ResponseBody
-    public ApiResult query(HttpServletRequest req) {
-        ApiResult result = new ApiResult();
+    public ApiResult<List<SysConfig>> query(HttpServletRequest req) {
+        ApiResult<List<SysConfig>> result = new ApiResult<>();
         try {
-            Map<String, Object> params = this.getQueryParameters(Permission.class, req);
-            return result.setData(permissionService.queryModel(Permission.class, params));
+            Map<String, Object> params = this.getQueryParameters(SysConfig.class, req);
+            return result.setData(sysConfigService.queryModel(SysConfig.class, params));
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
@@ -82,7 +83,7 @@ public class PermissionController extends BaseController {
     public ApiResult get(@PathVariable(required = true) String id) {
         ApiResult result = new ApiResult();
         try {
-            return result.setData(permissionService.getModel(Permission.class, id));
+            return result.setData(sysConfigService.getModel(SysConfig.class, id));
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
@@ -93,19 +94,19 @@ public class PermissionController extends BaseController {
 
     @RequestMapping(value = "/createOrUpdate", method = RequestMethod.POST)
     @ResponseBody
-    public ApiResult createOrUpdate(@RequestBody Permission form) {
+    public ApiResult createOrUpdate(@RequestBody SysConfig form) {
         ApiResult result = new ApiResult();
         try {
             // ID为空方可插入
             if (Strings.isNotBlank(form.getId())) {
                 // 存在，方可更新
-                if (permissionService.isExist(Permission.class, form.getId())) {
-                    result.setData(permissionService.updateModel(form));
+                if (sysConfigService.isExist(SysConfig.class, form.getId())) {
+                    result.setData(sysConfigService.updateModel(form));
                 } else {
                     result.error().setMsg(ApiErrorMsg.IS_NULL);
                 }
             } else {
-                result.setData(permissionService.createModel(form));
+                result.setData(sysConfigService.createModel(form));
             }
         } catch (Exception e) {
             logger.error(e.getMessage());
@@ -117,12 +118,12 @@ public class PermissionController extends BaseController {
 
     @RequestMapping(value = "/isDelete/{id}", method = RequestMethod.DELETE)
     @ResponseBody
-    public ApiResult isDelete(@PathVariable(required = true) String id) {
-        ApiResult result = new ApiResult();
+    public ApiResult<SysConfig> isDelete(@PathVariable(required = true) String id) {
+        ApiResult<SysConfig> result = new ApiResult<>();
         try {
-            Permission mResult = permissionService.getModel(Permission.class, id);
+            SysConfig mResult = sysConfigService.getModel(SysConfig.class, id);
             if (mResult != null) {
-                permissionService.isDeleteModel(mResult);
+                sysConfigService.isDeleteModel(mResult);
                 result.success();
             } else {
                 result.error().setMsg(ApiErrorMsg.IS_NULL);
@@ -137,14 +138,15 @@ public class PermissionController extends BaseController {
 
     @RequestMapping(value = "/validate", method = RequestMethod.POST)
     @ResponseBody
-    public ApiResult validate(@RequestBody Permission form) {
+    public ApiResult validate(@RequestBody SysConfig form) {
         ApiResult result = new ApiResult();
         try {
             Map<String, String> params = new HashMap<>();
-            params.put("code", form.getCode());
+            params.put("config_key", form.getConfigKey());
+            params.put("app_id", form.getAppId());
             params.put("del_status", String.valueOf(DeleteStatusEnum.NO.getCode()));
             params.put("tenant_code", form.getTenantCode());
-            result.setData(permissionService.validate("platform_permission", form.getId(), params));
+            result.setData(sysConfigService.validate("platform_sys_config", form.getId(), params));
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.VALIDATE_FAIL);

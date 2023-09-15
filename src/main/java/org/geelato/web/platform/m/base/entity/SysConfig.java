@@ -16,8 +16,7 @@ import org.geelato.core.meta.model.entity.EntityEnableAble;
 public class SysConfig extends BaseSortableEntity implements EntityEnableAble {
 
     private String appId;
-    private String configName;
-    private String configCode;
+    private String configKey;
     private String configValue;
     private int enableStatus = ColumnDefault.ENABLE_STATUS_VALUE;
     private String remark;
@@ -32,27 +31,17 @@ public class SysConfig extends BaseSortableEntity implements EntityEnableAble {
         this.appId = appId;
     }
 
-    @Col(name = "config_name")
-    @Title(title = "配置名称")
-    public String getConfigName() {
-        return configName;
+    @Col(name = "config_key")
+    @Title(title = "配置键")
+    public String getConfigKey() {
+        return configKey;
     }
 
-    public void setConfigName(String configName) {
-        this.configName = configName;
+    public void setConfigKey(String configKey) {
+        this.configKey = configKey;
     }
 
-    @Col(name = "config_code")
-    @Title(title = "配置编码")
-    public String getConfigCode() {
-        return configCode;
-    }
-
-    public void setConfigCode(String configCode) {
-        this.configCode = configCode;
-    }
-
-    @Col(name = "module_value")
+    @Col(name = "config_value")
     @Title(title = "配置值")
     public String getConfigValue() {
         return configValue;

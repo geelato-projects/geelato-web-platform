@@ -203,6 +203,10 @@ public class BaseService {
 
     public boolean validate(String tableName, String id, Map<String, String> params) {
         Map<String, Object> map = new HashMap<>();
+        // 租户编码
+        if (Strings.isBlank(params.get("tenant_code"))) {
+            params.put("tenant_code", getSessionTenantCode());
+        }
         // 查询表格
         if (Strings.isBlank(tableName)) {
             return false;
