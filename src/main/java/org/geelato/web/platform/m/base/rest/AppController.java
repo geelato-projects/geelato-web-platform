@@ -25,6 +25,7 @@ import java.util.*;
 @RequestMapping(value = "/api/app")
 public class AppController extends BaseController {
     private static final Map<String, List<String>> OPERATORMAP = new LinkedHashMap<>();
+    private static final String DEFAULT_ORDER_BY = "seq_no ASC,update_at DESC";
 
     static {
         OPERATORMAP.put("contains", Arrays.asList("name", "code", "description"));
@@ -67,7 +68,7 @@ public class AppController extends BaseController {
         ApiResult<List<App>> result = new ApiResult<>();
         try {
             Map<String, Object> params = this.getQueryParameters(App.class, req);
-            return result.setData(appService.queryModel(App.class, params));
+            return result.setData(appService.queryModel(App.class, params, AppController.DEFAULT_ORDER_BY));
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.QUERY_FAIL);

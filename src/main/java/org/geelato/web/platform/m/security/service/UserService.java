@@ -85,6 +85,9 @@ public class UserService extends BaseSortableService {
             oModel.setOrgName((String) model.get("orgName"));
             oModel.setDelStatus(DeleteStatusEnum.NO.getCode());
             oModel.setDefaultOrg(IsDefaultOrgEnum.IS.getCode());
+            if (Strings.isBlank(oModel.getId()) && Strings.isBlank(oModel.getTenantCode())) {
+                oModel.setTenantCode(getSessionTenantCode());
+            }
             dao.save(oModel);
         }
     }

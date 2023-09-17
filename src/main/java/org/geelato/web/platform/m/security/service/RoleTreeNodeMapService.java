@@ -1,12 +1,13 @@
 package org.geelato.web.platform.m.security.service;
 
+import org.apache.logging.log4j.util.Strings;
+import org.geelato.core.constants.ApiErrorMsg;
+import org.geelato.core.enums.DeleteStatusEnum;
 import org.geelato.web.platform.m.base.entity.TreeNode;
 import org.geelato.web.platform.m.base.service.BaseService;
 import org.geelato.web.platform.m.base.service.TreeNodeService;
-import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.web.platform.m.security.entity.Role;
 import org.geelato.web.platform.m.security.entity.RoleTreeNodeMap;
-import org.geelato.core.enums.DeleteStatusEnum;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
@@ -39,6 +40,9 @@ public class RoleTreeNodeMapService extends BaseService {
         model.setRoleName(rModel.getName());
         model.setTreeNodeText(tModel.getText());
         model.setDelStatus(DeleteStatusEnum.NO.getCode());
+        if (Strings.isBlank(model.getTenantCode())) {
+            model.setTenantCode(getSessionTenantCode());
+        }
         return dao.save(model);
     }
 }
