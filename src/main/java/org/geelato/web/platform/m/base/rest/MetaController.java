@@ -96,7 +96,14 @@ public class MetaController implements InitializingBean {
         result.setData(ruleService.batchSave(biz, gql));
         return result;
     }
-
+    @RequestMapping(value = {"multiSave"}, method = RequestMethod.POST, produces = MediaTypes.JSON_UTF_8)
+    @ResponseBody
+    public ApiMetaResult multiSave(HttpServletRequest request) {
+        String gql = getGql(request);
+        ApiMetaResult result = new ApiMetaResult();
+        result.setData(ruleService.multiSave(gql));
+        return result;
+    }
     @RequestMapping(value = {"delete/{biz}/{id}"}, method = RequestMethod.POST, produces = MediaTypes.JSON_UTF_8)
     @ResponseBody
     public ApiMetaResult delete(@PathVariable("biz") String biz, @PathVariable("id") String id) {
