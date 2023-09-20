@@ -206,7 +206,7 @@ public class RuleService {
     public Object multiSave(String gql) {
         List<SaveCommand> commandList = gqlManager.generateMultiSaveSql(gql, getSessionCtx());
         List<BoundSql> boundSqlList = sqlManager.generateBatchSaveSql(commandList);
-        return  dao.batchSave(boundSqlList);
+        return  dao.multiSave(boundSqlList);
     }
     /**
      * 递归执行，存在需解析依赖变更的情况
