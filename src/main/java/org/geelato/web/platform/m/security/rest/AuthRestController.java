@@ -7,6 +7,7 @@ import org.apache.shiro.authc.*;
 import org.apache.shiro.subject.Subject;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.orm.Dao;
+import org.geelato.web.platform.m.base.rest.BaseController;
 import org.geelato.web.platform.m.base.rest.RestException;
 import org.geelato.web.platform.m.security.entity.User;
 import org.geelato.web.platform.m.security.service.AccountService;
@@ -29,18 +30,11 @@ import java.util.Map;
  */
 @Controller
 @RequestMapping(value = "/api/sys/auth")
-public class AuthRestController {
-
-    @Autowired
-    @Qualifier("primaryDao")
-    private Dao dao;
+public class AuthRestController extends BaseController {
 
     @Autowired
     protected AccountService accountService;
 
-
-//    @Autowired
-//    private ShiroDbRealm shiroDbRealm;
 
     private Logger logger = LoggerFactory.getLogger(AuthRestController.class);
 

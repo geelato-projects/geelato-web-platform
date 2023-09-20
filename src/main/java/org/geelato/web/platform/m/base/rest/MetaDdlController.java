@@ -24,12 +24,7 @@ import java.util.Map;
  */
 @Controller
 @RequestMapping(value = "/api/meta/ddl/")
-public class MetaDdlController implements InitializingBean {
-
-    @Autowired
-    @Qualifier("primaryDao")
-    protected Dao dao;
-
+public class MetaDdlController extends BaseController implements InitializingBean {
 
     @Autowired
     protected DbGenerateDao dbGenerateDao;

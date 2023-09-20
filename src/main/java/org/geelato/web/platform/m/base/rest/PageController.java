@@ -19,10 +19,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
  */
 @Controller
 @RequestMapping(value = "/api/page/")
-public class PageController {
-    @Autowired
-    protected Dao dao;
-
+public class PageController extends BaseController {
     private static Logger logger = LoggerFactory.getLogger(PageController.class);
 
     @RequestMapping(value = {"{pageCode}", "{pageCode}/*"}, method = RequestMethod.POST, produces = MediaTypes.JSON_UTF_8)

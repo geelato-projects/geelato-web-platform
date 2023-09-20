@@ -30,12 +30,9 @@ import java.util.*;
  */
 @Controller
 @RequestMapping(value = "/api/cache/")
-public class CacheController {
+public class CacheController extends BaseController {
 
     private CacheChannel cache = J2Cache.getChannel();
-    @Autowired
-    @Qualifier("primaryDao")
-    protected Dao dao;
 
     private MetaManager metaManager = MetaManager.singleInstance();
 

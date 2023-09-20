@@ -34,10 +34,6 @@ import java.util.Map;
 public class SystemRestController extends BaseController {
 
     @Autowired
-    @Qualifier("primaryDao")
-    private Dao dao;
-
-    @Autowired
     protected AccountService accountService;
 
     private Logger logger = LoggerFactory.getLogger(SystemRestController.class);

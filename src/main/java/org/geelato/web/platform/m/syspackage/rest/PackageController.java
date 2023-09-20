@@ -3,6 +3,7 @@ package org.geelato.web.platform.m.syspackage.rest;
 import jakarta.servlet.http.HttpServletRequest;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.MediaTypes;
+import org.geelato.web.platform.m.base.rest.BaseController;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -11,7 +12,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 @Controller
 @RequestMapping(value = "/package")
-public class PackageController {
+public class PackageController extends BaseController {
     /*
     打包应用
      */

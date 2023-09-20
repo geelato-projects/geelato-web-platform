@@ -35,11 +35,8 @@ import java.util.Random;
 @Component
 @Controller
 @RequestMapping(value = "/api/file/")
-public class FileController implements InitializingBean {
+public class FileController extends BaseController implements InitializingBean {
 
-    @Autowired
-    @Qualifier("primaryDao")
-    protected Dao dao;
 
     @Autowired
     protected RuleService ruleService;

@@ -32,14 +32,7 @@ import java.io.IOException;
  */
 @Controller
 @RequestMapping(value = "/api/meta/")
-public class MetaController implements InitializingBean {
-
-    @Autowired
-    @Qualifier("primaryDao")
-    protected Dao dao;
-
-    @Autowired
-    protected RuleService ruleService;
+public class MetaController extends BaseController implements InitializingBean {
 
     private MetaManager metaManager = MetaManager.singleInstance();
 

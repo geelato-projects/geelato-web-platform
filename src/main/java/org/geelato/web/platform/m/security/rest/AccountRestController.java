@@ -3,6 +3,7 @@ package org.geelato.web.platform.m.security.rest;
 import jakarta.servlet.http.HttpServletRequest;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.orm.Dao;
+import org.geelato.web.platform.m.base.rest.BaseController;
 import org.geelato.web.platform.m.security.entity.User;
 import org.geelato.web.platform.m.security.service.AccountService;
 import org.slf4j.Logger;
@@ -18,11 +19,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 @Controller
 @RequestMapping(value = "/api/sys/account")
-public class AccountRestController {
-
-    @Autowired
-    @Qualifier("primaryDao")
-    private Dao dao;
+public class AccountRestController extends BaseController {
 
     @Autowired
     protected AccountService accountService;

@@ -22,14 +22,9 @@ import java.util.HashMap;
  */
 @Controller
 @RequestMapping(value = "/api/key/")
-public class KeyController {
+public class KeyController extends BaseController {
 
-    @Autowired
-    @Qualifier("primaryDao")
-    protected Dao dao;
     public HashMap queryForList(HttpServletRequest request){
-
-
         return null;
     }
 
