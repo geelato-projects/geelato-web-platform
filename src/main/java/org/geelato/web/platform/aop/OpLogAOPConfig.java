@@ -11,7 +11,7 @@ import org.geelato.core.gql.parser.SaveCommand;
 import org.geelato.core.meta.MetaManager;
 import org.geelato.core.meta.model.entity.EntityMeta;
 
-import org.geelato.core.mvc.Ctx;
+import org.geelato.core.Ctx;
 import org.geelato.core.orm.Dao;
 import org.geelato.utils.UIDGenerator;
 import org.geelato.web.platform.aop.annotation.OpLog;

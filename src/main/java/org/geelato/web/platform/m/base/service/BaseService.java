@@ -7,7 +7,7 @@ import org.geelato.core.constants.ColumnDefault;
 import org.geelato.core.enums.DeleteStatusEnum;
 import org.geelato.core.gql.parser.FilterGroup;
 import org.geelato.core.meta.model.entity.BaseEntity;
-import org.geelato.core.mvc.Ctx;
+import org.geelato.core.Ctx;
 import org.geelato.core.orm.Dao;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;

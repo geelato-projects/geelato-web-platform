@@ -4,7 +4,7 @@ import org.geelato.core.gql.parser.JsonTextSaveParser;
 import org.geelato.core.gql.parser.SaveCommand;
 import org.geelato.core.meta.MetaManager;
 import org.geelato.core.meta.model.entity.DemoEntity;
-import org.geelato.core.mvc.Ctx;
+import org.geelato.core.Ctx;
 import org.geelato.web.platform.m.base.service.RuleService;
 import org.junit.Assert;
 import org.junit.Test;
