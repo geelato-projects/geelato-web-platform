@@ -24,6 +24,12 @@ public class PlaceholderMeta {
     private boolean isList;
     // 是否需要从上往下同名合并
     private boolean isMerge;
+    // 是否是插入图片
+    private boolean isImage;
+    // 图片宽度，cm
+    private Double imageWidth;
+    // 图片高度，cm
+    private Double imageHeight;
 
     // 描述
     private String description;
@@ -123,10 +129,36 @@ public class PlaceholderMeta {
     public boolean isValueTypeNumber() {
         return "NUMBER".equalsIgnoreCase(this.valueType);
     }
+
     public boolean isValueTypeDate() {
         return "DATE".equalsIgnoreCase(this.valueType);
     }
+
     public boolean isValueTypeDateTime() {
         return "DATETIME".equalsIgnoreCase(this.valueType);
+    }
+
+    public boolean isImage() {
+        return isImage;
+    }
+
+    public void setImage(boolean image) {
+        isImage = image;
+    }
+
+    public Double getImageWidth() {
+        return imageWidth;
+    }
+
+    public void setImageWidth(Double imageWidth) {
+        this.imageWidth = imageWidth;
+    }
+
+    public Double getImageHeight() {
+        return imageHeight;
+    }
+
+    public void setImageHeight(Double imageHeight) {
+        this.imageHeight = imageHeight;
     }
 }
