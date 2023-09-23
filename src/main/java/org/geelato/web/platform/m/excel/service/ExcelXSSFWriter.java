@@ -357,7 +357,10 @@ public class ExcelXSSFWriter {
             placeholderMeta.setValueComputeMode(row.getCell(6).getStringCellValue());
             placeholderMeta.setList(getBoolean(row.getCell(7)));
             placeholderMeta.setMerge(getBoolean(row.getCell(8)));
-            placeholderMeta.setDescription(row.getCell(9).getStringCellValue());
+            placeholderMeta.setImage(getBoolean(row.getCell(9)));
+            placeholderMeta.setImageWidth(row.getCell(10).getNumericCellValue());
+            placeholderMeta.setImageHeight(row.getCell(11).getNumericCellValue());
+            placeholderMeta.setDescription(row.getCell(12).getStringCellValue());
             if (validatePlaceholderMeta(placeholderMeta)) {
                 map.put(placeholderMeta.getPlaceholder(), placeholderMeta);
             }

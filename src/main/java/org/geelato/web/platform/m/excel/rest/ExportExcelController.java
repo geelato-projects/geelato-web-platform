@@ -7,9 +7,11 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.apache.logging.log4j.util.Strings;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.hwpf.HWPFDocument;
 import org.apache.poi.poifs.filesystem.POIFSFileSystem;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiErrorMsg;
@@ -22,6 +24,7 @@ import org.geelato.web.platform.m.excel.entity.PlaceholderMeta;
 import org.geelato.web.platform.m.excel.service.ExcelWriter;
 import org.geelato.web.platform.m.excel.service.ExcelXSSFWriter;
 import org.geelato.web.platform.m.excel.service.ExportTemplateService;
+import org.geelato.web.platform.m.excel.service.WordXWPFWriter;
 import org.geelato.web.platform.m.security.entity.DataItems;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,8 +52,10 @@ import java.util.regex.Pattern;
 @RequestMapping(value = "/api/export/file")
 public class ExportExcelController extends BaseController {
     private static final String ROOT_DIRECTORY = "upload";
+    private static final String WORD_DOC_CONTENT_TYPE = "application/msword";
     private static final String EXCEL_XLS_CONTENT_TYPE = "application/vnd.ms-excel";
     private static final String EXCEL_XLSX_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+    private static final String WORD_DOCX_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
     private static final Pattern pattern = Pattern.compile("^[a-zA-Z0-9_\\-]+\\.[a-zA-Z0-9]{1,5}$");
     private final Logger logger = LoggerFactory.getLogger(ExportExcelController.class);
     private final SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
@@ -60,6 +65,8 @@ public class ExportExcelController extends BaseController {
     private ExcelWriter excelWriter;
     @Autowired
     private ExcelXSSFWriter excelXSSFWriter;
+    @Autowired
+    private WordXWPFWriter wordXWPFWriter;
     @Autowired
     private UploadService uploadService;
     @Autowired
@@ -99,9 +106,9 @@ public class ExportExcelController extends BaseController {
      * @param templateId 模板id
      * @param fileName   导出文件名称
      */
-    @RequestMapping(value = "/excel/{dataType}/{templateId}", method = {RequestMethod.POST, RequestMethod.GET})
+    @RequestMapping(value = "/wps/{dataType}/{templateId}", method = {RequestMethod.POST, RequestMethod.GET})
     @ResponseBody
-    public ApiResult exportBill(HttpServletRequest request, HttpServletResponse response, @PathVariable String dataType, @PathVariable String templateId, String fileName) {
+    public ApiResult exportWps(HttpServletRequest request, HttpServletResponse response, @PathVariable String dataType, @PathVariable String templateId, String fileName) {
         ApiResult result = new ApiResult();
         try {
             // 表单数据
@@ -229,7 +236,7 @@ public class ExportExcelController extends BaseController {
             if (EXCEL_XLS_CONTENT_TYPE.equals(contentType)) {
                 POIFSFileSystem fileSystem = new POIFSFileSystem(bufferedInputStream);
                 HSSFWorkbook workbook = new HSSFWorkbook(fileSystem);
-                // 如果多组数据写在一个Sheet中
+                // 替换占位符
                 HSSFSheet sheet = workbook.getSheetAt(0);
                 excelWriter.writeSheet(sheet, metaMap, valueMapList, valueMap);
                 // 写入文件
@@ -237,12 +244,27 @@ public class ExportExcelController extends BaseController {
                 workbook.write(outputStream);
             } else if (EXCEL_XLSX_CONTENT_TYPE.equals(contentType)) {
                 XSSFWorkbook workbook = new XSSFWorkbook(bufferedInputStream);
-                // 如果多组数据写在一个Sheet中
+                // 替换占位符
                 XSSFSheet sheet = workbook.getSheetAt(0);
                 excelXSSFWriter.writeSheet(sheet, metaMap, valueMapList, valueMap);
                 // 写入文件
                 outputStream = new FileOutputStream(exportFile);
                 workbook.write(outputStream);
+            } else if (WORD_DOC_CONTENT_TYPE.equals(contentType)) {
+                POIFSFileSystem fileSystem = new POIFSFileSystem(bufferedInputStream);
+                HWPFDocument document = new HWPFDocument(fileSystem);
+                // 替换占位符
+                // 写入文件
+                outputStream = new FileOutputStream(exportFile);
+                document.write(outputStream);
+            } else if (WORD_DOCX_CONTENT_TYPE.equals(contentType)) {
+                XWPFDocument document = new XWPFDocument(bufferedInputStream);
+                document.getParagraphs();
+                // 替换占位符
+                wordXWPFWriter.writeDocument(document, metaMap, valueMapList, valueMap);
+                // 写入文件
+                outputStream = new FileOutputStream(exportFile);
+                document.write(outputStream);
             } else {
                 throw new RuntimeException("暂不支持导出该格式文件！");
             }
