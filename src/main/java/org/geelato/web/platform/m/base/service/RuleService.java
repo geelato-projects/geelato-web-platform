@@ -195,10 +195,15 @@ public class RuleService {
         return recursiveSave(command);
     }
 
-    public Object batchSave(String biz, String gql) {
+    public Object batchSave(String gql) {
         List<SaveCommand> commandList = gqlManager.generateBatchSaveSql(gql, getSessionCtx());
-        List<BoundSql> boundSqlList = sqlManager.generateBatchSaveSql(commandList);
-        return  dao.batchSave(boundSqlList);
+//        List<BoundSql> boundSqlList = sqlManager.generateBatchSaveSql(commandList);
+        List<String> returnPks=new ArrayList<>();
+        for (SaveCommand saveCommand : commandList){
+            String rst=recursiveSave(saveCommand);
+            returnPks.add(rst);
+        }
+        return  returnPks;
     }
 
 

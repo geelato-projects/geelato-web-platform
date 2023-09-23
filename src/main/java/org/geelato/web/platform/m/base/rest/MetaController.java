@@ -81,12 +81,12 @@ public class MetaController extends BaseController implements InitializingBean {
      * @param request HttpServletRequest
      * @return SaveResult
      */
-    @RequestMapping(value = {"batchSave/{biz}"}, method = RequestMethod.POST, produces = MediaTypes.JSON_UTF_8)
+    @RequestMapping(value = {"batchSave"}, method = RequestMethod.POST, produces = MediaTypes.JSON_UTF_8)
     @ResponseBody
-    public ApiMetaResult batchSave(@PathVariable("biz") String biz, HttpServletRequest request) {
+    public ApiMetaResult batchSave(HttpServletRequest request) {
         String gql = getGql(request);
         ApiMetaResult result = new ApiMetaResult();
-        result.setData(ruleService.batchSave(biz, gql));
+        result.setData(ruleService.batchSave( gql));
         return result;
     }
     @RequestMapping(value = {"multiSave"}, method = RequestMethod.POST, produces = MediaTypes.JSON_UTF_8)
