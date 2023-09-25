@@ -106,7 +106,7 @@ public class ExportExcelController extends BaseController {
      * @param templateId 模板id
      * @param fileName   导出文件名称
      */
-    @RequestMapping(value = "/wps/{dataType}/{templateId}", method = {RequestMethod.POST, RequestMethod.GET})
+    @RequestMapping(value = "/{dataType}/{templateId}", method = {RequestMethod.POST, RequestMethod.GET})
     @ResponseBody
     public ApiResult exportWps(HttpServletRequest request, HttpServletResponse response, @PathVariable String dataType, @PathVariable String templateId, String fileName) {
         ApiResult result = new ApiResult();
