@@ -127,10 +127,10 @@ public class DictItemController extends BaseController {
 
     @RequestMapping(value = "/batchCreateOrUpdate", method = RequestMethod.POST)
     @ResponseBody
-    public ApiResult batchCreateOrUpdate(@RequestBody List<DictItem> forms, String dictId) {
+    public ApiResult batchCreateOrUpdate(@RequestBody List<DictItem> forms, String dictId, String parentId) {
         ApiResult result = new ApiResult();
         try {
-            dictItemService.batchCreateOrUpdate(dictId, forms);
+            dictItemService.batchCreateOrUpdate(dictId, parentId, forms);
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.OPERATE_FAIL);
