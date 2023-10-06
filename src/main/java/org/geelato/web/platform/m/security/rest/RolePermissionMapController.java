@@ -112,4 +112,32 @@ public class RolePermissionMapController extends BaseController {
 
         return result;
     }
+
+    @RequestMapping(value = "/queryTable/{type}/{object}", method = RequestMethod.GET)
+    @ResponseBody
+    public ApiResult queryTablePermissions(@PathVariable(required = true) String type, @PathVariable(required = true) String object, String appId, String tenantCode) {
+        ApiResult result = new ApiResult();
+        try {
+            result.success().setData(rolePermissionMapService.queryTablePermissions(type, object, appId, tenantCode));
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            result.error().setMsg(ApiErrorMsg.DELETE_FAIL);
+        }
+
+        return result;
+    }
+
+    @RequestMapping(value = "/insertTable", method = RequestMethod.POST)
+    @ResponseBody
+    public ApiResult insertTablePermission(@RequestBody RolePermissionMap form) {
+        ApiResult result = new ApiResult();
+        try {
+            rolePermissionMapService.insertTablePermission(form);
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            result.error().setMsg(ApiErrorMsg.OPERATE_FAIL);
+        }
+
+        return result;
+    }
 }
