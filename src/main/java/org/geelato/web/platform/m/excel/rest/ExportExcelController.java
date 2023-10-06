@@ -239,6 +239,7 @@ public class ExportExcelController extends BaseController {
                 // 替换占位符
                 HSSFSheet sheet = workbook.getSheetAt(0);
                 excelWriter.writeSheet(sheet, metaMap, valueMapList, valueMap);
+                sheet.setForceFormulaRecalculation(true);
                 // 写入文件
                 outputStream = new FileOutputStream(exportFile);
                 workbook.write(outputStream);
@@ -247,6 +248,7 @@ public class ExportExcelController extends BaseController {
                 // 替换占位符
                 XSSFSheet sheet = workbook.getSheetAt(0);
                 excelXSSFWriter.writeSheet(sheet, metaMap, valueMapList, valueMap);
+                sheet.setForceFormulaRecalculation(true);
                 // 写入文件
                 outputStream = new FileOutputStream(exportFile);
                 workbook.write(outputStream);
