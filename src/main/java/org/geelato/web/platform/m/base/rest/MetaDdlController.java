@@ -3,15 +3,11 @@ package org.geelato.web.platform.m.base.rest;
 
 import org.geelato.core.api.ApiMetaResult;
 import org.geelato.core.constants.MediaTypes;
-import org.geelato.core.meta.MetaManager;
-import org.geelato.core.orm.Dao;
 import org.geelato.core.orm.DbGenerateDao;
-import org.geelato.web.platform.m.base.service.RuleService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
@@ -43,7 +39,12 @@ public class MetaDdlController extends BaseController implements InitializingBea
     @ResponseBody
     public ApiMetaResult recreate(@PathVariable("entity") String entity) {
         ApiMetaResult result = new ApiMetaResult();
-        dbGenerateDao.createOrUpdateOneTable(entity, false);
+        try {
+            dbGenerateDao.createOrUpdateOneTable(entity, false);
+        } catch (Exception ex) {
+            logger.error(ex.getMessage(), ex);
+            result.error().setMsg(ex.getCause().getMessage());
+        }
         return result;
     }
 
