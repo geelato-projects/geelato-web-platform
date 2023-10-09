@@ -68,7 +68,11 @@ public class ExcelWriter {
                     }
                     listIndex++;
                 }
-            } else {
+            }else if (rowMeta.isDeleteGroupRow()) {
+                sheet.shiftRows(rowIndex + 1, lastRowIndex, -1, true, false);
+                rowIndex -= 1;
+                lastRowIndex -= 1;
+            }  else {
                 newRowCount = setRowValue(sheet, rowIndex, rowMeta, valueMap);
                 // 完成列表的设置后，若创建了新行，则需要同步设置整个sheet当前的row索引值、最后一行的索引值
                 rowIndex += newRowCount;
@@ -123,6 +127,8 @@ public class ExcelWriter {
                     if (rowMetaPattern.matcher(cellValue).find()) {
                         if ("${rowMeta.isMultiGroupRow}".equalsIgnoreCase(cellValue)) {
                             rowMeta.setMultiGroupRow(true);
+                        } else if ("${rowMeta.deleteOnFinished}".equalsIgnoreCase(cellValue)) {
+                            rowMeta.setDeleteGroupRow(true);
                         }
                         // 清除该行标识信息
                         cell.setBlank();
