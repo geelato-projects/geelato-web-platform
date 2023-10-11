@@ -121,7 +121,21 @@ public class RolePermissionMapController extends BaseController {
             result.success().setData(rolePermissionMapService.queryTablePermissions(type, object, appId, tenantCode));
         } catch (Exception e) {
             logger.error(e.getMessage());
-            result.error().setMsg(ApiErrorMsg.DELETE_FAIL);
+            result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
+        }
+
+        return result;
+    }
+
+    @RequestMapping(value = "/queryColumn/{type}/{object}", method = RequestMethod.GET)
+    @ResponseBody
+    public ApiResult queryColumnPermissions(@PathVariable(required = true) String type, @PathVariable(required = true) String object, String appId, String tenantCode) {
+        ApiResult result = new ApiResult();
+        try {
+            result.success().setData(rolePermissionMapService.queryColumnPermissions(type, object, appId, tenantCode));
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
         }
 
         return result;
@@ -133,6 +147,27 @@ public class RolePermissionMapController extends BaseController {
         ApiResult result = new ApiResult();
         try {
             rolePermissionMapService.insertTablePermission(form);
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            result.error().setMsg(ApiErrorMsg.OPERATE_FAIL);
+        }
+
+        return result;
+    }
+
+    @RequestMapping(value = "/insertColumn", method = RequestMethod.POST)
+    @ResponseBody
+    public ApiResult insertColumnPermission(@RequestBody Map<String, Object> form) {
+        ApiResult result = new ApiResult();
+        try {
+            String roleId = (String) form.get("roleId");
+            String columnId = (String) form.get("columnId");
+            String rule = (String) form.get("rule");
+            if (Strings.isNotBlank(roleId) && Strings.isNotBlank(columnId) && Strings.isNotBlank(rule)) {
+                rolePermissionMapService.insertColumnPermission(roleId, columnId, rule);
+            } else {
+                result.error().setMsg(ApiErrorMsg.PARAMETER_MISSING);
+            }
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.OPERATE_FAIL);
