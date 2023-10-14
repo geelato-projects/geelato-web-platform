@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.Pattern;
@@ -68,6 +69,10 @@ public class ExcelXSSFWriter {
                     }
                     listIndex++;
                 }
+            } else if (rowMeta.isDeleteGroupRow()) {
+                sheet.shiftRows(rowIndex + 1, lastRowIndex, -1, true, false);
+                rowIndex -= 1;
+                lastRowIndex -= 1;
             } else {
                 newRowCount = setRowValue(sheet, rowIndex, rowMeta, valueMap);
                 // 完成列表的设置后，若创建了新行，则需要同步设置整个sheet当前的row索引值、最后一行的索引值
@@ -75,33 +80,6 @@ public class ExcelXSSFWriter {
                 lastRowIndex += newRowCount;
             }
 
-        }
-    }
-
-    /**
-     * 按一组值valueMap写入sheet
-     *
-     * @param sheet
-     * @param placeholderMetaMap
-     * @param valueMap
-     */
-    public void writeSheet(XSSFSheet sheet, Map<String, PlaceholderMeta> placeholderMetaMap, Map valueMap) {
-        System.out.println("writeData:" + sheet.getSheetName());
-        int lastRowIndex = sheet.getLastRowNum();
-        for (int rowIndex = 0; rowIndex <= lastRowIndex; rowIndex++) {
-            // 按行扫描处理
-            XSSFRow row = sheet.getRow(rowIndex);
-            if (row == null) {
-                break;
-            }
-
-            RowMeta rowMeta = parseTemplateRow(row, placeholderMetaMap);
-            logger.info("完成第" + rowIndex + "行的元数据解析。");
-
-            int newRowCount = setRowValue(sheet, rowIndex, rowMeta, valueMap);
-            // 完成列表的设置后，若创建了新行，则需要同步设置整个sheet当前的row索引值、最后一行的索引值
-            rowIndex += newRowCount;
-            lastRowIndex += newRowCount;
         }
     }
 
@@ -123,6 +101,8 @@ public class ExcelXSSFWriter {
                     if (rowMetaPattern.matcher(cellValue).find()) {
                         if ("${rowMeta.isMultiGroupRow}".equalsIgnoreCase(cellValue)) {
                             rowMeta.setMultiGroupRow(true);
+                        } else if ("${rowMeta.deleteOnFinished}".equalsIgnoreCase(cellValue)) {
+                            rowMeta.setDeleteGroupRow(true);
                         }
                         // 清除该行标识信息
                         cell.setBlank();
@@ -195,15 +175,7 @@ public class ExcelXSSFWriter {
         int newRowCount = 0;
         while (newRowCount < listMaxRowCount - 1) {
             newRowCount++;
-            XSSFRow newRow = createRowWithPreRowStyle(sheet, rowIndex + newRowCount);
-//            newRow.setHeight(row.getHeight());
-//            for (int cellIndex = 0; cellIndex < row.getLastCellNum(); cellIndex++) {
-//                XSSFCell templateCell = row.getCell(cellIndex);
-//                // 这里里要createCell，否则getCell返回空值
-//                XSSFCell newCell = newRow.createCell(cellIndex);
-//                newCell.setCellStyle(templateCell.getCellStyle());
-//            }
-            // lastRowIndex++;
+            createRowWithPreRowStyle(sheet, rowIndex + newRowCount);
         }
 
         // ----2.2 为模板行及动态创建的行设置值
@@ -280,7 +252,7 @@ public class ExcelXSSFWriter {
                 if (value.toString().indexOf(".") == -1) {
                     cell.setCellValue(Long.parseLong(value.toString()));
                 } else {
-                    cell.setCellValue(Float.parseFloat(value.toString()));
+                    cell.setCellValue(new BigDecimal(value.toString()).doubleValue());
                 }
             } else if (meta.isValueTypeDate()) {
                 // value 应为时间戳

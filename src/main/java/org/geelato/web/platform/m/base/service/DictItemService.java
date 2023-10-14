@@ -22,14 +22,16 @@ public class DictItemService extends BaseSortableService {
      * 批量插入和更新
      *
      * @param dictId
+     * @param parentId
      * @param forms
      */
-    public void batchCreateOrUpdate(String dictId, List<DictItem> forms) {
+    public void batchCreateOrUpdate(String dictId, String parentId, List<DictItem> forms) {
         if (Strings.isBlank(dictId)) {
             throw new RuntimeException(ApiErrorMsg.UPDATE_FAIL);
         }
         Map<String, Object> params = new HashMap<>();
         params.put("dictId", dictId);
+        params.put("pid", parentId);
         List<DictItem> itemList = queryModel(DictItem.class, params);
         // 删除
         if (itemList != null && !itemList.isEmpty()) {

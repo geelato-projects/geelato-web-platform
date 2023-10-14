@@ -82,7 +82,9 @@ public class PermissionController extends BaseController {
     public ApiResult get(@PathVariable(required = true) String id) {
         ApiResult result = new ApiResult();
         try {
-            return result.setData(permissionService.getModel(Permission.class, id));
+            Permission model = permissionService.getModel(Permission.class, id);
+            model.setDefault(permissionService.isDefault(model));
+            return result.setData(model);
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
@@ -148,6 +150,20 @@ public class PermissionController extends BaseController {
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.VALIDATE_FAIL);
+        }
+
+        return result;
+    }
+
+    @RequestMapping(value = "/default/{type}/{object}", method = RequestMethod.POST)
+    @ResponseBody
+    public ApiResult defaultTablePermission(@PathVariable(required = true) String type, @PathVariable(required = true) String object) {
+        ApiResult result = new ApiResult();
+        try {
+            permissionService.resetDefaultPermission(type, object);
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            result.error().setMsg(ApiErrorMsg.OPERATE_FAIL);
         }
 
         return result;

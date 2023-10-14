@@ -154,4 +154,26 @@ public class SysConfigController extends BaseController {
 
         return result;
     }
+
+    @RequestMapping(value = "/getValue/{key}", method = RequestMethod.GET)
+    @ResponseBody
+    public ApiResult getValue(@PathVariable(required = true) String key) {
+        ApiResult result = new ApiResult();
+        try {
+            if (Strings.isNotBlank(key)) {
+                Map<String, Object> params = new HashMap<>();
+                params.put("configKey", key);
+                List<SysConfig> list = sysConfigService.queryModel(SysConfig.class, params);
+                if (list != null && list.size() > 0) {
+                    return result.success().setData(list.get(0).getConfigValue());
+                }
+            }
+            return result.success().setData("");
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
+        }
+
+        return result;
+    }
 }

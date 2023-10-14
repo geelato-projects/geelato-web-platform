@@ -3,10 +3,10 @@ package org.geelato.web.platform.m.security.entity;
 import org.geelato.core.meta.annotation.Col;
 import org.geelato.core.meta.annotation.Entity;
 import org.geelato.core.meta.annotation.Title;
+import org.geelato.core.meta.annotation.Transient;
 import org.geelato.core.meta.model.entity.BaseEntity;
 
 /**
- *
  * @author diabl
  */
 @Entity(name = "platform_permission")
@@ -18,6 +18,7 @@ public class Permission extends BaseEntity {
     private String object;
     private String rule;
     private String description;
+    private boolean isDefault;
 
     @Title(title = "名称")
     @Col(name = "name")
@@ -77,5 +78,16 @@ public class Permission extends BaseEntity {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    @Title(title = "默认权限")
+    @Transient
+
+    public boolean isDefault() {
+        return isDefault;
+    }
+
+    public void setDefault(boolean aDefault) {
+        isDefault = aDefault;
     }
 }

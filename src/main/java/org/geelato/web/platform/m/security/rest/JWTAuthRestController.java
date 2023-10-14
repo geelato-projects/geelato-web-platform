@@ -10,6 +10,7 @@ import org.geelato.core.meta.annotation.IgnoreJWTVerify;
 import org.geelato.web.platform.enums.ValidTypeEnum;
 import org.geelato.web.platform.m.base.rest.BaseController;
 import org.geelato.web.platform.m.base.service.AttachService;
+import org.geelato.web.platform.m.base.service.RuleService;
 import org.geelato.web.platform.m.base.service.UploadService;
 import org.geelato.web.platform.m.security.entity.*;
 import org.geelato.web.platform.m.security.service.*;
@@ -39,6 +40,8 @@ public class JWTAuthRestController extends BaseController {
     private UploadService uploadService;
     @Autowired
     private AttachService attachService;
+    @Autowired
+    private RuleService ruleService;
 
     private Logger logger = LoggerFactory.getLogger(JWTAuthRestController.class);
     private static final String ROOT_AVATAR_DIRECTORY = "upload/avatar";
@@ -223,16 +226,16 @@ public class JWTAuthRestController extends BaseController {
     @ResponseBody
     public ApiResult getCurrentUserMenu(@RequestBody Map<String, Object> params, HttpServletRequest request) throws Exception {
         ApiResult result = new ApiResult();
-        // User user = this.getUserByToken(req);
         List<Map<String, Object>> menuItemList = new ArrayList<>();
-
+        Map map = new HashMap<>();
+        map.put("flag", (String) params.get("flag"));
+        // 用户
+        User user = getUserByToken(request);
+        map.put("currentUser", (user != null && Strings.isNotBlank(user.getId())) ? user.getId() : "");
+        // 租户、应用
         String appId = (String) params.get("appId");
-        String tenantCode = (String) params.get("tenantCode");
+        String tenantCode = (user != null && Strings.isNotBlank(user.getTenantCode())) ? user.getTenantCode() : (String) params.get("tenantCode");
         if (Strings.isNotBlank(appId) && Strings.isNotBlank(tenantCode)) {
-            // 菜单
-            Map map = new HashMap<>();
-            // map.put("userId", user.getId());
-            map.put("flag", (String) params.get("flag"));
             map.put("appId", appId);
             map.put("tenantCode", tenantCode);
             menuItemList = dao.queryForMapList("select_platform_tree_node_app_page", map);

@@ -106,7 +106,7 @@ public class ExportExcelController extends BaseController {
      * @param templateId 模板id
      * @param fileName   导出文件名称
      */
-    @RequestMapping(value = "/wps/{dataType}/{templateId}", method = {RequestMethod.POST, RequestMethod.GET})
+    @RequestMapping(value = "/{dataType}/{templateId}", method = {RequestMethod.POST, RequestMethod.GET})
     @ResponseBody
     public ApiResult exportWps(HttpServletRequest request, HttpServletResponse response, @PathVariable String dataType, @PathVariable String templateId, String fileName) {
         ApiResult result = new ApiResult();
@@ -239,6 +239,7 @@ public class ExportExcelController extends BaseController {
                 // 替换占位符
                 HSSFSheet sheet = workbook.getSheetAt(0);
                 excelWriter.writeSheet(sheet, metaMap, valueMapList, valueMap);
+                sheet.setForceFormulaRecalculation(true);
                 // 写入文件
                 outputStream = new FileOutputStream(exportFile);
                 workbook.write(outputStream);
@@ -247,6 +248,7 @@ public class ExportExcelController extends BaseController {
                 // 替换占位符
                 XSSFSheet sheet = workbook.getSheetAt(0);
                 excelXSSFWriter.writeSheet(sheet, metaMap, valueMapList, valueMap);
+                sheet.setForceFormulaRecalculation(true);
                 // 写入文件
                 outputStream = new FileOutputStream(exportFile);
                 workbook.write(outputStream);
