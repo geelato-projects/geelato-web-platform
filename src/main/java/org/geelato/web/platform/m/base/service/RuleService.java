@@ -3,6 +3,7 @@ package org.geelato.web.platform.m.base.service;
 import net.oschina.j2cache.CacheChannel;
 import net.oschina.j2cache.J2Cache;
 import org.apache.commons.collections.map.HashedMap;
+import org.geelato.core.orm.TransactionHelper;
 import  org.geelato.web.platform.aop.annotation.OpLog;
 import org.geelato.core.api.*;
 import org.geelato.core.biz.rules.BizManagerFactory;
@@ -29,7 +30,9 @@ import org.jeasy.rules.core.DefaultRulesEngine;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.DataAccessException;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.TransactionStatus;
 
 import java.util.*;
 
@@ -192,15 +195,19 @@ public class RuleService {
         rules.register(new EntityValidateRule());
         rulesEngine.fire(rules, facts);
         // 存在子命令
-        return recursiveSave(command);
+        DataSourceTransactionManager dataSourceTransactionManager=new DataSourceTransactionManager(dao.getJdbcTemplate().getDataSource());
+        TransactionStatus transactionStatus= TransactionHelper.beginTransaction(dataSourceTransactionManager);
+        return recursiveSave(command,dataSourceTransactionManager,transactionStatus);
     }
 
     public Object batchSave(String gql) {
+        DataSourceTransactionManager dataSourceTransactionManager=new DataSourceTransactionManager(dao.getJdbcTemplate().getDataSource());
+        TransactionStatus transactionStatus= TransactionHelper.beginTransaction(dataSourceTransactionManager);
         List<SaveCommand> commandList = gqlManager.generateBatchSaveSql(gql, getSessionCtx());
 //        List<BoundSql> boundSqlList = sqlManager.generateBatchSaveSql(commandList);
         List<String> returnPks=new ArrayList<>();
         for (SaveCommand saveCommand : commandList){
-            String rst=recursiveSave(saveCommand);
+            String rst=recursiveSave(saveCommand, dataSourceTransactionManager, transactionStatus);
             returnPks.add(rst);
         }
         return  returnPks;
@@ -217,15 +224,23 @@ public class RuleService {
      * 不执行业务规则检查
      *
      * @param command
+     * @param dataSourceTransactionManager
+     * @param transactionStatus
      * @return
      */
-    public String recursiveSave(SaveCommand command) {
+    public String recursiveSave(SaveCommand command, DataSourceTransactionManager dataSourceTransactionManager, TransactionStatus transactionStatus) {
+
         // 如果更新了个人配置，则去除缓存
         if ("platform_user_config".equals(command.getEntityName()) && SecurityHelper.getCurrentUser() != null) {
             cache.evict("config", SecurityHelper.getCurrentUser().id);
         }
         BoundSql boundSql = sqlManager.generateSaveSql(command);
         String pkValue = dao.save(boundSql);
+        if(pkValue.equals("saveFail")){
+            command.setExecution(false);
+        }else{
+            command.setExecution(true);
+        }
         // 存在子command，需执行
         if (command.hasCommands()) {
             command.getCommands().forEach(subCommand -> {
@@ -235,8 +250,14 @@ public class RuleService {
                         subCommand.getValueMap().put(key, parseValueExp(subCommand, value.toString(), 0));
                     }
                 });
-                recursiveSave(subCommand);
+                recursiveSave(subCommand, dataSourceTransactionManager, transactionStatus);
             });
+        }else{
+            if(pkValue.equals("saveFail")){
+                TransactionHelper.rollbackTransaction(dataSourceTransactionManager,transactionStatus);
+            }else{
+                TransactionHelper.commitTransaction(dataSourceTransactionManager,transactionStatus);
+            }
         }
         return pkValue;
     }
