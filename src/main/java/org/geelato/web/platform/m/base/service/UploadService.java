@@ -45,7 +45,7 @@ public class UploadService {
         if (isRename) {
             int dotIndex = fileName.lastIndexOf(".");
             String ext = fileName.substring(dotIndex);
-            fileName = UIDGenerator.generate(1) + ext;
+            fileName = UIDGenerator.generate() + ext;
         }
         // 路径检验
         File pathFile = new File("/" + subPath + datePath);

@@ -39,7 +39,7 @@ public class WordXWPFWriter {
 
     private static void insertPicture(XWPFDocument document, String filePath, CTInline inline, double imageWidth, double imageHeight, int format) throws FileNotFoundException, InvalidFormatException {
         document.addPictureData(new FileInputStream(filePath), XWPFDocument.PICTURE_TYPE_PNG);
-        long id = UIDGenerator.generate(1);
+        long id = UIDGenerator.generate();
         long width = (long) Math.floor(Units.toEMU(imageWidth) * 1000 / 35);
         long height = (long) Math.floor(Units.toEMU(imageHeight) * 1000 / 35);
         String blipId = document.addPictureData(new FileInputStream(filePath), format);
