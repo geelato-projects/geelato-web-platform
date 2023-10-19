@@ -18,6 +18,7 @@ public class ExportTemplate extends BaseEntity implements EntityEnableAble {
 
     private String appId;
     private String title;
+    private String useType;
     private String fileType;
     private String fileCode;
     private String template;
@@ -43,6 +44,16 @@ public class ExportTemplate extends BaseEntity implements EntityEnableAble {
 
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    @Title(title = "用途")
+    @Col(name = "use_type")
+    public String getUseType() {
+        return useType;
+    }
+
+    public void setUseType(String useType) {
+        this.useType = useType;
     }
 
     @Title(title = "状态")
