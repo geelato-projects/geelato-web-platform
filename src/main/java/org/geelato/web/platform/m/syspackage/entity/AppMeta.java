@@ -3,9 +3,15 @@ package org.geelato.web.platform.m.syspackage.entity;
 import java.util.List;
 
 public class AppMeta {
+
+    public AppMeta(String metaName,Object metaData){
+        this.metaName=metaName;
+        this.metaData=metaData;
+    }
+
     private String metaName;
 
-    private List<Object> metaData;
+    private Object metaData;
 
     public String getMetaName() {
         return metaName;
@@ -15,11 +21,11 @@ public class AppMeta {
         this.metaName = metaName;
     }
 
-    public List<Object> getMetaData() {
+    public Object getMetaData() {
         return metaData;
     }
 
-    public void setMetaData(List<Object> metaData) {
+    public void setMetaData(Object metaData) {
         this.metaData = metaData;
     }
 }
