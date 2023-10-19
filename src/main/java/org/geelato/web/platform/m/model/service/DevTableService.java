@@ -48,7 +48,7 @@ public class DevTableService extends BaseSortableService {
      */
     @Override
     public <T> List<T> queryModel(Class<T> entity, Map<String, Object> params) {
-        dao.SetDefaultFilter(true, filterGroup);
+        dao.setDefaultFilter(true, filterGroup);
         return dao.queryList(entity, params, "entity_name ASC");
     }
 

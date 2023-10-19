@@ -40,7 +40,7 @@ public class BaseService {
      * @return
      */
     public <T> List<T> pageQueryModel(Class<T> entity, int pageNum, int pageSize, String orderBy, Map<String, Object> params) {
-        dao.SetDefaultFilter(true, filterGroup);
+        dao.setDefaultFilter(true, filterGroup);
         orderBy = Strings.isNotBlank(orderBy) ? orderBy : BaseService.DEFAULT_ORDER_BY;
         return dao.queryList(entity, params, pageNum, pageSize, orderBy);
     }
@@ -60,7 +60,7 @@ public class BaseService {
      * @return
      */
     public <T> List<T> pageQueryModel(Class<T> entity, int pageNum, int pageSize, String orderBy, FilterGroup filter) {
-        dao.SetDefaultFilter(true, filterGroup);
+        dao.setDefaultFilter(true, filterGroup);
         orderBy = Strings.isNotBlank(orderBy) ? orderBy : BaseService.DEFAULT_ORDER_BY;
         return dao.queryList(entity, filter, pageNum, pageSize, orderBy);
     }
@@ -78,7 +78,7 @@ public class BaseService {
      * @return
      */
     public <T> List<T> queryModel(Class<T> entity, Map<String, Object> params, String orderBy) {
-        dao.SetDefaultFilter(true, filterGroup);
+        dao.setDefaultFilter(true, filterGroup);
         orderBy = Strings.isNotBlank(orderBy) ? orderBy : BaseService.DEFAULT_ORDER_BY;
         return dao.queryList(entity, params, orderBy);
     }
@@ -96,13 +96,13 @@ public class BaseService {
      * @return
      */
     public <T> List<T> queryModel(Class<T> entity, FilterGroup filter, String orderBy) {
-        dao.SetDefaultFilter(true, filterGroup);
+        dao.setDefaultFilter(true, filterGroup);
         orderBy = Strings.isNotBlank(orderBy) ? orderBy : BaseService.DEFAULT_ORDER_BY;
         return dao.queryList(entity, filter, orderBy);
     }
 
     public <T> List<T> queryModel(Class<T> entity, FilterGroup filter) {
-        dao.SetDefaultFilter(true, filterGroup);
+        dao.setDefaultFilter(true, filterGroup);
         return queryModel(entity, filter, BaseService.DEFAULT_ORDER_BY);
     }
 

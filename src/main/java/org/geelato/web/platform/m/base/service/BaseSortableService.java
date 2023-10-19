@@ -27,7 +27,7 @@ public class BaseSortableService extends BaseService {
      */
     @Override
     public <T> List<T> queryModel(Class<T> entity, Map<String, Object> params, String orderBy) {
-        dao.SetDefaultFilter(true, filterGroup);
+        dao.setDefaultFilter(true, filterGroup);
         orderBy = Strings.isNotBlank(orderBy) ? orderBy : BaseSortableService.DEFAULT_ORDER_BY;
         return dao.queryList(entity, params, orderBy);
     }
@@ -47,7 +47,7 @@ public class BaseSortableService extends BaseService {
      */
     @Override
     public <T> List<T> queryModel(Class<T> entity, FilterGroup filter, String orderBy) {
-        dao.SetDefaultFilter(true, filterGroup);
+        dao.setDefaultFilter(true, filterGroup);
         orderBy = Strings.isNotBlank(orderBy) ? orderBy : BaseSortableService.DEFAULT_ORDER_BY;
         return dao.queryList(entity, filter, orderBy);
     }
