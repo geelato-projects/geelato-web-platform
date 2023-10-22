@@ -63,7 +63,7 @@ import java.util.concurrent.TimeUnit;
  * @date 2023/10/12 14:09
  */
 @Controller
-@RequestMapping(value = "/api/import/file")
+@RequestMapping(value = "/api/import")
 public class ImportExcelController extends BaseController {
     private static final String EXCEL_XLS_CONTENT_TYPE = "application/vnd.ms-excel";
     private static final String EXCEL_XLSX_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
@@ -121,7 +121,7 @@ public class ImportExcelController extends BaseController {
      * @return
      * @throws IOException
      */
-    @RequestMapping(value = "/{importType}/{templateId}", method = {RequestMethod.POST, RequestMethod.GET})
+    @RequestMapping(value = "/file/{importType}/{templateId}", method = {RequestMethod.POST, RequestMethod.GET})
     @ResponseBody
     public ApiResult importWps(HttpServletRequest request, HttpServletResponse response, @PathVariable String importType, @PathVariable String templateId) throws IOException {
         ApiResult result = new ApiResult();
@@ -137,11 +137,11 @@ public class ImportExcelController extends BaseController {
             //事务，模板元数据
             Attach templateRuleAttach = getFile(exportTemplate.getTemplateRule());
             Assert.notNull(templateRuleAttach, "导入模板元数据不存在");
-            businessMetaListMap = getBusinessMeta(new File(templateRuleAttach.getUrl()), 0);
+            businessMetaListMap = getBusinessMeta(new File(templateRuleAttach.getUrl()), 1);
             //事务，模板数据类型
-            Attach templateAttach = getFile(exportTemplate.getTemplate());
-            Assert.notNull(templateAttach, "导入模板不存在");
-            businessTypeDataMap = getBusinessTypeData(new File(templateAttach.getUrl()), 1);
+            // Attach templateAttach = getFile(exportTemplate.getTemplate());
+            // Assert.notNull(templateAttach, "导入模板不存在");
+            businessTypeDataMap = getBusinessTypeData(new File(templateRuleAttach.getUrl()), 0);
             // 事务，业务数据
             businessDataMapList = getBusinessData(request, businessTypeDataMap, 0);
             // 设置缓存
