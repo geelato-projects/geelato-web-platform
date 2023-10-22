@@ -286,7 +286,6 @@ public class RuleService {
                 }else{
                     return currentCommand.getValueMap().get(valueExpTrim);
                 }
-
             }
         }
     }

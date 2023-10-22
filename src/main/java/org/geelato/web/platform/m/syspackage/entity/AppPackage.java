@@ -11,6 +11,8 @@ public class AppPackage {
 
     private List<AppMeta> appMetaList;
 
+    private List<AppResource> appResourceList;
+
     public List<AppMeta> getAppMetaList() {
         return appMetaList;
     }
@@ -41,5 +43,13 @@ public class AppPackage {
 
     public void setTargetAppId(String targetAppId) {
         this.targetAppId = targetAppId;
+    }
+
+    public List<AppResource> getAppResourceList() {
+        return appResourceList;
+    }
+
+    public void setAppResourceList(List<AppResource> appResourceList) {
+        this.appResourceList = appResourceList;
     }
 }

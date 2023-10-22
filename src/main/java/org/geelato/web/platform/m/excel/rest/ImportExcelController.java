@@ -568,7 +568,7 @@ public class ImportExcelController extends BaseController {
                 }
             }
         }
-        dao.SetDefaultFilter(true, filterGroup);
+        dao.setDefaultFilter(true, filterGroup);
         // 数据字典
         List<String> dictKeys = setDictRedis(currentUUID, dictMetas);
         cacheList.containsAll(dictKeys);
