@@ -95,6 +95,79 @@ public class PermissionService extends BaseService {
         return defaultPermissions;
     }
 
+    /**
+     * @param curObject 新的
+     * @param sorObject 旧的
+     */
+    public void tablePermissionChangeObject(String curObject, String sorObject) {
+        List<Permission> permissions = new ArrayList<>();
+        // 表格权限
+        Map<String, Object> params = new HashMap<>();
+        params.put("type", PermissionTypeEnum.DP.getValue());
+        params.put("object", sorObject);
+        params.put("tenantCode", getSessionTenantCode());
+        List<Permission> tPermissions = queryModel(Permission.class, params);
+        // 修改 object
+        if (tPermissions != null && tPermissions.size() > 0) {
+            for (Permission permission : tPermissions) {
+                // tableName&XX
+                if (permission.getCode().startsWith(sorObject + "&")) {
+                    permission.setCode(permission.getCode().replace(sorObject + "&", curObject + "&"));
+                }
+                // tableName
+                permission.setObject(curObject);
+                updateModel(permission);
+            }
+        }
+        // 字段权限
+        FilterGroup filter = new FilterGroup();
+        filter.addFilter("type", PermissionTypeEnum.EP.getValue());
+        filter.addFilter("object", FilterGroup.Operator.startWith, String.format("%s:", sorObject));
+        filter.addFilter("tenantCode", getSessionTenantCode());
+        List<Permission> cPermissions = queryModel(Permission.class, filter);
+        // 修改 object
+        if (cPermissions != null && cPermissions.size() > 0) {
+            for (Permission permission : cPermissions) {
+                // tableName:columnName&XX
+                if (permission.getCode().startsWith(sorObject + ":")) {
+                    permission.setCode(permission.getCode().replace(sorObject + ":", curObject + ":"));
+                }
+                // tableName:columnName
+                if (permission.getObject().startsWith(sorObject + ":")) {
+                    permission.setObject(permission.getObject().replace(sorObject + ":", curObject + ":"));
+                }
+                updateModel(permission);
+            }
+        }
+    }
+
+    /**
+     * @param tableName 表格
+     * @param curObject 新字段
+     * @param sorObject 旧字段
+     */
+    public void columnPermissionChangeObject(String tableName, String curObject, String sorObject) {
+        // 字段权限
+        Map<String, Object> params = new HashMap<>();
+        params.put("type", PermissionTypeEnum.EP.getValue());
+        params.put("object", String.format("%s:%s", tableName, sorObject));
+        params.put("tenantCode", getSessionTenantCode());
+        List<Permission> permissions = queryModel(Permission.class, params);
+        // 修改 object
+        if (permissions != null && permissions.size() > 0) {
+            for (Permission permission : permissions) {
+                String object = String.format("%s:%s", tableName, curObject);
+                // tableName:columnName&XX
+                if (permission.getCode().startsWith(permission.getObject())) {
+                    permission.setCode(permission.getCode().replace(permission.getObject() + "&", object + "&"));
+                }
+                // tableName:columnName
+                permission.setObject(object);
+                updateModel(permission);
+            }
+        }
+    }
+
     public void resetDefaultPermission(String type, String object) {
         if (PermissionTypeEnum.DP.getValue().equals(type)) {
             resetTableDefaultPermission(type, object);
@@ -182,7 +255,7 @@ public class PermissionService extends BaseService {
                     for (Permission dModel : defPermissions) {
                         Permission permission = new Permission();
                         permission.setName(dModel.getName());
-                        permission.setCode(String.format("%s_%s%s", column.getTableName(), column.getName(), dModel.getCode()));
+                        permission.setCode(String.format("%s:%s%s", column.getTableName(), column.getName(), dModel.getCode()));
                         permission.setType(type);
                         permission.setObject(String.format("%s:%s", column.getTableName(), column.getName()));
                         permission.setRule(dModel.getRule());

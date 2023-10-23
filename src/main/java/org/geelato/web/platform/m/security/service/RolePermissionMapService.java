@@ -293,7 +293,7 @@ public class RolePermissionMapService extends BaseService {
             for (Permission dModel : defPermissions) {
                 Permission permission = new Permission();
                 permission.setName(dModel.getName());
-                permission.setCode(String.format("%s_%s%s", column.getTableName(), column.getName(), dModel.getCode()));
+                permission.setCode(String.format("%s:%s%s", column.getTableName(), column.getName(), dModel.getCode()));
                 permission.setType(PermissionTypeEnum.EP.getValue());
                 permission.setObject(String.format("%s:%s", column.getTableName(), column.getName()));
                 permission.setRule(dModel.getRule());

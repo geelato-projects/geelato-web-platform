@@ -12,11 +12,13 @@ import org.geelato.core.enums.EnableStatusEnum;
 import org.geelato.core.gql.parser.FilterGroup;
 import org.geelato.core.meta.MetaManager;
 import org.geelato.core.meta.model.entity.TableMeta;
+import org.geelato.web.platform.enums.PermissionTypeEnum;
 import org.geelato.web.platform.m.base.rest.BaseController;
 import org.geelato.web.platform.m.model.service.DevTableColumnService;
 import org.geelato.web.platform.m.model.service.DevTableService;
 import org.geelato.web.platform.m.model.service.DevViewService;
 import org.geelato.web.platform.m.security.entity.DataItems;
+import org.geelato.web.platform.m.security.service.PermissionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,6 +49,8 @@ public class DevTableController extends BaseController {
     private DevTableColumnService devTableColumnService;
     @Autowired
     private DevViewService devViewService;
+    @Autowired
+    private PermissionService permissionService;
 
     @RequestMapping(value = "/pageQuery", method = RequestMethod.GET)
     @ResponseBody
@@ -114,13 +118,22 @@ public class DevTableController extends BaseController {
                 TableMeta model = devTableService.getModel(TableMeta.class, form.getId());
                 if (model != null) {
                     form = devTableService.handleForm(form, model);
-                    result.setData(devTableService.updateModel(form));
+                    Map<String, Object> resultMap = devTableService.updateModel(form);
+                    if (!model.getEntityName().equals(form.getEntityName())) {
+                        // 修正权限
+                        permissionService.tablePermissionChangeObject(form.getEntityName(), model.getEntityName());
+                        // 添加默认权限
+                        permissionService.resetTableDefaultPermission(PermissionTypeEnum.DP.getValue(), form.getEntityName());
+                    }
+                    result.setData(resultMap);
                 } else {
                     result.error().setMsg(ApiErrorMsg.IS_NULL);
                 }
             } else {
                 Map<String, Object> resultMap = devTableService.createModel(form);
                 form.setId(resultMap.get("id").toString());
+                // 添加默认权限
+                permissionService.resetDefaultPermission(PermissionTypeEnum.DP.getValue(), form.getEntityName());
                 devTableColumnService.createDefaultColumn(form);
                 result.setData(resultMap);
             }
