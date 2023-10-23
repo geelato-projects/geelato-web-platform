@@ -112,6 +112,27 @@ public class ImportExcelController extends BaseController {
     }
 
     /**
+     * @param request
+     * @param response
+     * @param importType part:可以部分导入；all:需要全部导入，错误即中断并回滚。
+     * @param templateId 模板文件id
+     * @param attachId   业务数据文件id
+     * @return
+     */
+    @RequestMapping(value = "/attach/{importType}/{templateId}/{attachId}", method = {RequestMethod.POST, RequestMethod.GET})
+    @ResponseBody
+    public ApiResult importAttach(HttpServletRequest request, HttpServletResponse response, @PathVariable String importType, @PathVariable String templateId, @PathVariable String attachId) {
+        ApiResult result = new ApiResult();
+        try {
+            result = importExcel(request, response, importType, templateId, attachId);
+        } catch (Exception ex) {
+            logger.error(ex.getMessage(), ex);
+            result.error().setMsg(ex.getMessage());
+        }
+        return result;
+    }
+
+    /**
      * excel导入
      *
      * @param request
@@ -123,7 +144,18 @@ public class ImportExcelController extends BaseController {
      */
     @RequestMapping(value = "/file/{importType}/{templateId}", method = {RequestMethod.POST, RequestMethod.GET})
     @ResponseBody
-    public ApiResult importWps(HttpServletRequest request, HttpServletResponse response, @PathVariable String importType, @PathVariable String templateId) throws IOException {
+    public ApiResult importFile(HttpServletRequest request, HttpServletResponse response, @PathVariable String importType, @PathVariable String templateId) {
+        ApiResult result = new ApiResult();
+        try {
+            result = importExcel(request, response, importType, templateId, null);
+        } catch (Exception ex) {
+            logger.error(ex.getMessage(), ex);
+            result.error().setMsg(ex.getMessage());
+        }
+        return result;
+    }
+
+    public ApiResult importExcel(HttpServletRequest request, HttpServletResponse response, String importType, String templateId, String attachId) {
         ApiResult result = new ApiResult();
         String currentUUID = String.valueOf(UIDGenerator.generate());
         try {
@@ -143,7 +175,13 @@ public class ImportExcelController extends BaseController {
             // Assert.notNull(templateAttach, "导入模板不存在");
             businessTypeDataMap = getBusinessTypeData(new File(templateRuleAttach.getUrl()), 0);
             // 事务，业务数据
-            businessDataMapList = getBusinessData(request, businessTypeDataMap, 0);
+            File businessFile = null;
+            if (Strings.isNotBlank(attachId)) {
+                Attach uploadFile = getFile(attachId);
+                Assert.notNull(uploadFile, "导入业务数据不存在");
+                businessFile = new File(uploadFile.getUrl());
+            }
+            businessDataMapList = getBusinessData(businessFile, request, businessTypeDataMap, 0);
             // 设置缓存
             List<String> cacheKeys = setCache(currentUUID, businessMetaListMap, businessDataMapList);
             // 获取
@@ -184,7 +222,7 @@ public class ImportExcelController extends BaseController {
             redisTemplate.delete(cacheKeys);
             // 业务数据校验
             if (!validBusinessData(businessDataMapList)) {
-                Map<String, Object> errorAttach = writeBusinessData(request, businessDataMapList, 0);
+                Map<String, Object> errorAttach = writeBusinessData(businessFile, request, businessDataMapList, 0);
                 return result.error().setData(errorAttach).setMsg("请下载错误文件，查看具体错误信息");
             }
             // 插入数据 "@biz": "myBizCode",
@@ -205,6 +243,7 @@ public class ImportExcelController extends BaseController {
 
         return result;
     }
+
 
     /**
      * 业务数据类型与元数据类型校验
@@ -384,15 +423,23 @@ public class ImportExcelController extends BaseController {
      * @return
      * @throws IOException
      */
-    private List<Map<String, BusinessData>> getBusinessData(HttpServletRequest request, Map<String, BusinessTypeData> businessTypeDataMap, int sheetIndex) throws IOException {
+    private List<Map<String, BusinessData>> getBusinessData(File file, HttpServletRequest request, Map<String, BusinessTypeData> businessTypeDataMap, int sheetIndex) throws IOException {
         List<Map<String, BusinessData>> businessDataMapList = new ArrayList<>();
         InputStream inputStream = null;
+        FileInputStream fileInputStream = null;
         BufferedInputStream bufferedInputStream = null;
         try {
-            Part filePart = request.getPart(REQUEST_FILE_PART);
-            String contentType = filePart.getContentType();
-            inputStream = filePart.getInputStream();
-            bufferedInputStream = new BufferedInputStream(inputStream);
+            String contentType = null;
+            if (file != null) {
+                contentType = Files.probeContentType(file.toPath());
+                fileInputStream = new FileInputStream(file);
+                bufferedInputStream = new BufferedInputStream(fileInputStream);
+            } else {
+                Part filePart = request.getPart(REQUEST_FILE_PART);
+                contentType = filePart.getContentType();
+                inputStream = filePart.getInputStream();
+                bufferedInputStream = new BufferedInputStream(inputStream);
+            }
             if (EXCEL_XLS_CONTENT_TYPE.equals(contentType)) {
                 POIFSFileSystem fileSystem = new POIFSFileSystem(bufferedInputStream);
                 HSSFWorkbook workbook = new HSSFWorkbook(fileSystem);
@@ -413,6 +460,9 @@ public class ImportExcelController extends BaseController {
             }
             if (inputStream != null) {
                 inputStream.close();
+            }
+            if (fileInputStream != null) {
+                fileInputStream.close();
             }
         }
 
@@ -452,25 +502,37 @@ public class ImportExcelController extends BaseController {
      * @return
      * @throws IOException
      */
-    private Map<String, Object> writeBusinessData(HttpServletRequest request, List<Map<String, BusinessData>> businessDataMapList, int sheetIndex) throws IOException {
+    private Map<String, Object> writeBusinessData(File file, HttpServletRequest request, List<Map<String, BusinessData>> businessDataMapList, int sheetIndex) throws IOException {
         Map<String, Object> attachMap = new HashMap<>();
         InputStream inputStream = null;
+        FileInputStream fileInputStream = null;
         BufferedInputStream bufferedInputStream = null;
         OutputStream outputStream = null;
         try {
-            // 业务文件
-            Part filePart = request.getPart("file");
-            String contentType = filePart.getContentType();
-            String fileName = filePart.getSubmittedFileName();
+            String contentType = null;
+            String fileName = null;
+            if (file != null) {
+                contentType = Files.probeContentType(file.toPath());
+                fileName = file.getName();
+                // 输入流
+                fileInputStream = new FileInputStream(file);
+                bufferedInputStream = new BufferedInputStream(fileInputStream);
+            } else {
+                // 业务文件
+                Part filePart = request.getPart("file");
+                contentType = filePart.getContentType();
+                fileName = filePart.getSubmittedFileName();
+                // 输入流
+                inputStream = filePart.getInputStream();
+                bufferedInputStream = new BufferedInputStream(inputStream);
+            }
             String templateExt = fileName.substring(fileName.lastIndexOf("."));
             String templateName = fileName.substring(0, fileName.lastIndexOf("."));
             // 错误文件
             String errorFileName = String.format("%s：%s%s%s", templateName, "错误提示 ", dateTimeFormat.format(new Date()), templateExt);
             String directory = uploadService.getSavePath(ROOT_DIRECTORY, errorFileName, true);
             File errorFile = new File(directory);
-            // 输入流
-            inputStream = filePart.getInputStream();
-            bufferedInputStream = new BufferedInputStream(inputStream);
+            // 文件处理
             if (EXCEL_XLS_CONTENT_TYPE.equals(contentType)) {
                 POIFSFileSystem fileSystem = new POIFSFileSystem(bufferedInputStream);
                 HSSFWorkbook workbook = new HSSFWorkbook(fileSystem);
@@ -519,6 +581,9 @@ public class ImportExcelController extends BaseController {
             }
             if (inputStream != null) {
                 inputStream.close();
+            }
+            if (fileInputStream != null) {
+                fileInputStream.close();
             }
         }
 
