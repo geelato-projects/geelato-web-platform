@@ -232,7 +232,7 @@ public class ImportExcelController extends BaseController {
                 for (Map.Entry<String, List<Map<String, Object>>> table : tableData.entrySet()) {
                     insertMap.put(table.getKey(), table.getValue());
                 }
-                ruleService.batchSave(JSON.toJSONString(insertMap));
+                ruleService.batchSave(JSON.toJSONString(insertMap),false);
             } else {
                 result.error().setMsg("没有需要导入的数据");
             }

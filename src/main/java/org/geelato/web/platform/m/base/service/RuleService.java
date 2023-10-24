@@ -200,18 +200,38 @@ public class RuleService {
         return recursiveSave(command,dataSourceTransactionManager,transactionStatus);
     }
 
-    public Object batchSave(String gql) {
-        DataSourceTransactionManager dataSourceTransactionManager=new DataSourceTransactionManager(dao.getJdbcTemplate().getDataSource());
-        TransactionStatus transactionStatus= TransactionHelper.beginTransaction(dataSourceTransactionManager);
-        List<SaveCommand> commandList = gqlManager.generateBatchSaveSql(gql, getSessionCtx());
-//        List<BoundSql> boundSqlList = sqlManager.generateBatchSaveSql(commandList);
+    public Object batchSave(String gql,Boolean transaction) {
         List<String> returnPks=new ArrayList<>();
-        for (SaveCommand saveCommand : commandList){
-            String rst=recursiveSave(saveCommand, dataSourceTransactionManager, transactionStatus);
-            returnPks.add(rst);
+        List<SaveCommand> commandList = gqlManager.generateBatchSaveSql(gql, getSessionCtx());
+        if(transaction){
+            DataSourceTransactionManager dataSourceTransactionManager=new DataSourceTransactionManager(dao.getJdbcTemplate().getDataSource());
+            TransactionStatus transactionStatus= TransactionHelper.beginTransaction(dataSourceTransactionManager);
+            for (SaveCommand saveCommand : commandList){
+                BoundSql boundSql = sqlManager.generateSaveSql(saveCommand);
+                String pkValue = dao.save(boundSql);
+                if(pkValue.equals("saveFail")){
+                    TransactionHelper.rollbackTransaction(dataSourceTransactionManager,transactionStatus);
+                    break;
+                }else{
+                    returnPks.add(pkValue);
+                }
+            }
+            TransactionHelper.commitTransaction(dataSourceTransactionManager,transactionStatus);
+        }else {
+            for (SaveCommand saveCommand : commandList){
+                BoundSql boundSql = sqlManager.generateSaveSql(saveCommand);
+                String pkValue = dao.save(boundSql);
+                if(pkValue.equals("saveFail")){
+                    continue;
+                }else{
+                    returnPks.add(pkValue);
+                }
+            }
         }
         return  returnPks;
     }
+
+
 
 
     public Object multiSave(String gql) {
