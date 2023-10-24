@@ -11,10 +11,12 @@ import org.geelato.core.meta.MetaManager;
 import org.geelato.core.meta.model.entity.TableMeta;
 import org.geelato.core.meta.model.field.ColumnMeta;
 import org.geelato.core.meta.model.field.ColumnSelectType;
+import org.geelato.web.platform.enums.PermissionTypeEnum;
 import org.geelato.web.platform.m.base.rest.BaseController;
 import org.geelato.web.platform.m.model.service.DevTableColumnService;
 import org.geelato.web.platform.m.model.service.DevViewService;
 import org.geelato.web.platform.m.security.entity.DataItems;
+import org.geelato.web.platform.m.security.service.PermissionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,6 +45,8 @@ public class DevTableColumnController extends BaseController {
     private DevTableColumnService devTableColumnService;
     @Autowired
     private DevViewService devViewService;
+    @Autowired
+    private PermissionService permissionService;
 
     @RequestMapping(value = "/pageQuery", method = RequestMethod.GET)
     @ResponseBody
@@ -111,9 +115,16 @@ public class DevTableColumnController extends BaseController {
                 ColumnMeta meta = devTableColumnService.getModel(ColumnMeta.class, form.getId());
                 Assert.notNull(meta, ApiErrorMsg.IS_NULL);
                 form = devTableColumnService.upgradeTable(form, meta);
-                result.setData(devTableColumnService.updateModel(form));
+                Map<String, Object> resultMap = devTableColumnService.updateModel(form);
+                if (!meta.getName().equalsIgnoreCase(form.getName())) {
+                    permissionService.columnPermissionChangeObject(form.getTableName(), form.getName(), meta.getName());
+                    permissionService.resetDefaultPermission(PermissionTypeEnum.EP.getValue(), form.getTableName());
+                }
+                result.setData(resultMap);
             } else {
-                result.setData(devTableColumnService.createModel(form));
+                Map<String, Object> resultMap = devTableColumnService.createModel(form);
+                permissionService.resetDefaultPermission(PermissionTypeEnum.EP.getValue(), form.getTableName());
+                result.setData(resultMap);
             }
             // 选择类型为 组织、用户时
             if (result.isSuccess()) {
