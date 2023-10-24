@@ -26,6 +26,10 @@ public class BaseController {
     @Autowired
     @Qualifier("primaryDao")
     protected Dao dao;
+
+    @Autowired
+    @Qualifier("secondaryDao")
+    protected Dao dao2;
     @Autowired
     protected RuleService ruleService;
     /**

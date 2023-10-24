@@ -184,7 +184,7 @@ public class RuleService {
      * @param gql geelato query language
      * @return 第一个saveCommand执行的返回主健值（saveCommand内可能有子saveCommand）
      */
-    @OpLog(type="save")
+//    @OpLog(type="save")
     public String save(String biz, String gql) {
         SaveCommand command = gqlManager.generateSaveSql(gql, getSessionCtx());
         Facts facts = new Facts();

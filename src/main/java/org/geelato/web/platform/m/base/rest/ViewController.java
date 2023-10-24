@@ -8,6 +8,7 @@ import org.geelato.core.api.ApiMetaResult;
 import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.constants.MediaTypes;
+import org.geelato.core.exception.TestException;
 import org.geelato.core.meta.MetaManager;
 import org.geelato.core.meta.ViewManager;
 import org.geelato.core.meta.model.entity.EntityMeta;
@@ -64,15 +65,16 @@ public class ViewController  extends BaseController {
     @RequestMapping(value = {"defined/{view_name}"}, method = {RequestMethod.GET}, produces = MediaTypes.JSON_UTF_8)
     @ResponseBody
     public ApiMetaResult export(@PathVariable("view_name") String viewName) {
-        ApiMetaResult result = new ApiMetaResult();
-        ViewMeta viewMeta= ViewManager.singleInstance().getByViewName(viewName);
-        String viewColumnJson=viewMeta.getViewColumn();
-        if(!StringUtils.isBlank(viewColumnJson)){
-            JSONArray jsonArray = JSONArray.parse(viewMeta.getViewColumn());
-            result.setMeta(jsonArray);
-        }else{
-            result.setMeta(viewColumnJson);
-        }
-        return result;
+        throw new TestException("fu");
+//        ApiMetaResult result = new ApiMetaResult();
+//        ViewMeta viewMeta= ViewManager.singleInstance().getByViewName(viewName);
+//        String viewColumnJson=viewMeta.getViewColumn();
+//        if(!StringUtils.isBlank(viewColumnJson)){
+//            JSONArray jsonArray = JSONArray.parse(viewMeta.getViewColumn());
+//            result.setMeta(jsonArray);
+//        }else{
+//            result.setMeta(viewColumnJson);
+//        }
+//        return result;
     }
 }

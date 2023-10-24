@@ -166,7 +166,7 @@ public class PackageController extends BaseController {
         return appPackage;
     }
     private void deployAppPackageData(AppPackage appPackage) {
-        DataSourceTransactionManager dataSourceTransactionManager = new DataSourceTransactionManager(dao.getJdbcTemplate().getDataSource());
+        DataSourceTransactionManager dataSourceTransactionManager = new DataSourceTransactionManager(dao2.getJdbcTemplate().getDataSource());
         TransactionStatus transactionStatus = TransactionHelper.beginTransaction(dataSourceTransactionManager);
         for (AppMeta appMeta : appPackage.getAppMetaList()) {
             Map<String, Object> metaData = new HashMap<>();
@@ -189,39 +189,13 @@ public class PackageController extends BaseController {
             metaData.put(appMeta.getMetaName(), metaDataArrary);
             List<SaveCommand> saveCommandList = jsonTextSaveParser.parseBatch(JSONObject.toJSONString(metaData), new Ctx());
             for (SaveCommand saveCommand : saveCommandList) {
-//                String rst=recursiveSave(saveCommand, dataSourceTransactionManager, transactionStatus);
+                BoundSql boundSql = sqlManager.generateSaveSql(saveCommand);
+                String pkValue = dao.save(boundSql);
             }
         }
+        TransactionHelper.commitTransaction(dataSourceTransactionManager,transactionStatus);
     }
-    public String recursiveSave(SaveCommand command, DataSourceTransactionManager dataSourceTransactionManager, TransactionStatus transactionStatus) {
 
-        BoundSql boundSql = sqlManager.generateSaveSql(command);
-        String pkValue = dao.save(boundSql);
-        if(pkValue.equals("saveFail")){
-            command.setExecution(false);
-        }else{
-            command.setExecution(true);
-        }
-        // 存在子command，需执行
-        if (command.hasCommands()) {
-            command.getCommands().forEach(subCommand -> {
-                // 保存之前需先替换subCommand中的变量值，如依赖于父command执行的返回id：$parent.id
-                subCommand.getValueMap().forEach((key, value) -> {
-                    if (value != null) {
-                        subCommand.getValueMap().put(key, parseValueExp(subCommand, value.toString(), 0));
-                    }
-                });
-                recursiveSave(subCommand, dataSourceTransactionManager, transactionStatus);
-            });
-        }else{
-            if(pkValue.equals("saveFail")){
-                TransactionHelper.rollbackTransaction(dataSourceTransactionManager,transactionStatus);
-            }else{
-                TransactionHelper.commitTransaction(dataSourceTransactionManager,transactionStatus);
-            }
-        }
-        return pkValue;
-    }
 
     private Object parseValueExp(SaveCommand currentCommand, String valueExp, int times) {
         String valueExpTrim = valueExp.trim();
@@ -287,6 +261,9 @@ public class PackageController extends BaseController {
 //        map.put("platform_encoding",String.format("select * from platform_permission where app_id='%s'",appId));   //表需要加app_id
 //        map.put("platform_sys_config",String.format("select * from platform_permission where app_id='%s'",appId));   //表需要加app_id
 //        map.put("platform_resources",String.format("select * from platform_permission where app_id='%s'",appId));   //表需要加app_id
+//        map.put("platform_role_r_app",String.format("select * from platform_role_r_app where app_id='%s'",appId));   //表需要加app_id
+//        map.put("platform_role_r_permission",String.format("select * from platform_role_r_permission where app_id='%s'",appId));   //表需要加app_id
+//        map.put("platform_role_r_tree_node",String.format("select * from platform_role_r_tree_node where app_id='%s'",appId));   //表需要加app_id
         return map;
     }
 

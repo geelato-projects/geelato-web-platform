@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import jakarta.validation.ConstraintViolationException;
 import org.geelato.core.constants.MediaTypes;
+import org.geelato.core.exception.TestException;
 import org.geelato.utils.BeanValidators;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpHeaders;
@@ -38,7 +39,13 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
         headers.setContentType(MediaType.parseMediaType(MediaTypes.TEXT_PLAIN_UTF_8));
         return handleExceptionInternal(ex, body, headers, HttpStatus.BAD_REQUEST, request);
     }
-
+    @ExceptionHandler(value = {TestException.class})
+    public final ResponseEntity<?> handleException(TestException ex, WebRequest request) {
+        String body = ex.getMsg();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.parseMediaType(MediaTypes.TEXT_PLAIN_UTF_8));
+        return handleExceptionInternal(ex, body, headers, HttpStatus.BAD_REQUEST, request);
+    }
     /**
      * 处理RestException.
      */
