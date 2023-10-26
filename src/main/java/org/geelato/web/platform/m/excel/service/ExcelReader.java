@@ -3,6 +3,8 @@ package org.geelato.web.platform.m.excel.service;
 import org.apache.logging.log4j.util.Strings;
 import org.apache.poi.hssf.usermodel.*;
 import org.apache.poi.ss.usermodel.CellType;
+import org.geelato.web.platform.exception.file.FileContentIsEmptyException;
+import org.geelato.web.platform.exception.file.FileContentReadFailedException;
 import org.geelato.web.platform.m.excel.entity.BusinessColumnMeta;
 import org.geelato.web.platform.m.excel.entity.BusinessData;
 import org.geelato.web.platform.m.excel.entity.BusinessMeta;
@@ -20,7 +22,7 @@ import java.util.Map;
 
 /**
  * @author diabl
- * @description: TODO
+ * @description: HSSFSheet, xls
  * @date 2023/10/14 15:10
  */
 @Component
@@ -45,20 +47,25 @@ public class ExcelReader {
             if (row == null) {
                 break;
             }
-            BusinessMeta meta = new BusinessMeta();
-            meta.setTableName(row.getCell(0).getStringCellValue());
-            meta.setColumnName(row.getCell(1).getStringCellValue());
-            meta.setEvaluation(row.getCell(2).getStringCellValue());
-            meta.setConstValue(row.getCell(3).getStringCellValue());
-            meta.setVariableValue(row.getCell(4).getStringCellValue());
-            meta.setExpression(row.getCell(5).getStringCellValue());
-            meta.setDictCode(row.getCell(6).getStringCellValue());
-            meta.setPrimaryValue(row.getCell(7).getStringCellValue());
-            meta.setRemark(row.getCell(8).getStringCellValue());
-            columns.add(meta);
-            // 表格
-            if (!tables.contains(meta.getTableName())) {
-                tables.add(meta.getTableName());
+            try {
+                BusinessMeta meta = new BusinessMeta();
+                meta.setTableName(row.getCell(0).getStringCellValue());
+                meta.setColumnName(row.getCell(1).getStringCellValue());
+                meta.setEvaluation(row.getCell(2).getStringCellValue());
+                meta.setConstValue(row.getCell(3).getStringCellValue());
+                meta.setVariableValue(row.getCell(4).getStringCellValue());
+                meta.setExpression(row.getCell(5).getStringCellValue());
+                meta.setDictCode(row.getCell(6).getStringCellValue());
+                meta.setPrimaryValue(row.getCell(7).getStringCellValue());
+                meta.setRemark(row.getCell(8).getStringCellValue());
+                columns.add(meta);
+                // 表格
+                if (!tables.contains(meta.getTableName())) {
+                    tables.add(meta.getTableName());
+                }
+            } catch (Exception ex) {
+                logger.error(ex.getMessage(), ex);
+                throw new FileContentReadFailedException("Business Meta, Read Failed In (" + i + ").");
             }
         }
         // 按表格分类
@@ -91,12 +98,17 @@ public class ExcelReader {
             if (row == null) {
                 break;
             }
-            BusinessTypeData meta = new BusinessTypeData();
-            meta.setName(row.getCell(0).getStringCellValue());
-            meta.setType(row.getCell(1).getStringCellValue());
-            meta.setFormat(row.getCell(2).getStringCellValue());
-            meta.setRemark(row.getCell(3).getStringCellValue());
-            metaMap.put(meta.getName(), meta);
+            try {
+                BusinessTypeData meta = new BusinessTypeData();
+                meta.setName(row.getCell(0).getStringCellValue());
+                meta.setType(row.getCell(1).getStringCellValue());
+                meta.setFormat(row.getCell(2).getStringCellValue());
+                meta.setRemark(row.getCell(3).getStringCellValue());
+                metaMap.put(meta.getName(), meta);
+            } catch (Exception ex) {
+                logger.error(ex.getMessage(), ex);
+                throw new FileContentReadFailedException("Business Data Type, Read Failed In (" + i + ").");
+            }
         }
 
         return metaMap;
@@ -128,7 +140,7 @@ public class ExcelReader {
                 }
             }
         } else {
-            throw new RuntimeException("业务数据表头为空");
+            throw new FileContentIsEmptyException("Business Data Table Header is Empty.");
         }
         // 实体数据
         List<Map<String, BusinessData>> businessDataMapList = new ArrayList<>();

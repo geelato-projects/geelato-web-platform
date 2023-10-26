@@ -29,6 +29,8 @@ import org.geelato.core.meta.model.field.FieldMeta;
 import org.geelato.core.script.js.JsProvider;
 import org.geelato.utils.UIDGenerator;
 import org.geelato.web.platform.enums.ExcelColumnTypeEnum;
+import org.geelato.web.platform.exception.file.FileNotFoundException;
+import org.geelato.web.platform.exception.file.*;
 import org.geelato.web.platform.m.base.entity.Attach;
 import org.geelato.web.platform.m.base.entity.Dict;
 import org.geelato.web.platform.m.base.entity.DictItem;
@@ -43,6 +45,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -71,6 +74,7 @@ public class ImportExcelController extends BaseController {
     private static final int GGL_QUERY_TOTAL = 10000;
     private static final String ROOT_DIRECTORY = "upload";
     private static final String REQUEST_FILE_PART = "file";
+    private static final String IMPORT_ERROR_FILE_GENRE = "importErrorFile";
     private final Logger logger = LoggerFactory.getLogger(ImportExcelController.class);
     private final FilterGroup filterGroup = new FilterGroup().addFilter(ColumnDefault.DEL_STATUS_FIELD, String.valueOf(DeleteStatusEnum.NO.getCode()));
     private final MetaManager metaManager = MetaManager.singleInstance();
@@ -127,7 +131,7 @@ public class ImportExcelController extends BaseController {
             result = importExcel(request, response, importType, templateId, attachId);
         } catch (Exception ex) {
             logger.error(ex.getMessage(), ex);
-            result.error().setMsg(ex.getMessage());
+            result.error(ex);
         }
         return result;
     }
@@ -150,7 +154,7 @@ public class ImportExcelController extends BaseController {
             result = importExcel(request, response, importType, templateId, null);
         } catch (Exception ex) {
             logger.error(ex.getMessage(), ex);
-            result.error().setMsg(ex.getMessage());
+            result.error(ex);
         }
         return result;
     }
@@ -165,30 +169,31 @@ public class ImportExcelController extends BaseController {
             List<Map<String, BusinessData>> businessDataMapList = new ArrayList<>();// 业务数据
             // 事务模板查询
             ExportTemplate exportTemplate = exportTemplateService.getModel(ExportTemplate.class, templateId);
-            Assert.notNull(exportTemplate, "导入事务不存在");
+            notNull(exportTemplate, new FileNotFoundException("ExportTemplate Data Not Found"));
             //事务，模板元数据
             Attach templateRuleAttach = getFile(exportTemplate.getTemplateRule());
-            Assert.notNull(templateRuleAttach, "导入模板元数据不存在");
+            notNull(templateRuleAttach, new FileNotFoundException("Business Data Type And Meta File Not Found"));
             businessMetaListMap = getBusinessMeta(new File(templateRuleAttach.getUrl()), 1);
             //事务，模板数据类型
             // Attach templateAttach = getFile(exportTemplate.getTemplate());
-            // Assert.notNull(templateAttach, "导入模板不存在");
             businessTypeDataMap = getBusinessTypeData(new File(templateRuleAttach.getUrl()), 0);
             // 事务，业务数据
-            File businessFile = null;
+            Attach businessFile = null;
             if (Strings.isNotBlank(attachId)) {
-                Attach uploadFile = getFile(attachId);
-                Assert.notNull(uploadFile, "导入业务数据不存在");
-                businessFile = new File(uploadFile.getUrl());
+                businessFile = getFile(attachId);
+                notNull(businessFile, new FileNotFoundException("Business Data File Not Found"));
             }
-            businessDataMapList = getBusinessData(businessFile, request, businessTypeDataMap, 0);
+            businessDataMapList = getBusinessData(new File(businessFile.getUrl()), request, businessTypeDataMap, 0);
             // 设置缓存
             List<String> cacheKeys = setCache(currentUUID, businessMetaListMap, businessDataMapList);
+            // 忽略默认字段
+            List<String> columnNames = getDefaultColumns();
             // 获取
             Map<String, List<Map<String, Object>>> tableData = new HashMap<>();
             for (Map.Entry<String, List<BusinessMeta>> metaMap : businessMetaListMap.entrySet()) {
                 // 获取表格字段信息
                 EntityMeta entityMeta = metaManager.getByEntityName(metaMap.getKey(), false);
+                Assert.notNull(entityMeta, "Table Meta Is Null");
                 // 当前字段
                 List<Map<String, Object>> columnData = new ArrayList<>();
                 for (Map<String, BusinessData> businessDataMap : businessDataMapList) {
@@ -201,13 +206,14 @@ public class ImportExcelController extends BaseController {
                     Map<String, Object> columnMap = new HashMap<>();
                     for (BusinessMeta meta : metaMap.getValue()) {
                         FieldMeta fieldMeta = entityMeta.getFieldMeta(meta.getColumnName());
+                        Assert.notNull(entityMeta, "Table FieldMeta Is Null");
                         BusinessData businessData = businessDataMap.get(meta.getVariableValue());
                         Object value = null;
                         try {
                             // 获取值
                             value = getValue(currentUUID, fieldMeta.getColumn(), meta, businessData, valueMap);
                             // 验证值
-                            List<String> errorMsg = validateValue(fieldMeta.getColumn(), businessData.getBusinessTypeData(), value);
+                            List<String> errorMsg = validateValue(fieldMeta.getColumn(), businessData.getBusinessTypeData(), value, columnNames);
                             businessData.setErrorMsgs(errorMsg);
                         } catch (Exception ex) {
                             businessData.setErrorMsg(ex.getMessage());
@@ -222,28 +228,46 @@ public class ImportExcelController extends BaseController {
             redisTemplate.delete(cacheKeys);
             // 业务数据校验
             if (!validBusinessData(businessDataMapList)) {
-                Map<String, Object> errorAttach = writeBusinessData(businessFile, request, businessDataMapList, 0);
-                return result.error().setData(errorAttach).setMsg("请下载错误文件，查看具体错误信息");
+                Map<String, Object> errorAttach = writeBusinessData(businessFile, request, response, businessDataMapList, 0);
+                return result.error(new FileContentValidFailedException("For more information, see the error file.")).setData(errorAttach);
             }
             // 插入数据 "@biz": "myBizCode",
-            if (!tableData.isEmpty()) {
+            if (tableData.isEmpty()) {
                 Map<String, Object> insertMap = new HashMap<>();
                 insertMap.put("@biz", "myBizCode");
                 for (Map.Entry<String, List<Map<String, Object>>> table : tableData.entrySet()) {
                     insertMap.put(table.getKey(), table.getValue());
                 }
-                ruleService.batchSave(JSON.toJSONString(insertMap),false);
+                ruleService.batchSave(JSON.toJSONString(insertMap), false);
             } else {
-                result.error().setMsg("没有需要导入的数据");
+                throw new FileContentIsEmptyException("Business Import Data Is Empty");
             }
         } catch (Exception ex) {
             logger.error(ex.getMessage(), ex);
-            result.error().setMsg(ex.getMessage());
+            result.error(ex);
         }
 
         return result;
     }
 
+    /**
+     * 获取表格默认字段
+     *
+     * @return
+     */
+    private List<String> getDefaultColumns() {
+        List<String> columnNames = new ArrayList<>();
+        List<ColumnMeta> columnMetaList = metaManager.getDefaultColumn();
+        if (columnMetaList != null && columnMetaList.size() > 0) {
+            for (ColumnMeta columnMeta : columnMetaList) {
+                if (!columnNames.contains(columnMeta.getName())) {
+                    columnNames.add(columnMeta.getName());
+                }
+            }
+        }
+
+        return columnNames;
+    }
 
     /**
      * 业务数据类型与元数据类型校验
@@ -253,24 +277,26 @@ public class ImportExcelController extends BaseController {
      * @param value      值
      * @return
      */
-    private List<String> validateValue(ColumnMeta columnMeta, BusinessTypeData typeData, Object value) {
+    private List<String> validateValue(ColumnMeta columnMeta, BusinessTypeData typeData, Object value, List<String> columnNames) {
         List<String> errorMsg = new ArrayList<>();
+        if (value == null && !columnMeta.isNullable() && !columnNames.contains(columnMeta.getName())) {
+            errorMsg.add(String.format("%s，该字段不能为空。", columnMeta.getFieldName()));
+        }
         if (MysqlDataTypeEnum.getBooleans().contains(columnMeta.getDataType()) && ExcelColumnTypeEnum.BOOLEAN.name().equalsIgnoreCase(typeData.getType())) {
 
         } else if (MysqlDataTypeEnum.getStrings().contains(columnMeta.getDataType()) && ExcelColumnTypeEnum.STRING.name().equalsIgnoreCase(typeData.getType())) {
             if (value != null && String.valueOf(value).length() > columnMeta.getCharMaxLength()) {
-                errorMsg.add(String.valueOf(value).length() + " 已超出字段最大长度：" + columnMeta.getCharMaxLength());
+                errorMsg.add(String.format("当前长度：%s；已超出字段最大长度：%s。", String.valueOf(value).length(), columnMeta.getCharMaxLength()));
             }
         } else if (MysqlDataTypeEnum.getNumbers().contains(columnMeta.getDataType()) && ExcelColumnTypeEnum.NUMBER.name().equalsIgnoreCase(typeData.getType())) {
             if (value != null && String.valueOf(value).length() > (columnMeta.getNumericPrecision() + columnMeta.getNumericScale())) {
-                errorMsg.add(String.valueOf(value).length() + " 已超出字段数值位数限制：" + (columnMeta.getNumericPrecision() + columnMeta.getNumericScale()));
+                errorMsg.add(String.format("当前长度：%s；已超出字段数值位数限制：%s。", String.valueOf(value).length(), (columnMeta.getNumericPrecision() + columnMeta.getNumericScale())));
             }
         } else if (MysqlDataTypeEnum.getDates().contains(columnMeta.getDataType()) && ExcelColumnTypeEnum.DATETIME.name().equalsIgnoreCase(typeData.getType())) {
 
         } else {
-            errorMsg.add("业务数据格式：" + typeData.getType() + "；而数据库存储格式为：" + columnMeta.getDataType());
+            errorMsg.add(String.format("业务数据格式：%s；而数据库存储格式为：%s。", typeData.getType(), columnMeta.getDataType()));
         }
-
 
         return errorMsg;
     }
@@ -354,10 +380,10 @@ public class ImportExcelController extends BaseController {
                 XSSFSheet sheet = workbook.getSheetAt(sheetIndex);
                 businessMetaListMap = excelXSSFReader.readBusinessMeta(sheet);
             } else {
-                throw new RuntimeException("暂不支持该格式的导入数据模板文件！");
+                throw new FileTypeNotSupportedException("Business Meta, Excel Type: " + contentType);
             }
         } catch (IOException ex) {
-            throw new RuntimeException(ex);
+            throw new FileException("Business Meta, Excel Sheet(" + sheetIndex + ") Reader Failed! " + ex.getMessage());
         } finally {
             if (bufferedInputStream != null) {
                 bufferedInputStream.close();
@@ -398,10 +424,10 @@ public class ImportExcelController extends BaseController {
                 XSSFSheet sheet = workbook.getSheetAt(sheetIndex);
                 businessTypeDataMap = excelXSSFReader.readBusinessTypeData(sheet);
             } else {
-                throw new RuntimeException("暂不支持该格式的导入数据模板文件！");
+                throw new FileTypeNotSupportedException("Business Data Type, Excel Type: " + contentType);
             }
         } catch (IOException ex) {
-            throw new RuntimeException(ex);
+            throw new FileException("Business Data Type, Excel Sheet(" + sheetIndex + ") Reader Failed! " + ex.getMessage());
         } finally {
             if (bufferedInputStream != null) {
                 bufferedInputStream.close();
@@ -450,10 +476,10 @@ public class ImportExcelController extends BaseController {
                 XSSFSheet sheet = workbook.getSheetAt(sheetIndex);
                 businessDataMapList = excelXSSFReader.readBusinessData(sheet, businessTypeDataMap);
             } else {
-                throw new RuntimeException("暂不支持导入该格式文件！");
+                throw new FileTypeNotSupportedException("Business Data, Excel Type: " + contentType);
             }
         } catch (Exception ex) {
-            throw new RuntimeException(ex);
+            throw new FileException("Business Data, Excel Sheet(" + sheetIndex + ") Reader Failed! " + ex.getMessage());
         } finally {
             if (bufferedInputStream != null) {
                 bufferedInputStream.close();
@@ -502,18 +528,21 @@ public class ImportExcelController extends BaseController {
      * @return
      * @throws IOException
      */
-    private Map<String, Object> writeBusinessData(File file, HttpServletRequest request, List<Map<String, BusinessData>> businessDataMapList, int sheetIndex) throws IOException {
+    private Map<String, Object> writeBusinessData(Attach businessFile, HttpServletRequest request, HttpServletResponse response, List<Map<String, BusinessData>> businessDataMapList, int sheetIndex) throws IOException {
         Map<String, Object> attachMap = new HashMap<>();
         InputStream inputStream = null;
         FileInputStream fileInputStream = null;
         BufferedInputStream bufferedInputStream = null;
         OutputStream outputStream = null;
+        OutputStream responseOut = null;
+        FileInputStream responseIn = null;
         try {
             String contentType = null;
             String fileName = null;
-            if (file != null) {
+            if (businessFile != null) {
+                File file = new File(businessFile.getUrl());
                 contentType = Files.probeContentType(file.toPath());
-                fileName = file.getName();
+                fileName = businessFile.getName();
                 // 输入流
                 fileInputStream = new FileInputStream(file);
                 bufferedInputStream = new BufferedInputStream(fileInputStream);
@@ -559,19 +588,31 @@ public class ImportExcelController extends BaseController {
                 outputStream = new FileOutputStream(errorFile);
                 workbook.write(outputStream);
             } else {
-                throw new RuntimeException("暂不支持导入该格式文件！");
+                throw new FileTypeNotSupportedException("Business Data, Excel Type: " + contentType);
             }
             // 保存文件信息
             BasicFileAttributes attributes = Files.readAttributes(errorFile.toPath(), BasicFileAttributes.class);
             Attach attach = new Attach();
-            attach.setGenre("importErrorFile");
+            attach.setGenre(IMPORT_ERROR_FILE_GENRE);
             attach.setName(errorFileName);
             attach.setType(Files.probeContentType(errorFile.toPath()));
             attach.setSize(attributes.size());
             attach.setUrl(directory);
             attachMap = attachService.createModel(attach);
+            // 可下载
+            /*responseOut = response.getOutputStream();
+            responseIn = new FileInputStream(errorFile);
+            errorFileName = URLEncoder.encode(errorFileName, "UTF-8");
+            String mineType = request.getServletContext().getMimeType(errorFileName);
+            response.setContentType(mineType);
+            response.setHeader("Content-disposition", "attachment; filename=" + errorFileName);
+            int len = 0;
+            byte[] buffer = new byte[1024];
+            while ((len = responseIn.read(buffer)) > 0) {
+                responseOut.write(buffer, 0, len);
+            }*/
         } catch (Exception ex) {
-            throw new RuntimeException(ex);
+            throw new FileException("Business Data Error Message, Excel Sheet(" + sheetIndex + ") Writer Failed! " + ex.getMessage());
         } finally {
             if (outputStream != null) {
                 outputStream.close();
@@ -584,6 +625,12 @@ public class ImportExcelController extends BaseController {
             }
             if (fileInputStream != null) {
                 fileInputStream.close();
+            }
+            if (responseOut != null) {
+                responseOut.close();
+            }
+            if (responseIn != null) {
+                responseIn.close();
             }
         }
 
@@ -707,18 +754,22 @@ public class ImportExcelController extends BaseController {
     private List<String> setPrimaryRedis(String currentUUID, List<ConditionMeta> primaryMetas) {
         List<String> primaryKeys = new ArrayList<>();
         String gglFormat = "{\"%s\": {\"@fs\": \"id,%s\", \"%s|eq\": \"%s\", \"@p\": \"1,%s\"}}";
-        if (primaryMetas != null && primaryMetas.size() > 0) {
-            for (ConditionMeta meta : primaryMetas) {
-                if (meta != null && meta.getValues() != null && meta.getValues().size() > 0) {
-                    String primaryKey = String.format("%s:%s:%s", currentUUID, meta.getTableName(), meta.getColumnName());
-                    String limit = String.valueOf(GGL_QUERY_TOTAL * Math.ceil(meta.getValues().size() / GGL_QUERY_TOTAL));
-                    String ggl = String.format(gglFormat, meta.getTableName(), meta.getColumnName(), meta.getColumnName(), String.join(",", meta.getValues()), limit);
-                    ApiPagedResult page = ruleService.queryForMapList(ggl, false);
-                    logger.info(primaryKey + " - " + page.getData());
-                    redisTemplate.opsForValue().set(primaryKey, page.getData(), REDIS_TIME_OUT, TimeUnit.MINUTES);
-                    primaryKeys.add(primaryKey);
+        try {
+            if (primaryMetas != null && primaryMetas.size() > 0) {
+                for (ConditionMeta meta : primaryMetas) {
+                    if (meta != null && meta.getValues() != null && meta.getValues().size() > 0) {
+                        String primaryKey = String.format("%s:%s:%s", currentUUID, meta.getTableName(), meta.getColumnName());
+                        String limit = String.valueOf(GGL_QUERY_TOTAL * Math.ceil(meta.getValues().size() / GGL_QUERY_TOTAL));
+                        String ggl = String.format(gglFormat, meta.getTableName(), meta.getColumnName(), meta.getColumnName(), String.join(",", meta.getValues()), limit);
+                        ApiPagedResult page = ruleService.queryForMapList(ggl, false);
+                        logger.info(primaryKey + " - " + page.getData());
+                        redisTemplate.opsForValue().set(primaryKey, page.getData(), REDIS_TIME_OUT, TimeUnit.MINUTES);
+                        primaryKeys.add(primaryKey);
+                    }
                 }
             }
+        } catch (Exception ex) {
+            logger.info(ex.getMessage(), ex);
         }
 
         return primaryKeys;
@@ -731,15 +782,26 @@ public class ImportExcelController extends BaseController {
      * @return
      */
     private Attach getFile(String attachId) {
-        if (Strings.isNotBlank(attachId)) {
-            Attach attach = attachService.getModel(Attach.class, attachId);
-            File file = new File(attach.getUrl());
-            if (file.exists()) {
-                return attach;
+        try {
+            if (Strings.isNotBlank(attachId)) {
+                Attach attach = attachService.getModel(Attach.class, attachId);
+                File file = new File(attach.getUrl());
+                if (file.exists()) {
+                    return attach;
+                }
             }
+        } catch (Exception ex) {
+            logger.info(ex.getMessage(), ex);
         }
 
         return null;
+    }
+
+
+    private <T extends FileException> void notNull(@Nullable Object object, T fileException) throws T {
+        if (object == null) {
+            throw fileException;
+        }
     }
 
 }
