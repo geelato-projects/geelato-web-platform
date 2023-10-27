@@ -1,6 +1,8 @@
 package org.geelato.web.platform.m.excel.entity;
 
+import org.apache.logging.log4j.util.Strings;
 import org.geelato.web.platform.enums.ExcelColumnTypeEnum;
+import org.geelato.web.platform.enums.ExcelMultiSceneTypeEnum;
 
 /**
  * @author diabl
@@ -14,6 +16,10 @@ public class BusinessTypeData {
     private String type;
     //存在的格式，布尔值、时间格式
     private String format;
+    // 多值分隔符
+    private String multiSeparator;
+    // 多值场景
+    private String multiScene;
     //备注
     private String remark;
 
@@ -41,12 +47,40 @@ public class BusinessTypeData {
         this.format = format;
     }
 
+    public String getMultiSeparator() {
+        return multiSeparator;
+    }
+
+    public void setMultiSeparator(String multiSeparator) {
+        this.multiSeparator = multiSeparator;
+    }
+
+    public String getMultiScene() {
+        return multiScene;
+    }
+
+    public void setMultiScene(String multiScene) {
+        this.multiScene = multiScene;
+    }
+
     public String getRemark() {
         return remark;
     }
 
     public void setRemark(String remark) {
         this.remark = remark;
+    }
+
+    public boolean isMulti() {
+        return Strings.isNotBlank(this.multiSeparator);
+    }
+
+    public boolean isSceneTypeMulti() {
+        return ExcelMultiSceneTypeEnum.MULTI.name().equalsIgnoreCase(this.multiScene);
+    }
+
+    public boolean isSceneTypeSym() {
+        return ExcelMultiSceneTypeEnum.SYM.name().equalsIgnoreCase(this.multiScene);
     }
 
     public boolean isColumnTypeString() {

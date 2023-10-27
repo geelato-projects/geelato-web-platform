@@ -145,6 +145,10 @@ public class BusinessMeta {
         return ExcelEvaluationEnum.PRIMARY_KEY.name().equalsIgnoreCase(this.evaluation);
     }
 
+    public boolean isEvaluationTypeSerialNumber() {
+        return ExcelEvaluationEnum.SERIAL_NUMBER.name().equalsIgnoreCase(this.evaluation);
+    }
+
     /**
      * 求取主键值所需，表格名称
      *

@@ -105,7 +105,9 @@ public class ExcelXSSFReader {
                 meta.setName(row.getCell(0).getStringCellValue());
                 meta.setType(row.getCell(1).getStringCellValue());
                 meta.setFormat(row.getCell(2).getStringCellValue());
-                meta.setRemark(row.getCell(3).getStringCellValue());
+                meta.setMultiSeparator(row.getCell(3).getStringCellValue());
+                meta.setMultiScene(row.getCell(4).getStringCellValue());
+                meta.setRemark(row.getCell(5).getStringCellValue());
                 metaMap.put(meta.getName(), meta);
             } catch (Exception ex) {
                 logger.error(ex.getMessage(), ex);
@@ -131,13 +133,16 @@ public class ExcelXSSFReader {
         XSSFRow firstRow = sheet.getRow(0);
         if (firstRow != null) {
             for (int i = 0; i < businessTypeDataMap.size(); i++) {
-                String cellValue = firstRow.getCell(i).getStringCellValue();
-                if (Strings.isNotBlank(cellValue)) {
-                    BusinessColumnMeta busColMeta = new BusinessColumnMeta();
-                    busColMeta.setIndex(i);
-                    busColMeta.setBusinessTypeData(businessTypeDataMap.get(cellValue));
-                    if (busColMeta.getBusinessTypeData() != null) {
-                        headers.add(busColMeta);
+                XSSFCell cell = firstRow.getCell(i);
+                if (cell != null) {
+                    String cellValue = cell.getStringCellValue();
+                    if (Strings.isNotBlank(cellValue)) {
+                        BusinessColumnMeta busColMeta = new BusinessColumnMeta();
+                        busColMeta.setIndex(i);
+                        busColMeta.setBusinessTypeData(businessTypeDataMap.get(cellValue));
+                        if (busColMeta.getBusinessTypeData() != null) {
+                            headers.add(busColMeta);
+                        }
                     }
                 }
             }
@@ -214,7 +219,8 @@ public class ExcelXSSFReader {
                 businessDataMapList.add(businessDataMap);
             }
         }
-
+        // 多值数据处理
+        businessDataMapList = ExcelCommonUtils.handleBusinessDataMultiScene(businessDataMapList);
         return businessDataMapList;
     }
 

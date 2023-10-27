@@ -1,7 +1,7 @@
 package org.geelato.web.platform.m.excel.entity;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 /**
  * @author diabl
@@ -12,8 +12,9 @@ public class BusinessData {
     private int XIndex;
     private int YIndex;
     private Object value;
+    private String[] multiValue;
     private BusinessTypeData businessTypeData;
-    private List<String> errorMsg = new ArrayList<>();
+    private Set<String> errorMsg = new LinkedHashSet<>();
 
     public int getXIndex() {
         return XIndex;
@@ -39,6 +40,14 @@ public class BusinessData {
         this.value = value;
     }
 
+    public String[] getMultiValue() {
+        return multiValue;
+    }
+
+    public void setMultiValue(String[] multiValue) {
+        this.multiValue = multiValue;
+    }
+
     public BusinessTypeData getBusinessTypeData() {
         return businessTypeData;
     }
@@ -47,24 +56,24 @@ public class BusinessData {
         this.businessTypeData = businessTypeData;
     }
 
-    public List<String> getErrorMsg() {
+    public Set<String> getErrorMsg() {
         return errorMsg;
     }
 
-    public void setErrorMsg(List<String> errorMsg) {
+    public void setErrorMsg(Set<String> errorMsg) {
         this.errorMsg = errorMsg;
     }
 
     public void setErrorMsg(String errorMsg) {
         if (this.errorMsg == null) {
-            this.errorMsg = new ArrayList<>();
+            this.errorMsg = new LinkedHashSet<>();
         }
         this.errorMsg.add(errorMsg);
     }
 
-    public void setErrorMsgs(List<String> errorMsg) {
+    public void setErrorMsgs(Set<String> errorMsg) {
         if (this.errorMsg == null) {
-            this.errorMsg = new ArrayList<>();
+            this.errorMsg = new LinkedHashSet<>();
         }
         this.errorMsg.addAll(errorMsg);
     }
