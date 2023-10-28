@@ -58,7 +58,7 @@ public class ExcelCommonUtils {
                                         multiData.put(businessDataEntry.getKey(), businessData);
                                     } else if (typeData.isSceneTypeSym()) {
                                         isMulti = true;
-                                        multiData.put(businessDataEntry.getKey(), businessData);
+                                        symData.put(businessDataEntry.getKey(), businessData);
                                         maxLength = maxLength > multiValue.length ? maxLength : multiValue.length;
                                     }
                                 }
