@@ -17,6 +17,7 @@ public class SysConfig extends BaseSortableEntity implements EntityEnableAble {
 
     private String appId;
     private String configKey;
+    private String configType;
     private String configValue;
     private int enableStatus = ColumnDefault.ENABLE_STATUS_VALUE;
     private String remark;
@@ -39,6 +40,16 @@ public class SysConfig extends BaseSortableEntity implements EntityEnableAble {
 
     public void setConfigKey(String configKey) {
         this.configKey = configKey;
+    }
+
+    @Col(name = "config_type")
+    @Title(title = "值类型")
+    public String getConfigType() {
+        return configType;
+    }
+
+    public void setConfigType(String configType) {
+        this.configType = configType;
     }
 
     @Col(name = "config_value")
