@@ -14,6 +14,7 @@ import org.geelato.core.meta.model.entity.BaseSortableEntity;
 @Title(title = "用户")
 public class User extends BaseSortableEntity {
     private String name;
+    private String enName;
     private String loginName;
     private int sex;
     private String orgId;
@@ -51,6 +52,16 @@ public class User extends BaseSortableEntity {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    @Title(title = "英文名")
+    @Col(name = "en_name")
+    public String getEnName() {
+        return enName;
+    }
+
+    public void setEnName(String enName) {
+        this.enName = enName;
     }
 
     @Title(title = "登录名")
