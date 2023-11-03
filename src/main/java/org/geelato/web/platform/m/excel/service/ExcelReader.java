@@ -3,6 +3,9 @@ package org.geelato.web.platform.m.excel.service;
 import org.apache.logging.log4j.util.Strings;
 import org.apache.poi.hssf.usermodel.*;
 import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.ClientAnchor;
+import org.apache.poi.ss.usermodel.Drawing;
+import org.apache.poi.xssf.usermodel.XSSFRichTextString;
 import org.geelato.web.platform.exception.file.FileContentIsEmptyException;
 import org.geelato.web.platform.exception.file.FileContentReadFailedException;
 import org.geelato.web.platform.m.excel.entity.BusinessColumnMeta;
@@ -11,6 +14,8 @@ import org.geelato.web.platform.m.excel.entity.BusinessMeta;
 import org.geelato.web.platform.m.excel.entity.BusinessTypeData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -28,6 +33,9 @@ import java.util.Map;
 @Component
 public class ExcelReader {
     private final Logger logger = LoggerFactory.getLogger(ExcelReader.class);
+    @Lazy
+    @Autowired
+    private ExcelCommonUtils excelCommonUtils;
 
     /**
      * 元数据
@@ -103,9 +111,13 @@ public class ExcelReader {
                 meta.setName(row.getCell(0).getStringCellValue());
                 meta.setType(row.getCell(1).getStringCellValue());
                 meta.setFormat(row.getCell(2).getStringCellValue());
+                // 多值分解，全局规则
                 meta.setMultiSeparator(row.getCell(3).getStringCellValue());
                 meta.setMultiScene(row.getCell(4).getStringCellValue());
-                meta.setRemark(row.getCell(5).getStringCellValue());
+                // 规则，单格规则
+                String rules = row.getCell(5).getStringCellValue();
+                meta.setTypeRuleData(excelCommonUtils.readBusinessTypeRuleData(rules));
+                meta.setRemark(row.getCell(6).getStringCellValue());
                 metaMap.put(meta.getName(), meta);
             } catch (Exception ex) {
                 logger.error(ex.getMessage(), ex);
@@ -125,12 +137,15 @@ public class ExcelReader {
      */
     public List<Map<String, BusinessData>> readBusinessData(HSSFSheet sheet, Map<String, BusinessTypeData> businessTypeDataMap) {
         int lastRowIndex = sheet.getLastRowNum();
+        int lastCellNum = 0;
         logger.info("BusinessData = " + lastRowIndex);
         // 第一行
         List<BusinessColumnMeta> headers = new ArrayList<>();
         HSSFRow firstRow = sheet.getRow(0);
         if (firstRow != null) {
-            for (int i = 0; i < businessTypeDataMap.size(); i++) {
+            lastCellNum = firstRow.getLastCellNum();
+            logger.info("BusinessData Cells = " + lastCellNum);
+            for (int i = 0; i < lastCellNum; i++) {
                 HSSFCell cell = firstRow.getCell(i);
                 if (cell != null) {
                     String cellValue = cell.getStringCellValue();
@@ -207,6 +222,7 @@ public class ExcelReader {
                             }
                         }
                         businessData.setValue(cellValue);
+                        businessData.setPrimevalValue(cellValue);
                     } catch (Exception ex) {
                         businessData.setErrorMsg(ex.getMessage());
                     }
@@ -217,8 +233,7 @@ public class ExcelReader {
                 businessDataMapList.add(businessDataMap);
             }
         }
-        // 多值数据处理
-        businessDataMapList = ExcelCommonUtils.handleBusinessDataMultiScene(businessDataMapList);
+
         return businessDataMapList;
     }
 
@@ -230,27 +245,44 @@ public class ExcelReader {
      * @param businessDataMapList 业务数据
      */
     public void writeBusinessData(HSSFSheet sheet, HSSFCellStyle style, List<Map<String, BusinessData>> businessDataMapList) {
+        Map<String, BusinessData> mapSet = new HashMap<>();
+        for (Map<String, BusinessData> businessDataMap : businessDataMapList) {
+            for (Map.Entry<String, BusinessData> businessDataEntry : businessDataMap.entrySet()) {
+                BusinessData businessData = businessDataEntry.getValue();
+                if (businessData != null && !businessData.isValidate()) {
+                    String key = String.format("Y.%s;X.%s", businessData.getYIndex(), businessData.getXIndex());
+                    BusinessData msgData = (mapSet.containsKey(key) && mapSet.get(key) != null) ? mapSet.get(key) : new BusinessData();
+                    msgData.setYIndex(businessData.getYIndex());
+                    msgData.setXIndex(businessData.getXIndex());
+                    msgData.setErrorMsgs(businessData.getErrorMsg());
+                    mapSet.put(key, msgData);
+                }
+            }
+        }
         // 实体数据
         for (int i = 1; i <= sheet.getLastRowNum(); i++) {
             HSSFRow row = sheet.getRow(i);
             if (row == null) {
                 break;
             }
-            for (Map<String, BusinessData> businessDataMap : businessDataMapList) {
-                for (Map.Entry<String, BusinessData> businessDataEntry : businessDataMap.entrySet()) {
-                    BusinessData businessData = businessDataEntry.getValue();
-                    if (businessData.getYIndex() == i && !businessData.isValidate()) {
-                        HSSFCell cell = row.getCell(businessData.getXIndex());
-                        if (cell != null) {
-                            cell.setCellStyle(style);
-                            HSSFComment comment = sheet.createDrawingPatriarch().createCellComment(new HSSFClientAnchor(0, 0, 0, 0, (short) 0, businessData.getYIndex(), (short) 0, businessData.getXIndex()));
-                            comment.setString(new HSSFRichTextString(Strings.join(businessData.getErrorMsg(), '；')));
-                            cell.setCellComment(comment);
-                        }
+            for (Map.Entry<String, BusinessData> businessDataEntry : mapSet.entrySet()) {
+                BusinessData businessData = businessDataEntry.getValue();
+                if (businessData != null && businessData.getYIndex() == i) {
+                    HSSFCell cell = row.getCell(businessData.getXIndex());
+                    if (cell != null) {
+                        cell.setCellStyle(style);
+                        ClientAnchor anchor = new HSSFClientAnchor();
+                        anchor.setCol1(cell.getColumnIndex());
+                        anchor.setRow1(cell.getRowIndex());
+                        anchor.setCol2(cell.getColumnIndex() + 1);
+                        anchor.setRow2(cell.getRowIndex() + 1);
+                        Drawing drawing = sheet.createDrawingPatriarch();
+                        HSSFComment comment = (HSSFComment) drawing.createCellComment(anchor);
+                        comment.setString(new XSSFRichTextString(String.join("；\r\n", businessData.getErrorMsg())));
+                        cell.setCellComment(comment);
                     }
                 }
             }
         }
     }
-
 }

@@ -1,5 +1,6 @@
 package org.geelato.web.platform.m.excel.entity;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -16,8 +17,10 @@ public class ConditionMeta {
     private String dictCode;
     //主键，表格名称
     private String tableName;
+    // 主键，目标字段
+    private String goalName;
     //主键，字段名称
-    private String columnName;
+    private List<String> columnNames = new ArrayList<>();
     //变量对应的业务数据集合
     private List<String> values;
 
@@ -53,12 +56,20 @@ public class ConditionMeta {
         this.tableName = tableName;
     }
 
-    public String getColumnName() {
-        return columnName;
+    public String getGoalName() {
+        return goalName;
     }
 
-    public void setColumnName(String columnName) {
-        this.columnName = columnName;
+    public void setGoalName(String goalName) {
+        this.goalName = goalName;
+    }
+
+    public List<String> getColumnNames() {
+        return columnNames;
+    }
+
+    public void setColumnNames(List<String> columnNames) {
+        this.columnNames = columnNames;
     }
 
     public List<String> getValues() {

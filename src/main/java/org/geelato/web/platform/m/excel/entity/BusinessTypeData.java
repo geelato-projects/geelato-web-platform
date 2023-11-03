@@ -4,6 +4,9 @@ import org.apache.logging.log4j.util.Strings;
 import org.geelato.web.platform.enums.ExcelColumnTypeEnum;
 import org.geelato.web.platform.enums.ExcelMultiSceneTypeEnum;
 
+import java.util.LinkedHashSet;
+import java.util.Set;
+
 /**
  * @author diabl
  * @description: 导入业务数据，每列数据的类型
@@ -20,8 +23,11 @@ public class BusinessTypeData {
     private String multiSeparator;
     // 多值场景
     private String multiScene;
+    // 分解规则
+    private Set<BusinessTypeRuleData> typeRuleData = new LinkedHashSet<>();
     //备注
     private String remark;
+
 
     public String getName() {
         return name;
@@ -61,6 +67,14 @@ public class BusinessTypeData {
 
     public void setMultiScene(String multiScene) {
         this.multiScene = multiScene;
+    }
+
+    public Set<BusinessTypeRuleData> getTypeRuleData() {
+        return typeRuleData;
+    }
+
+    public void setTypeRuleData(Set<BusinessTypeRuleData> typeRuleData) {
+        this.typeRuleData = typeRuleData;
     }
 
     public String getRemark() {

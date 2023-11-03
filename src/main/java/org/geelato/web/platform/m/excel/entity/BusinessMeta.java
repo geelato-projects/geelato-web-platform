@@ -3,6 +3,9 @@ package org.geelato.web.platform.m.excel.entity;
 import org.apache.logging.log4j.util.Strings;
 import org.geelato.web.platform.enums.ExcelEvaluationEnum;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * @author diabl
  * @description: 业务元数据
@@ -167,14 +170,41 @@ public class BusinessMeta {
         return getPrimarySplit("column");
     }
 
+    public List<String> getPrimaryKeyColumns() {
+        List<String> columnNames = new ArrayList<>();
+        String column = getPrimaryKeyColumn();
+        if (Strings.isNotBlank(column)) {
+            String[] values = column.split(",");
+            if (values != null && values.length > 0) {
+                for (String columnName : values) {
+                    if (!columnNames.contains(columnName)) {
+                        columnNames.add(columnName);
+                    }
+                }
+            }
+        }
+        return columnNames;
+    }
+
+    public String getPrimaryKeyGoal() {
+        return getPrimarySplit("goal");
+    }
+
     private String getPrimarySplit(String type) {
         if (Strings.isNotBlank(type) && Strings.isNotBlank(this.primaryValue)) {
             String[] keys = this.primaryValue.split(":");
             if (keys != null && keys.length == 2 && Strings.isNotBlank(keys[0]) && Strings.isNotBlank(keys[1])) {
                 if ("table".equalsIgnoreCase(type)) {
                     return keys[0];
-                } else if ("column".equalsIgnoreCase(type)) {
-                    return keys[1];
+                } else if ("column".equalsIgnoreCase(type) || "goal".equalsIgnoreCase(type)) {
+                    String[] values = keys[1].split("\\|");
+                    if (values != null && values.length == 2 && Strings.isNotBlank(values[0]) && Strings.isNotBlank(values[1])) {
+                        if ("goal".equalsIgnoreCase(type)) {
+                            return values[0];
+                        } else if ("column".equalsIgnoreCase(type)) {
+                            return values[1];
+                        }
+                    }
                 }
             }
         }

@@ -12,6 +12,7 @@ public class BusinessData {
     private int XIndex;
     private int YIndex;
     private Object value;
+    private Object primevalValue;
     private String[] multiValue;
     private BusinessTypeData businessTypeData;
     private Set<String> errorMsg = new LinkedHashSet<>();
@@ -38,6 +39,14 @@ public class BusinessData {
 
     public void setValue(Object value) {
         this.value = value;
+    }
+
+    public Object getPrimevalValue() {
+        return primevalValue;
+    }
+
+    public void setPrimevalValue(Object primevalValue) {
+        this.primevalValue = primevalValue;
     }
 
     public String[] getMultiValue() {

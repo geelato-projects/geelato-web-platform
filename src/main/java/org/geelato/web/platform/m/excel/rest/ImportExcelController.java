@@ -15,13 +15,9 @@ import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiErrorMsg;
-import org.geelato.core.constants.ColumnDefault;
-import org.geelato.core.enums.DeleteStatusEnum;
 import org.geelato.core.enums.MysqlDataTypeEnum;
-import org.geelato.core.gql.parser.FilterGroup;
 import org.geelato.core.meta.MetaManager;
 import org.geelato.core.meta.model.entity.EntityMeta;
 import org.geelato.core.meta.model.field.ColumnMeta;
@@ -32,12 +28,14 @@ import org.geelato.web.platform.enums.ExcelColumnTypeEnum;
 import org.geelato.web.platform.exception.file.FileNotFoundException;
 import org.geelato.web.platform.exception.file.*;
 import org.geelato.web.platform.m.base.entity.Attach;
-import org.geelato.web.platform.m.base.entity.Dict;
-import org.geelato.web.platform.m.base.entity.DictItem;
 import org.geelato.web.platform.m.base.rest.BaseController;
 import org.geelato.web.platform.m.base.service.AttachService;
 import org.geelato.web.platform.m.base.service.UploadService;
-import org.geelato.web.platform.m.excel.entity.*;
+import org.geelato.web.platform.m.excel.entity.BusinessData;
+import org.geelato.web.platform.m.excel.entity.BusinessMeta;
+import org.geelato.web.platform.m.excel.entity.BusinessTypeData;
+import org.geelato.web.platform.m.excel.entity.ExportTemplate;
+import org.geelato.web.platform.m.excel.service.ExcelCommonUtils;
 import org.geelato.web.platform.m.excel.service.ExcelReader;
 import org.geelato.web.platform.m.excel.service.ExcelXSSFReader;
 import org.geelato.web.platform.m.excel.service.ExportTemplateService;
@@ -45,7 +43,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -58,7 +55,6 @@ import java.nio.file.Files;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @author diabl
@@ -70,15 +66,13 @@ import java.util.concurrent.TimeUnit;
 public class ImportExcelController extends BaseController {
     private static final String EXCEL_XLS_CONTENT_TYPE = "application/vnd.ms-excel";
     private static final String EXCEL_XLSX_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-    private static final int REDIS_TIME_OUT = 60;
-    private static final int GGL_QUERY_TOTAL = 10000;
     private static final String ROOT_DIRECTORY = "upload";
     private static final String REQUEST_FILE_PART = "file";
     private static final String IMPORT_ERROR_FILE_GENRE = "importErrorFile";
     private final Logger logger = LoggerFactory.getLogger(ImportExcelController.class);
-    private final FilterGroup filterGroup = new FilterGroup().addFilter(ColumnDefault.DEL_STATUS_FIELD, String.valueOf(DeleteStatusEnum.NO.getCode()));
     private final MetaManager metaManager = MetaManager.singleInstance();
     private final SimpleDateFormat dateTimeFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+    private final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     @Autowired
     private ExportTemplateService exportTemplateService;
     @Autowired
@@ -91,6 +85,8 @@ public class ImportExcelController extends BaseController {
     private AttachService attachService;
     @Resource
     private RedisTemplate<String, Object> redisTemplate;
+    @Autowired
+    private ExcelCommonUtils excelCommonUtils;
 
     /**
      * 下载模板
@@ -163,16 +159,19 @@ public class ImportExcelController extends BaseController {
         ApiResult result = new ApiResult();
         String currentUUID = String.valueOf(UIDGenerator.generate());
         try {
+            long importStart = System.currentTimeMillis();
             // 文件内容
             Map<String, List<BusinessMeta>> businessMetaListMap = new HashMap<>();// 元数据
             Map<String, BusinessTypeData> businessTypeDataMap = new HashMap<>();// 数据类型
             List<Map<String, BusinessData>> businessDataMapList = new ArrayList<>();// 业务数据
             // 事务模板查询
             ExportTemplate exportTemplate = exportTemplateService.getModel(ExportTemplate.class, templateId);
-            notNull(exportTemplate, new FileNotFoundException("ExportTemplate Data Not Found"));
+            ExcelCommonUtils.notNull(exportTemplate, new FileNotFoundException("ExportTemplate Data Not Found"));
+            logger.info(String.format("事务模板（%s[%s]）", exportTemplate.getTitle(), exportTemplate.getId()));
             //事务，模板元数据
             Attach templateRuleAttach = getFile(exportTemplate.getTemplateRule());
-            notNull(templateRuleAttach, new FileNotFoundException("Business Data Type And Meta File Not Found"));
+            ExcelCommonUtils.notNull(templateRuleAttach, new FileNotFoundException("Business Data Type And Meta File Not Found"));
+            logger.info(String.format("数据类型+元数据（%s[%s]）%s", templateRuleAttach.getName(), templateRuleAttach.getId(), templateRuleAttach.getUrl()));
             businessMetaListMap = getBusinessMeta(new File(templateRuleAttach.getUrl()), 1);
             //事务，模板数据类型
             // Attach templateAttach = getFile(exportTemplate.getTemplate());
@@ -181,14 +180,27 @@ public class ImportExcelController extends BaseController {
             Attach businessFile = null;
             if (Strings.isNotBlank(attachId)) {
                 businessFile = getFile(attachId);
-                notNull(businessFile, new FileNotFoundException("Business Data File Not Found"));
+                ExcelCommonUtils.notNull(businessFile, new FileNotFoundException("Business Data File Not Found"));
+                logger.info(String.format("业务数据（%s[%s]）[%s]", businessFile.getName(), businessFile.getId(), sdf.format(new Date())));
             }
             businessDataMapList = getBusinessData(businessFile, request, businessTypeDataMap, 0);
+            // 需要转化的业务数据
+            businessDataMapList = excelCommonUtils.handleBusinessDataRule(currentUUID, businessDataMapList, true);
+            logger.info(String.format("BusinessData Handle Rule [TRUE] = %s [%s]", (businessDataMapList == null ? 0 : businessDataMapList.size()), sdf.format(new Date())));
+            // 需要分割的业务数据，多值数据处理
+            businessDataMapList = excelCommonUtils.handleBusinessDataMultiScene(businessDataMapList);
+            logger.info(String.format("BusinessData Handle Multi Scene = %s [%s]", (businessDataMapList == null ? 0 : businessDataMapList.size()), sdf.format(new Date())));
+            // 需要转化的业务数据
+            businessDataMapList = excelCommonUtils.handleBusinessDataRule(currentUUID, businessDataMapList, false);
+            logger.info(String.format("BusinessData Handle Rule [FALSE] = %s [%s]", (businessDataMapList == null ? 0 : businessDataMapList.size()), sdf.format(new Date())));
             // 设置缓存
-            List<String> cacheKeys = setCache(currentUUID, businessMetaListMap, businessDataMapList);
+            List<String> cacheKeys = excelCommonUtils.setCache(currentUUID, businessMetaListMap, businessDataMapList);
+            logger.info(String.format("Redis Template [ADD] = %s [%s]", (cacheKeys == null ? 0 : cacheKeys.size()), sdf.format(new Date())));
             // 忽略默认字段
-            List<String> columnNames = getDefaultColumns();
+            List<String> columnNames = excelCommonUtils.getDefaultColumns();
             // 获取
+            logger.info(String.format("业务数据解析-开始 [%s]", sdf.format(new Date())));
+            long parseStart = System.currentTimeMillis();
             Map<String, List<Map<String, Object>>> tableData = new HashMap<>();
             for (Map.Entry<String, List<BusinessMeta>> metaMap : businessMetaListMap.entrySet()) {
                 // 获取表格字段信息
@@ -196,6 +208,7 @@ public class ImportExcelController extends BaseController {
                 Assert.notNull(entityMeta, "Table Meta Is Null");
                 // 当前字段
                 List<Map<String, Object>> columnData = new ArrayList<>();
+                long countCow = 0;
                 for (Map<String, BusinessData> businessDataMap : businessDataMapList) {
                     // 一行业务数据，键值对
                     Map<String, Object> valueMap = new HashMap<>();
@@ -204,6 +217,7 @@ public class ImportExcelController extends BaseController {
                     }
                     // 一行数据库数据
                     Map<String, Object> columnMap = new HashMap<>();
+                    long start = System.currentTimeMillis();
                     for (BusinessMeta meta : metaMap.getValue()) {
                         FieldMeta fieldMeta = entityMeta.getFieldMeta(meta.getColumnName());
                         Assert.notNull(entityMeta, "Table FieldMeta Is Null");
@@ -214,7 +228,7 @@ public class ImportExcelController extends BaseController {
                                 // 获取值
                                 value = getValue(currentUUID, fieldMeta.getColumn(), meta, businessData, valueMap);
                                 // 验证值
-                                Set<String> errorMsg = validateValue(fieldMeta.getColumn(), businessData.getBusinessTypeData(), value, columnNames);
+                                Set<String> errorMsg = validateValue(fieldMeta.getColumn(), businessData, value, columnNames);
                                 businessData.setErrorMsgs(errorMsg);
                             } catch (Exception ex) {
                                 businessData.setErrorMsg(ex.getMessage());
@@ -222,28 +236,36 @@ public class ImportExcelController extends BaseController {
                         }
                         columnMap.put(meta.getColumnName(), value);
                     }
+                    logger.info(String.format("表 %s 解析成功，第 %s 行。用时 %s ms。", metaMap.getKey(), (countCow += 1), (System.currentTimeMillis() - start)));
                     columnData.add(columnMap);
                 }
                 tableData.put(metaMap.getKey(), columnData);
             }
+            logger.info(String.format("业务数据解析-结束 用时：%s ms", (System.currentTimeMillis() - parseStart)));
             // 释放缓存
             redisTemplate.delete(cacheKeys);
+            logger.info(String.format("Redis Template [DELETE] [%s]", sdf.format(new Date())));
             // 业务数据校验
             if (!validBusinessData(businessDataMapList)) {
                 Map<String, Object> errorAttach = writeBusinessData(businessFile, request, response, businessDataMapList, 0);
+                logger.info(String.format("业务数据校验-错误 [%s]", sdf.format(new Date())));
                 return result.error(new FileContentValidFailedException("For more information, see the error file.")).setData(errorAttach);
             }
             // 插入数据 "@biz": "myBizCode",
+            logger.info(String.format("插入业务数据-开始 [%s]", sdf.format(new Date())));
+            long insertStart = System.currentTimeMillis();
             if (!tableData.isEmpty()) {
                 Map<String, Object> insertMap = new HashMap<>();
                 insertMap.put("@biz", "myBizCode");
                 for (Map.Entry<String, List<Map<String, Object>>> table : tableData.entrySet()) {
                     insertMap.put(table.getKey(), table.getValue());
                 }
-                ruleService.batchSave(JSON.toJSONString(insertMap), false);
+                ruleService.batchSave(JSON.toJSONString(insertMap), true);
             } else {
                 throw new FileContentIsEmptyException("Business Import Data Is Empty");
             }
+            logger.info(String.format("插入业务数据-结束 用时：%s ms", (System.currentTimeMillis() - insertStart)));
+            logger.info(String.format("导入业务数据-结束 用时：%s ms", (System.currentTimeMillis() - importStart)));
         } catch (Exception ex) {
             logger.error(ex.getMessage(), ex);
             result.error(ex);
@@ -253,37 +275,17 @@ public class ImportExcelController extends BaseController {
     }
 
     /**
-     * 获取表格默认字段
-     *
-     * @return
-     */
-    private List<String> getDefaultColumns() {
-        List<String> columnNames = new ArrayList<>();
-        List<ColumnMeta> columnMetaList = metaManager.getDefaultColumn();
-        if (columnMetaList != null && columnMetaList.size() > 0) {
-            for (ColumnMeta columnMeta : columnMetaList) {
-                if (!columnNames.contains(columnMeta.getName())) {
-                    columnNames.add(columnMeta.getName());
-                }
-            }
-        }
-
-        return columnNames;
-    }
-
-    /**
      * 业务数据类型与元数据类型校验
      *
-     * @param columnMeta 元数据
-     * @param typeData   业务数据类型
-     * @param value      值
+     * @param columnMeta   元数据
+     * @param businessData 业务数据类型
+     * @param value        值
      * @return
      */
-    private Set<String> validateValue(ColumnMeta columnMeta, BusinessTypeData typeData, Object value, List<String> columnNames) {
+    private Set<String> validateValue(ColumnMeta columnMeta, BusinessData businessData, Object value, List<String> columnNames) {
         Set<String> errorMsg = new LinkedHashSet<>();
-        if (value == null && !columnMeta.isNullable() && !columnNames.contains(columnMeta.getName())) {
-            errorMsg.add(String.format("%s，该字段不能为空。", columnMeta.getFieldName()));
-        }
+        BusinessTypeData typeData = businessData.getBusinessTypeData();
+
         if (MysqlDataTypeEnum.getBooleans().contains(columnMeta.getDataType()) && ExcelColumnTypeEnum.BOOLEAN.name().equalsIgnoreCase(typeData.getType())) {
 
         } else if (MysqlDataTypeEnum.getStrings().contains(columnMeta.getDataType()) && ExcelColumnTypeEnum.STRING.name().equalsIgnoreCase(typeData.getType())) {
@@ -298,6 +300,9 @@ public class ImportExcelController extends BaseController {
 
         } else {
             errorMsg.add(String.format("业务数据格式：%s；而数据库存储格式为：%s。", typeData.getType(), columnMeta.getDataType()));
+        }
+        if (value == null && !columnMeta.isNullable() && !columnNames.contains(columnMeta.getName())) {
+            errorMsg.add(String.format("原始数据[%s]，对应字段值不能为空。", businessData.getPrimevalValue()));
         }
 
         return errorMsg;
@@ -322,22 +327,17 @@ public class ImportExcelController extends BaseController {
         } else if (meta.isEvaluationTypeJsExpression()) {
             value = JsProvider.executeExpression(meta.getExpression(), valueMap);
         } else if (meta.isEvaluationTypePrimaryKey()) {
-            List<Map<String, Object>> mapList = (List<Map<String, Object>>) redisTemplate.opsForValue().get(String.format("%s:%s", currentUUID, meta.getPrimaryValue()));
-            if (businessData.getValue() != null && mapList != null && mapList.size() > 0) {
-                for (Map<String, Object> map : mapList) {
-                    if (businessData.getValue().equals(map.get(meta.getColumnName()))) {
-                        value = map.get("id");
-                    }
+            if (businessData.getValue() != null) {
+                Map<String, Object> redisValues = (Map<String, Object>) redisTemplate.opsForValue().get(String.format("%s:%s", currentUUID, meta.getPrimaryValue()));
+                if (redisValues != null && redisValues.size() > 0) {
+                    value = redisValues.get(String.valueOf(businessData.getValue()));
                 }
             }
         } else if (meta.isEvaluationTypeDictionary()) {
-            List<DictItem> dictItems = (List<DictItem>) redisTemplate.opsForValue().get(String.format("%s:%s", currentUUID, meta.getDictCode()));
-            if (dictItems != null && dictItems.size() > 0) {
-                for (DictItem item : dictItems) {
-                    if (item.getItemName().equalsIgnoreCase(String.valueOf(businessData.getValue()))) {
-                        value = item.getItemCode();
-                        break;
-                    }
+            if (businessData.getValue() != null) {
+                Map<String, String> redisValues = (Map<String, String>) redisTemplate.opsForValue().get(String.format("%s:%s", currentUUID, meta.getDictCode()));
+                if (redisValues != null && redisValues.size() > 0) {
+                    value = redisValues.get(String.valueOf(businessData.getValue()));
                 }
             }
         } else if (meta.isEvaluationTypeSerialNumber()) {
@@ -643,144 +643,6 @@ public class ImportExcelController extends BaseController {
     }
 
     /**
-     * 设置 缓存，数据字典、主键
-     *
-     * @param currentUUID 当前主键
-     * @param tableMeta   元数据
-     * @param data        业务数据
-     * @return
-     */
-    private List<String> setCache(String currentUUID, Map<String, List<BusinessMeta>> tableMeta, List<Map<String, BusinessData>> data) {
-        List<String> cacheList = new ArrayList<>();
-        // 元数据
-        List<ConditionMeta> dictMetas = new ArrayList<>();
-        List<ConditionMeta> primaryMetas = new ArrayList<>();
-        for (Map.Entry<String, List<BusinessMeta>> metaMap : tableMeta.entrySet()) {
-            if (metaMap.getValue() != null && metaMap.getValue().size() > 0) {
-                for (BusinessMeta meta : metaMap.getValue()) {
-                    ConditionMeta conditionMeta = null;
-                    if (meta.isEvaluationTypeDictionary() && Strings.isNotBlank(meta.getDictCode())) {
-                        conditionMeta = new ConditionMeta();
-                        conditionMeta.setVariable(meta.getVariableValue());
-                        conditionMeta.setDictCode(meta.getDictCode());
-                    } else if (meta.isEvaluationTypePrimaryKey() && Strings.isNotBlank(meta.getPrimaryValue())) {
-                        conditionMeta = new ConditionMeta();
-                        conditionMeta.setVariable(meta.getVariableValue());
-                        conditionMeta.setTableName(meta.getPrimaryKeyTable());
-                        conditionMeta.setColumnName(meta.getPrimaryKeyColumn());
-                    }
-                    if (conditionMeta != null) {
-                        List<String> values = new ArrayList<>();
-                        for (Map<String, BusinessData> map : data) {
-                            BusinessData businessData = map.get(meta.getVariableValue());
-                            values.add(String.valueOf(businessData.getValue()));
-                        }
-                        conditionMeta.setValues(values);
-                        if (meta.isEvaluationTypeDictionary()) {
-                            dictMetas.add(conditionMeta);
-                        } else if (meta.isEvaluationTypePrimaryKey()) {
-                            primaryMetas.add(conditionMeta);
-                        }
-                    }
-                }
-            }
-        }
-        dao.setDefaultFilter(true, filterGroup);
-        // 数据字典
-        List<String> dictKeys = setDictRedis(currentUUID, dictMetas);
-        cacheList.containsAll(dictKeys);
-        // 主键
-        List<String> primaryKeys = setPrimaryRedis(currentUUID, primaryMetas);
-        cacheList.containsAll(primaryKeys);
-
-        return cacheList;
-    }
-
-    /**
-     * 数据字典缓存
-     *
-     * @param currentUUID
-     * @param dictMetas
-     * @return
-     */
-    private List<String> setDictRedis(String currentUUID, List<ConditionMeta> dictMetas) {
-        List<String> dictKeys = new ArrayList<>();
-        if (dictMetas != null && dictMetas.size() > 0) {
-            List<String> dictCodes = new ArrayList<>();
-            List<String> dictItemNames = new ArrayList<>();
-            for (ConditionMeta conditionMeta : dictMetas) {
-                dictCodes.add(conditionMeta.getDictCode());
-                dictItemNames.addAll(conditionMeta.getValues());
-            }
-
-            List<Dict> dictList = new ArrayList<>();
-            List<DictItem> dictItemList = new ArrayList<>();
-            // 查询
-            FilterGroup filter = new FilterGroup();
-            filter.addFilter("dictCode", FilterGroup.Operator.in, String.join(",", dictCodes));
-            dictList = dao.queryList(Dict.class, filter, "");
-            if (dictList != null && dictList.size() > 0) {
-                List<String> dictIds = new ArrayList<>();
-                for (Dict dict : dictList) {
-                    dictIds.add(dict.getId());
-                }
-                FilterGroup filter1 = new FilterGroup();
-                filter1.addFilter("dictId", FilterGroup.Operator.in, String.join(",", dictIds));
-                filter1.addFilter("itemName", FilterGroup.Operator.in, String.join(",", dictItemNames));
-                dictItemList = dao.queryList(DictItem.class, filter1, "");
-                // 存入缓存
-                for (Dict dict : dictList) {
-                    String dictKey = String.format("%s:%s", currentUUID, dict.getDictCode());
-                    List<DictItem> dictItems = new ArrayList<>();
-                    if (dictItemList != null && dictItemList.size() > 0) {
-                        for (DictItem dictItem : dictItemList) {
-                            if (dict.getId().equalsIgnoreCase(dictItem.getDictId())) {
-                                dictItems.add(dictItem);
-                            }
-                        }
-                        logger.info(dictKey + " - " + JSON.toJSONString(dictItems));
-                        redisTemplate.opsForValue().set(dictKey, dictItems, REDIS_TIME_OUT, TimeUnit.MINUTES);
-                        dictKeys.add(dictKey);
-                    }
-                }
-            }
-        }
-
-        return dictKeys;
-    }
-
-    /**
-     * 主键查询，缓存
-     *
-     * @param currentUUID
-     * @param primaryMetas
-     * @return
-     */
-    private List<String> setPrimaryRedis(String currentUUID, List<ConditionMeta> primaryMetas) {
-        List<String> primaryKeys = new ArrayList<>();
-        String gglFormat = "{\"%s\": {\"@fs\": \"id,%s\", \"%s|in\": \"%s\", \"@p\": \"1,%s\"}}";
-        try {
-            if (primaryMetas != null && primaryMetas.size() > 0) {
-                for (ConditionMeta meta : primaryMetas) {
-                    if (meta != null && meta.getValues() != null && meta.getValues().size() > 0) {
-                        String primaryKey = String.format("%s:%s:%s", currentUUID, meta.getTableName(), meta.getColumnName());
-                        String limit = String.valueOf(GGL_QUERY_TOTAL * Math.ceil(meta.getValues().size() / GGL_QUERY_TOTAL));
-                        String ggl = String.format(gglFormat, meta.getTableName(), meta.getColumnName(), meta.getColumnName(), String.join(",", meta.getValues()), limit);
-                        ApiPagedResult page = ruleService.queryForMapList(ggl, false);
-                        logger.info(primaryKey + " - " + page.getData());
-                        redisTemplate.opsForValue().set(primaryKey, page.getData(), REDIS_TIME_OUT, TimeUnit.MINUTES);
-                        primaryKeys.add(primaryKey);
-                    }
-                }
-            }
-        } catch (Exception ex) {
-            logger.info(ex.getMessage(), ex);
-        }
-
-        return primaryKeys;
-    }
-
-    /**
      * 获取文件
      *
      * @param attachId
@@ -801,12 +663,4 @@ public class ImportExcelController extends BaseController {
 
         return null;
     }
-
-
-    private <T extends FileException> void notNull(@Nullable Object object, T fileException) throws T {
-        if (object == null) {
-            throw fileException;
-        }
-    }
-
 }
