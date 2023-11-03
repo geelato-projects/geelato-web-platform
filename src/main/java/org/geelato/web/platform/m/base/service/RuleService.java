@@ -27,6 +27,8 @@ import org.jeasy.rules.api.Facts;
 import org.jeasy.rules.api.Rules;
 import org.jeasy.rules.api.RulesEngine;
 import org.jeasy.rules.core.DefaultRulesEngine;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.DataAccessException;
@@ -52,7 +54,7 @@ public class RuleService {
     private RulesEngine rulesEngine = new DefaultRulesEngine();
     private final static String VARS_PARENT = "$parent";
     private CacheChannel cache = J2Cache.getChannel();
-
+    private static final Logger logger = LoggerFactory.getLogger(RuleService.class);
     /**
      * <p>注意: 在使用之前，需先设置dao
      *
@@ -255,12 +257,8 @@ public class RuleService {
             cache.evict("config", SecurityHelper.getCurrentUser().id);
         }
         BoundSql boundSql = sqlManager.generateSaveSql(command);
-        String pkValue = dao.save(boundSql);
-        if(pkValue.equals("saveFail")){
-            command.setExecution(false);
-        }else{
-            command.setExecution(true);
-        }
+        String rtnValue = dao.save(boundSql);
+        command.setExecution(!rtnValue.equals("saveFail"));
         // 存在子command，需执行
         if (command.hasCommands()) {
             command.getCommands().forEach(subCommand -> {
@@ -272,14 +270,18 @@ public class RuleService {
                 });
                 recursiveSave(subCommand, dataSourceTransactionManager, transactionStatus);
             });
-        }else{
-            if(pkValue.equals("saveFail")){
-                TransactionHelper.rollbackTransaction(dataSourceTransactionManager,transactionStatus);
-            }else{
-                TransactionHelper.commitTransaction(dataSourceTransactionManager,transactionStatus);
-            }
         }
-        return pkValue;
+
+        if (command.getParentCommand() == null && command.getExecution()) {
+            TransactionHelper.commitTransaction(dataSourceTransactionManager, transactionStatus);
+            logger.info("transactionCommit");
+        } else if (!command.getExecution() && !rtnValue.equals("transactionRollback")) {
+            TransactionHelper.rollbackTransaction(dataSourceTransactionManager, transactionStatus);
+            rtnValue = "transactionRollback";
+            logger.info("transactionRollback");
+        }
+
+        return rtnValue;
     }
 
     /**
