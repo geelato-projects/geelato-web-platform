@@ -24,7 +24,6 @@ import org.geelato.core.meta.model.field.ColumnMeta;
 import org.geelato.core.meta.model.field.FieldMeta;
 import org.geelato.core.script.js.JsProvider;
 import org.geelato.utils.UIDGenerator;
-import org.geelato.web.platform.enums.ExcelColumnTypeEnum;
 import org.geelato.web.platform.exception.file.FileNotFoundException;
 import org.geelato.web.platform.exception.file.*;
 import org.geelato.web.platform.m.base.entity.Attach;
@@ -233,6 +232,8 @@ public class ImportExcelController extends BaseController {
                             } catch (Exception ex) {
                                 businessData.setErrorMsg(ex.getMessage());
                             }
+                        } else if (meta.isEvaluationTypeConst()) {
+                            value = meta.getConstValue();
                         }
                         columnMap.put(meta.getColumnName(), value);
                     }
@@ -286,20 +287,20 @@ public class ImportExcelController extends BaseController {
         Set<String> errorMsg = new LinkedHashSet<>();
         BusinessTypeData typeData = businessData.getBusinessTypeData();
 
-        if (MysqlDataTypeEnum.getBooleans().contains(columnMeta.getDataType()) && ExcelColumnTypeEnum.BOOLEAN.name().equalsIgnoreCase(typeData.getType())) {
+        if (MysqlDataTypeEnum.getBooleans().contains(columnMeta.getDataType())) {
 
-        } else if (MysqlDataTypeEnum.getStrings().contains(columnMeta.getDataType()) && ExcelColumnTypeEnum.STRING.name().equalsIgnoreCase(typeData.getType())) {
+        } else if (MysqlDataTypeEnum.getStrings().contains(columnMeta.getDataType())) {
             if (value != null && String.valueOf(value).length() > columnMeta.getCharMaxLength()) {
                 errorMsg.add(String.format("当前长度：%s；已超出字段最大长度：%s。", String.valueOf(value).length(), columnMeta.getCharMaxLength()));
             }
-        } else if (MysqlDataTypeEnum.getNumbers().contains(columnMeta.getDataType()) && ExcelColumnTypeEnum.NUMBER.name().equalsIgnoreCase(typeData.getType())) {
+        } else if (MysqlDataTypeEnum.getNumbers().contains(columnMeta.getDataType())) {
             if (value != null && String.valueOf(value).length() > (columnMeta.getNumericPrecision() + columnMeta.getNumericScale())) {
                 errorMsg.add(String.format("当前长度：%s；已超出字段数值位数限制：%s。", String.valueOf(value).length(), (columnMeta.getNumericPrecision() + columnMeta.getNumericScale())));
             }
-        } else if (MysqlDataTypeEnum.getDates().contains(columnMeta.getDataType()) && ExcelColumnTypeEnum.DATETIME.name().equalsIgnoreCase(typeData.getType())) {
+        } else if (MysqlDataTypeEnum.getDates().contains(columnMeta.getDataType())) {
 
         } else {
-            errorMsg.add(String.format("业务数据格式：%s；而数据库存储格式为：%s。", typeData.getType(), columnMeta.getDataType()));
+            // errorMsg.add(String.format("业务数据格式：%s；而数据库存储格式为：%s。", typeData.getType(), columnMeta.getDataType()));
         }
         if (value == null && !columnMeta.isNullable() && !columnNames.contains(columnMeta.getName())) {
             errorMsg.add(String.format("原始数据[%s]，对应字段值不能为空。", businessData.getPrimevalValue()));
