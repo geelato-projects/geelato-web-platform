@@ -184,23 +184,16 @@ public class ExcelReader {
                     try {
                         if (data.isColumnTypeString()) {
                             if (CellType.NUMERIC.equals(cell.getCellType())) {
-                                cellValue = String.valueOf(cell.getNumericCellValue());
+                                cellValue = String.valueOf(BigDecimal.valueOf(cell.getNumericCellValue()));
                             } else if (CellType.STRING.equals(cell.getCellType())) {
                                 cellValue = cell.getStringCellValue();
                             }
                         } else if (data.isColumnTypeNumber()) {
                             if (CellType.NUMERIC.equals(cell.getCellType())) {
-                                cellValue = cell.getNumericCellValue();
+                                String value = String.valueOf(BigDecimal.valueOf(cell.getNumericCellValue()));
+                                cellValue = ExcelCommonUtils.stringToNumber(value);
                             } else if (CellType.STRING.equals(cell.getCellType())) {
-                                String value = cell.getStringCellValue();
-                                if (Strings.isNotBlank(value)) {
-                                    if (cell.getStringCellValue().indexOf(".") == -1) {
-                                        cellValue = Long.parseLong(value);
-                                        cell.setCellValue(Long.parseLong(value));
-                                    } else {
-                                        cellValue = new BigDecimal(value).doubleValue();
-                                    }
-                                }
+                                cellValue = ExcelCommonUtils.stringToNumber(cell.getStringCellValue());
                             }
                         } else if (data.isColumnTypeBoolean()) {
                             if (CellType.BOOLEAN.equals(cell.getCellType())) {

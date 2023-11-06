@@ -23,6 +23,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -61,6 +62,24 @@ public class ExcelCommonUtils {
         if (object == null) {
             throw fileException;
         }
+    }
+
+    /**
+     * 字符串转数值
+     *
+     * @param value
+     * @return
+     */
+    public static Object stringToNumber(String value) {
+        Object cellValue = null;
+        if (Strings.isNotBlank(value) && value.matches("-?\\d+(\\.\\d+)?")) {
+            if (value.indexOf(".") == -1) {
+                cellValue = Long.parseLong(value);
+            } else {
+                cellValue = new BigDecimal(value).doubleValue();
+            }
+        }
+        return cellValue;
     }
 
     /**
