@@ -289,6 +289,8 @@ public class ImportExcelController extends BaseController {
 
         if (MysqlDataTypeEnum.getBooleans().contains(columnMeta.getDataType())) {
 
+        } else if (MysqlDataTypeEnum.getTinyBooleans().contains(columnMeta.getDataType()) && Arrays.asList(new String[]{"BIT", "SWITCH"}).contains(columnMeta.getSelectType())) {
+
         } else if (MysqlDataTypeEnum.getStrings().contains(columnMeta.getDataType())) {
             if (value != null && String.valueOf(value).length() > columnMeta.getCharMaxLength()) {
                 errorMsg.add(String.format("当前长度：%s；已超出字段最大长度：%s。", String.valueOf(value).length(), columnMeta.getCharMaxLength()));
