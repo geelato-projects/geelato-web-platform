@@ -252,6 +252,8 @@ public class ExcelReader {
                 }
             }
         }
+        // 清理 批注
+        cleanSheetStyle(sheet);
         // 实体数据
         for (int i = 1; i <= sheet.getLastRowNum(); i++) {
             HSSFRow row = sheet.getRow(i);
@@ -273,6 +275,37 @@ public class ExcelReader {
                         HSSFComment comment = (HSSFComment) drawing.createCellComment(anchor);
                         comment.setString(new XSSFRichTextString(String.join("；\r\n", businessData.getErrorMsg())));
                         cell.setCellComment(comment);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * 清理 批注，
+     *
+     * @param sheet
+     */
+    private void cleanSheetStyle(HSSFSheet sheet) {
+        int yCount = sheet.getLastRowNum();
+        for (int y = 1; y < yCount; y++) {
+            HSSFRow row = sheet.getRow(y);
+            if (row != null) {
+                int xCount = row.getLastCellNum();
+                for (int x = 0; x < xCount; x++) {
+                    HSSFCell cell = row.getCell(x);
+                    if (cell != null) {
+                        // 单元格注释
+                        HSSFComment comment = cell.getCellComment();
+                        if (comment != null) {
+                            cell.removeCellComment();
+                        }
+                        // 清理格式
+                        /*HSSFCellStyle style = cell.getCellStyle();
+                        if (style != null) {
+                            style.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
+                            cell.setCellStyle(style);
+                        }*/
                     }
                 }
             }

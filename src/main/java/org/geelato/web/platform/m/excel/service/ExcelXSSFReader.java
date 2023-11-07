@@ -251,6 +251,8 @@ public class ExcelXSSFReader {
                 }
             }
         }
+        // 清理 批注
+        cleanSheetStyle(sheet);
         // 实体数据
         for (int i = 1; i <= sheet.getLastRowNum(); i++) {
             XSSFRow row = sheet.getRow(i);
@@ -266,12 +268,43 @@ public class ExcelXSSFReader {
                         ClientAnchor anchor = new XSSFClientAnchor();
                         anchor.setCol1(cell.getColumnIndex());
                         anchor.setRow1(cell.getRowIndex());
-                        anchor.setCol2(cell.getColumnIndex() + 1);
-                        anchor.setRow2(cell.getRowIndex() + 1);
+                        anchor.setCol2(cell.getColumnIndex() + 10);
+                        anchor.setRow2(cell.getRowIndex() + 10);
                         Drawing drawing = sheet.createDrawingPatriarch();
                         XSSFComment comment = (XSSFComment) drawing.createCellComment(anchor);
                         comment.setString(new XSSFRichTextString(String.join("；\r\n", businessData.getErrorMsg())));
                         cell.setCellComment(comment);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * 清理 批注，
+     *
+     * @param sheet
+     */
+    private void cleanSheetStyle(XSSFSheet sheet) {
+        int yCount = sheet.getLastRowNum();
+        for (int y = 1; y < yCount; y++) {
+            XSSFRow row = sheet.getRow(y);
+            if (row != null) {
+                int xCount = row.getLastCellNum();
+                for (int x = 0; x < xCount; x++) {
+                    XSSFCell cell = row.getCell(x);
+                    if (cell != null) {
+                        // 单元格注释
+                        XSSFComment comment = cell.getCellComment();
+                        if (comment != null) {
+                            cell.removeCellComment();
+                        }
+                        // 清理格式
+                        /*XSSFCellStyle style = cell.getCellStyle();
+                        if (style != null) {
+                            style.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
+                            cell.setCellStyle(style);
+                        }*/
                     }
                 }
             }
