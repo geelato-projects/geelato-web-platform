@@ -67,6 +67,7 @@ public class ImportExcelController extends BaseController {
     private static final String EXCEL_XLSX_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
     private static final String ROOT_DIRECTORY = "upload";
     private static final String REQUEST_FILE_PART = "file";
+    private static final double IMPORT_PAGE_SIZE = 100.0;
     private static final String IMPORT_ERROR_FILE_GENRE = "importErrorFile";
     private final Logger logger = LoggerFactory.getLogger(ImportExcelController.class);
     private final MetaManager metaManager = MetaManager.singleInstance();
@@ -234,6 +235,8 @@ public class ImportExcelController extends BaseController {
                             }
                         } else if (meta.isEvaluationTypeConst()) {
                             value = meta.getConstValue();
+                        } else if (meta.isEvaluationTypeSerialNumber()) {
+                            value = currentUUID;
                         }
                         columnMap.put(meta.getColumnName(), value);
                     }
@@ -259,17 +262,32 @@ public class ImportExcelController extends BaseController {
                 Map<String, Object> insertMap = new HashMap<>();
                 insertMap.put("@biz", "myBizCode");
                 for (Map.Entry<String, List<Map<String, Object>>> table : tableData.entrySet()) {
-                    insertMap.put(table.getKey(), table.getValue());
+                    List<Map<String, Object>> columns = table.getValue();
+                    if (columns != null && columns.size() > 0) {
+                        int total = columns.size();
+                        int page = (int) Math.ceil(total / IMPORT_PAGE_SIZE);
+                        int size = (int) IMPORT_PAGE_SIZE;
+                        for (int i = 0; i < page; i++) {
+                            int maxSize = ((i + 1) * size) > total ? total : ((i + 1) * size);
+                            logger.info(String.format("插入数据范围：[%s, %s)", i * size, maxSize));
+                            List<Map<String, Object>> insertList = new ArrayList<>();
+                            for (int n = (i * size); n < maxSize; n++) {
+                                insertList.add(columns.get(n));
+                            }
+                            insertMap.put(table.getKey(), insertList);
+                            ruleService.batchSave(JSON.toJSONString(insertMap), true);
+                        }
+                    }
                 }
-                ruleService.batchSave(JSON.toJSONString(insertMap), true);
             } else {
                 throw new FileContentIsEmptyException("Business Import Data Is Empty");
             }
             logger.info(String.format("插入业务数据-结束 用时：%s ms", (System.currentTimeMillis() - insertStart)));
             logger.info(String.format("导入业务数据-结束 用时：%s ms", (System.currentTimeMillis() - importStart)));
+            result.setData(currentUUID);
         } catch (Exception ex) {
             logger.error(ex.getMessage(), ex);
-            result.error(ex);
+            result.error(ex).setData(currentUUID);
         }
 
         return result;

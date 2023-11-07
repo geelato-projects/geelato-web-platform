@@ -366,6 +366,10 @@ public class ExcelCommonUtils {
                                     } else {
                                         businessData.setErrorMsg("Rule resolution failure。[" + ruleData.getType() + "] Rule or Goal is empty！");
                                     }
+                                } else if (ruleData.isRuleTypeUpperCase()) {
+                                    newValue = oldValue.toUpperCase(Locale.ENGLISH);
+                                } else if (ruleData.isRuleTypeLowerCase()) {
+                                    newValue = oldValue.toLowerCase(Locale.ENGLISH);
                                 } else if (ruleData.isRuleTypeDictionary()) {
                                     if (Strings.isNotBlank(ruleData.getRule())) {
                                         Map<String, String> redisValues = (Map<String, String>) redisTemplate.opsForValue().get(String.format("%s:%s", currentUUID, ruleData.getRule()));
@@ -401,7 +405,7 @@ public class ExcelCommonUtils {
                                     newValue = businessData.getValue();
                                 }
                                 if (newValue != null) {
-                                    logger.info(String.format("数据清洗[Y.%s,X.%s]，%s => %s", businessData.getYIndex(), businessData.getXIndex(), businessData.getValue(), newValue));
+                                    logger.info(String.format("数据清洗[Y.%s,X.%s], [%s], %s => %s", businessData.getYIndex(), businessData.getXIndex(), ruleData.getType(), businessData.getValue(), newValue));
                                 }
                                 businessData.setValue(newValue);
                             } catch (Exception ex) {

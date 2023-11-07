@@ -71,6 +71,14 @@ public class BusinessTypeRuleData {
         return ExcelColumnTypeRuleEnum.REPLACE.name().equalsIgnoreCase(this.type);
     }
 
+    public boolean isRuleTypeUpperCase() {
+        return ExcelColumnTypeRuleEnum.UPPERCASE.name().equalsIgnoreCase(this.type);
+    }
+
+    public boolean isRuleTypeLowerCase() {
+        return ExcelColumnTypeRuleEnum.LOWERCASE.name().equalsIgnoreCase(this.type);
+    }
+
     public boolean isRuleTypeDictionary() {
         return ExcelColumnTypeRuleEnum.DICTIONARY.name().equalsIgnoreCase(this.type);
     }

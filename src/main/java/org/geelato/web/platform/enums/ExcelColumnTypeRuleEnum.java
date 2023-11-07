@@ -6,5 +6,5 @@ package org.geelato.web.platform.enums;
  * @date 2023/11/1 16:30
  */
 public enum ExcelColumnTypeRuleEnum {
-    DELETES, REPLACE, DICTIONARY, QUERYGOAL, QUERYRULE;
+    DELETES, REPLACE, UPPERCASE, LOWERCASE, DICTIONARY, QUERYGOAL, QUERYRULE;
 }
