@@ -28,7 +28,7 @@ import java.net.URLEncoder;
  * @date 2023/7/5 14:00
  */
 @Controller
-@RequestMapping(value = "/resources")
+@RequestMapping(value = "/api/resources")
 public class DownloadController extends BaseController {
     private static final String ROOT_DIRECTORY = "upload";
     private final Logger logger = LoggerFactory.getLogger(DownloadController.class);
