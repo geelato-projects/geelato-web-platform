@@ -5,7 +5,9 @@ import org.apache.poi.hssf.usermodel.*;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.ClientAnchor;
 import org.apache.poi.ss.usermodel.Drawing;
+import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFRichTextString;
+import org.geelato.core.meta.model.field.ColumnMeta;
 import org.geelato.web.platform.exception.file.FileContentIsEmptyException;
 import org.geelato.web.platform.exception.file.FileContentReadFailedException;
 import org.geelato.web.platform.m.excel.entity.BusinessColumnMeta;
@@ -219,8 +221,8 @@ public class ExcelReader {
                     } catch (Exception ex) {
                         businessData.setErrorMsg(ex.getMessage());
                     }
-                    businessDataMap.put(data.getName(), businessData);
                 }
+                businessDataMap.put(data.getName(), businessData);
             }
             if (!businessDataMap.isEmpty()) {
                 businessDataMapList.add(businessDataMap);
@@ -279,6 +281,57 @@ public class ExcelReader {
                 }
             }
         }
+    }
+
+    /**
+     * 插入工作表，唯一性约束校验失败
+     *
+     * @param workbook
+     * @param repeatedData
+     */
+    public void writeRepeatedData(HSSFWorkbook workbook, Map<ColumnMeta, Map<Object, Long>> repeatedData) {
+        if (repeatedData != null && repeatedData.size() > 0) {
+            HSSFSheet sheet = workbook.createSheet("唯一约束，导入数据重复值及数量"); // 创建新的工作表
+            int x = 0;
+            for (Map.Entry<ColumnMeta, Map<Object, Long>> columnMetaMapEntry : repeatedData.entrySet()) {
+                // 表头
+                ColumnMeta meta = columnMetaMapEntry.getKey();
+                createRowCell(sheet, 0, x, String.format("%s(%s:%s)", meta.getTitle(), meta.getTableName(), meta.getFieldName()));
+                CellRangeAddress rangea = new CellRangeAddress(0, 0, x, x + 1); // A1到D1的范围
+                sheet.addMergedRegion(rangea);
+                createRowCell(sheet, 1, x, "值");
+                createRowCell(sheet, 1, x + 1, "值数量");
+                // 内容
+                int y = 2;
+                Map<Object, Long> objectLongMap = columnMetaMapEntry.getValue();
+                for (Map.Entry<Object, Long> mapEntry : objectLongMap.entrySet()) {
+                    createRowCell(sheet, y, x, mapEntry.getKey());
+                    createRowCell(sheet, y, x + 1, mapEntry.getValue());
+                    y = y + 1;
+                }
+                x = x + 2;
+            }
+        }
+    }
+
+    /**
+     * 创建表格
+     *
+     * @param sheet
+     * @param y
+     * @param x
+     * @param value
+     */
+    private void createRowCell(HSSFSheet sheet, int y, int x, Object value) {
+        HSSFRow row = sheet.getRow(y);
+        if (row == null) {
+            row = sheet.createRow(y);
+        }
+        HSSFCell cell = row.getCell(x);
+        if (cell == null) {
+            cell = row.createCell(x);
+        }
+        cell.setCellValue(String.valueOf(value));
     }
 
     /**

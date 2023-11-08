@@ -54,6 +54,8 @@ import java.nio.file.Files;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * @author diabl
@@ -69,6 +71,7 @@ public class ImportExcelController extends BaseController {
     private static final String REQUEST_FILE_PART = "file";
     private static final double IMPORT_PAGE_SIZE = 100.0;
     private static final String IMPORT_ERROR_FILE_GENRE = "importErrorFile";
+    private static final String REDIS_UNIQUE_KEY = "uniques";
     private final Logger logger = LoggerFactory.getLogger(ImportExcelController.class);
     private final MetaManager metaManager = MetaManager.singleInstance();
     private final SimpleDateFormat dateTimeFormat = new SimpleDateFormat("yyyyMMddHHmmss");
@@ -201,11 +204,16 @@ public class ImportExcelController extends BaseController {
             // 获取
             logger.info(String.format("业务数据解析-开始 [%s]", sdf.format(new Date())));
             long parseStart = System.currentTimeMillis();
+            Map<ColumnMeta, Map<Object, Long>> repeatedData = new HashMap<>();
             Map<String, List<Map<String, Object>>> tableData = new HashMap<>();
             for (Map.Entry<String, List<BusinessMeta>> metaMap : businessMetaListMap.entrySet()) {
                 // 获取表格字段信息
                 EntityMeta entityMeta = metaManager.getByEntityName(metaMap.getKey(), false);
                 Assert.notNull(entityMeta, "Table Meta Is Null");
+                // 数值唯一性校验，数值
+                Map<String, ColumnMeta> uniqueColumns = excelCommonUtils.getUniqueColumns(entityMeta.getFieldMetas(), columnNames);
+                List<String> uniqueRedis = excelCommonUtils.setUniqueRedis(currentUUID, metaMap.getKey(), uniqueColumns.keySet());
+                cacheKeys.addAll(uniqueRedis);
                 // 当前字段
                 List<Map<String, Object>> columnData = new ArrayList<>();
                 long countCow = 0;
@@ -228,7 +236,7 @@ public class ImportExcelController extends BaseController {
                                 // 获取值
                                 value = getValue(currentUUID, fieldMeta.getColumn(), meta, businessData, valueMap);
                                 // 验证值
-                                Set<String> errorMsg = validateValue(fieldMeta.getColumn(), businessData, value, columnNames);
+                                Set<String> errorMsg = validateValue(currentUUID, fieldMeta.getColumn(), businessData, value, columnNames);
                                 businessData.setErrorMsgs(errorMsg);
                             } catch (Exception ex) {
                                 businessData.setErrorMsg(ex.getMessage());
@@ -243,26 +251,29 @@ public class ImportExcelController extends BaseController {
                     logger.info(String.format("表 %s 解析成功，第 %s 行。用时 %s ms。", metaMap.getKey(), (countCow += 1), (System.currentTimeMillis() - start)));
                     columnData.add(columnMap);
                 }
+                repeatedData.putAll(validateValue(uniqueColumns, columnData));
                 tableData.put(metaMap.getKey(), columnData);
             }
+            // 数据唯一性校验
             logger.info(String.format("业务数据解析-结束 用时：%s ms", (System.currentTimeMillis() - parseStart)));
             // 释放缓存
             redisTemplate.delete(cacheKeys);
             logger.info(String.format("Redis Template [DELETE] [%s]", sdf.format(new Date())));
             // 业务数据校验
-            if (!validBusinessData(businessDataMapList)) {
-                Map<String, Object> errorAttach = writeBusinessData(businessFile, request, response, businessDataMapList, 0);
+            if (!validBusinessData(businessDataMapList) || repeatedData.size() > 0) {
+                Map<String, Object> errorAttach = writeBusinessData(businessFile, request, response, businessDataMapList, repeatedData, 0);
                 logger.info(String.format("业务数据校验-错误 [%s]", sdf.format(new Date())));
                 return result.error(new FileContentValidFailedException("For more information, see the error file.")).setData(errorAttach);
             }
             // 插入数据 "@biz": "myBizCode",
             logger.info(String.format("插入业务数据-开始 [%s]", sdf.format(new Date())));
             long insertStart = System.currentTimeMillis();
+            List<String> returnPks = new ArrayList<>();
             if (!tableData.isEmpty()) {
                 Map<String, Object> insertMap = new HashMap<>();
                 insertMap.put("@biz", "myBizCode");
                 for (Map.Entry<String, List<Map<String, Object>>> table : tableData.entrySet()) {
-                    List<Map<String, Object>> columns = table.getValue();
+                    /*List<Map<String, Object>> columns = table.getValue();
                     if (columns != null && columns.size() > 0) {
                         int total = columns.size();
                         int page = (int) Math.ceil(total / IMPORT_PAGE_SIZE);
@@ -274,16 +285,18 @@ public class ImportExcelController extends BaseController {
                             for (int n = (i * size); n < maxSize; n++) {
                                 insertList.add(columns.get(n));
                             }
-                            insertMap.put(table.getKey(), insertList);
-                            ruleService.batchSave(JSON.toJSONString(insertMap), true);
                         }
-                    }
+                    }*/
+                    insertMap.put(table.getKey(), table.getValue());
                 }
+                returnPks = (List<String>) ruleService.batchSave(JSON.toJSONString(insertMap), "all".equalsIgnoreCase(importType));
+                result.setMsg(String.format("导入数量：预计 [%s]，实际 [%s]", businessDataMapList.size(), (returnPks == null ? 0 : returnPks.size())));
             } else {
                 throw new FileContentIsEmptyException("Business Import Data Is Empty");
             }
             logger.info(String.format("插入业务数据-结束 用时：%s ms", (System.currentTimeMillis() - insertStart)));
             logger.info(String.format("导入业务数据-结束 用时：%s ms", (System.currentTimeMillis() - importStart)));
+            logger.info(String.format("导入业务数据-数量 预计 [%s]，实际 [%s]", businessDataMapList.size(), (returnPks == null ? 0 : returnPks.size())));
             result.setData(currentUUID);
         } catch (Exception ex) {
             logger.error(ex.getMessage(), ex);
@@ -296,12 +309,13 @@ public class ImportExcelController extends BaseController {
     /**
      * 业务数据类型与元数据类型校验
      *
+     * @param currentUUID  批次号
      * @param columnMeta   元数据
      * @param businessData 业务数据类型
      * @param value        值
      * @return
      */
-    private Set<String> validateValue(ColumnMeta columnMeta, BusinessData businessData, Object value, List<String> columnNames) {
+    private Set<String> validateValue(String currentUUID, ColumnMeta columnMeta, BusinessData businessData, Object value, List<String> columnNames) {
         Set<String> errorMsg = new LinkedHashSet<>();
         BusinessTypeData typeData = businessData.getBusinessTypeData();
 
@@ -325,8 +339,47 @@ public class ImportExcelController extends BaseController {
         if (value == null && !columnMeta.isNullable() && !columnNames.contains(columnMeta.getName())) {
             errorMsg.add(String.format("原始数据[%s]，对应字段值不能为空。", businessData.getPrimevalValue()));
         }
+        if (value != null && columnMeta.isUniqued() && !columnNames.contains(columnMeta.getName())) {
+            Map<String, Set<Object>> redisValues = (Map<String, Set<Object>>) redisTemplate.opsForValue().get(String.format("%s:%s:%s", currentUUID, columnMeta.getTableName(), REDIS_UNIQUE_KEY));
+            if (redisValues != null && redisValues.size() > 0) {
+                Set<Object> values = redisValues.get(columnMeta.getFieldName());
+                if (values != null && values.contains(value)) {
+                    errorMsg.add(String.format("唯一约束，数据库已存在相同值[%s]。", value));
+                }
+            }
+        }
 
         return errorMsg;
+    }
+
+    private Map<ColumnMeta, Map<Object, Long>> validateValue(Map<String, ColumnMeta> uniqueColumns, List<Map<String, Object>> columnData) {
+        Map<ColumnMeta, Map<Object, Long>> repeateData = new HashMap<>();
+        if (uniqueColumns != null && uniqueColumns.size() > 0 && columnData.size() > 0) {
+            for (Map.Entry<String, ColumnMeta> metaEntry : uniqueColumns.entrySet()) {
+                List<Object> values = new ArrayList<>();
+                for (Map<String, Object> columnMap : columnData) {
+                    Object value = columnMap.get(metaEntry.getKey());
+                    if (value != null) {
+                        values.add(value);
+                    }
+                }
+                if (values.size() > 0) {
+                    Map<Object, Long> countMap = values.stream().collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+                    countMap = countMap.entrySet().stream().filter(entry -> entry.getValue() > 1).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                    if (countMap != null && countMap.size() > 0) {
+                        List<Map.Entry<Object, Long>> list = new ArrayList<>(countMap.entrySet());
+                        list.sort(Map.Entry.<Object, Long>comparingByValue().reversed());
+                        Map<Object, Long> sortedMap = new LinkedHashMap<>();
+                        for (Map.Entry<Object, Long> entry : list) {
+                            sortedMap.put(entry.getKey(), entry.getValue());
+                        }
+                        repeateData.put(metaEntry.getValue(), sortedMap);
+                    }
+                }
+            }
+        }
+
+        return repeateData;
     }
 
     /**
@@ -550,11 +603,12 @@ public class ImportExcelController extends BaseController {
      *
      * @param request
      * @param businessDataMapList 业务数据
+     * @param repeatedData        业务数据
      * @param sheetIndex          工作表次序
      * @return
      * @throws IOException
      */
-    private Map<String, Object> writeBusinessData(Attach businessFile, HttpServletRequest request, HttpServletResponse response, List<Map<String, BusinessData>> businessDataMapList, int sheetIndex) throws IOException {
+    private Map<String, Object> writeBusinessData(Attach businessFile, HttpServletRequest request, HttpServletResponse response, List<Map<String, BusinessData>> businessDataMapList, Map<ColumnMeta, Map<Object, Long>> repeatedData, int sheetIndex) throws IOException {
         Map<String, Object> attachMap = new HashMap<>();
         InputStream inputStream = null;
         FileInputStream fileInputStream = null;
@@ -610,6 +664,7 @@ public class ImportExcelController extends BaseController {
                 style.setFillForegroundColor(IndexedColors.YELLOW.getIndex());
                 // 写入工作表
                 excelXSSFReader.writeBusinessData(sheet, style, businessDataMapList);
+                excelXSSFReader.writeRepeatedData(workbook, repeatedData);
                 // 写入文件
                 outputStream = new FileOutputStream(errorFile);
                 workbook.write(outputStream);

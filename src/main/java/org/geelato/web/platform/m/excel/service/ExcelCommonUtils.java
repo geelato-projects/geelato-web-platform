@@ -6,9 +6,11 @@ import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.constants.ColumnDefault;
 import org.geelato.core.enums.DeleteStatusEnum;
+import org.geelato.core.enums.EnableStatusEnum;
 import org.geelato.core.gql.parser.FilterGroup;
 import org.geelato.core.meta.MetaManager;
 import org.geelato.core.meta.model.field.ColumnMeta;
+import org.geelato.core.meta.model.field.FieldMeta;
 import org.geelato.core.orm.Dao;
 import org.geelato.web.platform.exception.file.FileException;
 import org.geelato.web.platform.m.base.entity.Dict;
@@ -36,6 +38,7 @@ import java.util.concurrent.TimeUnit;
 public class ExcelCommonUtils {
     private static final int REDIS_TIME_OUT = 60;
     private static final int GGL_QUERY_TOTAL = 10000;
+    private static final String REDIS_UNIQUE_KEY = "uniques";
     private final FilterGroup filterGroup = new FilterGroup().addFilter(ColumnDefault.DEL_STATUS_FIELD, String.valueOf(DeleteStatusEnum.NO.getCode()));
     private final Logger logger = LoggerFactory.getLogger(ExcelCommonUtils.class);
     private final MetaManager metaManager = MetaManager.singleInstance();
@@ -751,5 +754,69 @@ public class ExcelCommonUtils {
         }
 
         return redisMap;
+    }
+
+
+    public Map<String, ColumnMeta> getUniqueColumns(Collection<FieldMeta> fieldMetas, List<String> columnNames) {
+        Map<String, ColumnMeta> uniqueColumns = new HashMap<>();
+        if (fieldMetas != null && fieldMetas.size() > 0) {
+            for (FieldMeta fieldMeta : fieldMetas) {
+                ColumnMeta meta = fieldMeta.getColumn();
+                if (meta != null && Strings.isNotBlank(meta.getFieldName()) && meta.getEnableStatus() == EnableStatusEnum.ENABLED.getCode()
+                        && meta.getDelStatus() == DeleteStatusEnum.NO.getCode()) {
+                    if (!uniqueColumns.containsKey(meta.getFieldName()) && !columnNames.contains(meta.getName()) && meta.isUniqued()) {
+                        uniqueColumns.put(meta.getFieldName(), meta);
+                    }
+                }
+            }
+        }
+
+        return uniqueColumns;
+    }
+
+    /**
+     * 为一只
+     *
+     * @param currentUUID
+     * @param tableName
+     * @param uniqueColumns
+     * @return
+     */
+    public List<String> setUniqueRedis(String currentUUID, String tableName, Set<String> uniqueColumns) {
+        List<String> uniqueKeys = new ArrayList<>();
+        String gglFormat = "{\"%s\": {\"@fs\": \"%s\"}}";
+        String key = String.format("%s:%s:%s", currentUUID, tableName, REDIS_UNIQUE_KEY);
+        try {
+            if (Strings.isNotBlank(tableName) && uniqueColumns.size() > 0) {
+                String ggl = String.format(gglFormat, tableName, String.join(",", uniqueColumns));
+                ApiPagedResult page = ruleService.queryForMapList(ggl, false);
+                Map<String, Set<Object>> redisValue = pageResultToMap(page, uniqueColumns);
+                logger.info(String.format("%s - %s => %s", key, page.getTotal(), (redisValue != null ? redisValue.size() : 0)));
+                redisTemplate.opsForValue().set(key, redisValue, REDIS_TIME_OUT, TimeUnit.MINUTES);
+            }
+        } catch (Exception ex) {
+            logger.info(ex.getMessage(), ex);
+        }
+
+        return uniqueKeys;
+    }
+
+    private Map<String, Set<Object>> pageResultToMap(ApiPagedResult page, Set<String> uniqueColumns) {
+        Map<String, Set<Object>> redisValue = new HashMap<>();
+        if (page != null && page.getData() != null && page.getTotal() > 0) {
+            List<Map<String, Object>> mapList = (List<Map<String, Object>>) page.getData();
+            for (String fieldName : uniqueColumns) {
+                Set<Object> values = new LinkedHashSet<>();
+                for (Map<String, Object> map : mapList) {
+                    Object value = map.get(fieldName);
+                    if (value != null) {
+                        values.add(value);
+                    }
+                }
+                redisValue.put(fieldName, values);
+            }
+        }
+
+        return redisValue;
     }
 }

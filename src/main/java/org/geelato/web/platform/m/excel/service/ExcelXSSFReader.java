@@ -4,7 +4,9 @@ import org.apache.logging.log4j.util.Strings;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.ClientAnchor;
 import org.apache.poi.ss.usermodel.Drawing;
+import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.*;
+import org.geelato.core.meta.model.field.ColumnMeta;
 import org.geelato.web.platform.exception.file.FileContentIsEmptyException;
 import org.geelato.web.platform.exception.file.FileContentReadFailedException;
 import org.geelato.web.platform.m.excel.entity.BusinessColumnMeta;
@@ -218,8 +220,8 @@ public class ExcelXSSFReader {
                     } catch (Exception ex) {
                         businessData.setErrorMsg(ex.getMessage());
                     }
-                    businessDataMap.put(data.getName(), businessData);
                 }
+                businessDataMap.put(data.getName(), businessData);
             }
             if (!businessDataMap.isEmpty()) {
                 businessDataMapList.add(businessDataMap);
@@ -263,21 +265,74 @@ public class ExcelXSSFReader {
                 BusinessData businessData = businessDataEntry.getValue();
                 if (businessData != null && businessData.getYIndex() == i) {
                     XSSFCell cell = row.getCell(businessData.getXIndex());
-                    if (cell != null) {
-                        cell.setCellStyle(style);
-                        ClientAnchor anchor = new XSSFClientAnchor();
-                        anchor.setCol1(cell.getColumnIndex());
-                        anchor.setRow1(cell.getRowIndex());
-                        anchor.setCol2(cell.getColumnIndex() + 10);
-                        anchor.setRow2(cell.getRowIndex() + 10);
-                        Drawing drawing = sheet.createDrawingPatriarch();
-                        XSSFComment comment = (XSSFComment) drawing.createCellComment(anchor);
-                        comment.setString(new XSSFRichTextString(String.join("；\r\n", businessData.getErrorMsg())));
-                        cell.setCellComment(comment);
+                    if (cell == null) {
+                        cell = row.createCell(businessData.getXIndex());
                     }
+                    cell.setCellStyle(style);
+                    ClientAnchor anchor = new XSSFClientAnchor();
+                    anchor.setCol1(cell.getColumnIndex());
+                    anchor.setRow1(cell.getRowIndex());
+                    anchor.setCol2(cell.getColumnIndex() + 10);
+                    anchor.setRow2(cell.getRowIndex() + 10);
+                    Drawing drawing = sheet.createDrawingPatriarch();
+                    XSSFComment comment = (XSSFComment) drawing.createCellComment(anchor);
+                    comment.setString(new XSSFRichTextString(String.join("；\r\n", businessData.getErrorMsg())));
+                    cell.setCellComment(comment);
                 }
             }
         }
+
+    }
+
+    /**
+     * 插入工作表，唯一性约束校验失败
+     *
+     * @param workbook
+     * @param repeatedData
+     */
+    public void writeRepeatedData(XSSFWorkbook workbook, Map<ColumnMeta, Map<Object, Long>> repeatedData) {
+        if (repeatedData != null && repeatedData.size() > 0) {
+            XSSFSheet sheet = workbook.createSheet("唯一约束，导入数据重复值及数量"); // 创建新的工作表
+            int x = 0;
+            for (Map.Entry<ColumnMeta, Map<Object, Long>> columnMetaMapEntry : repeatedData.entrySet()) {
+                // 表头
+                ColumnMeta meta = columnMetaMapEntry.getKey();
+                createRowCell(sheet, 0, x, String.format("%s(%s:%s)", meta.getTitle(), meta.getTableName(), meta.getFieldName()));
+                CellRangeAddress rangea = new CellRangeAddress(0, 0, x, x + 1); // A1到D1的范围
+                sheet.addMergedRegion(rangea);
+                createRowCell(sheet, 1, x, "值");
+                createRowCell(sheet, 1, x + 1, "值数量");
+                // 内容
+                int y = 2;
+                Map<Object, Long> objectLongMap = columnMetaMapEntry.getValue();
+                for (Map.Entry<Object, Long> mapEntry : objectLongMap.entrySet()) {
+                    createRowCell(sheet, y, x, mapEntry.getKey());
+                    createRowCell(sheet, y, x + 1, mapEntry.getValue());
+                    y = y + 1;
+                }
+                x = x + 2;
+            }
+        }
+    }
+
+    /**
+     * 创建表格
+     *
+     * @param sheet
+     * @param y
+     * @param x
+     * @param value
+     */
+    private void createRowCell(XSSFSheet sheet, int y, int x, Object value) {
+        XSSFRow row = sheet.getRow(y);
+        if (row == null) {
+            row = sheet.createRow(y);
+        }
+        XSSFCell cell = row.getCell(x);
+        if (cell == null) {
+            cell = row.createCell(x);
+        }
+        cell.setCellValue(String.valueOf(value));
     }
 
     /**
