@@ -78,15 +78,11 @@ public class JWTAuthRestController extends BaseController {
 
                 apiResult.setData(loginResult);
             } else {
-                apiResult.error();
-                apiResult.setMsg("账号或密码不正确");
-                return apiResult;
+                return apiResult.error().setMsg("账号或密码不正确");
             }
-
         } catch (Exception exception) {
             logger.error(exception.getMessage(), exception);
-            apiResult.error();
-            apiResult.setMsg(exception.getMessage());
+            apiResult.error().setMsg("账号或密码不正确");
         }
         return apiResult;
     }
