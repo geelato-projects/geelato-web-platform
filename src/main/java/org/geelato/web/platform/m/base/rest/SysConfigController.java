@@ -7,7 +7,9 @@ import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.enums.DeleteStatusEnum;
 import org.geelato.core.gql.parser.FilterGroup;
+import org.geelato.web.platform.m.base.entity.Attach;
 import org.geelato.web.platform.m.base.entity.SysConfig;
+import org.geelato.web.platform.m.base.service.AttachService;
 import org.geelato.web.platform.m.base.service.SysConfigService;
 import org.geelato.web.platform.m.security.entity.DataItems;
 import org.slf4j.Logger;
@@ -27,6 +29,7 @@ import java.util.*;
 @RequestMapping(value = "/api/sys/config")
 public class SysConfigController extends BaseController {
     private static final Map<String, List<String>> OPERATORMAP = new LinkedHashMap<>();
+    private static final String CONFIG_TYPE_UPLOAD = "UPLOAD";
 
     static {
         OPERATORMAP.put("contains", Arrays.asList("configKey", "configValue", "remark"));
@@ -36,6 +39,8 @@ public class SysConfigController extends BaseController {
     private final Logger logger = LoggerFactory.getLogger(SysConfigController.class);
     @Autowired
     private SysConfigService sysConfigService;
+    @Autowired
+    private AttachService attachService;
 
     @RequestMapping(value = "/pageQuery", method = RequestMethod.GET)
     @ResponseBody
@@ -48,6 +53,7 @@ public class SysConfigController extends BaseController {
             FilterGroup filterGroup = this.getFilterGroup(params, OPERATORMAP);
 
             List<SysConfig> pageQueryList = sysConfigService.pageQueryModel(SysConfig.class, pageNum, pageSize, filterGroup);
+            pageQueryList = setConfigAssist(pageQueryList);
             List<SysConfig> queryList = sysConfigService.queryModel(SysConfig.class, filterGroup);
 
             result.setTotal(queryList != null ? queryList.size() : 0);
@@ -69,7 +75,9 @@ public class SysConfigController extends BaseController {
         ApiResult<List<SysConfig>> result = new ApiResult<>();
         try {
             Map<String, Object> params = this.getQueryParameters(SysConfig.class, req);
-            return result.setData(sysConfigService.queryModel(SysConfig.class, params));
+            List<SysConfig> queryList = sysConfigService.queryModel(SysConfig.class, params);
+            queryList = setConfigAssist(queryList);
+            return result.setData(queryList);
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
@@ -175,5 +183,35 @@ public class SysConfigController extends BaseController {
         }
 
         return result;
+    }
+
+    private List<SysConfig> setConfigAssist(List<SysConfig> sysConfigs) {
+        List<String> fileIds = new ArrayList<>();
+        if (sysConfigs != null && sysConfigs.size() > 0) {
+            for (SysConfig model : sysConfigs) {
+                if (CONFIG_TYPE_UPLOAD.equalsIgnoreCase(model.getConfigType()) && !fileIds.contains(model.getConfigValue())) {
+                    fileIds.add(model.getConfigValue());
+                }
+            }
+        }
+        if (fileIds.size() > 0) {
+            FilterGroup filter = new FilterGroup();
+            filter.addFilter("id", FilterGroup.Operator.in, String.join(",", fileIds));
+            List<Attach> attachList = dao.queryList(Attach.class, filter, "");
+            if (attachList != null && attachList.size() > 0) {
+                for (SysConfig model : sysConfigs) {
+                    if (CONFIG_TYPE_UPLOAD.equalsIgnoreCase(model.getConfigType()) && Strings.isNotBlank(model.getConfigValue())) {
+                        for (Attach attach : attachList) {
+                            if (Strings.isNotBlank(attach.getName()) && model.getConfigValue().equals(attach.getId())) {
+                                model.setConfigAssist(attach.getName());
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return sysConfigs;
     }
 }

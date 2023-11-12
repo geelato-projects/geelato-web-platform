@@ -4,6 +4,7 @@ import org.geelato.core.constants.ColumnDefault;
 import org.geelato.core.meta.annotation.Col;
 import org.geelato.core.meta.annotation.Entity;
 import org.geelato.core.meta.annotation.Title;
+import org.geelato.core.meta.annotation.Transient;
 import org.geelato.core.meta.model.entity.BaseSortableEntity;
 import org.geelato.core.meta.model.entity.EntityEnableAble;
 
@@ -19,6 +20,7 @@ public class SysConfig extends BaseSortableEntity implements EntityEnableAble {
     private String configKey;
     private String configType;
     private String configValue;
+    private String configAssist;
     private int enableStatus = ColumnDefault.ENABLE_STATUS_VALUE;
     private String remark;
 
@@ -60,6 +62,16 @@ public class SysConfig extends BaseSortableEntity implements EntityEnableAble {
 
     public void setConfigValue(String configValue) {
         this.configValue = configValue;
+    }
+
+    @Transient
+    @Title(title = "辅助字段")
+    public String getConfigAssist() {
+        return configAssist;
+    }
+
+    public void setConfigAssist(String configAssist) {
+        this.configAssist = configAssist;
     }
 
     @Col(name = "remark")

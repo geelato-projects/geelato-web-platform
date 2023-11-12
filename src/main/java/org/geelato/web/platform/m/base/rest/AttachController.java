@@ -3,6 +3,7 @@ package org.geelato.web.platform.m.base.rest;
 import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiErrorMsg;
+import org.geelato.core.gql.parser.FilterGroup;
 import org.geelato.web.platform.m.base.entity.Attach;
 import org.geelato.web.platform.m.base.service.AttachService;
 import org.slf4j.Logger;
@@ -50,12 +51,9 @@ public class AttachController extends BaseController {
             List<Attach> attachList = new ArrayList<>();
             String ids = (String) requestMap.get("ids");
             if (Strings.isNotBlank(ids)) {
-                String[] idArr = ids.split(",");
-                if (idArr.length > 0) {
-                    for (int i = 0; i < idArr.length; i++) {
-                        attachList.add(attachService.getModel(Attach.class, idArr[i]));
-                    }
-                }
+                FilterGroup filter = new FilterGroup();
+                filter.addFilter("id", FilterGroup.Operator.in, String.join(",", ids));
+                attachList = dao.queryList(Attach.class, filter, "");
             }
             return result.setData(attachList);
         } catch (Exception e) {

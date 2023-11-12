@@ -68,7 +68,7 @@ public class DownloadController extends BaseController {
                 name = URLEncoder.encode(name, "UTF-8");
                 String mineType = request.getServletContext().getMimeType(name);
                 response.setContentType(mineType);
-                response.setHeader("Content-disposition", "attachment; filename=" + name);
+                response.setHeader("Content-Disposition", "attachment; filename=" + name);
                 int len = 0;
                 byte[] buffer = new byte[1024];
                 while ((len = in.read(buffer)) > 0) {
