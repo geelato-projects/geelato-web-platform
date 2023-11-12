@@ -342,7 +342,7 @@ public class ExcelXSSFReader {
      */
     private void cleanSheetStyle(XSSFSheet sheet) {
         int yCount = sheet.getLastRowNum();
-        for (int y = 1; y < yCount; y++) {
+        for (int y = 1; y <= yCount; y++) {
             XSSFRow row = sheet.getRow(y);
             if (row != null) {
                 int xCount = row.getLastCellNum();

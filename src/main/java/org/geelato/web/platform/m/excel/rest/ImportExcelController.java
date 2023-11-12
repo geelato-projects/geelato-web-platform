@@ -27,6 +27,7 @@ import org.geelato.utils.UIDGenerator;
 import org.geelato.web.platform.exception.file.FileNotFoundException;
 import org.geelato.web.platform.exception.file.*;
 import org.geelato.web.platform.m.base.entity.Attach;
+import org.geelato.web.platform.m.base.entity.Base64Info;
 import org.geelato.web.platform.m.base.rest.BaseController;
 import org.geelato.web.platform.m.base.service.AttachService;
 import org.geelato.web.platform.m.base.service.UploadService;
@@ -172,13 +173,14 @@ public class ImportExcelController extends BaseController {
             ExcelCommonUtils.notNull(exportTemplate, new FileNotFoundException("ExportTemplate Data Not Found"));
             logger.info(String.format("事务模板（%s[%s]）", exportTemplate.getTitle(), exportTemplate.getId()));
             //事务，模板元数据
-            Attach templateRuleAttach = getFile(exportTemplate.getTemplateRule());
-            ExcelCommonUtils.notNull(templateRuleAttach, new FileNotFoundException("Business Data Type And Meta File Not Found"));
-            logger.info(String.format("数据类型+元数据（%s[%s]）%s", templateRuleAttach.getName(), templateRuleAttach.getId(), templateRuleAttach.getUrl()));
-            businessMetaListMap = getBusinessMeta(new File(templateRuleAttach.getUrl()), 1);
+            // Attach templateRuleAttach = getFile(exportTemplate.getTemplateRule());
+            // ExcelCommonUtils.notNull(templateRuleAttach, new FileNotFoundException("Business Data Type And Meta File Not Found"));
+            // logger.info(String.format("数据类型+元数据（%s[%s]）%s", templateRuleAttach.getName(), templateRuleAttach.getId(), templateRuleAttach.getUrl()));
+            File templateRuleFile = getTemplate(currentUUID, exportTemplate.getTemplateRule());
+            ExcelCommonUtils.notNull(templateRuleFile, new FileNotFoundException("Business Data Type And Meta File Not Found"));
+            businessMetaListMap = getBusinessMeta(templateRuleFile, 1);
             //事务，模板数据类型
-            // Attach templateAttach = getFile(exportTemplate.getTemplate());
-            businessTypeDataMap = getBusinessTypeData(new File(templateRuleAttach.getUrl()), 0);
+            businessTypeDataMap = getBusinessTypeData(templateRuleFile, 0);
             // 事务，业务数据
             Attach businessFile = null;
             if (Strings.isNotBlank(attachId)) {
@@ -686,7 +688,7 @@ public class ImportExcelController extends BaseController {
             errorFileName = URLEncoder.encode(errorFileName, "UTF-8");
             String mineType = request.getServletContext().getMimeType(errorFileName);
             response.setContentType(mineType);
-            response.setHeader("Content-disposition", "attachment; filename=" + errorFileName);
+            response.setHeader("Content-Disposition", "attachment; filename=" + errorFileName);
             int len = 0;
             byte[] buffer = new byte[1024];
             while ((len = responseIn.read(buffer)) > 0) {
@@ -716,6 +718,49 @@ public class ImportExcelController extends BaseController {
         }
 
         return attachMap;
+    }
+
+    /**
+     * 将base64转为file
+     *
+     * @param currentUUID
+     * @param template
+     * @return
+     */
+    private File getTemplate(String currentUUID, String template) {
+        File file = null;
+        if (Strings.isNotBlank(template)) {
+            if (template.length() > 64) {
+                try {
+                    Base64Info bi = JSON.parseObject(template, Base64Info.class);
+                    if (bi != null && Strings.isNotBlank(bi.getName()) && Strings.isNotBlank(bi.getBase64())) {
+                        // 解码Base64字符串为字节数组
+                        byte[] decodedBytes = Base64.getDecoder().decode(bi.getBase64());
+                        // 创建临时文件
+                        String fileExt = bi.getName().substring(bi.getName().lastIndexOf("."));
+                        File tempFile = File.createTempFile("temp_base64_import", fileExt);
+                        tempFile.deleteOnExit();
+                        // 将字节数组写入临时文件
+                        try (FileOutputStream fos = new FileOutputStream(tempFile)) {
+                            fos.write(decodedBytes);
+                        }
+                        // 将临时文件吸入file
+                        file = tempFile;
+                        logger.info(String.format("base64Name：%s；tempFilePath：%s", bi.getName(), file.getAbsolutePath()));
+                    }
+                } catch (Exception ex) {
+                    logger.info(ex.getMessage(), ex);
+                }
+            } else {
+                Attach attach = getFile(template);
+                if (attach != null) {
+                    file = new File(attach.getUrl());
+                    logger.info(String.format("AttachName：%s；tempFilePath：%s", attach.getName(), file.getAbsolutePath()));
+                }
+            }
+        }
+
+        return file;
     }
 
     /**

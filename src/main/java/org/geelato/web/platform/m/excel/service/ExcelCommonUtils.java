@@ -390,6 +390,9 @@ public class ExcelCommonUtils {
                                         if (redisValues != null && redisValues.size() > 0) {
                                             newValue = redisValues.get(oldValue);
                                         }
+                                        if (newValue == null) {
+                                            newValue = businessData.getValue();
+                                        }
                                     } else {
                                         businessData.setErrorMsg("Rule resolution failure。[" + ruleData.getType() + "] Rule is Error Or Goal is Empty！");
                                     }
@@ -400,6 +403,9 @@ public class ExcelCommonUtils {
                                         Map<String, Object> redisValues = (Map<String, Object>) redisTemplate.opsForValue().get(String.format("%s:%s", currentUUID, ruleData.getRule()));
                                         if (redisValues != null && redisValues.size() > 0) {
                                             newValue = redisValues.get(oldValue);
+                                        }
+                                        if (newValue == null) {
+                                            newValue = businessData.getValue();
                                         }
                                     } else {
                                         businessData.setErrorMsg("Rule resolution failure。[" + ruleData.getType() + "] Rule is Error Or Goal is Empty！");
@@ -746,7 +752,7 @@ public class ExcelCommonUtils {
                     for (String columnName : columnNames) {
                         String value = String.valueOf(map.get(columnName));
                         if (Strings.isNotBlank(value) && !redisMap.containsKey(value)) {
-                            redisMap.put(value, goalName);
+                            redisMap.put(value, goalValue);
                         }
                     }
                 }
