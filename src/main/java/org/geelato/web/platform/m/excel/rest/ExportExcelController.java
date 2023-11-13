@@ -16,6 +16,7 @@ import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.web.platform.m.base.entity.Attach;
+import org.geelato.web.platform.m.base.entity.Base64Info;
 import org.geelato.web.platform.m.base.rest.BaseController;
 import org.geelato.web.platform.m.base.service.AttachService;
 import org.geelato.web.platform.m.base.service.UploadService;
@@ -129,7 +130,8 @@ public class ExportExcelController extends BaseController {
             ExportTemplate exportTemplate = exportTemplateService.getModel(ExportTemplate.class, templateId);
             Assert.notNull(exportTemplate, "导出模板不存在");
             // 模板
-            Attach templateAttach = getFile(exportTemplate.getTemplate());
+            // Attach templateAttach = getFile(exportTemplate.getTemplate());
+            Base64Info templateAttach = getTemplate(exportTemplate.getTemplate());
             Assert.notNull(templateAttach, "导出模板不存在");
             // 实体文件名称
             String templateExt = templateAttach.getName().substring(templateAttach.getName().lastIndexOf("."));
@@ -146,12 +148,13 @@ public class ExportExcelController extends BaseController {
             String directory = uploadService.getSavePath(ROOT_DIRECTORY, fileName, true);
             File exportFile = new File(directory);
             // 模板源数据
-            Attach templateRuleAttach = getFile(exportTemplate.getTemplateRule());
+            // Attach templateRuleAttach = getFile(exportTemplate.getTemplateRule());
+            Base64Info templateRuleAttach = getTemplate(exportTemplate.getTemplateRule());
             Assert.notNull(templateRuleAttach, "导出模板源数据不存在");
             // 读取，模板源数据
-            Map<String, PlaceholderMeta> metaMap = getPlaceholderMeta(new File(templateRuleAttach.getUrl()));
+            Map<String, PlaceholderMeta> metaMap = getPlaceholderMeta(templateRuleAttach.getFile());
             // 生成实体文件
-            generateEntityFile(new File(templateAttach.getUrl()), exportFile, metaMap, valueMapList, valueMap);
+            generateEntityFile(templateAttach.getFile(), exportFile, metaMap, valueMapList, valueMap);
 
             // 保存文件信息
             BasicFileAttributes attributes = Files.readAttributes(exportFile.toPath(), BasicFileAttributes.class);
@@ -283,6 +286,49 @@ public class ExportExcelController extends BaseController {
                 fileInputStream.close();
             }
         }
+    }
+
+    /**
+     * 将base64转为file
+     *
+     * @param template
+     * @return
+     */
+    private Base64Info getTemplate(String template) {
+        Base64Info info = new Base64Info();
+        if (Strings.isNotBlank(template)) {
+            if (template.length() > 64) {
+                try {
+                    Base64Info bi = JSON.parseObject(template, Base64Info.class);
+                    if (bi != null && Strings.isNotBlank(bi.getName()) && Strings.isNotBlank(bi.getBase64())) {
+                        // 解码Base64字符串为字节数组
+                        byte[] decodedBytes = Base64.getDecoder().decode(bi.getBase64());
+                        // 创建临时文件
+                        String fileExt = bi.getName().substring(bi.getName().lastIndexOf("."));
+                        File tempFile = File.createTempFile("temp_base64_export", fileExt);
+                        tempFile.deleteOnExit();
+                        // 将字节数组写入临时文件
+                        try (FileOutputStream fos = new FileOutputStream(tempFile)) {
+                            fos.write(decodedBytes);
+                        }
+                        // 将临时文件吸入file
+                        info = bi;
+                        info.setFile(tempFile);
+                        logger.info(String.format("base64Name：%s；tempFilePath：%s", bi.getName(), info.getFile().getAbsolutePath()));
+                    }
+                } catch (Exception ex) {
+                    logger.info(ex.getMessage(), ex);
+                }
+            } else {
+                Attach attach = getFile(template);
+                if (attach != null) {
+                    info = Base64Info.getBase64InfoByAttach(attach);
+                    logger.info(String.format("AttachName：%s；tempFilePath：%s", attach.getName(), info.getFile().getAbsolutePath()));
+                }
+            }
+        }
+
+        return info;
     }
 
     /**
