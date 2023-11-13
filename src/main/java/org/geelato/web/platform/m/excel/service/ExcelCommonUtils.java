@@ -758,7 +758,6 @@ public class ExcelCommonUtils {
                 }
             }
         }
-
         return redisMap;
     }
 

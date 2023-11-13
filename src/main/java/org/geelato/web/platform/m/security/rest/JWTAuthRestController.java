@@ -227,11 +227,11 @@ public class JWTAuthRestController extends BaseController {
         map.put("flag", (String) params.get("flag"));
         // 用户
         User user = getUserByToken(request);
-        map.put("currentUser", (user != null && Strings.isNotBlank(user.getId())) ? user.getId() : "");
         // 租户、应用
         String appId = (String) params.get("appId");
         String tenantCode = (user != null && Strings.isNotBlank(user.getTenantCode())) ? user.getTenantCode() : (String) params.get("tenantCode");
-        if (Strings.isNotBlank(appId) && Strings.isNotBlank(tenantCode)) {
+        if (user != null && Strings.isNotBlank(appId) && Strings.isNotBlank(tenantCode)) {
+            map.put("currentUser", user.getId());
             map.put("appId", appId);
             map.put("tenantCode", tenantCode);
             menuItemList = dao.queryForMapList("select_platform_tree_node_app_page", map);
