@@ -223,21 +223,38 @@ public class JWTAuthRestController extends BaseController {
     public ApiResult getCurrentUserMenu(@RequestBody Map<String, Object> params, HttpServletRequest request) throws Exception {
         ApiResult result = new ApiResult();
         List<Map<String, Object>> menuItemList = new ArrayList<>();
+        result.setData(menuItemList);
+        // post参数
         Map map = new HashMap<>();
-        map.put("flag", (String) params.get("flag"));
+        String flag = (String) params.get("flag");
+        String appId = (String) params.get("appId");
+        String tenantCode = (String) params.get("tenantCode");
         // 用户
         User user = getUserByToken(request);
-        // 租户、应用
-        String appId = (String) params.get("appId");
-        String tenantCode = (user != null && Strings.isNotBlank(user.getTenantCode())) ? user.getTenantCode() : (String) params.get("tenantCode");
+        logger.info(String.format("当前用户菜单查询，用户：%s", (user != null ? String.format("%s（%s）", user.getName(), user.getLoginName()) : "")));
+        String token = getToken(request);
+        logger.info(String.format("当前用户菜单查询，Token：%s", token));
+        if (user == null || Strings.isBlank(token)) {
+            return result;
+        }
+        // 用户与租户比对
+        if (Strings.isNotBlank(tenantCode) && !tenantCode.equalsIgnoreCase(user.getTenantCode())) {
+            logger.info(String.format("当前用户菜单查询，租户不一致：User=>%s | %s", user.getTenantCode(), tenantCode));
+            return result;
+        } else {
+            tenantCode = user.getTenantCode();
+        }
+        logger.info(String.format("当前用户菜单查询，租户：%s；应用：%s", tenantCode, appId));
+        // 菜单查询
         if (user != null && Strings.isNotBlank(appId) && Strings.isNotBlank(tenantCode)) {
             map.put("currentUser", user.getId());
             map.put("appId", appId);
             map.put("tenantCode", tenantCode);
+            map.put("flag", flag);
             menuItemList = dao.queryForMapList("select_platform_tree_node_app_page", map);
         }
 
-        return new ApiResult().setData(menuItemList);
+        return result.setData(menuItemList);
     }
 
     /**
@@ -429,8 +446,6 @@ public class JWTAuthRestController extends BaseController {
     }
 
     private String getToken(HttpServletRequest req) {
-        return req.getHeader("authorization");
+        return req.getHeader("Authorization");
     }
-
-
 }
