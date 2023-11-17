@@ -34,8 +34,7 @@ public class UserService extends BaseSortableService {
      */
     public void isDeleteModel(User model) {
         // 用户删除
-        model.setDelStatus(DeleteStatusEnum.IS.getCode());
-        dao.save(model);
+        super.isDeleteModel(model);
         // 清理 组织用户表
         Map<String, Object> params = new HashMap<>();
         params.put("userId", model.getId());
@@ -43,16 +42,14 @@ public class UserService extends BaseSortableService {
         if (oList != null) {
             for (OrgUserMap oModel : oList) {
                 oModel.setDefaultOrg(IsDefaultOrgEnum.NO.getCode());
-                oModel.setDelStatus(DeleteStatusEnum.IS.getCode());
-                dao.save(oModel);
+                orgUserMapService.isDeleteOrgUserMap(oModel);
             }
         }
         // 角色用户关系表
         List<RoleUserMap> rList = roleUserMapService.queryModel(RoleUserMap.class, params);
         if (rList != null) {
             for (RoleUserMap rModel : rList) {
-                rModel.setDelStatus(DeleteStatusEnum.IS.getCode());
-                dao.save(rModel);
+                roleUserMapService.isDeleteModel(rModel);
             }
         }
     }

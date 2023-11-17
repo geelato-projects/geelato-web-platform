@@ -3,7 +3,6 @@ package org.geelato.web.platform.m.security.service;
 import com.alibaba.fastjson2.JSON;
 import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.constants.ResourcesFiles;
-import org.geelato.core.enums.DeleteStatusEnum;
 import org.geelato.core.gql.parser.FilterGroup;
 import org.geelato.core.meta.model.field.ColumnMeta;
 import org.geelato.core.util.FastJsonUtils;
@@ -39,16 +38,14 @@ public class PermissionService extends BaseService {
      */
     public void isDeleteModel(Permission model) {
         // 用户删除
-        model.setDelStatus(DeleteStatusEnum.IS.getCode());
-        dao.save(model);
+        super.isDeleteModel(model);
         // 角色权限关系表
         Map<String, Object> params = new HashMap<>();
         params.put("permissionId", model.getId());
         List<RolePermissionMap> rList = rolePermissionMapService.queryModel(RolePermissionMap.class, params);
         if (rList != null) {
             for (RolePermissionMap oModel : rList) {
-                oModel.setDelStatus(DeleteStatusEnum.IS.getCode());
-                dao.save(oModel);
+                rolePermissionMapService.isDeleteModel(oModel);
             }
         }
     }
@@ -287,7 +284,7 @@ public class PermissionService extends BaseService {
             List<RolePermissionMap> rolePermissionMaps = queryModel(RolePermissionMap.class, filter);
             if (rolePermissionMaps != null && rolePermissionMaps.size() > 0) {
                 for (RolePermissionMap dModel : rolePermissionMaps) {
-                    rolePermissionMapService.deleteModel(RolePermissionMap.class, dModel.getId());
+                    rolePermissionMapService.isDeleteModel(dModel);
                 }
             }
         }

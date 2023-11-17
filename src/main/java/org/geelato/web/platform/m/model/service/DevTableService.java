@@ -119,6 +119,7 @@ public class DevTableService extends BaseSortableService {
         model.setTitle(UPDATE_COMMENT_PREFIX + model.getTitle());
         model.setEnableStatus(EnableStatusEnum.DISABLED.getCode());
         model.setDelStatus(DeleteStatusEnum.IS.getCode());
+        model.setDeleteAt(new Date());
         model.setSeqNo(ColumnDefault.SEQ_NO_DELETE);
         //dao.save(model);
         // 数据库表修正
@@ -126,6 +127,7 @@ public class DevTableService extends BaseSortableService {
         sqlParams.put("entityName", model.getEntityName());// 旧
         sqlParams.put("newComment", form.getTitle());
         sqlParams.put("delStatus", DeleteStatusEnum.NO.getCode());
+        sqlParams.put("deleteAt", "");
         sqlParams.put("enableStatus", EnableStatusEnum.ENABLED.getCode());
         sqlParams.put("remark", "");
         dao.execute("metaResetOrDeleteTable", sqlParams);
@@ -151,6 +153,7 @@ public class DevTableService extends BaseSortableService {
         sqlParams.put("entityName", model.getEntityName());// 旧
         sqlParams.put("newComment", newComment);
         sqlParams.put("delStatus", DeleteStatusEnum.IS.getCode());
+        sqlParams.put("deleteAt", sdf.format(new Date()));
         sqlParams.put("enableStatus", EnableStatusEnum.DISABLED.getCode());
         sqlParams.put("remark", "delete table. \n");
         if (TableTypeEnum.TABLE.getCode().equals(model.getTableType())) {
@@ -176,6 +179,7 @@ public class DevTableService extends BaseSortableService {
         // 删除，标记变更
         model.setEnableStatus(EnableStatusEnum.DISABLED.getCode());
         model.setDelStatus(DeleteStatusEnum.IS.getCode());
+        model.setDeleteAt(new Date());
         model.setSeqNo(ColumnDefault.SEQ_NO_DELETE);
         dao.save(model);
     }

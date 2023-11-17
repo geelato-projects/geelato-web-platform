@@ -1,7 +1,7 @@
 package org.geelato.web.platform.m.security.service;
 
 import org.apache.logging.log4j.util.Strings;
-import org.geelato.core.enums.DeleteStatusEnum;
+import org.geelato.core.enums.EnableStatusEnum;
 import org.geelato.core.gql.parser.FilterGroup;
 import org.geelato.web.platform.enums.RoleTypeEnum;
 import org.geelato.web.platform.m.base.entity.App;
@@ -41,40 +41,36 @@ public class RoleService extends BaseSortableService {
      */
     public void isDeleteModel(Role model) {
         // 组织删除
-        model.setDelStatus(DeleteStatusEnum.IS.getCode());
-        dao.save(model);
+        model.setEnableStatus(EnableStatusEnum.DISABLED.getCode());
+        super.isDeleteModel(model);
         // 角色APP关系表
         Map<String, Object> params = new HashMap<>();
         params.put("roleId", model.getId());
         List<RoleAppMap> aList = roleAppMapService.queryModel(RoleAppMap.class, params);
         if (aList != null) {
             for (RoleAppMap rModel : aList) {
-                rModel.setDelStatus(DeleteStatusEnum.IS.getCode());
-                dao.save(rModel);
+                roleAppMapService.isDeleteModel(rModel);
             }
         }
         // 角色权限关系表
         List<RolePermissionMap> pList = rolePermissionMapService.queryModel(RolePermissionMap.class, params);
         if (aList != null) {
             for (RolePermissionMap rModel : pList) {
-                rModel.setDelStatus(DeleteStatusEnum.IS.getCode());
-                dao.save(rModel);
+                rolePermissionMapService.isDeleteModel(rModel);
             }
         }
         // 角色菜单关系表
         List<RoleTreeNodeMap> tList = roleTreeNodeMapService.queryModel(RoleTreeNodeMap.class, params);
         if (aList != null) {
             for (RoleTreeNodeMap rModel : tList) {
-                rModel.setDelStatus(DeleteStatusEnum.IS.getCode());
-                dao.save(rModel);
+                roleTreeNodeMapService.isDeleteModel(rModel);
             }
         }
         // 角色用户关系表
         List<RoleUserMap> uList = roleUserMapService.queryModel(RoleUserMap.class, params);
         if (uList != null) {
             for (RoleUserMap rModel : uList) {
-                rModel.setDelStatus(DeleteStatusEnum.IS.getCode());
-                dao.save(rModel);
+                roleUserMapService.isDeleteModel(rModel);
             }
         }
     }

@@ -65,8 +65,7 @@ public class OrgUserMapService extends BaseService {
      * @param model
      */
     public void isDeleteModel(OrgUserMap model) {
-        model.setDelStatus(DeleteStatusEnum.IS.getCode());
-        dao.save(model);
+        isDeleteOrgUserMap(model);
         // 清理 用户默认部门
         Map<String, Object> params = new HashMap<>();
         params.put("orgId", model.getOrgId());
@@ -79,5 +78,15 @@ public class OrgUserMapService extends BaseService {
                 dao.save(uModel);
             }
         }
+    }
+
+    /**
+     * 基础逻辑删除
+     *
+     * @param model
+     */
+    public void isDeleteOrgUserMap(OrgUserMap model) {
+        model.setDefaultOrg(IsDefaultOrgEnum.NO.getCode());
+        super.isDeleteModel(model);
     }
 }
