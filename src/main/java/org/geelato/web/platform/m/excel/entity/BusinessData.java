@@ -13,6 +13,7 @@ public class BusinessData {
     private int YIndex;
     private Object value;
     private Object primevalValue;
+    private Set<Object> transitionValue = new LinkedHashSet<>();
     private String[] multiValue;
     private BusinessTypeData businessTypeData;
     private Set<String> errorMsg = new LinkedHashSet<>();
@@ -47,6 +48,39 @@ public class BusinessData {
 
     public void setPrimevalValue(Object primevalValue) {
         this.primevalValue = primevalValue;
+    }
+
+    public Set<Object> getTransitionValue() {
+        return transitionValue;
+    }
+
+    public Set<String> getTransitionValueString() {
+        Set<String> stringSet = new LinkedHashSet<>();
+        if (this.transitionValue != null && this.transitionValue.size() > 0) {
+            for (Object obj : this.transitionValue) {
+                stringSet.add(String.valueOf(obj));
+            }
+        }
+
+        return stringSet;
+    }
+
+    public void setTransitionValue(Set<Object> transitionValue) {
+        this.transitionValue = transitionValue;
+    }
+
+    public void setTransitionValue(Object transitionValue) {
+        if (this.transitionValue == null) {
+            this.transitionValue = new LinkedHashSet<>();
+        }
+        this.transitionValue.add(transitionValue);
+    }
+
+    public void setTransitionValues(Set<Object> transitionValues) {
+        if (this.transitionValue == null) {
+            this.transitionValue = new LinkedHashSet<>();
+        }
+        this.transitionValue.addAll(transitionValues);
     }
 
     public String[] getMultiValue() {

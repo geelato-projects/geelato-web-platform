@@ -10,10 +10,8 @@ import org.apache.poi.xssf.usermodel.XSSFRichTextString;
 import org.geelato.core.meta.model.field.ColumnMeta;
 import org.geelato.web.platform.exception.file.FileContentIsEmptyException;
 import org.geelato.web.platform.exception.file.FileContentReadFailedException;
-import org.geelato.web.platform.m.excel.entity.BusinessColumnMeta;
-import org.geelato.web.platform.m.excel.entity.BusinessData;
-import org.geelato.web.platform.m.excel.entity.BusinessMeta;
-import org.geelato.web.platform.m.excel.entity.BusinessTypeData;
+import org.geelato.web.platform.m.excel.entity.*;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,10 +20,7 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author diabl
@@ -131,13 +126,68 @@ public class ExcelReader {
     }
 
     /**
+     * 业务数据清洗规则
+     *
+     * @param sheet
+     * @return
+     */
+    public Set<Map<Integer, BusinessTypeRuleData>> readBusinessTypeRuleData(HSSFSheet sheet) {
+        int lastRowIndex = sheet.getLastRowNum();
+        logger.info("BusinessTypeRuleData = " + lastRowIndex);
+        List<BusinessTypeRuleData> typeRuleDataList = new ArrayList<>();
+        // 跳过第一行，标题行
+        for (int i = 2; i <= lastRowIndex; i++) {
+            HSSFRow row = sheet.getRow(i);
+            if (row == null) {
+                break;
+            }
+            try {
+                BusinessTypeRuleData meta = new BusinessTypeRuleData();
+                meta.setColumnName(row.getCell(0).getStringCellValue());
+                meta.setType(row.getCell(1).getStringCellValue());
+                meta.setRule(row.getCell(2).getStringCellValue());
+                meta.setGoal(row.getCell(3).getStringCellValue());
+                HSSFCell cell4 = row.getCell(4);
+                if (cell4 != null) {
+                    if (CellType.BOOLEAN.equals(cell4.getCellType())) {
+                        meta.setRetain(cell4.getBooleanCellValue() || false);
+                    } else if (CellType.STRING.equals(cell4.getCellType())) {
+                        meta.setRetain("TRUE".equalsIgnoreCase(cell4.getStringCellValue()) || false);
+                    }
+                }
+                meta.setOrder((int) row.getCell(5).getNumericCellValue());
+                typeRuleDataList.add(meta);
+            } catch (Exception ex) {
+                logger.error(ex.getMessage(), ex);
+                throw new FileContentReadFailedException("Business Data Type Rule, Read Failed In (" + i + ").");
+            }
+        }
+        Set<Map<Integer, BusinessTypeRuleData>> typeRuleDataSet = new LinkedHashSet<>();
+        if (typeRuleDataList != null && typeRuleDataList.size() > 0) {
+            typeRuleDataList.sort(new Comparator<BusinessTypeRuleData>() {
+                @Override
+                public int compare(BusinessTypeRuleData o1, BusinessTypeRuleData o2) {
+                    return o1.getOrder() - o2.getOrder();
+                }
+            });
+            for (int i = 0; i < typeRuleDataList.size(); i++) {
+                Map<Integer, BusinessTypeRuleData> ruleDataMap = new HashMap<>();
+                ruleDataMap.put(i + 1, typeRuleDataList.get(i));
+                typeRuleDataSet.add(ruleDataMap);
+            }
+        }
+
+        return typeRuleDataSet;
+    }
+
+    /**
      * 读取业务数据
      *
      * @param sheet
      * @param businessTypeDataMap 数据类型
      * @return
      */
-    public List<Map<String, BusinessData>> readBusinessData(HSSFSheet sheet, Map<String, BusinessTypeData> businessTypeDataMap) {
+    public List<Map<String, BusinessData>> readBusinessData(@NotNull HSSFSheet sheet, Map<String, BusinessTypeData> businessTypeDataMap) {
         int lastRowIndex = sheet.getLastRowNum();
         int lastCellNum = 0;
         logger.info("BusinessData = " + lastRowIndex);
@@ -218,6 +268,7 @@ public class ExcelReader {
                         }
                         businessData.setValue(cellValue);
                         businessData.setPrimevalValue(cellValue);
+                        businessData.setTransitionValue(cellValue);
                     } catch (Exception ex) {
                         businessData.setErrorMsg(ex.getMessage());
                     }

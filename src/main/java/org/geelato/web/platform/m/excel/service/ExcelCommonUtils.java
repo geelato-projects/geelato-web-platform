@@ -12,6 +12,7 @@ import org.geelato.core.meta.MetaManager;
 import org.geelato.core.meta.model.field.ColumnMeta;
 import org.geelato.core.meta.model.field.FieldMeta;
 import org.geelato.core.orm.Dao;
+import org.geelato.core.script.js.JsProvider;
 import org.geelato.web.platform.exception.file.FileException;
 import org.geelato.web.platform.m.base.entity.Dict;
 import org.geelato.web.platform.m.base.entity.DictItem;
@@ -284,7 +285,9 @@ public class ExcelCommonUtils {
                 data.setXIndex(businessData.getXIndex());
                 data.setYIndex(businessData.getYIndex());
                 data.setValue(arr[count++]);
-                data.setPrimevalValue(data.getValue());
+                data.setPrimevalValue(businessData.getPrimevalValue());
+                data.setTransitionValues(businessData.getTransitionValue());
+                data.setTransitionValue(data.getValue());
                 data.setBusinessTypeData(businessData.getBusinessTypeData());
                 data.setErrorMsgs(businessData.getErrorMsg());
                 map.put(key, data);
@@ -341,6 +344,12 @@ public class ExcelCommonUtils {
             List<String> cacheKeys = setCache(currentUUID, businessDataMapList, priorityMulti);
             // 数据处理
             for (Map<String, BusinessData> businessDataMap : businessDataMapList) {
+                // 一行业务数据，键值对
+                Map<String, Object> valueMap = new HashMap<>();
+                for (Map.Entry<String, BusinessData> businessDataEntry : businessDataMap.entrySet()) {
+                    valueMap.put(businessDataEntry.getKey(), businessDataEntry.getValue().getValue());
+                }
+                // 一行数据，每个列
                 for (Map.Entry<String, BusinessData> businessDataEntry : businessDataMap.entrySet()) {
                     BusinessData businessData = businessDataEntry.getValue();
                     if (businessData.getValue() == null || Strings.isBlank(String.valueOf(businessData.getValue()))) {
@@ -373,6 +382,14 @@ public class ExcelCommonUtils {
                                     newValue = oldValue.toUpperCase(Locale.ENGLISH);
                                 } else if (ruleData.isRuleTypeLowerCase()) {
                                     newValue = oldValue.toLowerCase(Locale.ENGLISH);
+                                } else if (ruleData.isRuleTypeTrim()) {
+                                    newValue = oldValue.trim();
+                                } else if (ruleData.isRuleTypeExpression()) {
+                                    if (Strings.isNotBlank(ruleData.getRule())) {
+                                        newValue = JsProvider.executeExpression(ruleData.getRule(), valueMap);
+                                    } else {
+                                        businessData.setErrorMsg("Rule resolution failure。[" + ruleData.getType() + "] Rule is empty！");
+                                    }
                                 } else if (ruleData.isRuleTypeDictionary()) {
                                     if (Strings.isNotBlank(ruleData.getRule())) {
                                         Map<String, String> redisValues = (Map<String, String>) redisTemplate.opsForValue().get(String.format("%s:%s", currentUUID, ruleData.getRule()));
@@ -767,8 +784,7 @@ public class ExcelCommonUtils {
         if (fieldMetas != null && fieldMetas.size() > 0) {
             for (FieldMeta fieldMeta : fieldMetas) {
                 ColumnMeta meta = fieldMeta.getColumn();
-                if (meta != null && Strings.isNotBlank(meta.getFieldName()) && meta.getEnableStatus() == EnableStatusEnum.ENABLED.getCode()
-                        && meta.getDelStatus() == DeleteStatusEnum.NO.getCode()) {
+                if (meta != null && Strings.isNotBlank(meta.getFieldName()) && meta.getEnableStatus() == EnableStatusEnum.ENABLED.getCode() && meta.getDelStatus() == DeleteStatusEnum.NO.getCode()) {
                     if (!uniqueColumns.containsKey(meta.getFieldName()) && !columnNames.contains(meta.getName()) && meta.isUniqued()) {
                         uniqueColumns.put(meta.getFieldName(), meta);
                     }
@@ -824,4 +840,295 @@ public class ExcelCommonUtils {
 
         return redisValue;
     }
+
+
+    /**
+     * 数据处理
+     *
+     * @param currentUUID
+     * @param businessDataMapList     业务数据
+     * @param businessTypeRuleDataSet 清洗规则
+     * @return
+     */
+    public List<Map<String, BusinessData>> handleBusinessDataRules(String currentUUID, List<Map<String, BusinessData>> businessDataMapList, Set<Map<Integer, BusinessTypeRuleData>> businessTypeRuleDataSet) {
+        if (businessDataMapList == null || businessDataMapList.size() == 0 || businessTypeRuleDataSet == null || businessTypeRuleDataSet.size() == 0) {
+            return businessDataMapList;
+        }
+        // 设置缓存
+        List<String> cacheKeys = setTypeRuleCache(currentUUID, businessTypeRuleDataSet);
+        // 数据处理
+        List<Map<String, BusinessData>> newMapList = handleTypeRules1(currentUUID, businessDataMapList, businessTypeRuleDataSet, 0);
+        // 清理缓存
+        redisTemplate.delete(cacheKeys);
+
+        return newMapList;
+    }
+
+    private List<Map<String, BusinessData>> handleTypeRules1(String currentUUID, List<Map<String, BusinessData>> businessDataMapList, Set<Map<Integer, BusinessTypeRuleData>> businessTypeRuleDataSet, int startIndex) {
+        List<Map<String, BusinessData>> newMapList = new ArrayList<>();
+        for (Map<String, BusinessData> businessDataMap : businessDataMapList) {
+            List<Map<String, BusinessData>> handleData = new ArrayList<>();
+            handleData.add(businessDataMap);
+            List<Map<String, BusinessData>> handledData = handleTypeRules(currentUUID, handleData, businessTypeRuleDataSet, startIndex);
+            newMapList.addAll(handledData);
+        }
+        return newMapList;
+    }
+
+
+    private List<Map<String, BusinessData>> handleTypeRules(String currentUUID, List<Map<String, BusinessData>> businessDataMapList, Set<Map<Integer, BusinessTypeRuleData>> businessTypeRuleDataSet, int startIndex) {
+        if (businessDataMapList == null || businessDataMapList.size() == 0) {
+            return new ArrayList<>();
+        }
+        for (Map<String, BusinessData> businessDataMap : businessDataMapList) {
+            // 一行业务数据，键值对
+            Map<String, Object> valueMap = new HashMap<>();
+            for (Map.Entry<String, BusinessData> businessDataEntry : businessDataMap.entrySet()) {
+                valueMap.put(businessDataEntry.getKey(), businessDataEntry.getValue().getValue());
+            }
+            // 清洗规则
+            for (Map<Integer, BusinessTypeRuleData> ruleDataMap : businessTypeRuleDataSet) {
+                for (Map.Entry<Integer, BusinessTypeRuleData> ruleDataEntry : ruleDataMap.entrySet()) {
+                    if (startIndex > ruleDataEntry.getKey()) {
+                        continue;
+                    }
+                    BusinessTypeRuleData ruleData = ruleDataEntry.getValue();
+                    if (ruleData != null) {
+                        // 需要清洗的列名
+                        Set<String> columnNames = ruleData.getColumnNames();
+                        if (columnNames == null || columnNames.size() == 0) {
+                            continue;
+                        }
+                        // 清洗规则
+                        if (ruleData.isRuleTypeDeletes() || ruleData.isRuleTypeReplace() || ruleData.isRuleTypeTrim() || ruleData.isRuleTypeUpperCase() || ruleData.isRuleTypeLowerCase() || ruleData.isRuleTypeExpression() || ruleData.isRuleTypeDictionary() || ruleData.isRuleTypeQueryGoal() || ruleData.isRuleTypeQueryRule()) {
+                            typeRuleBaseToColumn(currentUUID, businessDataMap, valueMap, columnNames, ruleData);
+                        } else if (ruleData.isRuleTypeMulti() || ruleData.isRuleTypeSym()) {
+                            List<Map<String, BusinessData>> multiMapList = typeRuleMultiToColumn(businessDataMap, columnNames, ruleData);
+                            List<Map<String, BusinessData>> handleMulti = handleTypeRules1(currentUUID, multiMapList, businessTypeRuleDataSet, ruleDataEntry.getKey() + 1);
+                            businessDataMapList.clear();
+                            businessDataMapList.addAll(handleMulti);
+                            return businessDataMapList;
+                        }
+                    }
+                }
+            }
+        }
+
+        return businessDataMapList;
+    }
+
+    private List<Map<String, BusinessData>> typeRuleMultiToColumn(Map<String, BusinessData> businessDataMap, Set<String> columnNames, BusinessTypeRuleData ruleData) {
+        List<Map<String, BusinessData>> handleDataMapList = new ArrayList<>();
+        // 分类
+        Map<String, BusinessData> singleData = new HashMap<>();
+        Map<String, BusinessData> multiData = new LinkedHashMap<>();
+        Map<String, BusinessData> symData = new HashMap<>();
+
+        Set<String> dataValues = new LinkedHashSet<>();
+        int maxLength = 0;
+        for (Map.Entry<String, BusinessData> businessDataEntry : businessDataMap.entrySet()) {
+            boolean isMulti = false;
+            BusinessData businessData = businessDataEntry.getValue();
+            if (businessData != null && businessData.getValue() != null && Strings.isNotBlank(String.valueOf(businessData.getValue()))) {
+                for (String columnName : columnNames) {
+                    if (columnName.equalsIgnoreCase(businessDataEntry.getKey())) {
+                        if (Strings.isNotBlank(ruleData.getRule())) {
+                            try {
+                                String[] multiValue = String.valueOf(businessData.getValue()).split(ruleData.getRule());
+                                if (multiValue != null && multiValue.length > 0) {
+                                    for (int i = 0; i < multiValue.length; i++) {
+                                        multiValue[i] = Strings.isNotBlank(multiValue[i]) ? multiValue[i].trim() : "";
+                                    }
+                                    businessData.setMultiValue(multiValue);
+                                    if (ruleData.isRuleTypeMulti()) {
+                                        isMulti = true;
+                                        multiData.put(businessDataEntry.getKey(), businessData);
+                                    } else if (ruleData.isRuleTypeSym()) {
+                                        isMulti = true;
+                                        symData.put(businessDataEntry.getKey(), businessData);
+                                        maxLength = maxLength > multiValue.length ? maxLength : multiValue.length;
+                                        dataValues.add(String.join(",", multiValue));
+                                    }
+                                    logger.info(String.format("数据清洗[Y.%s,X.%s], [%s], [%s], %s => %s", businessData.getYIndex(), businessData.getXIndex(), columnName, ruleData.getType(), businessData.getValue(), JSON.toJSONString(multiValue)));
+                                }
+                            } catch (Exception ex) {
+                                logger.error(ex.getMessage(), ex);
+                            }
+                        } else {
+                            businessData.setErrorMsg("Rule resolution failure。[" + ruleData.getType() + "] Rule is empty！");
+                        }
+                    }
+                }
+            }
+            if (!isMulti) {
+                singleData.put(businessDataEntry.getKey(), businessData);
+            }
+        }
+        if (dataValues.size() > 1 && "AB*CD".equalsIgnoreCase(ruleData.getGoal())) {
+            multiData.putAll(symData);
+            symData.clear();
+        }
+        // 对乘值处理
+        List<Map<String, BusinessData>> multiMapList = cartesianProduct(multiData);
+        // 对称值处理
+        List<Map<String, BusinessData>> symMapList = new ArrayList<>();
+        if (!symData.isEmpty()) {
+            for (int i = 0; i < maxLength; i++) {
+                Map<String, BusinessData> symMap = new HashMap<>();
+                for (Map.Entry<String, BusinessData> businessDataEntry : symData.entrySet()) {
+                    BusinessData businessData = businessDataEntry.getValue();
+                    BusinessData data = new BusinessData();
+                    data.setXIndex(businessData.getXIndex());
+                    data.setYIndex(businessData.getYIndex());
+                    String[] multiValue = businessData.getMultiValue();
+                    if ("AB:CN".equalsIgnoreCase(ruleData.getGoal())) {
+                        data.setValue((i < multiValue.length) ? multiValue[i] : null);
+                    } else {
+                        data.setValue(multiValue[i < multiValue.length ? i : multiValue.length - 1]);
+                    }
+                    data.setPrimevalValue(businessData.getPrimevalValue());
+                    data.setTransitionValues(businessData.getTransitionValue());
+                    data.setTransitionValue(data.getValue());
+                    data.setBusinessTypeData(businessData.getBusinessTypeData());
+                    data.setErrorMsgs(businessData.getErrorMsg());
+                    symMap.put(businessDataEntry.getKey(), data);
+                }
+                symMapList.add(symMap);
+            }
+        }
+        handleDataMapList = mergeBusinessData(singleData, multiMapList, symMapList);
+
+        return handleDataMapList;
+    }
+
+    private void typeRuleBaseToColumn(String currentUUID, Map<String, BusinessData> businessDataMap, Map<String, Object> valueMap, Set<String> columnNames, BusinessTypeRuleData ruleData) {
+        for (String columnName : columnNames) {
+            BusinessData businessData = businessDataMap.get(columnName);
+            if (businessData == null) {
+                continue;
+            }
+            Object newValue = null;
+            String oldValue = businessData.getValue() == null ? null : String.valueOf(businessData.getValue());
+            if (ruleData.isRuleTypeDeletes()) {
+                if (Strings.isNotBlank(ruleData.getRule())) {
+                    newValue = Strings.isNotBlank(oldValue) ? oldValue.replaceAll(ruleData.getRule(), "") : "";
+                    newValue = Strings.isNotBlank(String.valueOf(newValue)) ? newValue : null;
+                } else {
+                    businessData.setErrorMsg("Rule resolution failure。[" + ruleData.getType() + "] Rule is empty！");
+                }
+            } else if (ruleData.isRuleTypeReplace()) {
+                if (Strings.isNotBlank(ruleData.getRule()) && Strings.isNotBlank(ruleData.getGoal())) {
+                    newValue = Strings.isNotBlank(oldValue) ? oldValue.replaceAll(ruleData.getRule(), ruleData.getGoal()) : "";
+                    newValue = Strings.isNotBlank(String.valueOf(newValue)) ? newValue : null;
+                } else {
+                    businessData.setErrorMsg("Rule resolution failure。[" + ruleData.getType() + "] Rule or Goal is empty！");
+                }
+            } else if (ruleData.isRuleTypeUpperCase()) {
+                newValue = Strings.isNotBlank(oldValue) ? oldValue.toUpperCase(Locale.ENGLISH) : null;
+            } else if (ruleData.isRuleTypeLowerCase()) {
+                newValue = Strings.isNotBlank(oldValue) ? oldValue.toLowerCase(Locale.ENGLISH) : null;
+            } else if (ruleData.isRuleTypeTrim()) {
+                newValue = Strings.isNotBlank(oldValue) && Strings.isNotBlank(oldValue.trim()) ? oldValue.trim() : null;
+            } else if (ruleData.isRuleTypeExpression()) {
+                if (Strings.isNotBlank(ruleData.getRule())) {
+                    newValue = JsProvider.executeExpression(ruleData.getRule(), valueMap);
+                } else {
+                    businessData.setErrorMsg("Rule resolution failure。[" + ruleData.getType() + "] Rule is empty！");
+                }
+            } else if (ruleData.isRuleTypeDictionary()) {
+                if (Strings.isNotBlank(ruleData.getRule())) {
+                    Map<String, String> redisValues = (Map<String, String>) redisTemplate.opsForValue().get(String.format("%s:%s", currentUUID, ruleData.getRule()));
+                    if (Strings.isNotBlank(oldValue) && redisValues != null && redisValues.size() > 0) {
+                        newValue = redisValues.get(oldValue);
+                    }
+                } else {
+                    businessData.setErrorMsg("Rule resolution failure。[" + ruleData.getType() + "] Rule is empty！");
+                }
+            } else if (ruleData.isRuleTypeQueryGoal()) {
+                String tableName = ruleData.getQueryRuleTable();
+                List<String> colNames = ruleData.getQueryRuleColumn();
+                if (Strings.isNotBlank(tableName) && colNames != null && colNames.size() > 0 && Strings.isNotBlank(ruleData.getGoal())) {
+                    Map<String, Object> redisValues = (Map<String, Object>) redisTemplate.opsForValue().get(String.format("%s:%s,%s", currentUUID, ruleData.getRule(), ruleData.getGoal()));
+                    if (Strings.isNotBlank(oldValue) && redisValues != null && redisValues.size() > 0) {
+                        newValue = redisValues.get(oldValue);
+                    }
+                } else {
+                    businessData.setErrorMsg("Rule resolution failure。[" + ruleData.getType() + "] Rule is Error Or Goal is Empty！");
+                }
+            } else if (ruleData.isRuleTypeQueryRule()) {
+                String tableName = ruleData.getQueryRuleTable();
+                List<String> colNames = ruleData.getQueryRuleColumn();
+                if (Strings.isNotBlank(tableName) && colNames != null && colNames.size() > 0 && Strings.isNotBlank(ruleData.getGoal())) {
+                    Map<String, Object> redisValues = (Map<String, Object>) redisTemplate.opsForValue().get(String.format("%s:%s", currentUUID, ruleData.getRule()));
+                    if (Strings.isNotBlank(oldValue) && redisValues != null && redisValues.size() > 0) {
+                        newValue = redisValues.get(oldValue);
+                    }
+                } else {
+                    businessData.setErrorMsg("Rule resolution failure。[" + ruleData.getType() + "] Rule is Error Or Goal is Empty！");
+                }
+            }
+            newValue = (ruleData.isRetain() && newValue == null) ? businessData.getValue() : newValue;
+            if (businessData.getValue() != null && !businessData.getValue().equals(newValue)) {
+                businessData.setValue(newValue);
+                businessData.setTransitionValue(newValue);
+            }
+            logger.info(String.format("数据清洗[Y.%s,X.%s], [%s], [%s], %s => %s, (%s)", businessData.getYIndex(), businessData.getXIndex(), columnName, ruleData.getType(), oldValue, newValue, ruleData.getRule()));
+        }
+    }
+
+    private List<String> setTypeRuleCache(String currentUUID, Set<Map<Integer, BusinessTypeRuleData>> businessTypeRuleDataSet) {
+        List<String> cacheList = new ArrayList<>();
+        // 类型
+        Map<String, BusinessTypeRuleData> ruleDataDict = new HashMap<>();
+        Map<String, BusinessTypeRuleData> ruleDataGoal = new HashMap<>();
+        Map<String, BusinessTypeRuleData> ruleDataRule = new HashMap<>();
+        // 数据解析
+        if (businessTypeRuleDataSet != null && businessTypeRuleDataSet.size() > 0) {
+            for (Map<Integer, BusinessTypeRuleData> ruleDataMap : businessTypeRuleDataSet) {
+                for (Map.Entry<Integer, BusinessTypeRuleData> ruleDataEntry : ruleDataMap.entrySet()) {
+                    BusinessTypeRuleData ruleData = ruleDataEntry.getValue();
+                    if (ruleData != null) {
+                        if (ruleData.isRuleTypeDictionary()) {
+                            if (Strings.isNotBlank(ruleData.getRule())) {
+                                String key = String.format("%s:%s", currentUUID, ruleData.getRule());
+                                if (!ruleDataDict.containsKey(key)) {
+                                    ruleDataDict.put(key, ruleData);
+                                }
+                            }
+                        } else if (ruleData.isRuleTypeQueryGoal()) {
+                            String tableName = ruleData.getQueryRuleTable();
+                            List<String> columnNames = ruleData.getQueryRuleColumn();
+                            if (Strings.isNotBlank(ruleData.getGoal()) && Strings.isNotBlank(tableName) && columnNames != null && columnNames.size() > 0) {
+                                String key = String.format("%s:%s,%s", currentUUID, ruleData.getRule(), ruleData.getGoal());
+                                if (!ruleDataGoal.containsKey(key)) {
+                                    ruleDataGoal.put(key, ruleData);
+                                }
+                            }
+                        } else if (ruleData.isRuleTypeQueryRule()) {
+                            String tableName = ruleData.getQueryRuleTable();
+                            List<String> columnNames = ruleData.getQueryRuleColumn();
+                            if (Strings.isNotBlank(ruleData.getGoal()) && Strings.isNotBlank(tableName) && columnNames != null && columnNames.size() > 0) {
+                                String key = String.format("%s:%s", currentUUID, ruleData.getRule());
+                                if (!ruleDataRule.containsKey(key)) {
+                                    ruleDataRule.put(key, ruleData);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        // 字典查询
+        List<String> dictKeys = setDictRuleRedis(currentUUID, ruleDataDict);
+        cacheList.addAll(dictKeys);
+        // 目标字段查询
+        List<String> goalRedis = setQueryRuleRedis(ruleDataGoal);
+        cacheList.addAll(goalRedis);
+        // 规则字段查询
+        List<String> ruleRedis = setQueryRuleRedis(ruleDataRule);
+        cacheList.addAll(ruleRedis);
+
+        return cacheList;
+    }
+
 }

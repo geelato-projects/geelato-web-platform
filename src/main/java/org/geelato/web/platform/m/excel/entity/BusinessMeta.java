@@ -148,8 +148,22 @@ public class BusinessMeta {
         return ExcelEvaluationEnum.PRIMARY_KEY.name().equalsIgnoreCase(this.evaluation);
     }
 
+    /**
+     * 取值方式，流水号
+     *
+     * @return
+     */
     public boolean isEvaluationTypeSerialNumber() {
         return ExcelEvaluationEnum.SERIAL_NUMBER.name().equalsIgnoreCase(this.evaluation);
+    }
+
+    /**
+     * 取值方式，未被清洗过的数值
+     *
+     * @return
+     */
+    public boolean isEvaluationTypePrimitive() {
+        return ExcelEvaluationEnum.PRIMITIVE.name().equalsIgnoreCase(this.evaluation);
     }
 
     /**

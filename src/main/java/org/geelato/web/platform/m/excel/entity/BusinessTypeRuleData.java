@@ -4,7 +4,9 @@ import org.apache.logging.log4j.util.Strings;
 import org.geelato.web.platform.enums.ExcelColumnTypeRuleEnum;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author diabl
@@ -12,6 +14,8 @@ import java.util.List;
  * @date 2023/10/30 10:28
  */
 public class BusinessTypeRuleData {
+    // 列名
+    private String columnName;
     // 类型
     private String type;
     // 规则，正则表达式；字典编码；表格:字段,字段...
@@ -20,8 +24,18 @@ public class BusinessTypeRuleData {
     private String goal;
     // 是否优先于 全局多值处理
     private boolean priority = false;
+    // 保留值，规则清洗后为空，TRUE:保留清洗前值;FALSE:已清洗结果为准。默认：FALSE
+    private boolean retain = false;
     // 执行次序
     private Integer order;
+
+    public String getColumnName() {
+        return columnName;
+    }
+
+    public void setColumnName(String columnName) {
+        this.columnName = columnName;
+    }
 
     public String getType() {
         return type;
@@ -53,6 +67,14 @@ public class BusinessTypeRuleData {
 
     public void setPriority(boolean priority) {
         this.priority = priority;
+    }
+
+    public boolean isRetain() {
+        return retain;
+    }
+
+    public void setRetain(boolean retain) {
+        this.retain = retain;
     }
 
     public Integer getOrder() {
@@ -89,6 +111,22 @@ public class BusinessTypeRuleData {
 
     public boolean isRuleTypeQueryRule() {
         return ExcelColumnTypeRuleEnum.QUERYRULE.name().equalsIgnoreCase(this.type);
+    }
+
+    public boolean isRuleTypeTrim() {
+        return ExcelColumnTypeRuleEnum.TRIM.name().equalsIgnoreCase(this.type);
+    }
+
+    public boolean isRuleTypeExpression() {
+        return ExcelColumnTypeRuleEnum.EXPRESSION.name().equalsIgnoreCase(this.type);
+    }
+
+    public boolean isRuleTypeSym() {
+        return ExcelColumnTypeRuleEnum.SYM.name().equalsIgnoreCase(this.type);
+    }
+
+    public boolean isRuleTypeMulti() {
+        return ExcelColumnTypeRuleEnum.MULTI.name().equalsIgnoreCase(this.type);
     }
 
     /**
@@ -131,5 +169,20 @@ public class BusinessTypeRuleData {
             }
         }
         return columns;
+    }
+
+    public Set<String> getColumnNames() {
+        Set<String> columnNames = new LinkedHashSet<>();
+        if (Strings.isNotBlank(this.columnName)) {
+            String[] columns = this.columnName.split(",");
+            if (columns != null && columns.length > 0) {
+                for (String str : columns) {
+                    if (Strings.isNotBlank(str) && !columnNames.contains(str)) {
+                        columnNames.add(str);
+                    }
+                }
+            }
+        }
+        return columnNames;
     }
 }

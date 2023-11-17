@@ -31,10 +31,7 @@ import org.geelato.web.platform.m.base.entity.Base64Info;
 import org.geelato.web.platform.m.base.rest.BaseController;
 import org.geelato.web.platform.m.base.service.AttachService;
 import org.geelato.web.platform.m.base.service.UploadService;
-import org.geelato.web.platform.m.excel.entity.BusinessData;
-import org.geelato.web.platform.m.excel.entity.BusinessMeta;
-import org.geelato.web.platform.m.excel.entity.BusinessTypeData;
-import org.geelato.web.platform.m.excel.entity.ExportTemplate;
+import org.geelato.web.platform.m.excel.entity.*;
 import org.geelato.web.platform.m.excel.service.ExcelCommonUtils;
 import org.geelato.web.platform.m.excel.service.ExcelReader;
 import org.geelato.web.platform.m.excel.service.ExcelXSSFReader;
@@ -167,6 +164,7 @@ public class ImportExcelController extends BaseController {
             // 文件内容
             Map<String, List<BusinessMeta>> businessMetaListMap = new HashMap<>();// 元数据
             Map<String, BusinessTypeData> businessTypeDataMap = new HashMap<>();// 数据类型
+            Set<Map<Integer, BusinessTypeRuleData>> businessTypeRuleDataSet = new LinkedHashSet<>();// 清洗规则
             List<Map<String, BusinessData>> businessDataMapList = new ArrayList<>();// 业务数据
             // 事务模板查询
             ExportTemplate exportTemplate = exportTemplateService.getModel(ExportTemplate.class, templateId);
@@ -178,9 +176,11 @@ public class ImportExcelController extends BaseController {
             // logger.info(String.format("数据类型+元数据（%s[%s]）%s", templateRuleAttach.getName(), templateRuleAttach.getId(), templateRuleAttach.getUrl()));
             File templateRuleFile = getTemplate(currentUUID, exportTemplate.getTemplateRule());
             ExcelCommonUtils.notNull(templateRuleFile, new FileNotFoundException("Business Data Type And Meta File Not Found"));
-            businessMetaListMap = getBusinessMeta(templateRuleFile, 1);
+            businessMetaListMap = getBusinessMeta(templateRuleFile, 2);
             //事务，模板数据类型
             businessTypeDataMap = getBusinessTypeData(templateRuleFile, 0);
+            // 清洗规则
+            businessTypeRuleDataSet = getBusinessTypeRuleData(templateRuleFile, 1);
             // 事务，业务数据
             Attach businessFile = null;
             if (Strings.isNotBlank(attachId)) {
@@ -189,15 +189,18 @@ public class ImportExcelController extends BaseController {
                 logger.info(String.format("业务数据（%s[%s]）[%s]", businessFile.getName(), businessFile.getId(), sdf.format(new Date())));
             }
             businessDataMapList = getBusinessData(businessFile, request, businessTypeDataMap, 0);
-            // 需要转化的业务数据
-            businessDataMapList = excelCommonUtils.handleBusinessDataRule(currentUUID, businessDataMapList, true);
+            // 业务数据清洗规则
+            businessDataMapList = excelCommonUtils.handleBusinessDataRules(currentUUID, businessDataMapList, businessTypeRuleDataSet);
             logger.info(String.format("BusinessData Handle Rule [TRUE] = %s [%s]", (businessDataMapList == null ? 0 : businessDataMapList.size()), sdf.format(new Date())));
-            // 需要分割的业务数据，多值数据处理
-            businessDataMapList = excelCommonUtils.handleBusinessDataMultiScene(businessDataMapList);
-            logger.info(String.format("BusinessData Handle Multi Scene = %s [%s]", (businessDataMapList == null ? 0 : businessDataMapList.size()), sdf.format(new Date())));
             // 需要转化的业务数据
-            businessDataMapList = excelCommonUtils.handleBusinessDataRule(currentUUID, businessDataMapList, false);
-            logger.info(String.format("BusinessData Handle Rule [FALSE] = %s [%s]", (businessDataMapList == null ? 0 : businessDataMapList.size()), sdf.format(new Date())));
+            // businessDataMapList = excelCommonUtils.handleBusinessDataRule(currentUUID, businessDataMapList, true);
+            //logger.info(String.format("BusinessData Handle Rule [TRUE] = %s [%s]", (businessDataMapList == null ? 0 : businessDataMapList.size()), sdf.format(new Date())));
+            // 需要分割的业务数据，多值数据处理
+            // businessDataMapList = excelCommonUtils.handleBusinessDataMultiScene(businessDataMapList);
+            //logger.info(String.format("BusinessData Handle Multi Scene = %s [%s]", (businessDataMapList == null ? 0 : businessDataMapList.size()), sdf.format(new Date())));
+            // 需要转化的业务数据
+            // businessDataMapList = excelCommonUtils.handleBusinessDataRule(currentUUID, businessDataMapList, false);
+            //logger.info(String.format("BusinessData Handle Rule [FALSE] = %s [%s]", (businessDataMapList == null ? 0 : businessDataMapList.size()), sdf.format(new Date())));
             // 设置缓存
             List<String> cacheKeys = excelCommonUtils.setCache(currentUUID, businessMetaListMap, businessDataMapList);
             logger.info(String.format("Redis Template [ADD] = %s [%s]", (cacheKeys == null ? 0 : cacheKeys.size()), sdf.format(new Date())));
@@ -245,6 +248,8 @@ public class ImportExcelController extends BaseController {
                             }
                         } else if (meta.isEvaluationTypeConst()) {
                             value = meta.getConstValue();
+                        } else if (meta.isEvaluationTypeJsExpression()) {
+                            value = JsProvider.executeExpression(meta.getExpression(), valueMap);
                         } else if (meta.isEvaluationTypeSerialNumber()) {
                             value = currentUUID;
                         }
@@ -339,7 +344,7 @@ public class ImportExcelController extends BaseController {
             // errorMsg.add(String.format("业务数据格式：%s；而数据库存储格式为：%s。", typeData.getType(), columnMeta.getDataType()));
         }
         if (value == null && !columnMeta.isNullable() && !columnNames.contains(columnMeta.getName())) {
-            errorMsg.add(String.format("原始数据[%s]，对应字段值不能为空。", businessData.getPrimevalValue()));
+            errorMsg.add(String.format("原始数据流[%s]，对应字段值不能为空。", String.join("=>", businessData.getTransitionValueString())));
         }
         if (value != null && columnMeta.isUniqued() && !columnNames.contains(columnMeta.getName())) {
             Map<String, Set<Object>> redisValues = (Map<String, Set<Object>>) redisTemplate.opsForValue().get(String.format("%s:%s:%s", currentUUID, columnMeta.getTableName(), REDIS_UNIQUE_KEY));
@@ -418,6 +423,8 @@ public class ImportExcelController extends BaseController {
             }
         } else if (meta.isEvaluationTypeSerialNumber()) {
             value = currentUUID;
+        } else if (meta.isEvaluationTypePrimitive()) {
+            value = businessData.getPrimevalValue();
         }
         if (columnMeta.getDataType().equalsIgnoreCase("year")) {
             value = new SimpleDateFormat("yyyy").format(value);
@@ -518,6 +525,50 @@ public class ImportExcelController extends BaseController {
         }
 
         return businessTypeDataMap;
+    }
+
+    /**
+     * 获取业务数据类型
+     *
+     * @param file       文件
+     * @param sheetIndex 工作表次序
+     * @return
+     * @throws IOException
+     */
+    private Set<Map<Integer, BusinessTypeRuleData>> getBusinessTypeRuleData(File file, int sheetIndex) throws IOException {
+        Set<Map<Integer, BusinessTypeRuleData>> typeRuleDataSet = new LinkedHashSet<>();
+        FileInputStream fileInputStream = null;
+        BufferedInputStream bufferedInputStream = null;
+        try {
+            // excel文件类型
+            String contentType = Files.probeContentType(file.toPath());
+            // 读取文件
+            fileInputStream = new FileInputStream(file);
+            bufferedInputStream = new BufferedInputStream(fileInputStream);
+            if (EXCEL_XLS_CONTENT_TYPE.equals(contentType)) {
+                POIFSFileSystem fileSystem = new POIFSFileSystem(bufferedInputStream);
+                HSSFWorkbook workbook = new HSSFWorkbook(fileSystem);
+                HSSFSheet sheet = workbook.getSheetAt(sheetIndex);
+                typeRuleDataSet = excelReader.readBusinessTypeRuleData(sheet);
+            } else if (EXCEL_XLSX_CONTENT_TYPE.equals(contentType)) {
+                XSSFWorkbook workbook = new XSSFWorkbook(bufferedInputStream);
+                XSSFSheet sheet = workbook.getSheetAt(sheetIndex);
+                typeRuleDataSet = excelXSSFReader.readBusinessTypeRuleData(sheet);
+            } else {
+                throw new FileTypeNotSupportedException("Business Data Type Rule, Excel Type: " + contentType);
+            }
+        } catch (IOException ex) {
+            throw new FileException("Business Data Type Rule, Excel Sheet(" + sheetIndex + ") Reader Failed! " + ex.getMessage());
+        } finally {
+            if (bufferedInputStream != null) {
+                bufferedInputStream.close();
+            }
+            if (fileInputStream != null) {
+                fileInputStream.close();
+            }
+        }
+
+        return typeRuleDataSet;
     }
 
     /**
