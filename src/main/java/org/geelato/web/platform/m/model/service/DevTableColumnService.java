@@ -104,6 +104,8 @@ public class DevTableColumnService extends BaseSortableService {
                 });
                 // 创建
                 for (ColumnMeta meta : metaList) {
+                    meta.setAppId(tableMeta.getAppId());
+                    meta.setTenantCode(tableMeta.getTenantCode());
                     meta.setTableId(tableMeta.getId());
                     meta.setTableName(tableMeta.getEntityName());
                     meta.setTableCatalog(null);

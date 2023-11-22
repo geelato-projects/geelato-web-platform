@@ -255,6 +255,7 @@ public class DevTableController extends BaseController {
             params.put("entity_name", form.getEntityName());
             params.put("connect_id", form.getConnectId());
             params.put("del_status", String.valueOf(DeleteStatusEnum.NO.getCode()));
+            params.put("app_id", form.getAppId());
             params.put("tenant_code", form.getTenantCode());
             result.setData(devTableService.validate("platform_dev_table", form.getId(), params));
         } catch (Exception e) {
