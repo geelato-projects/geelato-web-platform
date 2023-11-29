@@ -344,7 +344,7 @@ public class ImportExcelController extends BaseController {
             // errorMsg.add(String.format("业务数据格式：%s；而数据库存储格式为：%s。", typeData.getType(), columnMeta.getDataType()));
         }
         if (value == null && !columnMeta.isNullable() && !columnNames.contains(columnMeta.getName())) {
-            errorMsg.add(String.format("原始数据流[%s]，对应字段值不能为空。", String.join("=>", businessData.getTransitionValueString())));
+            errorMsg.add(String.format("原始数据[%s]，对应字段值不能为空。", String.join("=>", businessData.getTransitionValueString())));
         }
         if (value != null && columnMeta.isUniqued() && !columnNames.contains(columnMeta.getName())) {
             Map<String, Set<Object>> redisValues = (Map<String, Set<Object>>) redisTemplate.opsForValue().get(String.format("%s:%s:%s", currentUUID, columnMeta.getTableName(), REDIS_UNIQUE_KEY));

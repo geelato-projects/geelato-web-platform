@@ -14,13 +14,22 @@ import org.geelato.core.meta.model.entity.BaseEntity;
 @Entity(name = "platform_role_r_permission")
 @Title(title = "角色权限关系表")
 public class RolePermissionMap extends BaseEntity {
+
+    private String appId;
     private String roleId;
-
     private String permissionId;
-
     private String roleName;
     private String permissionName;
 
+    @Title(title = "应用Id")
+    @Col(name = "app_id")
+    public String getAppId() {
+        return appId;
+    }
+
+    public void setAppId(String appId) {
+        this.appId = appId;
+    }
 
     @Title(title = "角色ID")
     @Col(name = "role_id", refTables = "platform_role", refColName = "platform_role.id")

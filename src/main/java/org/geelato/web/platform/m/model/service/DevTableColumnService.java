@@ -3,8 +3,6 @@ package org.geelato.web.platform.m.model.service;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import org.apache.logging.log4j.util.Strings;
-import org.geelato.web.platform.arco.select.SelectOptionData;
-import org.geelato.web.platform.arco.select.SelectOptionGroup;
 import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.constants.ColumnDefault;
 import org.geelato.core.constants.MetaDaoSql;
@@ -20,6 +18,8 @@ import org.geelato.core.meta.schema.SchemaColumn;
 import org.geelato.core.meta.schema.SchemaIndex;
 import org.geelato.core.util.SchemaUtils;
 import org.geelato.core.util.StringUtils;
+import org.geelato.web.platform.arco.select.SelectOptionData;
+import org.geelato.web.platform.arco.select.SelectOptionGroup;
 import org.geelato.web.platform.m.base.service.BaseSortableService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -104,6 +104,8 @@ public class DevTableColumnService extends BaseSortableService {
                 });
                 // 创建
                 for (ColumnMeta meta : metaList) {
+                    meta.setAppId(tableMeta.getAppId());
+                    meta.setTenantCode(tableMeta.getTenantCode());
                     meta.setTableId(tableMeta.getId());
                     meta.setTableName(tableMeta.getEntityName());
                     meta.setTableCatalog(null);
@@ -268,6 +270,7 @@ public class DevTableColumnService extends BaseSortableService {
         // 常用
         model.setEnableStatus(EnableStatusEnum.DISABLED.getCode());
         model.setDelStatus(DeleteStatusEnum.IS.getCode());
+        model.setDeleteAt(new Date());
         model.setSeqNo(ColumnDefault.SEQ_NO_DELETE);
         // 标记
         model.setTitle(newTitle);
@@ -283,6 +286,7 @@ public class DevTableColumnService extends BaseSortableService {
         sqlParams.put("remark", "delete column. \n");
         sqlParams.put("newName", newColumnName);
         sqlParams.putAll(getSqlParams(model, ""));
+        sqlParams.put("deleteAt", sdf.format(new Date()));
         // 数据库表中是否有该字段
         String filterSql = String.format(" AND TABLE_NAME='%s' AND COLUMN_NAME='%s' ", model.getTableName(), model.getName());
         String columnSql = String.format(MetaDaoSql.INFORMATION_SCHEMA_COLUMNS, MetaDaoSql.TABLE_SCHEMA_METHOD, filterSql);
@@ -380,6 +384,7 @@ public class DevTableColumnService extends BaseSortableService {
         model.setId(null);
         model.setEnableStatus(EnableStatusEnum.DISABLED.getCode());
         model.setDelStatus(DeleteStatusEnum.IS.getCode());
+        model.setDeleteAt(new Date());
         model.setSeqNo(ColumnDefault.SEQ_NO_DELETE);
         // 标记
         model.setTitle(UPDATE_COMMENT_PREFIX + model.getTitle());

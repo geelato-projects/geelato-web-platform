@@ -146,6 +146,7 @@ public class DevViewController extends BaseController {
             params.put("view_name", form.getViewName());
             params.put("connect_id", form.getConnectId());
             params.put("del_status", String.valueOf(DeleteStatusEnum.NO.getCode()));
+            params.put("app_id", form.getAppId());
             params.put("tenant_code", form.getTenantCode());
             result.setData(devViewService.validate("platform_dev_view", form.getId(), params));
         } catch (Exception e) {

@@ -3,20 +3,18 @@ package org.geelato.web.platform.m.base.service;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import org.apache.logging.log4j.util.Strings;
+import org.geelato.core.Ctx;
 import org.geelato.core.constants.ColumnDefault;
 import org.geelato.core.enums.DeleteStatusEnum;
 import org.geelato.core.gql.parser.FilterGroup;
 import org.geelato.core.meta.model.entity.BaseEntity;
-import org.geelato.core.Ctx;
 import org.geelato.core.orm.Dao;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 /**
  * @author diabl
@@ -153,6 +151,7 @@ public class BaseService {
      */
     public <T extends BaseEntity> void isDeleteModel(T model) {
         model.setDelStatus(DeleteStatusEnum.IS.getCode());
+        model.setDeleteAt(new Date());
         dao.save(model);
     }
 

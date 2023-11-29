@@ -85,8 +85,7 @@ public class DictItemService extends BaseSortableService {
                 if (childs != null && !childs.isEmpty()) {
                     for (DictItem item : childs) {
                         item.setEnableStatus(EnableStatusEnum.DISABLED.getCode());
-                        item.setDelStatus(DeleteStatusEnum.NO.getCode());
-                        dao.save(item);
+                        super.isDeleteModel(item);
                     }
                 }
             }
@@ -95,11 +94,11 @@ public class DictItemService extends BaseSortableService {
     }
 
     /**
-     * 逻辑删除
+     * 逻辑删除，并删除子集
      *
      * @param model
      */
-    public void isDeleteModel(DictItem model) {
+    public void isDeleteModelAndChild(DictItem model) {
         List<DictItem> childs = new ArrayList<>();
         childs.add(model);
 
@@ -111,12 +110,22 @@ public class DictItemService extends BaseSortableService {
             if (childs != null && !childs.isEmpty()) {
                 for (DictItem item : childs) {
                     item.setEnableStatus(EnableStatusEnum.DISABLED.getCode());
-                    item.setDelStatus(DeleteStatusEnum.IS.getCode());
-                    dao.save(item);
+                    super.isDeleteModel(item);
                 }
             }
         }
     }
+
+    /**
+     * 基础逻辑删除
+     *
+     * @param model
+     */
+    public void isDeleteDictItem(DictItem model) {
+        model.setEnableStatus(EnableStatusEnum.DISABLED.getCode());
+        super.isDeleteModel(model);
+    }
+
 
     private List<DictItem> childIteration(List<DictItem> list, String pid) {
         List<DictItem> result = new ArrayList<>();

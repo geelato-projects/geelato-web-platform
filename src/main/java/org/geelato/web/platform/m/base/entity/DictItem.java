@@ -18,6 +18,7 @@ import java.util.List;
 @Title(title = "数据字典项")
 public class DictItem extends BaseSortableEntity implements EntityEnableAble {
 
+    private String appId;
     private String pid;
     private String dictId;
     private String itemCode;
@@ -25,6 +26,17 @@ public class DictItem extends BaseSortableEntity implements EntityEnableAble {
     private String itemRemark;
     private int enableStatus = ColumnDefault.ENABLE_STATUS_VALUE;
     private List<DictItem> children;
+
+
+    @Title(title = "应用Id")
+    @Col(name = "app_id")
+    public String getAppId() {
+        return appId;
+    }
+
+    public void setAppId(String appId) {
+        this.appId = appId;
+    }
 
     @Col(name = "pid")
     @Title(title = "字典项父级")

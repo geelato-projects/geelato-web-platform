@@ -209,6 +209,7 @@ public class DevTableColumnController extends BaseController {
             params.put("column_name", form.getName());
             params.put("table_id", form.getTableId());
             params.put("del_status", String.valueOf(DeleteStatusEnum.NO.getCode()));
+            params.put("app_id", form.getAppId());
             params.put("tenant_code", form.getTenantCode());
             result.setData(devTableColumnService.validate("platform_dev_column", form.getId(), params));
         } catch (Exception e) {

@@ -1,16 +1,19 @@
 package org.geelato.web.platform.m.security.service;
 
 import org.apache.logging.log4j.util.Strings;
-import org.geelato.web.platform.m.base.service.BaseService;
 import org.geelato.core.constants.ApiErrorMsg;
+import org.geelato.core.enums.DeleteStatusEnum;
+import org.geelato.web.platform.m.base.service.BaseService;
 import org.geelato.web.platform.m.security.entity.Role;
 import org.geelato.web.platform.m.security.entity.RoleUserMap;
 import org.geelato.web.platform.m.security.entity.User;
-import org.geelato.core.enums.DeleteStatusEnum;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -43,5 +46,40 @@ public class RoleUserMapService extends BaseService {
             model.setTenantCode(getSessionTenantCode());
         }
         return dao.save(model);
+    }
+
+    /**
+     * 获取拥有的角色
+     *
+     * @param userId
+     * @param appId
+     * @return
+     */
+    public List<Role> queryRoleByUser(String userId, String appId, String tenantCode) {
+        List<Role> result = new ArrayList<>();
+        if (Strings.isBlank(userId)) {
+            return result;
+        }
+        Map<String, Object> params = new HashMap<>();
+        params.put("appId", appId);
+        List<Role> roleList = roleService.queryRoles(params);
+        if (roleList == null || roleList.size() == 0) {
+            return result;
+        }
+        params.clear();
+        params.put("userId", userId);
+        params.put("tenantCode", Strings.isNotBlank(tenantCode) ? tenantCode : getSessionTenantCode());
+        List<RoleUserMap> roleUserMaps = queryModel(RoleUserMap.class, params);
+        if (roleUserMaps != null && roleUserMaps.size() > 0) {
+            for (RoleUserMap roleUserMap : roleUserMaps) {
+                for (Role role : roleList) {
+                    if (Strings.isNotBlank(roleUserMap.getRoleId()) && roleUserMap.getRoleId().equals(role.getId())) {
+                        result.add(role);
+                    }
+                }
+            }
+        }
+
+        return result;
     }
 }

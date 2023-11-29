@@ -42,7 +42,7 @@ public class DevViewService extends BaseSortableService {
             TableView meta = tableViewList.get(0);
             if (tableViewList.size() > 1) {
                 for (int i = 1; i < tableViewList.size(); i++) {
-                    deleteModel(TableView.class, tableViewList.get(i).getId());
+                    isDeleteModel(tableViewList.get(i));
                 }
             }
             meta.setViewConstruct(viewConstruct);
@@ -52,6 +52,8 @@ public class DevViewService extends BaseSortableService {
             updateModel(meta);
         } else {
             TableView meta = new TableView();
+            meta.setAppId(tableMeta.getAppId());
+            meta.setTenantCode(tableMeta.getTenantCode());
             meta.setConnectId(tableMeta.getConnectId());
             meta.setEntityName(tableMeta.getEntityName());
             meta.setTitle(String.format("%s的默认视图", tableMeta.getTitle()));

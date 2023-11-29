@@ -43,16 +43,85 @@ public class UploadService {
 
         // 处理文件名称
         if (isRename) {
-            int dotIndex = fileName.lastIndexOf(".");
-            String ext = fileName.substring(dotIndex);
+            String ext = this.getFileExtension(fileName);
             fileName = UIDGenerator.generate() + ext;
         }
         // 路径检验
-        File pathFile = new File("/" + subPath + datePath);
-        if (!pathFile.exists()) {
-            pathFile.mkdirs();
-        }
+        this.fileMkdirs("/" + subPath + datePath);
 
         return "/" + subPath + datePath + fileName;
+    }
+
+    /**
+     * 创建全部路径
+     *
+     * @param path
+     */
+    public void fileMkdirs(String path) {
+        if (Strings.isNotBlank(path)) {
+            File pathFile = new File(path);
+            if (!pathFile.exists()) {
+                pathFile.mkdirs();
+            }
+        }
+    }
+
+    /**
+     * 文件后缀。例：.xlsx
+     *
+     * @param fileName 文件名称
+     * @return
+     */
+    public String getFileExtension(String fileName) {
+        if (Strings.isNotBlank(fileName)) {
+            int lastIndexOfDot = fileName.lastIndexOf('.');
+            if (lastIndexOfDot != -1) {
+                return fileName.substring(lastIndexOfDot);
+            }
+        }
+
+        return "";
+    }
+
+    public String getFileName(String fileName) {
+        if (Strings.isNotBlank(fileName)) {
+            int lastIndexOfDot = fileName.lastIndexOf('.');
+            if (lastIndexOfDot != -1) {
+                return fileName.substring(0, lastIndexOfDot);
+            }
+        }
+
+        return "";
+    }
+
+    /**
+     * 文件复制
+     *
+     * @param file
+     * @param fileName 重命名文件名称
+     * @return
+     */
+    public boolean fileResetName(File file, String fileName) {
+        if (file != null && file.exists()) {
+            if (Strings.isBlank(fileName)) {
+                fileName = String.format("%s_%s_bak%s", this.getFileName(file.getName()), UIDGenerator.generate(), this.getFileExtension(file.getName()));
+            }
+            File newFile = new File(String.format("%s/%s", file.getParent(), fileName));
+            if (!newFile.exists()) {
+                return file.renameTo(newFile);
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * 文件复制，重命名：name_uuid_bak.extension
+     *
+     * @param file
+     * @return
+     */
+    public boolean fileResetName(File file) {
+        return this.fileResetName(file, null);
     }
 }

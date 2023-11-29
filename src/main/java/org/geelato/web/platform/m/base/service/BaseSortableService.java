@@ -92,8 +92,7 @@ public class BaseSortableService extends BaseService {
      * @param <T>
      */
     public <T extends BaseSortableEntity> void isDeleteModel(T model) {
-        model.setDelStatus(DeleteStatusEnum.IS.getCode());
         model.setSeqNo(ColumnDefault.SEQ_NO_DELETE);
-        dao.save(model);
+        super.isDeleteModel(model);
     }
 }

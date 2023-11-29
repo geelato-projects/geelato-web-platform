@@ -22,7 +22,7 @@ import java.util.Map;
  */
 @Component
 public class DevTableForeignService extends BaseSortableService {
-    private static Logger logger = LoggerFactory.getLogger(MetaDdlController.class);
+    private static final Logger logger = LoggerFactory.getLogger(MetaDdlController.class);
 
     /**
      * 依据表格情况，从数据库中更新至 dev_column 中
@@ -81,12 +81,13 @@ public class DevTableForeignService extends BaseSortableService {
         for (String key : schemaMap.keySet()) {
             SchemaForeign schema = schemaMap.get(key);
             TableForeign meta = schema.convertTableForeign(metaMap.get(key));
+            meta.setAppId(tableMeta.getAppId());
+            meta.setTenantCode(tableMeta.getTenantCode());
             meta.setMainTable(tableMeta.getTableName());
             meta.setMainTableId(tableMeta.getId());
             if (!metaMap.containsKey(key)) {
                 createModel(meta);
             } else {
-
                 updateModel(meta);
             }
         }

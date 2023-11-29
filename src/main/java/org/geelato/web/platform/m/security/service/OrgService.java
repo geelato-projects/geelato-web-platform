@@ -1,7 +1,5 @@
 package org.geelato.web.platform.m.security.service;
 
-import org.geelato.core.enums.DeleteStatusEnum;
-import org.geelato.web.platform.enums.IsDefaultOrgEnum;
 import org.geelato.web.platform.m.base.service.BaseSortableService;
 import org.geelato.web.platform.m.security.entity.Org;
 import org.geelato.web.platform.m.security.entity.OrgUserMap;
@@ -32,17 +30,14 @@ public class OrgService extends BaseSortableService {
      */
     public void isDeleteModel(Org model) {
         // 组织删除
-        model.setDelStatus(DeleteStatusEnum.IS.getCode());
-        dao.save(model);
+        super.isDeleteModel(model);
         // 清理 组织用户表
         Map<String, Object> params = new HashMap<>();
         params.put("orgId", model.getId());
         List<OrgUserMap> oList = orgUserMapService.queryModel(OrgUserMap.class, params);
         if (oList != null) {
             for (OrgUserMap oModel : oList) {
-                oModel.setDefaultOrg(IsDefaultOrgEnum.NO.getCode());
-                oModel.setDelStatus(DeleteStatusEnum.IS.getCode());
-                dao.save(oModel);
+                orgUserMapService.isDeleteOrgUserMap(oModel);
             }
         }
         // 清理 用户表

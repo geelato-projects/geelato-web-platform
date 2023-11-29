@@ -12,6 +12,7 @@ import org.geelato.core.meta.model.entity.BaseEntity;
 @Entity(name = "platform_permission")
 public class Permission extends BaseEntity {
 
+    private String appId;
     private String name;
     private String code;
     private String type;
@@ -19,6 +20,16 @@ public class Permission extends BaseEntity {
     private String rule;
     private String description;
     private boolean isDefault;
+
+    @Title(title = "应用Id")
+    @Col(name = "app_id")
+    public String getAppId() {
+        return appId;
+    }
+
+    public void setAppId(String appId) {
+        this.appId = appId;
+    }
 
     @Title(title = "名称")
     @Col(name = "name")

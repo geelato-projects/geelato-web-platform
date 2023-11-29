@@ -4,6 +4,8 @@ package org.geelato.web.platform.m.base.rest;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.logging.log4j.util.Strings;
+import org.geelato.core.api.ApiResult;
+import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.web.platform.m.base.entity.Attach;
 import org.geelato.web.platform.m.base.service.AttachService;
 import org.geelato.web.platform.m.base.service.DownloadService;
@@ -17,10 +19,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 /**
  * @author diabl
@@ -31,6 +34,7 @@ import java.net.URLEncoder;
 @RequestMapping(value = "/api/resources")
 public class DownloadController extends BaseController {
     private static final String ROOT_DIRECTORY = "upload";
+    private static final String ROOT_CONFIG_DIRECTORY = "/upload/config";
     private final Logger logger = LoggerFactory.getLogger(DownloadController.class);
     @Autowired
     private DownloadService downloadService;
@@ -88,5 +92,41 @@ public class DownloadController extends BaseController {
                 in.close();
             }
         }
+    }
+
+    @RequestMapping(value = "/json", method = RequestMethod.GET)
+    @ResponseBody
+    public ApiResult downloadJson(String fileName) throws IOException {
+        ApiResult result = new ApiResult();
+        if (Strings.isBlank(fileName)) {
+            return result.error().setMsg(ApiErrorMsg.OPERATE_FAIL);
+        }
+        BufferedReader bufferedReader = null;
+        try {
+            String ext = uploadService.getFileExtension(fileName);
+            if (Strings.isBlank(ext) || !ext.equalsIgnoreCase(".config")) {
+                fileName += ".config";
+            }
+            File file = new File(String.format("%s/%s", ROOT_CONFIG_DIRECTORY, fileName));
+            if (!file.exists()) {
+                return result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
+            }
+            StringBuilder contentBuilder = new StringBuilder();
+            bufferedReader = Files.newBufferedReader(Paths.get(file.getAbsolutePath()), StandardCharsets.UTF_8);
+            String line;
+            while ((line = bufferedReader.readLine()) != null) {
+                contentBuilder.append(line).append("");
+            }
+            result.setData(contentBuilder.toString());
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            result.error().setMsg(ApiErrorMsg.OPERATE_FAIL);
+        } finally {
+            if (bufferedReader != null) {
+                bufferedReader.close();
+            }
+        }
+
+        return result;
     }
 }

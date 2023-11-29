@@ -112,4 +112,19 @@ public class RoleUserMapController extends BaseController {
 
         return result;
     }
+
+
+    @RequestMapping(value = "/queryRoles/{userId}", method = RequestMethod.GET)
+    @ResponseBody
+    public ApiResult queryRoleByUser(@PathVariable(required = true) String userId, String appId, String tenantCode) {
+        ApiResult result = new ApiResult();
+        try {
+            return result.setData(roleUserMapService.queryRoleByUser(userId, appId, tenantCode));
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
+        }
+
+        return result;
+    }
 }

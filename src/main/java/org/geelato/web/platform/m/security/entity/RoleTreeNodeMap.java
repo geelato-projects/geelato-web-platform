@@ -16,15 +16,23 @@ import org.geelato.web.platform.m.base.entity.TreeNode;
 @Title(title = "角色菜单关系表")
 public class RoleTreeNodeMap extends BaseEntity {
 
+    private String appId;
     private String treeId;
     private String roleId;
-
     private String treeNodeId;
-
     private String treeNodeText;
     private String roleName;
-
     private String title;
+
+    @Title(title = "应用Id")
+    @Col(name = "app_id")
+    public String getAppId() {
+        return appId;
+    }
+
+    public void setAppId(String appId) {
+        this.appId = appId;
+    }
 
     @Title(title = "树ID")
     @Col(name = "tree_id", nullable = false)
