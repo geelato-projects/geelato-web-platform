@@ -97,22 +97,6 @@ public class SystemRestController extends BaseController {
         }
     }
 
-    /**
-     * 获取当前用户的菜单
-     *
-     * @param req
-     * @return
-     */
-    @RequestMapping(value = "/getMenuList", method = {RequestMethod.POST, RequestMethod.GET})
-    @ResponseBody
-    public ApiResult getCurrentUserMenu(HttpServletRequest req) throws Exception {
-        User user = this.getUserByToken(req);
-        // 菜单
-        Map map = new HashMap<>();
-        map.put("userId", user.getId());
-        List<Map<String, Object>> menuItemList = dao.queryForMapList("select_platform_menu", map);
-        return new ApiResult().setData(menuItemList);
-    }
 
     /**
      * 用于管理员重置密码
@@ -151,11 +135,5 @@ public class SystemRestController extends BaseController {
     private String getToken(HttpServletRequest req) {
         return req.getHeader("authorization");
     }
-
-//    @Override
-//    public void afterPropertiesSet() throws Exception {
-//        super.afterPropertiesSet();
-//        accountService.setDao(this.dao);
-//    }
 
 }
