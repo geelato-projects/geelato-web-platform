@@ -263,11 +263,15 @@ public class UserRestController extends BaseController {
         try {
             if (Strings.isNotBlank(type)) {
                 Map<String, String> params = new HashMap<>();
-                if ("loginName".equals(type)) {
+                if ("loginName".equalsIgnoreCase(type)) {
                     params.put("login_name", form.getLoginName());
-                } else if ("mobilePhone".equals(type)) {
+                } else if ("enName".equalsIgnoreCase(type)) {
+                    params.put("en_name", form.getEnName());
+                } else if ("mobilePhone".equalsIgnoreCase(type)) {
                     params.put("mobile_phone", form.getMobilePhone());
                     params.put("mobile_prefix", form.getMobilePrefix());
+                } else {
+                    return result.setData(true);
                 }
                 params.put("del_status", String.valueOf(DeleteStatusEnum.NO.getCode()));
                 params.put("tenant_code", form.getTenantCode());
