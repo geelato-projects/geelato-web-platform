@@ -32,17 +32,23 @@ public class ConfigController extends BaseController {
         String tenantCode=request.getParameter("tenantCode");
         String appId=request.getParameter("appId");
        Map<String, SysConfig> configMap=EnvManager.singleInstance().getConfigMap();
-       Map<String,String> rtnConfigMap=new HashMap<>();
+       Map<String,Object> rtnConfigMap=new HashMap<>();
+        Map<String,String> globalConfigMap=new HashMap<>();
+        Map<String,String> tenantConfigMap=new HashMap<>();
+        Map<String,String> appConfigMap=new HashMap<>();
         for (Map.Entry<String,SysConfig> entry: configMap.entrySet()) {
             SysConfig config = entry.getValue();
             if(StringUtils.isEmpty(config.getTenantCode())){
-                rtnConfigMap.put(config.getConfigKey(),config.getConfigValue());
+                globalConfigMap.put(config.getConfigKey(),config.getConfigValue());
+                rtnConfigMap.put("sys",globalConfigMap);
             }
             if(!StringUtils.isEmpty(tenantCode)&&config.getTenantCode().equals(tenantCode)){
-                rtnConfigMap.put(config.getConfigKey(),config.getConfigValue());
+                tenantConfigMap.put(config.getConfigKey(),config.getConfigValue());
+                rtnConfigMap.put("tenant",tenantConfigMap);
             }
             if(!StringUtils.isEmpty(appId)&&config.getAppId().equals(appId)){
-                rtnConfigMap.put(config.getConfigKey(),config.getConfigValue());
+                appConfigMap.put(config.getConfigKey(),config.getConfigValue());
+                rtnConfigMap.put("app",appConfigMap);
             }
 
         }
