@@ -62,8 +62,8 @@ public class OpLogAOPConfig {
         String gql=(String) proceedingJoinPoint.getArgs()[1];
         SaveCommand saveCommand = gqlManager.generateSaveSql(gql, new Ctx());
         EntityMeta entityMeta= MetaManager.singleInstance().get(saveCommand.getEntityName());
-        String opUser= EnvManager.singleInstance().getCurrentUser().getUserName();
-        String opUserId=EnvManager.singleInstance().getCurrentUser().getUserId();
+        String opUser= Ctx.getCurrentUser().getUserName();
+        String opUserId=Ctx.getCurrentUser().getUserId();
         String opDataId="";
         String opType="";
         String opRecord="";
@@ -104,7 +104,7 @@ public class OpLogAOPConfig {
                     opUser,
                     opUserId,
                     opRecord,
-                    EnvManager.singleInstance().getCurrentTenantCode());
+                    Ctx.getCurrentTenantCode());
         }
 
     }
