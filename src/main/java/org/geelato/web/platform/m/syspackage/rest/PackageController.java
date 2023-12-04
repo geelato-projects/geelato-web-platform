@@ -69,7 +69,7 @@ public class PackageController extends BaseController {
     @RequestMapping(value = {"/packet/{appId}"}, method = RequestMethod.GET, produces = MediaTypes.JSON_UTF_8)
     @ResponseBody
     public Object packetApp(@PathVariable("appId") String appId,String version,String description){
-        Map<String,String> appMetaMap=appMetaMap(appId);
+        Map<String,String> appMetaMap=appMetaMap(appId,"package");
         AppPackage appPackage=new AppPackage();
         appPackage.setSourceAppId(appId);
         List<AppMeta> appMetaList=new ArrayList<>();
@@ -120,12 +120,17 @@ public class PackageController extends BaseController {
     /*
     上传版本包
      */
-    @RequestMapping(value = {"/uploadPackage"}, method = RequestMethod.POST, produces = MediaTypes.JSON_UTF_8)
+    @RequestMapping(value = {"/uploadPackage/{appId}"}, method = RequestMethod.POST, produces = MediaTypes.JSON_UTF_8)
     @ResponseBody
-    public void uploadPackage(@RequestParam("file") MultipartFile file) throws IOException {
+    public void uploadPackage(@RequestParam("file") MultipartFile file,@PathVariable("appId") String appId) throws IOException {
         byte[] bytes = file.getBytes();
         String targetPath=baseUploadPath+file.getOriginalFilename();
         Files.write(Path.of(targetPath), bytes);
+        AppVersion av=new AppVersion();
+        av.setAppId(appId);
+        av.setPacketTime(new Date());
+        av.setPackagePath(file.getOriginalFilename());
+        appVersionService.createModel(av);
     }
 
     /*
@@ -136,12 +141,20 @@ public class PackageController extends BaseController {
     public void deployPackage(@PathVariable("versionId") String versionId){
         AppVersion appVersion= appVersionService.getModel(AppVersion.class,versionId);
         if(appVersion!=null&&!StringUtils.isEmpty(appVersion.getPackagePath())) {
-            String appPackageData = ZipUtils.readPackageData(appVersion.getPackagePath(), ".gpd");
+            String appPackageData = ZipUtils.readPackageData(baseUploadPath+appVersion.getPackagePath(), ".gdp");
+            deleteCurrentVersion(appVersion.getAppId());
             AppPackage appPackage = resolveAppPackageData(appPackageData);
             deployAppPackageData(appPackage);
         }
     }
 
+    private void deleteCurrentVersion(String appId) {
+        Map<String,String> appMetaMap= appMetaMap(appId,"remove");
+        for (String key : appMetaMap.keySet()) {
+            String value = appMetaMap.get(key);
+             dao.getJdbcTemplate().execute(value);
+        }
+    }
 
 
     /*
@@ -181,29 +194,41 @@ public class PackageController extends BaseController {
     }
 
 
-    private Map<String,String> appMetaMap(String appId){
+    private Map<String,String> appMetaMap(String appId,String type){
         Map<String,String> map=new HashMap<>();
-        map.put("platform_app",String.format("select * from platform_app where id='%s'",appId));
-        map.put("platform_app_page",String.format("select * from platform_app_page where app_id='%s'",appId));
-        map.put("platform_tree_node",String.format("select * from platform_tree_node where tree_id='%s'",appId));
-        map.put("platform_dev_db_connect","select * from platform_dev_db_connect");
-        map.put("platform_dev_table","select * from platform_dev_table");
-        map.put("platform_dev_table_foreign","select * from platform_dev_table_foreign");
-        map.put("platform_dev_view","select * from platform_dev_view");
-        map.put("platform_dev_column","select * from platform_dev_column");
-        map.put("platform_dict",String.format("select * from platform_dict where app_id='%s'",appId));
-        //todo
-//        map.put("platform_dict_item",String.format("select * from platform_dict_item where app_id='%s'",appId));   //表需要加app_id
-//        map.put("platform_permission",String.format("select * from platform_permission where app_id='%s'",appId));   //表需要加app_id
-//        map.put("platform_role",String.format("select * from platform_role where app_id='%s'",appId));   //表需要加app_id
-//        map.put("platform_encoding",String.format("select * from platform_encoding where app_id='%s'",appId));   //表需要加app_id
-//        map.put("platform_sys_config",String.format("select * from platform_sys_config where app_id='%s'",appId));   //表需要加app_id
-//        map.put("platform_resources",String.format("select * from platform_resources where app_id='%s'",appId));   //表需要加app_id
-//        map.put("platform_role_r_app",String.format("select * from platform_role_r_app where app_id='%s'",appId));   //表需要加app_id
-//        map.put("platform_role_r_permission",String.format("select * from platform_role_r_permission where app_id='%s'",appId));   //表需要加app_id
-//        map.put("platform_role_r_tree_node",String.format("select * from platform_role_r_tree_node where app_id='%s'",appId));   //表需要加app_id
+        String preOperateSql="";
+        switch (type){
+            case "package":
+                preOperateSql="select * from ";
+                break;
+            case "remove":
+                preOperateSql="delete from  ";
+                break;
+            default:
+                break;
+        }
+        map.put("platform_app",String.format("%s platform_app where id='%s'",preOperateSql,appId));
+        map.put("platform_app_page",String.format("%s  platform_app_page where app_id='%s'",preOperateSql,appId));
+        map.put("platform_tree_node",String.format("%s  platform_tree_node where tree_id='%s'",preOperateSql,appId));
+        map.put("platform_dev_db_connect",String.format("%s platform_dev_db_connect",preOperateSql,appId));
+        map.put("platform_dev_table",String.format("%s  platform_dev_table ",preOperateSql));
+        map.put("platform_dev_table_foreign",String.format("%s  platform_dev_table_foreign ",preOperateSql));
+        map.put("platform_dev_view",String.format("%s  platform_dev_view ",preOperateSql));
+        map.put("platform_dev_column",String.format("%s  platform_dev_column ",preOperateSql));
+        map.put("platform_dict",String.format("%s  platform_dict where app_id='%s'",preOperateSql,appId));
+        map.put("platform_dict_item",String.format("%s  platform_dict_item where app_id='%s'",preOperateSql,appId));
+        map.put("platform_permission",String.format("%s platform_permission where app_id='%s'",preOperateSql,appId));
+        map.put("platform_role",String.format("%s  platform_role where app_id='%s'",preOperateSql,appId));
+        map.put("platform_sys_config",String.format("%s  platform_sys_config where app_id='%s'",preOperateSql,appId));
+        map.put("platform_resources",String.format("%s  platform_resources where app_id='%s'",preOperateSql,appId));
+        map.put("platform_role_r_app",String.format("%s  platform_role_r_app where app_id='%s'",preOperateSql,appId));
+        map.put("platform_role_r_permission",String.format("%s  platform_role_r_permission where app_id='%s'",preOperateSql,appId));
+        map.put("platform_role_r_tree_node",String.format("%s  platform_role_r_tree_node where app_id='%s'",preOperateSql,appId));
+        map.put("platform_encoding",String.format("%s  platform_encoding where app_id='%s'",preOperateSql,appId));
         return map;
     }
+
+
 
     private Map<String,String> appResourceMetaMap(String appId){
         Map<String,String> map=new HashMap<>();
@@ -228,19 +253,21 @@ public class PackageController extends BaseController {
             e.printStackTrace();
         }
         writePackageResourceData(appPackage);
-        compressAppPackage(basePath+tempFolderPath,appPackage);
-        return fileName;
+        String packagePath= compressAppPackage(basePath+tempFolderPath,appPackage);
+        return packagePath;
     }
 
     private void writePackageResourceData(AppPackage appPackage){
 
 
     }
-    private void compressAppPackage(String sourcePackageFolder,AppPackage appPackage ){
+    private String  compressAppPackage(String sourcePackageFolder,AppPackage appPackage ){
         String packageSuffix=".zgdp";
         String appPackageName = appPackage.getAppCode()==""?appPackage.getAppCode():"geelatoApp";
-        String targetZipPath=basePath+appPackageName+packageSuffix;
+        String appPackageFullName=appPackageName+packageSuffix;
+        String targetZipPath=basePath+appPackageFullName;
         ZipUtils.compressDirectory(sourcePackageFolder,targetZipPath);
+        return appPackageFullName;
     }
 
     private AppPackage resolveAppPackageData(String appPackageData) {
