@@ -58,7 +58,7 @@ public class PackageController extends BaseController {
     private GqlManager gqlManager = GqlManager.singleInstance();
     private SqlManager sqlManager = SqlManager.singleInstance();
     private JsonTextSaveParser jsonTextSaveParser = new JsonTextSaveParser();
-    private String basePath="D://geelato-project//app_package_temp/";
+    private String basePath="/app_package_temp/";
     private String baseUploadPath=basePath+"upload_temp/";
 
     @Autowired
