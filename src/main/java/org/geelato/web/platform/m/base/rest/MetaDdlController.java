@@ -1,9 +1,15 @@
 package org.geelato.web.platform.m.base.rest;
 
 
+import org.apache.logging.log4j.util.Strings;
+import org.geelato.core.Ctx;
 import org.geelato.core.api.ApiMetaResult;
 import org.geelato.core.constants.MediaTypes;
+import org.geelato.core.enums.EnableStatusEnum;
+import org.geelato.core.gql.parser.FilterGroup;
+import org.geelato.core.meta.model.entity.TableMeta;
 import org.geelato.core.orm.DbGenerateDao;
+import org.geelato.web.platform.m.model.service.DevTableService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -12,6 +18,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.sql.SQLException;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -24,6 +33,8 @@ public class MetaDdlController extends BaseController implements InitializingBea
 
     @Autowired
     protected DbGenerateDao dbGenerateDao;
+    @Autowired
+    private DevTableService devTableService;
 
     private static Logger logger = LoggerFactory.getLogger(MetaDdlController.class);
 
@@ -44,6 +55,43 @@ public class MetaDdlController extends BaseController implements InitializingBea
         } catch (Exception ex) {
             logger.error(ex.getMessage(), ex);
             result.error().setMsg(ex.getCause().getMessage());
+        }
+        return result;
+    }
+
+    @RequestMapping(value = {"tables/{appId}"}, method = {RequestMethod.POST}, produces = MediaTypes.JSON_UTF_8)
+    @ResponseBody
+    public ApiMetaResult recreates(@PathVariable("appId") String appId) {
+        ApiMetaResult result = new ApiMetaResult();
+        Map<String, Boolean> tableResult = new LinkedHashMap<>();
+        try {
+            if (Strings.isNotBlank(appId)) {
+                FilterGroup filterGroup = new FilterGroup();
+                filterGroup.addFilter("appId", appId);
+                filterGroup.addFilter("tenantCode", Ctx.getCurrentTenantCode());
+                filterGroup.addFilter("enableStatus", String.valueOf(EnableStatusEnum.ENABLED.getCode()));
+                List<TableMeta> tableMetas = devTableService.queryModel(TableMeta.class, filterGroup);
+                if (tableMetas != null) {
+                    tableMetas.sort(new Comparator<TableMeta>() {
+                        @Override
+                        public int compare(TableMeta o1, TableMeta o2) {
+                            return o1.getEntityName().compareToIgnoreCase(o2.getEntityName());
+                        }
+                    });
+                    for (TableMeta meta : tableMetas) {
+                        tableResult.put(meta.getEntityName(), false);
+                    }
+                    for (int i = 0; i < tableMetas.size(); i++) {
+                        dbGenerateDao.createOrUpdateOneTable(tableMetas.get(i).getEntityName(), false);
+                        logger.info(String.format("成功插入第 %s 个。表名：%s", (i + 1), tableMetas.get(i).getEntityName()));
+                        tableResult.put(tableMetas.get(i).getEntityName(), true);
+                    }
+                }
+            }
+            result.setData(tableResult);
+        } catch (Exception ex) {
+            logger.error(ex.getMessage(), ex);
+            result.error().setMsg(ex.getCause().getMessage()).setData(tableResult);
         }
         return result;
     }

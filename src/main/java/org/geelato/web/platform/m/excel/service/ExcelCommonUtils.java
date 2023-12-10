@@ -1068,7 +1068,7 @@ public class ExcelCommonUtils {
                 }
             }
             newValue = (ruleData.isRetain() && newValue == null) ? businessData.getValue() : newValue;
-            if (businessData.getValue() != null && !businessData.getValue().equals(newValue)) {
+            if (businessData.getValue() == null || !businessData.getValue().equals(newValue)) {
                 businessData.setValue(newValue);
                 businessData.setTransitionValue(newValue);
             }

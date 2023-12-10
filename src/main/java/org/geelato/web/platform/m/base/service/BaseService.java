@@ -232,7 +232,6 @@ public class BaseService {
      * @return 当前会话信息
      */
     protected String getSessionTenantCode() {
-        Ctx ctx = new Ctx();
-        return ctx.getCurrentTenantCode();
+        return Ctx.getCurrentTenantCode();
     }
 }
