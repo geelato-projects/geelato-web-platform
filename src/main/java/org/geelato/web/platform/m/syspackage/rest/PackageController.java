@@ -20,6 +20,7 @@ import org.geelato.core.gql.parser.SaveCommand;
 import org.geelato.core.meta.MetaManager;
 import org.geelato.core.meta.model.entity.EntityMeta;
 import org.geelato.core.meta.model.field.FieldMeta;
+import org.geelato.core.orm.DaoException;
 import org.geelato.core.orm.TransactionHelper;
 import org.geelato.core.sql.SqlManager;
 import org.geelato.core.util.StringUtils;
@@ -32,6 +33,7 @@ import org.geelato.web.platform.m.syspackage.entity.AppPackage;
 import org.geelato.web.platform.m.syspackage.entity.AppVersion;
 import org.geelato.web.platform.m.syspackage.service.AppVersionService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.stereotype.Controller;
@@ -58,7 +60,8 @@ public class PackageController extends BaseController {
     private GqlManager gqlManager = GqlManager.singleInstance();
     private SqlManager sqlManager = SqlManager.singleInstance();
     private JsonTextSaveParser jsonTextSaveParser = new JsonTextSaveParser();
-    private String basePath="/app_package_temp/";
+    @Value("${geelato.package.path}")
+    private String basePath;
     private String baseUploadPath=basePath+"upload_temp/";
 
     @Autowired
@@ -68,7 +71,8 @@ public class PackageController extends BaseController {
      */
     @RequestMapping(value = {"/packet/{appId}"}, method = RequestMethod.GET, produces = MediaTypes.JSON_UTF_8)
     @ResponseBody
-    public Object packetApp(@PathVariable("appId") String appId,String version,String description){
+    public ApiResult packetApp(@PathVariable("appId") String appId,String version,String description){
+        ApiResult apiResult=new ApiResult();
         Map<String,String> appMetaMap=appMetaMap(appId,"package");
         AppPackage appPackage=new AppPackage();
         appPackage.setSourceAppId(appId);
@@ -91,8 +95,8 @@ public class PackageController extends BaseController {
         av.setDescription(description);
         av.setPacketTime(new Date());
         av.setPackagePath(filePath);
-        appVersionService.createModel(av);
-        return appPackage;
+        apiResult.setData(appVersionService.createModel(av));
+        return apiResult;
     }
 
     /*
@@ -138,7 +142,7 @@ public class PackageController extends BaseController {
      */
     @RequestMapping(value = {"/deploy/{versionId}"}, method = RequestMethod.GET, produces = MediaTypes.JSON_UTF_8)
     @ResponseBody
-    public void deployPackage(@PathVariable("versionId") String versionId){
+    public void deployPackage(@PathVariable("versionId") String versionId) throws DaoException {
         AppVersion appVersion= appVersionService.getModel(AppVersion.class,versionId);
         if(appVersion!=null&&!StringUtils.isEmpty(appVersion.getPackagePath())) {
             String appPackageData = ZipUtils.readPackageData(baseUploadPath+appVersion.getPackagePath(), ".gdp");
@@ -274,7 +278,7 @@ public class PackageController extends BaseController {
         AppPackage appPackage=JSONObject.parseObject(appPackageData,AppPackage.class);
         return appPackage;
     }
-    private void deployAppPackageData(AppPackage appPackage) {
+    private void deployAppPackageData(AppPackage appPackage) throws DaoException {
         DataSourceTransactionManager dataSourceTransactionManager = new DataSourceTransactionManager(dao2.getJdbcTemplate().getDataSource());
         TransactionStatus transactionStatus = TransactionHelper.beginTransaction(dataSourceTransactionManager);
         for (AppMeta appMeta : appPackage.getAppMetaList()) {
