@@ -961,7 +961,16 @@ public class ExcelCommonUtils {
                 }
             }
             if (!isMulti) {
-                singleData.put(businessDataEntry.getKey(), businessData);
+                BusinessData data = new BusinessData();
+                data.setXIndex(businessData.getXIndex());
+                data.setYIndex(businessData.getYIndex());
+                data.setValue(businessData.getValue());
+                data.setPrimevalValue(businessData.getPrimevalValue());
+                data.setTransitionValue(businessData.getTransitionValue());
+                data.setMultiValue(businessData.getMultiValue());
+                data.setBusinessTypeData(businessData.getBusinessTypeData());
+                data.setErrorMsg(businessData.getErrorMsg());
+                singleData.put(businessDataEntry.getKey(), data);
             }
         }
         if (dataValues.size() > 1 && "AB*CD".equalsIgnoreCase(ruleData.getGoal())) {
