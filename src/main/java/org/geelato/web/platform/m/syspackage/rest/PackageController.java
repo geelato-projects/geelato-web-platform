@@ -3,6 +3,7 @@ package org.geelato.web.platform.m.syspackage.rest;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import com.itextpdf.text.Meta;
+import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import netscape.javascript.JSObject;
 import okio.FileMetadata;
@@ -28,6 +29,7 @@ import org.geelato.utils.ZipUtils;
 import org.geelato.web.platform.m.base.entity.AppPage;
 import org.geelato.web.platform.m.base.rest.BaseController;
 import org.geelato.web.platform.m.security.service.SecurityHelper;
+import org.geelato.web.platform.m.syspackage.PackageConfigurationProperties;
 import org.geelato.web.platform.m.syspackage.entity.AppMeta;
 import org.geelato.web.platform.m.syspackage.entity.AppPackage;
 import org.geelato.web.platform.m.syspackage.entity.AppVersion;
@@ -56,13 +58,13 @@ import java.util.zip.ZipOutputStream;
 @RequestMapping(value = "/package")
 public class PackageController extends BaseController {
 
+    @Resource
+    private PackageConfigurationProperties packageConfigurationProperties;
+
     private MetaManager metaManager= MetaManager.singleInstance();
     private GqlManager gqlManager = GqlManager.singleInstance();
     private SqlManager sqlManager = SqlManager.singleInstance();
     private JsonTextSaveParser jsonTextSaveParser = new JsonTextSaveParser();
-    @Value("${geelato.package.path}")
-    private String basePath;
-    private String baseUploadPath=basePath+"upload_temp/";
 
     @Autowired
     AppVersionService appVersionService;
@@ -106,7 +108,7 @@ public class PackageController extends BaseController {
     @ResponseBody
     public void downloadPackage(@PathVariable("versionId") String versionId) throws IOException {
         AppVersion appVersion = appVersionService.getModel(AppVersion.class, versionId);
-        String filePath = basePath + appVersion.getPackagePath();
+        String filePath = packageConfigurationProperties.getPath() + appVersion.getPackagePath();
         File file = new File(filePath);
         FileInputStream fileInputStream = new FileInputStream(file);
         response.setHeader("Content-Disposition", "attachment; filename=\"" + file.getName() + "\"");
@@ -128,7 +130,7 @@ public class PackageController extends BaseController {
     @ResponseBody
     public void uploadPackage(@RequestParam("file") MultipartFile file,@PathVariable("appId") String appId) throws IOException {
         byte[] bytes = file.getBytes();
-        String targetPath=baseUploadPath+file.getOriginalFilename();
+        String targetPath=packageConfigurationProperties.getUploadPath()+file.getOriginalFilename();
         Files.write(Path.of(targetPath), bytes);
         AppVersion av=new AppVersion();
         av.setAppId(appId);
@@ -145,7 +147,7 @@ public class PackageController extends BaseController {
     public void deployPackage(@PathVariable("versionId") String versionId) throws DaoException {
         AppVersion appVersion= appVersionService.getModel(AppVersion.class,versionId);
         if(appVersion!=null&&!StringUtils.isEmpty(appVersion.getPackagePath())) {
-            String appPackageData = ZipUtils.readPackageData(baseUploadPath+appVersion.getPackagePath(), ".gdp");
+            String appPackageData = ZipUtils.readPackageData(packageConfigurationProperties.getUploadPath()+appVersion.getPackagePath(), ".gdp");
             deleteCurrentVersion(appVersion.getAppId());
             AppPackage appPackage = resolveAppPackageData(appPackageData);
             deployAppPackageData(appPackage);
@@ -245,7 +247,7 @@ public class PackageController extends BaseController {
         String dataFileName=appPackage.getAppCode()==""?appPackage.getAppCode():"geelatoApp";
         String fileName=dataFileName+packageSuffix;
         String tempFolderPath=dataFileName+"/";
-        File file = new File(basePath+tempFolderPath+fileName);
+        File file = new File(packageConfigurationProperties.getPath()+tempFolderPath+fileName);
         if(!file.getParentFile().exists()) {
             file.getParentFile().mkdir();
         }
@@ -257,7 +259,7 @@ public class PackageController extends BaseController {
             e.printStackTrace();
         }
         writePackageResourceData(appPackage);
-        String packagePath= compressAppPackage(basePath+tempFolderPath,appPackage);
+        String packagePath= compressAppPackage( packageConfigurationProperties.getPath()+tempFolderPath,appPackage);
         return packagePath;
     }
 
@@ -269,7 +271,7 @@ public class PackageController extends BaseController {
         String packageSuffix=".zgdp";
         String appPackageName = appPackage.getAppCode()==""?appPackage.getAppCode():"geelatoApp";
         String appPackageFullName=appPackageName+packageSuffix;
-        String targetZipPath=basePath+appPackageFullName;
+        String targetZipPath=packageConfigurationProperties.getPath()+appPackageFullName;
         ZipUtils.compressDirectory(sourcePackageFolder,targetZipPath);
         return appPackageFullName;
     }
@@ -310,7 +312,7 @@ public class PackageController extends BaseController {
     }
 
     private String readPackageData(){
-        String filePath=basePath+"/geelatoApp.gdp";
+        String filePath=packageConfigurationProperties.getPath()+"/geelatoApp.gdp";
         String data="";
         try {
             data=new  String(Files.readAllBytes(Paths.get(filePath)));
