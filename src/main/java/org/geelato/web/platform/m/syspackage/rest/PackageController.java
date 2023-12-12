@@ -62,6 +62,7 @@ import java.util.zip.ZipOutputStream;
 public class PackageController extends BaseController {
 
     private static Logger logger = LoggerFactory.getLogger(PackageController.class);
+    private String defaultPackageName="geelatoApp";
     @Resource
     private PackageConfigurationProperties packageConfigurationProperties;
 
@@ -165,6 +166,7 @@ public class PackageController extends BaseController {
         Map<String,String> appMetaMap= appMetaMap(appId,"remove");
         for (String key : appMetaMap.keySet()) {
             String value = appMetaMap.get(key);
+             logger.info(String.format("remove sql：%s ",value));
              dao.getJdbcTemplate().execute(value);
         }
     }
@@ -213,6 +215,7 @@ public class PackageController extends BaseController {
         switch (type){
             case "package":
                 preOperateSql="select * from ";
+
                 break;
             case "remove":
                 preOperateSql="delete from  ";
@@ -251,7 +254,8 @@ public class PackageController extends BaseController {
     private String writePackageData(AppPackage appPackage){
         String jsonStr= JSONObject.toJSONString(appPackage);
         String packageSuffix=".gdp";
-        String dataFileName=appPackage.getAppCode()==""?appPackage.getAppCode():"geelatoApp";
+        String dataFileName=StringUtils.isEmpty(appPackage.getAppCode())?
+                defaultPackageName:appPackage.getAppCode();
         String fileName=dataFileName+packageSuffix;
         String tempFolderPath=dataFileName+"/";
         File file = new File(packageConfigurationProperties.getPath()+tempFolderPath+fileName);
@@ -276,7 +280,8 @@ public class PackageController extends BaseController {
     }
     private String  compressAppPackage(String sourcePackageFolder,AppPackage appPackage ){
         String packageSuffix=".zgdp";
-        String appPackageName = appPackage.getAppCode()==""?appPackage.getAppCode():"geelatoApp";
+        String appPackageName = StringUtils.isEmpty(appPackage.getAppCode())?
+                defaultPackageName:appPackage.getAppCode();
         String appPackageFullName=appPackageName+packageSuffix;
         String targetZipPath=packageConfigurationProperties.getPath()+appPackageFullName;
         ZipUtils.compressDirectory(sourcePackageFolder,targetZipPath);
@@ -321,16 +326,5 @@ public class PackageController extends BaseController {
         }
         TransactionHelper.commitTransaction(dataSourceTransactionManager,transactionStatus);
         logger.info(String.format("----------------------部署结束--------------------"));
-    }
-
-    private String readPackageData(){
-        String filePath=packageConfigurationProperties.getPath()+"/geelatoApp.gdp";
-        String data="";
-        try {
-            data=new  String(Files.readAllBytes(Paths.get(filePath)));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return data;
     }
 }
