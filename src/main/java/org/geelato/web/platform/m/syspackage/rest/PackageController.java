@@ -128,7 +128,8 @@ public class PackageController extends BaseController {
      */
     @RequestMapping(value = {"/uploadPackage/{appId}"}, method = RequestMethod.POST, produces = MediaTypes.JSON_UTF_8)
     @ResponseBody
-    public void uploadPackage(@RequestParam("file") MultipartFile file,@PathVariable("appId") String appId) throws IOException {
+    public ApiResult uploadPackage(@RequestParam("file") MultipartFile file,@PathVariable("appId") String appId) throws IOException {
+        ApiResult apiResult=new ApiResult();
         byte[] bytes = file.getBytes();
         String targetPath=packageConfigurationProperties.getUploadPath()+file.getOriginalFilename();
         Files.write(Path.of(targetPath), bytes);
@@ -136,7 +137,9 @@ public class PackageController extends BaseController {
         av.setAppId(appId);
         av.setPacketTime(new Date());
         av.setPackagePath(file.getOriginalFilename());
-        appVersionService.createModel(av);
+        apiResult.setData( appVersionService.createModel(av));
+        return apiResult;
+
     }
 
     /*
@@ -281,7 +284,7 @@ public class PackageController extends BaseController {
         return appPackage;
     }
     private void deployAppPackageData(AppPackage appPackage) throws DaoException {
-        DataSourceTransactionManager dataSourceTransactionManager = new DataSourceTransactionManager(dao2.getJdbcTemplate().getDataSource());
+        DataSourceTransactionManager dataSourceTransactionManager = new DataSourceTransactionManager(dao.getJdbcTemplate().getDataSource());
         TransactionStatus transactionStatus = TransactionHelper.beginTransaction(dataSourceTransactionManager);
         for (AppMeta appMeta : appPackage.getAppMetaList()) {
             Map<String, Object> metaData = new HashMap<>();
