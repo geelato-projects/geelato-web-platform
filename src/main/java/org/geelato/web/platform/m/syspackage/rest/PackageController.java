@@ -215,7 +215,6 @@ public class PackageController extends BaseController {
         switch (type){
             case "package":
                 preOperateSql="select * from ";
-
                 break;
             case "remove":
                 preOperateSql="delete from  ";
@@ -297,6 +296,7 @@ public class PackageController extends BaseController {
         DataSourceTransactionManager dataSourceTransactionManager = new DataSourceTransactionManager(dao.getJdbcTemplate().getDataSource());
         TransactionStatus transactionStatus = TransactionHelper.beginTransaction(dataSourceTransactionManager);
         for (AppMeta appMeta : appPackage.getAppMetaList()) {
+            if(appMeta.getMetaName().equals("platform_app"))break;;
             logger.info(String.format("开始处理元数据：%s",appMeta.getMetaName()));
             Map<String, Object> metaData = new HashMap<>();
             ArrayList<Map<String, Object>> metaDataArray=new ArrayList<>();
