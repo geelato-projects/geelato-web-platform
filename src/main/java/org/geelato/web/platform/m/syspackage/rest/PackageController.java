@@ -28,12 +28,15 @@ import org.geelato.core.util.StringUtils;
 import org.geelato.utils.ZipUtils;
 import org.geelato.web.platform.m.base.entity.AppPage;
 import org.geelato.web.platform.m.base.rest.BaseController;
+import org.geelato.web.platform.m.base.rest.CacheController;
 import org.geelato.web.platform.m.security.service.SecurityHelper;
 import org.geelato.web.platform.m.syspackage.PackageConfigurationProperties;
 import org.geelato.web.platform.m.syspackage.entity.AppMeta;
 import org.geelato.web.platform.m.syspackage.entity.AppPackage;
 import org.geelato.web.platform.m.syspackage.entity.AppVersion;
 import org.geelato.web.platform.m.syspackage.service.AppVersionService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -58,6 +61,7 @@ import java.util.zip.ZipOutputStream;
 @RequestMapping(value = "/package")
 public class PackageController extends BaseController {
 
+    private static Logger logger = LoggerFactory.getLogger(PackageController.class);
     @Resource
     private PackageConfigurationProperties packageConfigurationProperties;
 
@@ -284,9 +288,11 @@ public class PackageController extends BaseController {
         return appPackage;
     }
     private void deployAppPackageData(AppPackage appPackage) throws DaoException {
+        logger.info(String.format("----------------------部署开始--------------------"));
         DataSourceTransactionManager dataSourceTransactionManager = new DataSourceTransactionManager(dao.getJdbcTemplate().getDataSource());
         TransactionStatus transactionStatus = TransactionHelper.beginTransaction(dataSourceTransactionManager);
         for (AppMeta appMeta : appPackage.getAppMetaList()) {
+            logger.info(String.format("开始处理元数据：%s",appMeta.getMetaName()));
             Map<String, Object> metaData = new HashMap<>();
             ArrayList<Map<String, Object>> metaDataArray=new ArrayList<>();
             String appMetaName = appMeta.getMetaName();
@@ -307,11 +313,14 @@ public class PackageController extends BaseController {
             metaData.put(appMeta.getMetaName(), metaDataArray);
             List<SaveCommand> saveCommandList = jsonTextSaveParser.parseBatch(JSONObject.toJSONString(metaData), new Ctx());
             for (SaveCommand saveCommand : saveCommandList) {
+
                 BoundSql boundSql = sqlManager.generateSaveSql(saveCommand);
-                String pkValue = dao2.save(boundSql);
+                String pkValue = dao.save(boundSql);
             }
+            logger.info(String.format("结束处理元数据：%s",appMeta.getMetaName()));
         }
         TransactionHelper.commitTransaction(dataSourceTransactionManager,transactionStatus);
+        logger.info(String.format("----------------------部署结束--------------------"));
     }
 
     private String readPackageData(){
