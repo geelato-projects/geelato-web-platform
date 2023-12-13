@@ -308,7 +308,7 @@ public class PackageController extends BaseController {
                 Map<String, Object> columnMap = new HashMap<>();
                 for (String key : jo.keySet()) {
                     FieldMeta fieldMeta = entityMeta.getFieldMetaByColumn(key);
-                    if("id".equals("key")){
+                    if("id".equals(key)){
                         columnMap.put("forceId", jo.get(key));
                     }else{
                         columnMap.put(fieldMeta.getFieldName(), jo.get(key));
