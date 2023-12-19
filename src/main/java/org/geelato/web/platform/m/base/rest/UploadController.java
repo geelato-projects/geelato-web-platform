@@ -1,12 +1,15 @@
 package org.geelato.web.platform.m.base.rest;
 
+import com.alibaba.fastjson2.JSON;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiErrorMsg;
+import org.geelato.core.meta.model.field.ColumnMeta;
 import org.geelato.web.platform.m.base.entity.Attach;
 import org.geelato.web.platform.m.base.service.AttachService;
 import org.geelato.web.platform.m.base.service.UploadService;
+import org.geelato.web.platform.m.model.service.DevTableColumnService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author diabl
@@ -29,11 +32,14 @@ import java.util.Map;
 public class UploadController extends BaseController {
     private static final String ROOT_DIRECTORY = "upload";
     private static final String ROOT_CONFIG_DIRECTORY = "/upload/config";
+    private static final String ROOT_CONFIG_SUFFIX = ".config";
     private final Logger logger = LoggerFactory.getLogger(UploadController.class);
     @Autowired
     private UploadService uploadService;
     @Autowired
     private AttachService attachService;
+    @Autowired
+    private DevTableColumnService devTableColumnService;
 
     @RequestMapping(value = "/file", method = RequestMethod.POST)
     @ResponseBody
@@ -67,8 +73,8 @@ public class UploadController extends BaseController {
         ObjectOutputStream oops = null;
         try {
             String ext = uploadService.getFileExtension(fileName);
-            if (Strings.isBlank(ext) || !ext.equalsIgnoreCase(".config")) {
-                fileName += ".config";
+            if (Strings.isBlank(ext) || !ext.equalsIgnoreCase(ROOT_CONFIG_SUFFIX)) {
+                fileName += ROOT_CONFIG_SUFFIX;
             }
             uploadService.fileMkdirs(ROOT_CONFIG_DIRECTORY);
             File file = new File(String.format("%s/%s", ROOT_CONFIG_DIRECTORY, fileName));
@@ -105,8 +111,8 @@ public class UploadController extends BaseController {
         BufferedWriter bufferedWriter = null;
         try {
             String ext = uploadService.getFileExtension(fileName);
-            if (Strings.isBlank(ext) || !ext.equalsIgnoreCase(".config")) {
-                fileName += ".config";
+            if (Strings.isBlank(ext) || !ext.equalsIgnoreCase(ROOT_CONFIG_SUFFIX)) {
+                fileName += ROOT_CONFIG_SUFFIX;
             }
             uploadService.fileMkdirs(ROOT_CONFIG_DIRECTORY);
             File file = new File(String.format("%s/%s", ROOT_CONFIG_DIRECTORY, fileName));
@@ -132,5 +138,66 @@ public class UploadController extends BaseController {
         return result;
     }
 
+    @RequestMapping(value = "/model/{entityName}/{id}", method = RequestMethod.POST)
+    @ResponseBody
+    public ApiResult uploadModel(@PathVariable("entityName") String entityName, @PathVariable("id") String id) {
+        ApiResult result = new ApiResult();
+        if (Strings.isBlank(entityName) || Strings.isBlank(id)) {
+            return result.error().setMsg(ApiErrorMsg.OPERATE_FAIL);
+        }
+        try {
+            String fieldNames = getColumnFieldNames(entityName);
+            if (Strings.isBlank(fieldNames)) {
+                return result.error().setMsg("Column Meta Is Null");
+            }
+            Map<String, Object> columnMap = dao.getJdbcTemplate().queryForMap(String.format("select %s from %s where id = %s", fieldNames, entityName, id));
+            if (columnMap == null || columnMap.isEmpty()) {
+                return result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
+            }
+            for (Map.Entry<String, Object> columnEntry : columnMap.entrySet()) {
+                if (columnEntry.getValue() == null) {
+                    columnEntry.setValue("");
+                }
+            }
+            String configName = null;
+            String tenantCode = String.valueOf(columnMap.get("tenantCode"));
+            if (Strings.isBlank(tenantCode)) {
+                return result.error().setMsg("tenantCode is null");
+            }
+            String appId = String.valueOf(columnMap.get("appId"));
+            if (Strings.isBlank(appId)) {
+                configName = String.format("%s_%s%s", tenantCode, id, ROOT_CONFIG_SUFFIX);
+            } else {
+                configName = String.format("%s_%s_%s%s", tenantCode, appId, id, ROOT_CONFIG_SUFFIX);
+            }
+            result = uploadJson(JSON.toJSONString(columnMap), configName);
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            result.error().setMsg(ApiErrorMsg.OPERATE_FAIL);
+        }
+
+        return result;
+    }
+
+    private String getColumnFieldNames(String tableName) {
+        String fieldName = null;
+        try {
+            Map<String, Object> params = new HashMap<>();
+            params.put("tableName", tableName);
+            // params.put("enableStatus", EnableStatusEnum.ENABLED.getCode());
+            List<ColumnMeta> columnMetas = devTableColumnService.queryModel(ColumnMeta.class, params);
+            if (columnMetas != null && columnMetas.size() > 0) {
+                Set<String> fields = new LinkedHashSet<>();
+                for (ColumnMeta meta : columnMetas) {
+                    fields.add(String.format("%s %s", meta.getName(), meta.getFieldName()));
+                }
+                fieldName = String.join(",", fields);
+            }
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+        }
+
+        return fieldName;
+    }
 }
 
