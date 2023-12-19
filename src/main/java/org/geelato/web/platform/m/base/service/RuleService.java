@@ -3,6 +3,8 @@ package org.geelato.web.platform.m.base.service;
 import net.oschina.j2cache.CacheChannel;
 import net.oschina.j2cache.J2Cache;
 import org.apache.commons.collections.map.HashedMap;
+import org.geelato.core.exception.TestException;
+import org.geelato.core.orm.DaoException;
 import org.geelato.core.orm.TransactionHelper;
 import  org.geelato.web.platform.aop.annotation.OpLog;
 import org.geelato.core.api.*;
@@ -186,8 +188,7 @@ public class RuleService {
      * @param gql geelato query language
      * @return 第一个saveCommand执行的返回主健值（saveCommand内可能有子saveCommand）
      */
-//    @OpLog(type="save")
-    public String save(String biz, String gql) {
+    public String save(String biz, String gql) throws DaoException {
         SaveCommand command = gqlManager.generateSaveSql(gql, getSessionCtx());
         Facts facts = new Facts();
         facts.put("saveCommand", command);
@@ -202,7 +203,7 @@ public class RuleService {
         return recursiveSave(command,dataSourceTransactionManager,transactionStatus);
     }
 
-    public Object batchSave(String gql,Boolean transaction) {
+    public Object batchSave(String gql,Boolean transaction) throws DaoException {
         List<String> returnPks=new ArrayList<>();
         List<SaveCommand> commandList = gqlManager.generateBatchSaveSql(gql, getSessionCtx());
         if(transaction){
@@ -250,27 +251,24 @@ public class RuleService {
      * @param transactionStatus
      * @return
      */
-    public String recursiveSave(SaveCommand command, DataSourceTransactionManager dataSourceTransactionManager, TransactionStatus transactionStatus) {
-
-        // 如果更新了个人配置，则去除缓存
-        if ("platform_user_config".equals(command.getEntityName()) && SecurityHelper.getCurrentUser() != null) {
-            cache.evict("config", SecurityHelper.getCurrentUser().id);
-        }
+    public String recursiveSave(SaveCommand command, DataSourceTransactionManager dataSourceTransactionManager, TransactionStatus transactionStatus)  throws  DaoException{
         BoundSql boundSql = sqlManager.generateSaveSql(command);
-        String rtnValue = dao.save(boundSql);
-        command.setExecution(!rtnValue.equals("saveFail"));
-        // 存在子command，需执行
-        if (command.hasCommands()) {
-            command.getCommands().forEach(subCommand -> {
-                // 保存之前需先替换subCommand中的变量值，如依赖于父command执行的返回id：$parent.id
-                subCommand.getValueMap().forEach((key, value) -> {
-                    if (value != null) {
-                        subCommand.getValueMap().put(key, parseValueExp(subCommand, value.toString(), 0));
+        String rtnValue = null;
+            rtnValue = dao.save(boundSql);
+            command.setExecution(!rtnValue.equals("saveFail"));
+            if (command.hasCommands()) {
+                command.getCommands().forEach(subCommand -> {
+                    subCommand.getValueMap().forEach((key, value) -> {
+                        if (value != null) {
+                            subCommand.getValueMap().put(key, parseValueExp(subCommand, value.toString(), 0));
+                        }
+                    });
+                    try {
+                        recursiveSave(subCommand, dataSourceTransactionManager, transactionStatus);
+                    } catch (DaoException e) {
                     }
                 });
-                recursiveSave(subCommand, dataSourceTransactionManager, transactionStatus);
-            });
-        }
+            }
 
         if (command.getParentCommand() == null && command.getExecution()) {
             TransactionHelper.commitTransaction(dataSourceTransactionManager, transactionStatus);

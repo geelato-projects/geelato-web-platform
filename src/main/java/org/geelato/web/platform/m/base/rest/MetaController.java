@@ -10,8 +10,10 @@ import org.geelato.core.api.ApiMultiPagedResult;
 import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.MediaTypes;
+import org.geelato.core.exception.TestException;
 import org.geelato.core.meta.MetaManager;
 import org.geelato.core.orm.Dao;
+import org.geelato.core.orm.DaoException;
 import org.geelato.web.platform.m.base.service.RuleService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,20 +72,16 @@ public class MetaController extends BaseController implements InitializingBean {
      */
     @RequestMapping(value = {"save/{biz}"}, method = RequestMethod.POST, produces = MediaTypes.JSON_UTF_8)
     @ResponseBody
-    public ApiMetaResult save(@PathVariable("biz") String biz, HttpServletRequest request) {
+    public ApiMetaResult save(@PathVariable("biz") String biz, HttpServletRequest request) throws DaoException {
         String gql = getGql(request);
         ApiMetaResult result = new ApiMetaResult();
         result.setData(ruleService.save(biz, gql));
         return result;
     }
-    /**
-     * @param biz     业务代码
-     * @param request HttpServletRequest
-     * @return SaveResult
-     */
+
     @RequestMapping(value = {"batchSave"}, method = RequestMethod.POST, produces = MediaTypes.JSON_UTF_8)
     @ResponseBody
-    public ApiMetaResult batchSave(HttpServletRequest request) {
+    public ApiMetaResult batchSave(HttpServletRequest request) throws DaoException {
         String gql = getGql(request);
         ApiMetaResult result = new ApiMetaResult();
         result.setData(ruleService.batchSave( gql,true));
