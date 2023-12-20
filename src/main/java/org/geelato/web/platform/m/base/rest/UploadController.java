@@ -154,7 +154,7 @@ public class UploadController extends BaseController {
 
     @RequestMapping(value = "/model/{entityName}/{id}", method = RequestMethod.POST)
     @ResponseBody
-    public ApiResult uploadModel(@PathVariable("entityName") String entityName, @PathVariable("id") String id) {
+    public ApiResult uploadModel(@PathVariable("entityName") String entityName, @PathVariable("id") String id, String fileName) {
         ApiResult result = new ApiResult();
         if (Strings.isBlank(entityName) || Strings.isBlank(id)) {
             return result.error().setMsg(ApiErrorMsg.OPERATE_FAIL);
@@ -174,7 +174,7 @@ public class UploadController extends BaseController {
                     columnEntry.setValue("");
                 }
             }
-            String configName = null;
+            /*String configName = null;
             String tenantCode = columnMap.get("tenantCode") == null ? null : String.valueOf(columnMap.get("tenantCode"));
             if (Strings.isBlank(tenantCode)) {
                 return result.error().setMsg("TenantCode Is Null");
@@ -184,8 +184,8 @@ public class UploadController extends BaseController {
                 configName = String.format("%s_%s%s", tenantCode, id, ROOT_CONFIG_SUFFIX);
             } else {
                 configName = String.format("%s_%s_%s%s", tenantCode, appId, id, ROOT_CONFIG_SUFFIX);
-            }
-            result = uploadJson(JSON.toJSONString(columnMap), configName, String.format("/%s", tenantCode));
+            }*/
+            result = uploadJson(JSON.toJSONString(columnMap), fileName, "");
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(e.getMessage());
