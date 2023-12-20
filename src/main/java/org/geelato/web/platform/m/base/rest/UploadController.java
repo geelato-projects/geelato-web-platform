@@ -164,7 +164,8 @@ public class UploadController extends BaseController {
             if (Strings.isBlank(fieldNames)) {
                 return result.error().setMsg("Column Meta Is Null");
             }
-            Map<String, Object> columnMap = dao.getJdbcTemplate().queryForMap(String.format("select %s from %s where id = %s", fieldNames, entityName, id));
+            String sql = String.format("select %s from %s where id = %s", fieldNames, entityName, id);
+            Map<String, Object> columnMap = dao.getJdbcTemplate().queryForMap(sql);
             if (columnMap == null || columnMap.isEmpty()) {
                 return result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
             }
@@ -174,11 +175,11 @@ public class UploadController extends BaseController {
                 }
             }
             String configName = null;
-            String tenantCode = String.valueOf(columnMap.get("tenantCode"));
+            String tenantCode = columnMap.get("tenantCode") == null ? null : String.valueOf(columnMap.get("tenantCode"));
             if (Strings.isBlank(tenantCode)) {
-                return result.error().setMsg("tenantCode is null");
+                return result.error().setMsg("TenantCode Is Null");
             }
-            String appId = String.valueOf(columnMap.get("appId"));
+            String appId = columnMap.get("appId") == null ? null : String.valueOf(columnMap.get("appId"));
             if (Strings.isBlank(appId)) {
                 configName = String.format("%s_%s%s", tenantCode, id, ROOT_CONFIG_SUFFIX);
             } else {
@@ -187,7 +188,7 @@ public class UploadController extends BaseController {
             result = uploadJson(JSON.toJSONString(columnMap), configName, String.format("/%s", tenantCode));
         } catch (Exception e) {
             logger.error(e.getMessage());
-            result.error().setMsg(ApiErrorMsg.OPERATE_FAIL);
+            result.error().setMsg(e.getMessage());
         }
 
         return result;
