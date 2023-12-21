@@ -3,10 +3,7 @@ package org.geelato.web.platform.m.model.service;
 import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.constants.ColumnDefault;
 import org.geelato.core.constants.MetaDaoSql;
-import org.geelato.core.enums.DeleteStatusEnum;
-import org.geelato.core.enums.EnableStatusEnum;
-import org.geelato.core.enums.LinkedEnum;
-import org.geelato.core.enums.TableTypeEnum;
+import org.geelato.core.enums.*;
 import org.geelato.core.meta.model.entity.TableMeta;
 import org.geelato.core.meta.schema.SchemaTable;
 import org.geelato.core.util.SchemaUtils;
@@ -88,6 +85,7 @@ public class DevTableService extends BaseSortableService {
      * @return
      */
     public TableMeta handleForm(TableMeta form, TableMeta model) {
+        form.setSynced(ColumnSyncedEnum.FALSE.getValue());
         // 表名是否修改
         if (model.getEntityName().equals(form.getEntityName())) {
             return form;
@@ -132,6 +130,7 @@ public class DevTableService extends BaseSortableService {
         sqlParams.put("remark", "");
         dao.execute("metaResetOrDeleteTable", sqlParams);
 
+        form.setSynced(ColumnSyncedEnum.TRUE.getValue());
         return form;
     }
 

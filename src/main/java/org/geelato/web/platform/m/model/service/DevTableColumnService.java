@@ -111,6 +111,7 @@ public class DevTableColumnService extends BaseSortableService {
                     meta.setTableName(tableMeta.getEntityName());
                     meta.setTableCatalog(null);
                     meta.setTableSchema(null);
+                    meta.setSynced(ColumnSyncedEnum.FALSE.getValue());
                     createModel(meta);
                 }
             }
