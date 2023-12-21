@@ -6,6 +6,7 @@ import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.constants.ColumnDefault;
 import org.geelato.core.constants.MetaDaoSql;
+import org.geelato.core.enums.ColumnSyncedEnum;
 import org.geelato.core.enums.DeleteStatusEnum;
 import org.geelato.core.enums.EnableStatusEnum;
 import org.geelato.core.enums.TableTypeEnum;
@@ -378,8 +379,10 @@ public class DevTableColumnService extends BaseSortableService {
     public ColumnMeta upgradeTable(ColumnMeta form, ColumnMeta model) throws InvocationTargetException, IllegalAccessException {
         // 字段标识，是否变更
         if (model.getName().equals(form.getName())) {
+            form.setSynced(ColumnSyncedEnum.FALSE.getValue());
             return form;
         }
+        form.setSynced(ColumnSyncedEnum.TRUE.getValue());
         // 复制字段
         model.setId(null);
         model.setEnableStatus(EnableStatusEnum.DISABLED.getCode());

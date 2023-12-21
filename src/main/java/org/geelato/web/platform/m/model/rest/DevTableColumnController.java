@@ -5,6 +5,7 @@ import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiErrorMsg;
+import org.geelato.core.enums.ColumnSyncedEnum;
 import org.geelato.core.enums.DeleteStatusEnum;
 import org.geelato.core.gql.parser.FilterGroup;
 import org.geelato.core.meta.MetaManager;
@@ -122,6 +123,7 @@ public class DevTableColumnController extends BaseController {
                 }
                 result.setData(resultMap);
             } else {
+                form.setSynced(ColumnSyncedEnum.FALSE.getValue());
                 Map<String, Object> resultMap = devTableColumnService.createModel(form);
                 permissionService.resetDefaultPermission(PermissionTypeEnum.EP.getValue(), form.getTableName());
                 result.setData(resultMap);
