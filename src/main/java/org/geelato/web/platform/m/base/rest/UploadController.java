@@ -64,7 +64,7 @@ public class UploadController extends BaseController {
 
     @RequestMapping(value = "/object", method = RequestMethod.POST)
     @ResponseBody
-    public ApiResult uploadObject(@RequestBody Map<String, Object> params, String fileName) throws IOException {
+    public ApiResult uploadObject(@RequestBody Map<String, Object> params, String fileName, String catalog) throws IOException {
         ApiResult result = new ApiResult();
         if (params == null || params.isEmpty() || Strings.isBlank(fileName)) {
             return result.error().setMsg(ApiErrorMsg.OPERATE_FAIL);
@@ -72,12 +72,19 @@ public class UploadController extends BaseController {
         FileOutputStream fops = null;
         ObjectOutputStream oops = null;
         try {
+            // 文件名称
             String ext = uploadService.getFileExtension(fileName);
             if (Strings.isBlank(ext) || !ext.equalsIgnoreCase(ROOT_CONFIG_SUFFIX)) {
                 fileName += ROOT_CONFIG_SUFFIX;
             }
-            uploadService.fileMkdirs(ROOT_CONFIG_DIRECTORY);
-            File file = new File(String.format("%s/%s", ROOT_CONFIG_DIRECTORY, fileName));
+            // 路径
+            String rootDir = ROOT_CONFIG_DIRECTORY;
+            if (Strings.isNotBlank(catalog)) {
+                rootDir = String.format(catalog.startsWith("/") ? "%s%s" : "%s/%s", rootDir, catalog);
+            }
+            uploadService.fileMkdirs(rootDir);
+            // 文件
+            File file = new File(String.format("%s/%s", rootDir, fileName));
             if (file.exists() && !uploadService.fileResetName(file)) {
                 file.delete();
             }
@@ -102,7 +109,7 @@ public class UploadController extends BaseController {
 
     @RequestMapping(value = "/json", method = RequestMethod.POST)
     @ResponseBody
-    public ApiResult uploadJson(@RequestBody String JsonData, String fileName) throws IOException {
+    public ApiResult uploadJson(@RequestBody String JsonData, String fileName, String catalog) throws IOException {
         ApiResult result = new ApiResult();
         if (Strings.isBlank(JsonData) || Strings.isBlank(fileName)) {
             return result.error().setMsg(ApiErrorMsg.OPERATE_FAIL);
@@ -110,12 +117,19 @@ public class UploadController extends BaseController {
         FileWriter fileWriter = null;
         BufferedWriter bufferedWriter = null;
         try {
+            // 文件名称
             String ext = uploadService.getFileExtension(fileName);
             if (Strings.isBlank(ext) || !ext.equalsIgnoreCase(ROOT_CONFIG_SUFFIX)) {
                 fileName += ROOT_CONFIG_SUFFIX;
             }
-            uploadService.fileMkdirs(ROOT_CONFIG_DIRECTORY);
-            File file = new File(String.format("%s/%s", ROOT_CONFIG_DIRECTORY, fileName));
+            // 路径
+            String rootDir = ROOT_CONFIG_DIRECTORY;
+            if (Strings.isNotBlank(catalog)) {
+                rootDir = String.format(catalog.startsWith("/") ? "%s%s" : "%s/%s", rootDir, catalog);
+            }
+            uploadService.fileMkdirs(rootDir);
+            // 文件
+            File file = new File(String.format("%s/%s", rootDir, fileName));
             if (file.exists() && !uploadService.fileResetName(file)) {
                 file.delete();
             }
@@ -140,17 +154,21 @@ public class UploadController extends BaseController {
 
     @RequestMapping(value = "/model/{entityName}/{id}", method = RequestMethod.POST)
     @ResponseBody
-    public ApiResult uploadModel(@PathVariable("entityName") String entityName, @PathVariable("id") String id) {
+    public ApiResult uploadModel(@PathVariable("entityName") String entityName, @PathVariable("id") String id, String fileName) {
         ApiResult result = new ApiResult();
         if (Strings.isBlank(entityName) || Strings.isBlank(id)) {
             return result.error().setMsg(ApiErrorMsg.OPERATE_FAIL);
+        }
+        if (Strings.isBlank(fileName)) {
+            return result.error().setMsg("File Name Is Null");
         }
         try {
             String fieldNames = getColumnFieldNames(entityName);
             if (Strings.isBlank(fieldNames)) {
                 return result.error().setMsg("Column Meta Is Null");
             }
-            Map<String, Object> columnMap = dao.getJdbcTemplate().queryForMap(String.format("select %s from %s where id = %s", fieldNames, entityName, id));
+            String sql = String.format("select %s from %s where id = '%s'", fieldNames, entityName, id);
+            Map<String, Object> columnMap = dao.getJdbcTemplate().queryForMap(sql);
             if (columnMap == null || columnMap.isEmpty()) {
                 return result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
             }
@@ -159,21 +177,21 @@ public class UploadController extends BaseController {
                     columnEntry.setValue("");
                 }
             }
-            String configName = null;
-            String tenantCode = String.valueOf(columnMap.get("tenantCode"));
+            /*String configName = null;
+            String tenantCode = columnMap.get("tenantCode") == null ? null : String.valueOf(columnMap.get("tenantCode"));
             if (Strings.isBlank(tenantCode)) {
-                return result.error().setMsg("tenantCode is null");
+                return result.error().setMsg("TenantCode Is Null");
             }
-            String appId = String.valueOf(columnMap.get("appId"));
+            String appId = columnMap.get("appId") == null ? null : String.valueOf(columnMap.get("appId"));
             if (Strings.isBlank(appId)) {
                 configName = String.format("%s_%s%s", tenantCode, id, ROOT_CONFIG_SUFFIX);
             } else {
                 configName = String.format("%s_%s_%s%s", tenantCode, appId, id, ROOT_CONFIG_SUFFIX);
-            }
-            result = uploadJson(JSON.toJSONString(columnMap), configName);
+            }*/
+            result = uploadJson(JSON.toJSONString(columnMap), fileName, "");
         } catch (Exception e) {
             logger.error(e.getMessage());
-            result.error().setMsg(ApiErrorMsg.OPERATE_FAIL);
+            result.error().setMsg(e.getMessage());
         }
 
         return result;

@@ -7,6 +7,7 @@ import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.constants.MediaTypes;
+import org.geelato.core.enums.ColumnSyncedEnum;
 import org.geelato.core.enums.DeleteStatusEnum;
 import org.geelato.core.enums.EnableStatusEnum;
 import org.geelato.core.gql.parser.FilterGroup;
@@ -130,6 +131,7 @@ public class DevTableController extends BaseController {
                     result.error().setMsg(ApiErrorMsg.IS_NULL);
                 }
             } else {
+                form.setSynced(ColumnSyncedEnum.FALSE.getValue());
                 Map<String, Object> resultMap = devTableService.createModel(form);
                 form.setId(resultMap.get("id").toString());
                 // 添加默认权限

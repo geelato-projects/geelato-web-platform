@@ -15,6 +15,7 @@ import java.util.Date;
  */
 @Component
 public class UploadService {
+    private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
 
     /**
      * 返回文件上传绝对路径
@@ -104,7 +105,7 @@ public class UploadService {
     public boolean fileResetName(File file, String fileName) {
         if (file != null && file.exists()) {
             if (Strings.isBlank(fileName)) {
-                fileName = String.format("%s_%s_bak%s", this.getFileName(file.getName()), UIDGenerator.generate(), this.getFileExtension(file.getName()));
+                fileName = String.format("%s_bak_%s%s", this.getFileName(file.getName()), sdf.format(new Date()), this.getFileExtension(file.getName()));
             }
             File newFile = new File(String.format("%s/%s", file.getParent(), fileName));
             if (!newFile.exists()) {
