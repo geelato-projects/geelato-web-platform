@@ -251,10 +251,15 @@ public class RuleService {
      * @param transactionStatus
      * @return
      */
-    public String recursiveSave(SaveCommand command, DataSourceTransactionManager dataSourceTransactionManager, TransactionStatus transactionStatus)  throws  DaoException{
+    public String recursiveSave(SaveCommand command, DataSourceTransactionManager dataSourceTransactionManager, TransactionStatus transactionStatus) throws DaoException {
         BoundSql boundSql = sqlManager.generateSaveSql(command);
         String rtnValue = null;
-            rtnValue = dao.save(boundSql);
+            try{
+                rtnValue = dao.save(boundSql);
+            }catch (DaoException e) {
+                TransactionHelper.rollbackTransaction(dataSourceTransactionManager, transactionStatus);
+                throw e;
+            }
             command.setExecution(!rtnValue.equals("saveFail"));
             if (command.hasCommands()) {
                 command.getCommands().forEach(subCommand -> {
