@@ -266,6 +266,7 @@ public class RuleService {
                     try {
                         recursiveSave(subCommand, dataSourceTransactionManager, transactionStatus);
                     } catch (DaoException e) {
+                        TransactionHelper.rollbackTransaction(dataSourceTransactionManager, transactionStatus);
                     }
                 });
             }
