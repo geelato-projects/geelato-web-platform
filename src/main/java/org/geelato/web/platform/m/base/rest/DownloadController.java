@@ -5,7 +5,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.api.ApiResult;
-import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.web.platform.m.base.entity.Attach;
 import org.geelato.web.platform.m.base.service.AttachService;
 import org.geelato.web.platform.m.base.service.DownloadService;
@@ -99,7 +98,7 @@ public class DownloadController extends BaseController {
     public ApiResult downloadJson(String fileName) throws IOException {
         ApiResult result = new ApiResult();
         if (Strings.isBlank(fileName)) {
-            return result.error().setMsg(ApiErrorMsg.OPERATE_FAIL);
+            return result.success().setMsg("fileName is null");
         }
         BufferedReader bufferedReader = null;
         try {
@@ -109,7 +108,7 @@ public class DownloadController extends BaseController {
             }
             File file = new File(String.format("%s/%s", ROOT_CONFIG_DIRECTORY, fileName));
             if (!file.exists()) {
-                return result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
+                return result.success().setMsg("File (.config) does not exist");
             }
             StringBuilder contentBuilder = new StringBuilder();
             bufferedReader = Files.newBufferedReader(Paths.get(file.getAbsolutePath()), StandardCharsets.UTF_8);
@@ -120,7 +119,7 @@ public class DownloadController extends BaseController {
             result.setData(contentBuilder.toString());
         } catch (Exception e) {
             logger.error(e.getMessage());
-            result.error().setMsg(ApiErrorMsg.OPERATE_FAIL);
+            result.success().setMsg(e.getMessage());
         } finally {
             if (bufferedReader != null) {
                 bufferedReader.close();

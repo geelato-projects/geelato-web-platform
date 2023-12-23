@@ -159,12 +159,15 @@ public class UploadController extends BaseController {
         if (Strings.isBlank(entityName) || Strings.isBlank(id)) {
             return result.error().setMsg(ApiErrorMsg.OPERATE_FAIL);
         }
+        if (Strings.isBlank(fileName)) {
+            return result.error().setMsg("File Name Is Null");
+        }
         try {
             String fieldNames = getColumnFieldNames(entityName);
             if (Strings.isBlank(fieldNames)) {
                 return result.error().setMsg("Column Meta Is Null");
             }
-            String sql = String.format("select %s from %s where id = %s", fieldNames, entityName, id);
+            String sql = String.format("select %s from %s where id = '%s'", fieldNames, entityName, id);
             Map<String, Object> columnMap = dao.getJdbcTemplate().queryForMap(sql);
             if (columnMap == null || columnMap.isEmpty()) {
                 return result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
