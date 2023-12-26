@@ -135,6 +135,15 @@ public class BusinessMeta {
      *
      * @return
      */
+    public boolean isEvaluationTypeCheckBox() {
+        return ExcelEvaluationEnum.CHECKBOX.name().equalsIgnoreCase(this.evaluation);
+    }
+
+    /**
+     * 取值方式，数据字典项value值
+     *
+     * @return
+     */
     public boolean isEvaluationTypeDictionary() {
         return ExcelEvaluationEnum.DICTIONARY.name().equalsIgnoreCase(this.evaluation);
     }

@@ -414,6 +414,23 @@ public class ImportExcelController extends BaseController {
                     value = redisValues.get(String.valueOf(businessData.getValue()));
                 }
             }
+        } else if (meta.isEvaluationTypeCheckBox()) {
+            if (businessData.getValue() != null) {
+                Map<String, String> redisValues = (Map<String, String>) redisTemplate.opsForValue().get(String.format("%s:%s", currentUUID, meta.getDictCode()));
+                if (redisValues != null && redisValues.size() > 0) {
+                    String[] oValues = String.valueOf(businessData.getValue()).split(",");
+                    if (oValues != null && oValues.length > 0) {
+                        Set<String> nValues = new LinkedHashSet<>();
+                        for (String oValue : oValues) {
+                            String nValue = redisValues.get(oValue);
+                            if (Strings.isNotBlank(nValue)) {
+                                nValues.add(nValue);
+                            }
+                        }
+                        value = String.join(",", nValues);
+                    }
+                }
+            }
         } else if (meta.isEvaluationTypeDictionary()) {
             if (businessData.getValue() != null) {
                 Map<String, String> redisValues = (Map<String, String>) redisTemplate.opsForValue().get(String.format("%s:%s", currentUUID, meta.getDictCode()));
