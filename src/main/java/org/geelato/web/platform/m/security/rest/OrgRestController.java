@@ -169,8 +169,14 @@ public class OrgRestController extends BaseController {
     public ApiResult delete(@PathVariable(required = true) String id) {
         ApiResult result = new ApiResult();
         try {
-            orgService.deleteModel(Org.class, id);
-            result.success();
+            if (Strings.isNotBlank(id)) {
+                Org org = orgService.getModel(Org.class, id);
+                if (org != null) {
+                    orgService.isDeleteModel(org);
+                    return result.success().setData(id);
+                }
+            }
+            result.error().setMsg(ApiErrorMsg.DELETE_FAIL);
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.DELETE_FAIL);
