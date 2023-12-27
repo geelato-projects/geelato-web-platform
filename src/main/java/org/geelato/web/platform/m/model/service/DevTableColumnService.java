@@ -6,10 +6,7 @@ import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.constants.ColumnDefault;
 import org.geelato.core.constants.MetaDaoSql;
-import org.geelato.core.enums.ColumnSyncedEnum;
-import org.geelato.core.enums.DeleteStatusEnum;
-import org.geelato.core.enums.EnableStatusEnum;
-import org.geelato.core.enums.TableTypeEnum;
+import org.geelato.core.enums.*;
 import org.geelato.core.meta.MetaManager;
 import org.geelato.core.meta.model.entity.TableMeta;
 import org.geelato.core.meta.model.field.ColumnMeta;
@@ -112,6 +109,7 @@ public class DevTableColumnService extends BaseSortableService {
                     meta.setTableCatalog(null);
                     meta.setTableSchema(null);
                     meta.setSynced(ColumnSyncedEnum.FALSE.getValue());
+                    meta.setEncrypted(ColumnEncryptedEnum.FALSE.getValue());
                     createModel(meta);
                 }
             }
