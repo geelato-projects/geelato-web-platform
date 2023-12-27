@@ -226,8 +226,14 @@ public class UserRestController extends BaseController {
     public ApiResult delete(@PathVariable(required = true) String id) {
         ApiResult result = new ApiResult();
         try {
-            userService.deleteModel(User.class, id);
-            result.success();
+            if (Strings.isNotBlank(id)) {
+                User user = userService.getModel(User.class, id);
+                if (user != null) {
+                    userService.deleteModel(User.class, id);
+                    return result.success().setData(id);
+                }
+            }
+            result.error().setMsg(ApiErrorMsg.DELETE_FAIL);
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.DELETE_FAIL);

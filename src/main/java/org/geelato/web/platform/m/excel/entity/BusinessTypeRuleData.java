@@ -101,6 +101,10 @@ public class BusinessTypeRuleData {
         return ExcelColumnTypeRuleEnum.LOWERCASE.name().equalsIgnoreCase(this.type);
     }
 
+    public boolean isRuleTypeCheckBox() {
+        return ExcelColumnTypeRuleEnum.CHECKBOX.name().equalsIgnoreCase(this.type);
+    }
+
     public boolean isRuleTypeDictionary() {
         return ExcelColumnTypeRuleEnum.DICTIONARY.name().equalsIgnoreCase(this.type);
     }

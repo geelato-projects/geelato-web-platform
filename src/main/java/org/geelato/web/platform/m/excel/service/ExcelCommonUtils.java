@@ -390,6 +390,25 @@ public class ExcelCommonUtils {
                                     } else {
                                         businessData.setErrorMsg("Rule resolution failure。[" + ruleData.getType() + "] Rule is empty！");
                                     }
+                                } else if (ruleData.isRuleTypeCheckBox()) {
+                                    if (Strings.isNotBlank(ruleData.getRule())) {
+                                        Map<String, String> redisValues = (Map<String, String>) redisTemplate.opsForValue().get(String.format("%s:%s", currentUUID, ruleData.getRule()));
+                                        if (redisValues != null && redisValues.size() > 0) {
+                                            String[] oValues = oldValue.split(",");
+                                            if (oValues != null && oValues.length > 0) {
+                                                Set<String> nValues = new LinkedHashSet<>();
+                                                for (String oValue : oValues) {
+                                                    String nValue = redisValues.get(oValue);
+                                                    if (Strings.isNotBlank(nValue)) {
+                                                        nValues.add(nValue);
+                                                    }
+                                                }
+                                                newValue = String.join(",", nValues);
+                                            }
+                                        }
+                                    } else {
+                                        businessData.setErrorMsg("Rule resolution failure。[" + ruleData.getType() + "] Rule is empty！");
+                                    }
                                 } else if (ruleData.isRuleTypeDictionary()) {
                                     if (Strings.isNotBlank(ruleData.getRule())) {
                                         Map<String, String> redisValues = (Map<String, String>) redisTemplate.opsForValue().get(String.format("%s:%s", currentUUID, ruleData.getRule()));
@@ -467,7 +486,7 @@ public class ExcelCommonUtils {
                             if (priorityMulti != ruleData.isPriority()) {
                                 continue;
                             }
-                            if (ruleData.isRuleTypeDictionary()) {
+                            if (ruleData.isRuleTypeDictionary() || ruleData.isRuleTypeCheckBox()) {
                                 if (Strings.isNotBlank(ruleData.getRule())) {
                                     String key = String.format("%s:%s", currentUUID, ruleData.getRule());
                                     if (!ruleDataDict.containsKey(key)) {
@@ -614,7 +633,7 @@ public class ExcelCommonUtils {
             if (metaMap.getValue() != null && metaMap.getValue().size() > 0) {
                 for (BusinessMeta meta : metaMap.getValue()) {
                     ConditionMeta conditionMeta = null;
-                    if (meta.isEvaluationTypeDictionary() && Strings.isNotBlank(meta.getDictCode())) {
+                    if ((meta.isEvaluationTypeDictionary() || meta.isEvaluationTypeCheckBox()) && Strings.isNotBlank(meta.getDictCode())) {
                         conditionMeta = new ConditionMeta();
                         conditionMeta.setVariable(meta.getVariableValue());
                         conditionMeta.setDictCode(meta.getDictCode());
@@ -634,7 +653,7 @@ public class ExcelCommonUtils {
                             }
                         }
                         conditionMeta.setValues(values);
-                        if (meta.isEvaluationTypeDictionary()) {
+                        if (meta.isEvaluationTypeDictionary() || meta.isEvaluationTypeCheckBox()) {
                             String key = String.format("%s:%s", currentUUID, meta.getDictCode());
                             if (!dictMetas.containsKey(key)) {
                                 dictMetas.put(key, conditionMeta);
@@ -900,7 +919,9 @@ public class ExcelCommonUtils {
                             continue;
                         }
                         // 清洗规则
-                        if (ruleData.isRuleTypeDeletes() || ruleData.isRuleTypeReplace() || ruleData.isRuleTypeTrim() || ruleData.isRuleTypeUpperCase() || ruleData.isRuleTypeLowerCase() || ruleData.isRuleTypeExpression() || ruleData.isRuleTypeDictionary() || ruleData.isRuleTypeQueryGoal() || ruleData.isRuleTypeQueryRule()) {
+                        if (ruleData.isRuleTypeDeletes() || ruleData.isRuleTypeReplace() || ruleData.isRuleTypeTrim() || ruleData.isRuleTypeUpperCase()
+                                || ruleData.isRuleTypeLowerCase() || ruleData.isRuleTypeExpression() || ruleData.isRuleTypeCheckBox()
+                                || ruleData.isRuleTypeDictionary() || ruleData.isRuleTypeQueryGoal() || ruleData.isRuleTypeQueryRule()) {
                             typeRuleBaseToColumn(currentUUID, businessDataMap, valueMap, columnNames, ruleData);
                         } else if (ruleData.isRuleTypeMulti() || ruleData.isRuleTypeSym()) {
                             List<Map<String, BusinessData>> multiMapList = typeRuleMultiToColumn(businessDataMap, columnNames, ruleData);
@@ -1044,6 +1065,25 @@ public class ExcelCommonUtils {
                 } else {
                     businessData.setErrorMsg("Rule resolution failure。[" + ruleData.getType() + "] Rule is empty！");
                 }
+            } else if (ruleData.isRuleTypeCheckBox()) {
+                if (Strings.isNotBlank(ruleData.getRule())) {
+                    Map<String, String> redisValues = (Map<String, String>) redisTemplate.opsForValue().get(String.format("%s:%s", currentUUID, ruleData.getRule()));
+                    if (Strings.isNotBlank(oldValue) && redisValues != null && redisValues.size() > 0) {
+                        String[] oValues = oldValue.split(",");
+                        if (oValues != null && oValues.length > 0) {
+                            Set<String> nValues = new LinkedHashSet<>();
+                            for (String oValue : oValues) {
+                                String nValue = redisValues.get(oValue);
+                                if (Strings.isNotBlank(nValue)) {
+                                    nValues.add(nValue);
+                                }
+                            }
+                            newValue = String.join(",", nValues);
+                        }
+                    }
+                } else {
+                    businessData.setErrorMsg("Rule resolution failure。[" + ruleData.getType() + "] Rule is empty！");
+                }
             } else if (ruleData.isRuleTypeDictionary()) {
                 if (Strings.isNotBlank(ruleData.getRule())) {
                     Map<String, String> redisValues = (Map<String, String>) redisTemplate.opsForValue().get(String.format("%s:%s", currentUUID, ruleData.getRule()));
@@ -1097,7 +1137,7 @@ public class ExcelCommonUtils {
                 for (Map.Entry<Integer, BusinessTypeRuleData> ruleDataEntry : ruleDataMap.entrySet()) {
                     BusinessTypeRuleData ruleData = ruleDataEntry.getValue();
                     if (ruleData != null) {
-                        if (ruleData.isRuleTypeDictionary()) {
+                        if (ruleData.isRuleTypeDictionary() || ruleData.isRuleTypeCheckBox()) {
                             if (Strings.isNotBlank(ruleData.getRule())) {
                                 String key = String.format("%s:%s", currentUUID, ruleData.getRule());
                                 if (!ruleDataDict.containsKey(key)) {

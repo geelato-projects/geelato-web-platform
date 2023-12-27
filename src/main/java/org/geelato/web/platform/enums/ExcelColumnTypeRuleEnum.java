@@ -11,6 +11,7 @@ public enum ExcelColumnTypeRuleEnum {
     TRIM,// 去除字符串前后空格
     UPPERCASE,// 字符串大写
     LOWERCASE,// 字符串小写
+    CHECKBOX,// 多选框，查询字典编码(rule)
     DICTIONARY,// 查询字典编码(rule)，字典项名称与字符串匹配，回写字典项编码。
     QUERYGOAL,// 查询表格(rule)，查询字段与字符串匹配[或]，回写目标字段[不属于查询字段](goal)值。
     QUERYRULE,// 查询表格(rule)，查询字段与字符串匹配[或]，回写目标字段[属于查询字段](goal)值。

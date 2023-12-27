@@ -57,7 +57,7 @@ import java.util.stream.Collectors;
 
 /**
  * @author diabl
- * @description: TODO
+ * @description: 文件导入
  * @date 2023/10/12 14:09
  */
 @Controller
@@ -233,7 +233,7 @@ public class ImportExcelController extends BaseController {
                     long start = System.currentTimeMillis();
                     for (BusinessMeta meta : metaMap.getValue()) {
                         FieldMeta fieldMeta = entityMeta.getFieldMeta(meta.getColumnName());
-                        Assert.notNull(entityMeta, "Table FieldMeta Is Null");
+                        Assert.notNull(fieldMeta, "Table FieldMeta Is Null");
                         Object value = null;
                         BusinessData businessData = businessDataMap.get(meta.getVariableValue());
                         if (businessData != null) {
@@ -414,6 +414,23 @@ public class ImportExcelController extends BaseController {
                     value = redisValues.get(String.valueOf(businessData.getValue()));
                 }
             }
+        } else if (meta.isEvaluationTypeCheckBox()) {
+            if (businessData.getValue() != null) {
+                Map<String, String> redisValues = (Map<String, String>) redisTemplate.opsForValue().get(String.format("%s:%s", currentUUID, meta.getDictCode()));
+                if (redisValues != null && redisValues.size() > 0) {
+                    String[] oValues = String.valueOf(businessData.getValue()).split(",");
+                    if (oValues != null && oValues.length > 0) {
+                        Set<String> nValues = new LinkedHashSet<>();
+                        for (String oValue : oValues) {
+                            String nValue = redisValues.get(oValue);
+                            if (Strings.isNotBlank(nValue)) {
+                                nValues.add(nValue);
+                            }
+                        }
+                        value = String.join(",", nValues);
+                    }
+                }
+            }
         } else if (meta.isEvaluationTypeDictionary()) {
             if (businessData.getValue() != null) {
                 Map<String, String> redisValues = (Map<String, String>) redisTemplate.opsForValue().get(String.format("%s:%s", currentUUID, meta.getDictCode()));
@@ -426,14 +443,16 @@ public class ImportExcelController extends BaseController {
         } else if (meta.isEvaluationTypePrimitive()) {
             value = businessData.getPrimevalValue();
         }
-        if (columnMeta.getDataType().equalsIgnoreCase("year")) {
-            value = new SimpleDateFormat("yyyy").format(value);
-        } else if (columnMeta.getDataType().equalsIgnoreCase("date")) {
-            value = new SimpleDateFormat("yyyy-MM-dd").format(value);
-        } else if (columnMeta.getDataType().equalsIgnoreCase("time")) {
-            value = new SimpleDateFormat("HH:mm:ss").format(value);
-        } else if (columnMeta.getDataType().equalsIgnoreCase("dateTime")) {
-            value = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(value);
+        if (value != null) {
+            if (columnMeta.getDataType().equalsIgnoreCase("year")) {
+                value = new SimpleDateFormat("yyyy").format(value);
+            } else if (columnMeta.getDataType().equalsIgnoreCase("date")) {
+                value = new SimpleDateFormat("yyyy-MM-dd").format(value);
+            } else if (columnMeta.getDataType().equalsIgnoreCase("time")) {
+                value = new SimpleDateFormat("HH:mm:ss").format(value);
+            } else if (columnMeta.getDataType().equalsIgnoreCase("dateTime")) {
+                value = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(value);
+            }
         }
 
         return value;

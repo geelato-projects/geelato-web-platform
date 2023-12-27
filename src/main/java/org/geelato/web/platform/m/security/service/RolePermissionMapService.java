@@ -254,7 +254,7 @@ public class RolePermissionMapService extends BaseService {
             List<RolePermissionMap> maps = queryModel(RolePermissionMap.class, params);
             if (maps != null && maps.size() > 0) {
                 for (RolePermissionMap map : maps) {
-                    deleteModel(RolePermissionMap.class, map.getId());
+                    this.isDeleteModel(map);
                 }
             } else {
                 insertModel(form);
@@ -327,7 +327,7 @@ public class RolePermissionMapService extends BaseService {
             List<RolePermissionMap> rolePermissionMaps = queryModel(RolePermissionMap.class, filter1);
             if (rolePermissionMaps != null && rolePermissionMaps.size() > 0) {
                 for (RolePermissionMap dModel : rolePermissionMaps) {
-                    deleteModel(RolePermissionMap.class, dModel.getId());
+                    this.isDeleteModel(dModel);
                 }
             }
         }
