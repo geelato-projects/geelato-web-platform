@@ -93,7 +93,6 @@ public class Permission extends BaseEntity {
 
     @Title(title = "默认权限")
     @Transient
-
     public boolean isDefault() {
         return isDefault;
     }

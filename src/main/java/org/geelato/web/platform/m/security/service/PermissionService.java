@@ -15,10 +15,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author diabl
@@ -27,6 +24,7 @@ import java.util.Map;
 public class PermissionService extends BaseService {
     public static final String PERMISSION_COLUMN = ResourcesFiles.PERMISSION_COLUMN_DEFAULT_JSON;
     public static final String PERMISSION_TABLE = ResourcesFiles.PERMISSION_TABLE_DEFAULT_JSON;
+    private static final String[] PERMISSION_TO_ROLE = {"&myself", "&insert", "&update", "&delete"};
     @Lazy
     @Autowired
     private RolePermissionMapService rolePermissionMapService;
@@ -199,18 +197,24 @@ public class PermissionService extends BaseService {
                         }
                     }
                     if (!isExist) {
-                        dModel.setObject(object);
-                        dModel.setCode(String.format("%s%s", object, dModel.getCode()));
-                        createModel(dModel);
+                        createDefaultPermission(object, dModel);
                     }
                 }
             } else {
                 for (Permission dModel : defPermissions) {
-                    dModel.setObject(object);
-                    dModel.setCode(String.format("%s%s", object, dModel.getCode()));
-                    createModel(dModel);
+                    createDefaultPermission(object, dModel);
                 }
             }
+        }
+    }
+
+    private void createDefaultPermission(String object, Permission dModel) {
+        String defaultCode = dModel.getCode();
+        dModel.setObject(object);
+        dModel.setCode(String.format("%s%s", object, defaultCode));
+        Map<String, Object> permission = createModel(dModel);
+        if (Arrays.asList(PERMISSION_TO_ROLE).contains(defaultCode)) {
+            rolePermissionMapService.createAllRoleOfDefaultPermission(JSON.parseObject(JSON.toJSONString(permission), Permission.class));
         }
     }
 

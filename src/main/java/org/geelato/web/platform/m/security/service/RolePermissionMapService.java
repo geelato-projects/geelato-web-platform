@@ -18,16 +18,14 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.RequestBody;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author diabl
  */
 @Component
 public class RolePermissionMapService extends BaseService {
+    private static final String[] PERMISSION_CLASSIFY = {"Insert", "Update", "Delete"};
     @Autowired
     private RoleService roleService;
     @Autowired
@@ -57,6 +55,46 @@ public class RolePermissionMapService extends BaseService {
         return dao.save(model);
     }
 
+    private Set<Map<String, Object>> permissionClassify(List<Permission> permissions) {
+        Set<Map<String, Object>> permissionMapSet = new LinkedHashSet<>();
+        Map<String, Object> viewPermissionMap = new LinkedHashMap<>();
+        viewPermissionMap.put("type", "view");
+        Set<Permission> viewPermissions = new LinkedHashSet<>();
+        viewPermissionMap.put("data", viewPermissions);
+        permissionMapSet.add(viewPermissionMap);
+
+        Map<String, Object> editPermissionMap = new LinkedHashMap<>();
+        editPermissionMap.put("type", "edit");
+        Set<Permission> editPermissions = new LinkedHashSet<>();
+        editPermissionMap.put("data", editPermissions);
+        permissionMapSet.add(editPermissionMap);
+
+        Map<String, Object> customPermissionMap = new LinkedHashMap<>();
+        customPermissionMap.put("type", "custom");
+        Set<Permission> customPermissions = new LinkedHashSet<>();
+        customPermissionMap.put("data", customPermissions);
+        permissionMapSet.add(customPermissionMap);
+        for (Permission model : permissions) {
+            if (model.isDefault()) {
+                boolean isEdit = false;
+                for (String clazz : PERMISSION_CLASSIFY) {
+                    if (String.format("%s&%s", model.getObject(), clazz).equalsIgnoreCase(model.getCode())) {
+                        editPermissions.add(model);
+                        isEdit = true;
+                        break;
+                    }
+                }
+                if (!isEdit) {
+                    viewPermissions.add(model);
+                }
+            } else {
+                customPermissions.add(model);
+            }
+        }
+
+        return permissionMapSet;
+    }
+
     /**
      * 表格权限
      *
@@ -81,9 +119,9 @@ public class RolePermissionMapService extends BaseService {
             for (Permission model : permissions) {
                 model.setDefault(permissionService.isDefault(model));
                 permissionIds.add(model.getId());
-
             }
-            tablePermissionMap.put("permission", JSON.parseArray(JSON.toJSONString(permissions)));
+            Set<Map<String, Object>> permissionMap = permissionClassify(permissions);
+            tablePermissionMap.put("permission", JSON.parseArray(JSON.toJSONString(permissionMap)));
         } else {
             tablePermissionMap.put("permission", null);
         }
@@ -343,5 +381,25 @@ public class RolePermissionMapService extends BaseService {
                 break;
             }
         }
+    }
+
+    public void createAllRoleOfDefaultPermission(Permission permission) {
+        Map<String, Object> roleParams = new HashMap<>();
+        roleParams.put("appId", permission.getAppId());
+        roleParams.put("tenantCode", permission.getTenantCode());
+        List<Role> roles = roleService.queryRoles(roleParams);
+        if (roles != null && roles.size() > 0) {
+            for (Role role : roles) {
+                RolePermissionMap map = new RolePermissionMap();
+                map.setRoleId(role.getId());
+                map.setRoleName(role.getName());
+                map.setPermissionId(permission.getId());
+                map.setPermissionName(permission.getName());
+                map.setAppId(permission.getAppId());
+                map.setTenantCode(permission.getTenantCode());
+                createModel(map);
+            }
+        }
+
     }
 }
