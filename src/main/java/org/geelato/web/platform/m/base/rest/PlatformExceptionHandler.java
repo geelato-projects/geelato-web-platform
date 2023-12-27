@@ -3,10 +3,13 @@ package org.geelato.web.platform.m.base.rest;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import jakarta.validation.ConstraintViolationException;
+import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.MediaTypes;
 import org.geelato.core.exception.TestException;
 import org.geelato.core.orm.DaoException;
 import org.geelato.utils.BeanValidators;
+import org.geelato.utils.UIDGenerator;
+import org.geelato.web.platform.PlatformRuntimeException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -26,13 +29,11 @@ import java.util.Map;
  **/
 // 会被Spring-MVC自动扫描，但又不属于Controller的annotation。
 @ControllerAdvice
-public class RestExceptionHandler extends ResponseEntityExceptionHandler {
-    private JSONObject jo = new JSONObject();
-
+public class PlatformExceptionHandler extends ResponseEntityExceptionHandler {
     /**
      * 处理JSR311 Validation异常.
      */
-    @ExceptionHandler(value = {ConstraintViolationException.class})
+    @org.springframework.web.bind.annotation.ExceptionHandler(value = {ConstraintViolationException.class})
     public final ResponseEntity<?> handleException(ConstraintViolationException ex, WebRequest request) {
         Map<String, String> errors = BeanValidators.extractPropertyAndMessage(ex.getConstraintViolations());
         String body = JSON.toJSONString(errors);
@@ -40,17 +41,23 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
         headers.setContentType(MediaType.parseMediaType(MediaTypes.TEXT_PLAIN_UTF_8));
         return handleExceptionInternal(ex, body, headers, HttpStatus.BAD_REQUEST, request);
     }
-    @ExceptionHandler(value = {DaoException.class})
-    public final ResponseEntity<?> handleException(DaoException ex, WebRequest request) {
-        String body = ex.getMsg();
+
+    @org.springframework.web.bind.annotation.ExceptionHandler(value = {PlatformRuntimeException.class})
+    public final ResponseEntity<?> handleException(PlatformRuntimeException ex, WebRequest request) {
+        ApiResult apiResult=new ApiResult();
+        ex.printStackTrace();
+        apiResult.setCode(ex.getCode());
+        apiResult.setMsg(ex.getMsg());
+        String content="错误详细已经做了统一记录,请复制并依据该标识向系统管理员进行沟通交流,标识依据是:;"+ UIDGenerator.generate();
+        apiResult.setData(content);
         HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.parseMediaType(MediaTypes.TEXT_PLAIN_UTF_8));
-        return handleExceptionInternal(ex, body, headers, HttpStatus.BAD_REQUEST, request);
+        headers.setContentType(MediaType.parseMediaType(MediaTypes.JSON_UTF_8));
+        return handleExceptionInternal(ex, apiResult, headers, HttpStatus.BAD_REQUEST, request);
     }
     /**
      * 处理RestException.
      */
-    @ExceptionHandler(value = {RestException.class})
+    @org.springframework.web.bind.annotation.ExceptionHandler(value = {RestException.class})
     public final ResponseEntity<?> handleException(RestException ex, WebRequest request) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.parseMediaType(MediaTypes.TEXT_PLAIN_UTF_8));
@@ -60,9 +67,8 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
     /**
      * 处理数据唯一约束问题
      */
-    @ExceptionHandler(value = {DuplicateKeyException.class})
+    @org.springframework.web.bind.annotation.ExceptionHandler(value = {DuplicateKeyException.class})
     public final ResponseEntity<?> handleException(DuplicateKeyException ex, WebRequest request) {
-
         logger.error(ex);
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.parseMediaType(MediaTypes.TEXT_PLAIN_UTF_8));
@@ -73,9 +79,8 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
     /**
      * 处理除以上问题之后的其它问题
      */
-    @ExceptionHandler
+    @org.springframework.web.bind.annotation.ExceptionHandler
     public final ResponseEntity<?> handleOtherException(Exception ex, WebRequest request) {
-
         logger.error("Exception", ex);
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.parseMediaType(MediaTypes.TEXT_PLAIN_UTF_8));
