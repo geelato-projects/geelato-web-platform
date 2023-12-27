@@ -273,6 +273,8 @@ public class UserRestController extends BaseController {
                     params.put("login_name", form.getLoginName());
                 } else if ("enName".equalsIgnoreCase(type)) {
                     params.put("en_name", form.getEnName());
+                } else if ("jobNumber".equalsIgnoreCase(type)) {
+                    params.put("job_number", form.getJobNumber());
                 } else if ("mobilePhone".equalsIgnoreCase(type)) {
                     params.put("mobile_phone", form.getMobilePhone());
                     params.put("mobile_prefix", form.getMobilePrefix());

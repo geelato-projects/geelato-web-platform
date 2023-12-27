@@ -35,7 +35,7 @@ public class User extends BaseSortableEntity {
     private String address;
     private String description;
     private String orgName;
-
+    private String jobNumber;
 
     public User() {
     }
@@ -264,5 +264,15 @@ public class User extends BaseSortableEntity {
 
     public void setOrgName(String orgName) {
         this.orgName = orgName;
+    }
+
+    @Title(title = "工号")
+    @Col(name = "job_number")
+    public String getJobNumber() {
+        return jobNumber;
+    }
+
+    public void setJobNumber(String jobNumber) {
+        this.jobNumber = jobNumber;
     }
 }

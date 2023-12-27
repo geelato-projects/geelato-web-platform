@@ -8,6 +8,7 @@ import java.util.Date;
  */
 public class LoginResult {
     private String id;
+    private String jobNumber;
     private String name;
     private String loginName;
     private String avatar;
@@ -180,6 +181,14 @@ public class LoginResult {
         this.roles = roles;
     }
 
+    public String getJobNumber() {
+        return jobNumber;
+    }
+
+    public void setJobNumber(String jobNumber) {
+        this.jobNumber = jobNumber;
+    }
+
     /**
      * 对象转换
      *
@@ -189,6 +198,7 @@ public class LoginResult {
     public static LoginResult formatLoginResult(User user) {
         LoginResult loginResult = new LoginResult();
         loginResult.setId(user.getId());
+        loginResult.setJobNumber(user.getJobNumber());
         loginResult.setName(user.getName());
         loginResult.setLoginName(user.getLoginName());
         loginResult.setAvatar(user.getAvatar());
