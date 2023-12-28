@@ -1,5 +1,6 @@
 package org.geelato.web.platform.m.base.rest;
 
+import com.alibaba.fastjson2.JSON;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.api.ApiPagedResult;
@@ -219,6 +220,37 @@ public class DictItemController extends BaseController {
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.VALIDATE_FAIL);
+        }
+
+        return result;
+    }
+
+    @RequestMapping(value = "/createDictAndItems", method = RequestMethod.POST)
+    @ResponseBody
+    public ApiResult createDictAndItems(@RequestBody Dict form) {
+        ApiResult result = new ApiResult();
+        try {
+            Dict dict = new Dict();
+            dict.setAppId(form.getAppId());
+            dict.setDictCode(form.getDictCode());
+            dict.setDictName(form.getDictName());
+            dict.setDictRemark(form.getDictRemark());
+            Map<String, Object> dictMap = dictService.createModel(dict);
+            dict = JSON.parseObject(JSON.toJSONString(dictMap), Dict.class);
+            if (form.getDictItems() != null && form.getDictItems().size() > 0) {
+                int orderNum = 1;
+                for (DictItem item : form.getDictItems()) {
+                    item.setId(null);
+                    item.setAppId(dict.getAppId());
+                    item.setTenantCode(dict.getTenantCode());
+                    item.setDictId(dict.getId());
+                    item.setSeqNo(orderNum++);
+                    dictItemService.createModel(item);
+                }
+            }
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            result.error().setMsg(ApiErrorMsg.OPERATE_FAIL);
         }
 
         return result;

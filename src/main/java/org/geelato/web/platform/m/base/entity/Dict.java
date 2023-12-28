@@ -4,8 +4,12 @@ import org.geelato.core.constants.ColumnDefault;
 import org.geelato.core.meta.annotation.Col;
 import org.geelato.core.meta.annotation.Entity;
 import org.geelato.core.meta.annotation.Title;
+import org.geelato.core.meta.annotation.Transient;
 import org.geelato.core.meta.model.entity.BaseSortableEntity;
 import org.geelato.core.meta.model.entity.EntityEnableAble;
+
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 /**
  * @author geelato
@@ -19,6 +23,7 @@ public class Dict extends BaseSortableEntity implements EntityEnableAble {
     private String dictName;
     private String dictRemark;
     private int enableStatus = ColumnDefault.ENABLE_STATUS_VALUE;
+    private Set<DictItem> dictItems = new LinkedHashSet<>();
 
     @Col(name = "dict_code")
     @Title(title = "字典编码")
@@ -74,5 +79,14 @@ public class Dict extends BaseSortableEntity implements EntityEnableAble {
     @Override
     public void setEnableStatus(int enableStatus) {
         this.enableStatus = enableStatus;
+    }
+
+    @Transient
+    public Set<DictItem> getDictItems() {
+        return dictItems;
+    }
+
+    public void setDictItems(Set<DictItem> dictItems) {
+        this.dictItems = dictItems;
     }
 }
