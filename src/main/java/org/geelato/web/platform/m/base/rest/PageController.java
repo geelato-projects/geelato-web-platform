@@ -3,6 +3,7 @@ package org.geelato.web.platform.m.base.rest;
 import org.geelato.core.api.ApiMetaResult;
 import org.geelato.core.constants.MediaTypes;
 import org.geelato.core.orm.Dao;
+import org.geelato.web.platform.DemoPractiseException;
 import org.geelato.web.platform.m.base.entity.AppPage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
