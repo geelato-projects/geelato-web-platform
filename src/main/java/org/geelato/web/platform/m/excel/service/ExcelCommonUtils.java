@@ -797,6 +797,21 @@ public class ExcelCommonUtils {
         return redisMap;
     }
 
+    public Map<String, ColumnMeta> getNullableColumns(Collection<FieldMeta> fieldMetas, List<String> columnNames) {
+        Map<String, ColumnMeta> uniqueColumns = new HashMap<>();
+        if (fieldMetas != null && fieldMetas.size() > 0) {
+            for (FieldMeta fieldMeta : fieldMetas) {
+                ColumnMeta meta = fieldMeta.getColumn();
+                if (meta != null && Strings.isNotBlank(meta.getFieldName()) && meta.getEnableStatus() == EnableStatusEnum.ENABLED.getCode() && meta.getDelStatus() == DeleteStatusEnum.NO.getCode()) {
+                    if (!uniqueColumns.containsKey(meta.getFieldName()) && !columnNames.contains(meta.getName()) && !meta.isNullable()) {
+                        uniqueColumns.put(meta.getFieldName(), meta);
+                    }
+                }
+            }
+        }
+
+        return uniqueColumns;
+    }
 
     public Map<String, ColumnMeta> getUniqueColumns(Collection<FieldMeta> fieldMetas, List<String> columnNames) {
         Map<String, ColumnMeta> uniqueColumns = new HashMap<>();

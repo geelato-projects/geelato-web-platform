@@ -189,6 +189,10 @@ public class ImportExcelController extends BaseController {
                 logger.info(String.format("业务数据（%s[%s]）[%s]", businessFile.getName(), businessFile.getId(), sdf.format(new Date())));
             }
             businessDataMapList = getBusinessData(businessFile, request, businessTypeDataMap, 0);
+            // 忽略默认字段
+            List<String> columnNames = excelCommonUtils.getDefaultColumns();
+            // 表检查
+            validateExcel(businessMetaListMap, businessTypeDataMap, businessDataMapList, columnNames);
             // 业务数据清洗规则
             businessDataMapList = excelCommonUtils.handleBusinessDataRules(currentUUID, businessDataMapList, businessTypeRuleDataSet);
             logger.info(String.format("BusinessData Handle Rule [TRUE] = %s [%s]", (businessDataMapList == null ? 0 : businessDataMapList.size()), sdf.format(new Date())));
@@ -204,8 +208,6 @@ public class ImportExcelController extends BaseController {
             // 设置缓存
             List<String> cacheKeys = excelCommonUtils.setCache(currentUUID, businessMetaListMap, businessDataMapList);
             logger.info(String.format("Redis Template [ADD] = %s [%s]", (cacheKeys == null ? 0 : cacheKeys.size()), sdf.format(new Date())));
-            // 忽略默认字段
-            List<String> columnNames = excelCommonUtils.getDefaultColumns();
             // 获取
             logger.info(String.format("业务数据解析-开始 [%s]", sdf.format(new Date())));
             long parseStart = System.currentTimeMillis();
@@ -214,7 +216,7 @@ public class ImportExcelController extends BaseController {
             for (Map.Entry<String, List<BusinessMeta>> metaMap : businessMetaListMap.entrySet()) {
                 // 获取表格字段信息
                 EntityMeta entityMeta = metaManager.getByEntityName(metaMap.getKey(), false);
-                Assert.notNull(entityMeta, "Table Meta Is Null");
+                Assert.notNull(entityMeta, String.format("Table Meta [%s] Is Null", metaMap.getKey()));
                 // 数值唯一性校验，数值
                 Map<String, ColumnMeta> uniqueColumns = excelCommonUtils.getUniqueColumns(entityMeta.getFieldMetas(), columnNames);
                 List<String> uniqueRedis = excelCommonUtils.setUniqueRedis(currentUUID, metaMap.getKey(), uniqueColumns.keySet());
@@ -233,7 +235,7 @@ public class ImportExcelController extends BaseController {
                     long start = System.currentTimeMillis();
                     for (BusinessMeta meta : metaMap.getValue()) {
                         FieldMeta fieldMeta = entityMeta.getFieldMeta(meta.getColumnName());
-                        Assert.notNull(fieldMeta, "Table FieldMeta Is Null");
+                        Assert.notNull(fieldMeta, String.format("Table ColumnName [%s] Is Null", meta.getColumnName()));
                         Object value = null;
                         BusinessData businessData = businessDataMap.get(meta.getVariableValue());
                         if (businessData != null) {
@@ -311,6 +313,67 @@ public class ImportExcelController extends BaseController {
         }
 
         return result;
+    }
+
+    private void validateExcel(Map<String, List<BusinessMeta>> businessMetaListMap, Map<String, BusinessTypeData> businessTypeDataMap,
+                               List<Map<String, BusinessData>> businessDataMapList, List<String> columnNames) {
+        // 导入数据表头
+        List<String> businessDataNames = new ArrayList<>();
+        // 业务数据类型
+        List<String> businessTypeDataNames = new ArrayList<>();
+        if (businessDataMapList != null && businessDataMapList.size() > 0) {
+            for (Map.Entry<String, BusinessData> businessDataEntry : businessDataMapList.get(0).entrySet()) {
+                businessDataNames.add(businessDataEntry.getKey());
+            }
+        }
+        if (businessTypeDataMap != null && businessTypeDataMap.size() > 0) {
+            for (Map.Entry<String, BusinessTypeData> businessTypeDataEntry : businessTypeDataMap.entrySet()) {
+                businessTypeDataNames.add(businessTypeDataEntry.getKey());
+            }
+        }
+        // 表头应该包含所有业务数据类型
+        if (!businessDataNames.containsAll(businessTypeDataNames)) {
+            throw new FileException("business data table header deficiency");
+        }
+        if (!businessTypeDataNames.containsAll(businessDataNames)) {
+            throw new FileException("business type data name deficiency");
+        }
+        if (businessMetaListMap != null && businessMetaListMap.size() > 0) {
+            for (Map.Entry<String, List<BusinessMeta>> businessMetaEntry : businessMetaListMap.entrySet()) {
+                List<String> nullableColumnNames = new ArrayList<>();
+                List<String> metaColumnNames = new ArrayList<>();
+                List<String> metaVariableValues = new ArrayList<>();
+                // 获取表格字段信息
+                EntityMeta entityMeta = metaManager.getByEntityName(businessMetaEntry.getKey(), false);
+                Assert.notNull(entityMeta, "Table Meta Is Null");
+                // 必填项
+                Map<String, ColumnMeta> nullableColumns = excelCommonUtils.getNullableColumns(entityMeta.getFieldMetas(), columnNames);
+
+                if (nullableColumns != null && nullableColumns.size() > 0) {
+                    for (Map.Entry<String, ColumnMeta> columnMetaEntry : nullableColumns.entrySet()) {
+                        nullableColumnNames.add(columnMetaEntry.getKey());
+                    }
+                }
+                if (businessMetaEntry.getValue() != null && businessMetaEntry.getValue().size() > 0) {
+                    for (BusinessMeta businessMeta : businessMetaEntry.getValue()) {
+                        if (Strings.isNotBlank(businessMeta.getColumnName())) {
+                            metaColumnNames.add(businessMeta.getColumnName());
+                        }
+                        if (Strings.isNotBlank(businessMeta.getVariableValue())) {
+                            metaVariableValues.add(businessMeta.getVariableValue());
+                        }
+                    }
+                }
+                // 元数据必须包含 必填项
+                if (!metaColumnNames.containsAll(nullableColumnNames)) {
+                    throw new FileException("business meta required fields are missing");
+                }
+                // 数据类型必须包含 用到的所有变量
+                if (!businessTypeDataNames.containsAll(metaVariableValues)) {
+                    throw new FileException("business meta variable values are missing");
+                }
+            }
+        }
     }
 
     /**
