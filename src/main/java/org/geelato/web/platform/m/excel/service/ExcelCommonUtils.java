@@ -890,7 +890,6 @@ public class ExcelCommonUtils {
         }
         // 设置缓存
         List<String> cacheKeys = setTypeRuleCache(currentUUID, businessTypeRuleDataSet);
-        logger.info(String.format("redis 数量：%s, %s", cacheKeys.size(), String.join(",", cacheKeys)));
         // 数据处理
         List<Map<String, BusinessData>> newMapList = handleTypeRules1(currentUUID, businessDataMapList, businessTypeRuleDataSet, 0);
         // 清理缓存
@@ -900,10 +899,8 @@ public class ExcelCommonUtils {
     }
 
     private List<Map<String, BusinessData>> handleTypeRules1(String currentUUID, List<Map<String, BusinessData>> businessDataMapList, Set<Map<Integer, BusinessTypeRuleData>> businessTypeRuleDataSet, int startIndex) {
-        logger.info(String.format("handleTypeRules1.startIndex: %s", startIndex));
         List<Map<String, BusinessData>> newMapList = new ArrayList<>();
         for (Map<String, BusinessData> businessDataMap : businessDataMapList) {
-            logger.info(String.format("handleTypeRules1.businessDataMapList.for"));
             List<Map<String, BusinessData>> handleData = new ArrayList<>();
             handleData.add(businessDataMap);
             List<Map<String, BusinessData>> handledData = handleTypeRules(currentUUID, handleData, businessTypeRuleDataSet, startIndex);
@@ -914,12 +911,10 @@ public class ExcelCommonUtils {
 
 
     private List<Map<String, BusinessData>> handleTypeRules(String currentUUID, List<Map<String, BusinessData>> businessDataMapList, Set<Map<Integer, BusinessTypeRuleData>> businessTypeRuleDataSet, int startIndex) {
-        logger.info(String.format("handleTypeRules.startIndex: %s", startIndex));
         if (businessDataMapList == null || businessDataMapList.size() == 0) {
             return new ArrayList<>();
         }
         for (Map<String, BusinessData> businessDataMap : businessDataMapList) {
-            logger.info(String.format("handleTypeRules.businessDataMapList.for"));
             // 一行业务数据，键值对
             Map<String, Object> valueMap = new HashMap<>();
             for (Map.Entry<String, BusinessData> businessDataEntry : businessDataMap.entrySet()) {
@@ -927,7 +922,6 @@ public class ExcelCommonUtils {
             }
             // 清洗规则
             for (Map<Integer, BusinessTypeRuleData> ruleDataMap : businessTypeRuleDataSet) {
-                logger.info(String.format("handleTypeRules.businessTypeRuleDataSet.for"));
                 for (Map.Entry<Integer, BusinessTypeRuleData> ruleDataEntry : ruleDataMap.entrySet()) {
                     if (startIndex > ruleDataEntry.getKey()) {
                         continue;
@@ -943,14 +937,12 @@ public class ExcelCommonUtils {
                         if (ruleData.isRuleTypeDeletes() || ruleData.isRuleTypeReplace() || ruleData.isRuleTypeTrim() || ruleData.isRuleTypeUpperCase()
                                 || ruleData.isRuleTypeLowerCase() || ruleData.isRuleTypeExpression() || ruleData.isRuleTypeCheckBox()
                                 || ruleData.isRuleTypeDictionary() || ruleData.isRuleTypeQueryGoal() || ruleData.isRuleTypeQueryRule()) {
-                            logger.info(String.format("handleTypeRules 清洗规则：%s, 行号：%s", ruleData.getType(), ruleDataEntry.getKey()));
                             typeRuleBaseToColumn(currentUUID, businessDataMap, valueMap, columnNames, ruleData);
                         } else if (ruleData.isRuleTypeMulti() || ruleData.isRuleTypeSym()) {
                             List<Map<String, BusinessData>> multiMapList = typeRuleMultiToColumn(businessDataMap, columnNames, ruleData);
                             List<Map<String, BusinessData>> handleMulti = handleTypeRules1(currentUUID, multiMapList, businessTypeRuleDataSet, ruleDataEntry.getKey() + 1);
                             businessDataMapList.clear();
                             businessDataMapList.addAll(handleMulti);
-                            logger.info(String.format("handleTypeRules,多值分割，数量：%s", businessDataMapList.size()));
                             return businessDataMapList;
                         }
                     }
@@ -962,7 +954,6 @@ public class ExcelCommonUtils {
     }
 
     private List<Map<String, BusinessData>> typeRuleMultiToColumn(Map<String, BusinessData> businessDataMap, Set<String> columnNames, BusinessTypeRuleData ruleData) {
-        logger.info(String.format("typeRuleMultiToColumn,具体清除方法，%s", ruleData.getType()));
         List<Map<String, BusinessData>> handleDataMapList = new ArrayList<>();
         // 分类
         Map<String, BusinessData> singleData = new HashMap<>();
@@ -1056,7 +1047,6 @@ public class ExcelCommonUtils {
     }
 
     private void typeRuleBaseToColumn(String currentUUID, Map<String, BusinessData> businessDataMap, Map<String, Object> valueMap, Set<String> columnNames, BusinessTypeRuleData ruleData) {
-        logger.info(String.format("typeRuleBaseToColumn,具体清除方法，%s", ruleData.getType()));
         for (String columnName : columnNames) {
             BusinessData businessData = businessDataMap.get(columnName);
             if (businessData == null) {

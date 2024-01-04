@@ -12,6 +12,8 @@ import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.poifs.filesystem.POIFSFileSystem;
 import org.apache.poi.ss.usermodel.FillPatternType;
 import org.apache.poi.ss.usermodel.IndexedColors;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -32,10 +34,7 @@ import org.geelato.web.platform.m.base.rest.BaseController;
 import org.geelato.web.platform.m.base.service.AttachService;
 import org.geelato.web.platform.m.base.service.UploadService;
 import org.geelato.web.platform.m.excel.entity.*;
-import org.geelato.web.platform.m.excel.service.ExcelCommonUtils;
-import org.geelato.web.platform.m.excel.service.ExcelReader;
-import org.geelato.web.platform.m.excel.service.ExcelXSSFReader;
-import org.geelato.web.platform.m.excel.service.ExportTemplateService;
+import org.geelato.web.platform.m.excel.service.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -68,6 +67,7 @@ public class ImportExcelController extends BaseController {
     private static final String ROOT_DIRECTORY = "upload";
     private static final String REQUEST_FILE_PART = "file";
     private static final double IMPORT_PAGE_SIZE = 100.0;
+    private static final int ROW_ACCESS_WINDOW_SIZE = 50;
     private static final String IMPORT_ERROR_FILE_GENRE = "importErrorFile";
     private static final String REDIS_UNIQUE_KEY = "uniques";
     private final Logger logger = LoggerFactory.getLogger(ImportExcelController.class);
@@ -80,6 +80,8 @@ public class ImportExcelController extends BaseController {
     private ExcelReader excelReader;
     @Autowired
     private ExcelXSSFReader excelXSSFReader;
+    @Autowired
+    private ExcelSXSSFWriter excelSXSSFWriter;
     @Autowired
     private UploadService uploadService;
     @Autowired
@@ -157,6 +159,7 @@ public class ImportExcelController extends BaseController {
     }
 
     public ApiResult importExcel(HttpServletRequest request, HttpServletResponse response, String importType, String templateId, String attachId) {
+        System.gc();
         ApiResult result = new ApiResult();
         String currentUUID = String.valueOf(UIDGenerator.generate());
         try {
@@ -195,6 +198,7 @@ public class ImportExcelController extends BaseController {
             validateExcel(businessMetaListMap, businessTypeDataMap, businessDataMapList, columnNames);
             // 业务数据清洗规则
             businessDataMapList = excelCommonUtils.handleBusinessDataRules(currentUUID, businessDataMapList, businessTypeRuleDataSet);
+            System.gc();
             logger.info(String.format("BusinessData Handle Rule [TRUE] = %s [%s]", (businessDataMapList == null ? 0 : businessDataMapList.size()), sdf.format(new Date())));
             // 需要转化的业务数据
             // businessDataMapList = excelCommonUtils.handleBusinessDataRule(currentUUID, businessDataMapList, true);
@@ -263,6 +267,7 @@ public class ImportExcelController extends BaseController {
                 repeatedData.putAll(validateValue(uniqueColumns, columnData));
                 tableData.put(metaMap.getKey(), columnData);
             }
+            System.gc();
             // 数据唯一性校验
             logger.info(String.format("业务数据解析-结束 用时：%s ms", (System.currentTimeMillis() - parseStart)));
             // 释放缓存
@@ -310,6 +315,8 @@ public class ImportExcelController extends BaseController {
         } catch (Exception ex) {
             logger.error(ex.getMessage(), ex);
             result.error(ex).setData(currentUUID);
+        } finally {
+            System.gc();
         }
 
         return result;
@@ -533,6 +540,7 @@ public class ImportExcelController extends BaseController {
         Map<String, List<BusinessMeta>> businessMetaListMap = new HashMap<>();
         FileInputStream fileInputStream = null;
         BufferedInputStream bufferedInputStream = null;
+        Workbook workbook = null;
         try {
             // excel文件类型
             String contentType = Files.probeContentType(file.toPath());
@@ -541,13 +549,15 @@ public class ImportExcelController extends BaseController {
             bufferedInputStream = new BufferedInputStream(fileInputStream);
             if (EXCEL_XLS_CONTENT_TYPE.equals(contentType)) {
                 POIFSFileSystem fileSystem = new POIFSFileSystem(bufferedInputStream);
-                HSSFWorkbook workbook = new HSSFWorkbook(fileSystem);
-                HSSFSheet sheet = workbook.getSheetAt(sheetIndex);
+                workbook = new HSSFWorkbook(fileSystem);
+                HSSFSheet sheet = (HSSFSheet) workbook.getSheetAt(sheetIndex);
                 businessMetaListMap = excelReader.readBusinessMeta(sheet);
+                workbook.close();
             } else if (EXCEL_XLSX_CONTENT_TYPE.equals(contentType)) {
-                XSSFWorkbook workbook = new XSSFWorkbook(bufferedInputStream);
-                XSSFSheet sheet = workbook.getSheetAt(sheetIndex);
+                workbook = new XSSFWorkbook(bufferedInputStream);
+                XSSFSheet sheet = (XSSFSheet) workbook.getSheetAt(sheetIndex);
                 businessMetaListMap = excelXSSFReader.readBusinessMeta(sheet);
+                workbook.close();
             } else {
                 throw new FileTypeNotSupportedException("Business Meta, Excel Type: " + contentType);
             }
@@ -559,6 +569,9 @@ public class ImportExcelController extends BaseController {
             }
             if (fileInputStream != null) {
                 fileInputStream.close();
+            }
+            if (workbook != null) {
+                workbook.close();
             }
         }
 
@@ -577,6 +590,7 @@ public class ImportExcelController extends BaseController {
         Map<String, BusinessTypeData> businessTypeDataMap = new HashMap<>();
         FileInputStream fileInputStream = null;
         BufferedInputStream bufferedInputStream = null;
+        Workbook workbook = null;
         try {
             // excel文件类型
             String contentType = Files.probeContentType(file.toPath());
@@ -585,13 +599,15 @@ public class ImportExcelController extends BaseController {
             bufferedInputStream = new BufferedInputStream(fileInputStream);
             if (EXCEL_XLS_CONTENT_TYPE.equals(contentType)) {
                 POIFSFileSystem fileSystem = new POIFSFileSystem(bufferedInputStream);
-                HSSFWorkbook workbook = new HSSFWorkbook(fileSystem);
-                HSSFSheet sheet = workbook.getSheetAt(sheetIndex);
+                workbook = new HSSFWorkbook(fileSystem);
+                HSSFSheet sheet = (HSSFSheet) workbook.getSheetAt(sheetIndex);
                 businessTypeDataMap = excelReader.readBusinessTypeData(sheet);
+                workbook.close();
             } else if (EXCEL_XLSX_CONTENT_TYPE.equals(contentType)) {
-                XSSFWorkbook workbook = new XSSFWorkbook(bufferedInputStream);
-                XSSFSheet sheet = workbook.getSheetAt(sheetIndex);
+                workbook = new XSSFWorkbook(bufferedInputStream);
+                XSSFSheet sheet = (XSSFSheet) workbook.getSheetAt(sheetIndex);
                 businessTypeDataMap = excelXSSFReader.readBusinessTypeData(sheet);
+                workbook.close();
             } else {
                 throw new FileTypeNotSupportedException("Business Data Type, Excel Type: " + contentType);
             }
@@ -603,6 +619,9 @@ public class ImportExcelController extends BaseController {
             }
             if (fileInputStream != null) {
                 fileInputStream.close();
+            }
+            if (workbook != null) {
+                workbook.close();
             }
         }
 
@@ -621,6 +640,7 @@ public class ImportExcelController extends BaseController {
         Set<Map<Integer, BusinessTypeRuleData>> typeRuleDataSet = new LinkedHashSet<>();
         FileInputStream fileInputStream = null;
         BufferedInputStream bufferedInputStream = null;
+        Workbook workbook = null;
         try {
             // excel文件类型
             String contentType = Files.probeContentType(file.toPath());
@@ -629,13 +649,15 @@ public class ImportExcelController extends BaseController {
             bufferedInputStream = new BufferedInputStream(fileInputStream);
             if (EXCEL_XLS_CONTENT_TYPE.equals(contentType)) {
                 POIFSFileSystem fileSystem = new POIFSFileSystem(bufferedInputStream);
-                HSSFWorkbook workbook = new HSSFWorkbook(fileSystem);
-                HSSFSheet sheet = workbook.getSheetAt(sheetIndex);
+                workbook = new HSSFWorkbook(fileSystem);
+                HSSFSheet sheet = (HSSFSheet) workbook.getSheetAt(sheetIndex);
                 typeRuleDataSet = excelReader.readBusinessTypeRuleData(sheet);
+                workbook.close();
             } else if (EXCEL_XLSX_CONTENT_TYPE.equals(contentType)) {
-                XSSFWorkbook workbook = new XSSFWorkbook(bufferedInputStream);
-                XSSFSheet sheet = workbook.getSheetAt(sheetIndex);
+                workbook = new XSSFWorkbook(bufferedInputStream);
+                XSSFSheet sheet = (XSSFSheet) workbook.getSheetAt(sheetIndex);
                 typeRuleDataSet = excelXSSFReader.readBusinessTypeRuleData(sheet);
+                workbook.close();
             } else {
                 throw new FileTypeNotSupportedException("Business Data Type Rule, Excel Type: " + contentType);
             }
@@ -647,6 +669,9 @@ public class ImportExcelController extends BaseController {
             }
             if (fileInputStream != null) {
                 fileInputStream.close();
+            }
+            if (workbook != null) {
+                workbook.close();
             }
         }
 
@@ -667,6 +692,7 @@ public class ImportExcelController extends BaseController {
         InputStream inputStream = null;
         FileInputStream fileInputStream = null;
         BufferedInputStream bufferedInputStream = null;
+        Workbook workbook = null;
         try {
             String contentType = null;
             if (businessFile != null) {
@@ -682,13 +708,15 @@ public class ImportExcelController extends BaseController {
             }
             if (EXCEL_XLS_CONTENT_TYPE.equals(contentType)) {
                 POIFSFileSystem fileSystem = new POIFSFileSystem(bufferedInputStream);
-                HSSFWorkbook workbook = new HSSFWorkbook(fileSystem);
-                HSSFSheet sheet = workbook.getSheetAt(sheetIndex);
+                workbook = new HSSFWorkbook(fileSystem);
+                HSSFSheet sheet = (HSSFSheet) workbook.getSheetAt(sheetIndex);
                 businessDataMapList = excelReader.readBusinessData(sheet, businessTypeDataMap);
+                workbook.close();
             } else if (EXCEL_XLSX_CONTENT_TYPE.equals(contentType)) {
-                XSSFWorkbook workbook = new XSSFWorkbook(bufferedInputStream);
-                XSSFSheet sheet = workbook.getSheetAt(sheetIndex);
+                workbook = new XSSFWorkbook(bufferedInputStream);
+                XSSFSheet sheet = (XSSFSheet) workbook.getSheetAt(sheetIndex);
                 businessDataMapList = excelXSSFReader.readBusinessData(sheet, businessTypeDataMap);
+                workbook.close();
             } else {
                 throw new FileTypeNotSupportedException("Business Data, Excel Type: " + contentType);
             }
@@ -703,6 +731,9 @@ public class ImportExcelController extends BaseController {
             }
             if (fileInputStream != null) {
                 fileInputStream.close();
+            }
+            if (workbook != null) {
+                workbook.close();
             }
         }
 
@@ -751,6 +782,8 @@ public class ImportExcelController extends BaseController {
         OutputStream outputStream = null;
         OutputStream responseOut = null;
         FileInputStream responseIn = null;
+        Workbook workbook = null;
+        SXSSFWorkbook sWorkbook = null;
         try {
             String contentType = null;
             String fileName = null;
@@ -779,10 +812,10 @@ public class ImportExcelController extends BaseController {
             // 文件处理
             if (EXCEL_XLS_CONTENT_TYPE.equals(contentType)) {
                 POIFSFileSystem fileSystem = new POIFSFileSystem(bufferedInputStream);
-                HSSFWorkbook workbook = new HSSFWorkbook(fileSystem);
-                HSSFSheet sheet = workbook.getSheetAt(sheetIndex);
+                workbook = new HSSFWorkbook(fileSystem);
+                HSSFSheet sheet = (HSSFSheet) workbook.getSheetAt(sheetIndex);
                 // 创建CellStyle对象并设置填充颜色
-                HSSFCellStyle style = workbook.createCellStyle();
+                HSSFCellStyle style = (HSSFCellStyle) workbook.createCellStyle();
                 style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
                 style.setFillForegroundColor(IndexedColors.YELLOW.getIndex());
                 // 写入工作表
@@ -790,19 +823,27 @@ public class ImportExcelController extends BaseController {
                 // 写入文件
                 outputStream = new FileOutputStream(errorFile);
                 workbook.write(outputStream);
+                workbook.close();
             } else if (EXCEL_XLSX_CONTENT_TYPE.equals(contentType)) {
-                XSSFWorkbook workbook = new XSSFWorkbook(bufferedInputStream);
-                XSSFSheet sheet = workbook.getSheetAt(sheetIndex);
+                workbook = new XSSFWorkbook(bufferedInputStream);
+                ExcelXSSFUtils.reserveSheet((XSSFWorkbook) workbook, sheetIndex);
+                XSSFSheet sheet = (XSSFSheet) workbook.getSheetAt(0);
                 // 创建CellStyle对象并设置填充颜色
-                XSSFCellStyle style = workbook.createCellStyle();
+                XSSFCellStyle style = (XSSFCellStyle) workbook.createCellStyle();
                 style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
                 style.setFillForegroundColor(IndexedColors.YELLOW.getIndex());
                 // 写入工作表
                 excelXSSFReader.writeBusinessData(sheet, style, businessDataMapList);
-                excelXSSFReader.writeRepeatedData(workbook, repeatedData);
+                excelXSSFReader.writeRepeatedData((XSSFWorkbook) workbook, repeatedData);
+                // 大数据导入
+                int maxRow = sheet.getLastRowNum();
+                sWorkbook = new SXSSFWorkbook((XSSFWorkbook) workbook, maxRow > ROW_ACCESS_WINDOW_SIZE ? ROW_ACCESS_WINDOW_SIZE : maxRow);
                 // 写入文件
-                outputStream = new FileOutputStream(errorFile);
-                workbook.write(outputStream);
+                outputStream = new BufferedOutputStream(new FileOutputStream(errorFile));
+                sWorkbook.write(outputStream);
+                outputStream.flush();
+                sWorkbook.dispose();
+                workbook.close();
             } else {
                 throw new FileTypeNotSupportedException("Business Data, Excel Type: " + contentType);
             }
@@ -847,6 +888,13 @@ public class ImportExcelController extends BaseController {
             }
             if (responseIn != null) {
                 responseIn.close();
+            }
+            if (sWorkbook != null) {
+                sWorkbook.close();
+                sWorkbook.dispose();
+            }
+            if (workbook != null) {
+                workbook.close();
             }
         }
 
