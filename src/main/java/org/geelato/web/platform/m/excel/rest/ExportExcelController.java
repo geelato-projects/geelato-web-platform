@@ -9,6 +9,7 @@ import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.hwpf.HWPFDocument;
 import org.apache.poi.poifs.filesystem.POIFSFileSystem;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
@@ -184,6 +185,7 @@ public class ExportExcelController extends BaseController {
         Map<String, PlaceholderMeta> metaMap = new HashMap<>();
         FileInputStream fileInputStream = null;
         BufferedInputStream bufferedInputStream = null;
+        Workbook workbook = null;
         try {
             // excel文件类型
             String contentType = Files.probeContentType(file.toPath());
@@ -192,13 +194,15 @@ public class ExportExcelController extends BaseController {
             bufferedInputStream = new BufferedInputStream(fileInputStream);
             if (EXCEL_XLS_CONTENT_TYPE.equals(contentType)) {
                 POIFSFileSystem fileSystem = new POIFSFileSystem(bufferedInputStream);
-                HSSFWorkbook workbook = new HSSFWorkbook(fileSystem);
-                HSSFSheet sheet = workbook.getSheetAt(0);
+                workbook = new HSSFWorkbook(fileSystem);
+                HSSFSheet sheet = (HSSFSheet) workbook.getSheetAt(0);
                 metaMap = excelWriter.readPlaceholderMeta(sheet);
+                workbook.close();
             } else if (EXCEL_XLSX_CONTENT_TYPE.equals(contentType)) {
-                XSSFWorkbook templateWorkbook = new XSSFWorkbook(bufferedInputStream);
-                XSSFSheet sheet = templateWorkbook.getSheetAt(0);
+                workbook = new XSSFWorkbook(bufferedInputStream);
+                XSSFSheet sheet = (XSSFSheet) workbook.getSheetAt(0);
                 metaMap = excelXSSFWriter.readPlaceholderMeta(sheet);
+                workbook.close();
             } else {
                 throw new RuntimeException("暂不支持导出该格式文件！");
             }
@@ -210,6 +214,9 @@ public class ExportExcelController extends BaseController {
             }
             if (fileInputStream != null) {
                 fileInputStream.close();
+            }
+            if (workbook != null) {
+                workbook.close();
             }
         }
 
@@ -230,6 +237,7 @@ public class ExportExcelController extends BaseController {
         FileInputStream fileInputStream = null;
         BufferedInputStream bufferedInputStream = null;
         OutputStream outputStream = null;
+        Workbook workbook = null;
         try {
             // excel文件类型
             String contentType = Files.probeContentType(templateFile.toPath());
@@ -238,23 +246,25 @@ public class ExportExcelController extends BaseController {
             bufferedInputStream = new BufferedInputStream(fileInputStream);
             if (EXCEL_XLS_CONTENT_TYPE.equals(contentType)) {
                 POIFSFileSystem fileSystem = new POIFSFileSystem(bufferedInputStream);
-                HSSFWorkbook workbook = new HSSFWorkbook(fileSystem);
+                workbook = new HSSFWorkbook(fileSystem);
                 // 替换占位符
-                HSSFSheet sheet = workbook.getSheetAt(0);
+                HSSFSheet sheet = (HSSFSheet) workbook.getSheetAt(0);
                 excelWriter.writeSheet(sheet, metaMap, valueMapList, valueMap);
                 sheet.setForceFormulaRecalculation(true);
                 // 写入文件
                 outputStream = new FileOutputStream(exportFile);
                 workbook.write(outputStream);
+                workbook.close();
             } else if (EXCEL_XLSX_CONTENT_TYPE.equals(contentType)) {
-                XSSFWorkbook workbook = new XSSFWorkbook(bufferedInputStream);
+                workbook = new XSSFWorkbook(bufferedInputStream);
                 // 替换占位符
-                XSSFSheet sheet = workbook.getSheetAt(0);
+                XSSFSheet sheet = (XSSFSheet) workbook.getSheetAt(0);
                 excelXSSFWriter.writeSheet(sheet, metaMap, valueMapList, valueMap);
                 sheet.setForceFormulaRecalculation(true);
                 // 写入文件
                 outputStream = new FileOutputStream(exportFile);
                 workbook.write(outputStream);
+                workbook.close();
             } else if (WORD_DOC_CONTENT_TYPE.equals(contentType)) {
                 POIFSFileSystem fileSystem = new POIFSFileSystem(bufferedInputStream);
                 HWPFDocument document = new HWPFDocument(fileSystem);
@@ -262,6 +272,7 @@ public class ExportExcelController extends BaseController {
                 // 写入文件
                 outputStream = new FileOutputStream(exportFile);
                 document.write(outputStream);
+                document.close();
             } else if (WORD_DOCX_CONTENT_TYPE.equals(contentType)) {
                 XWPFDocument document = new XWPFDocument(bufferedInputStream);
                 document.getParagraphs();
@@ -270,6 +281,7 @@ public class ExportExcelController extends BaseController {
                 // 写入文件
                 outputStream = new FileOutputStream(exportFile);
                 document.write(outputStream);
+                document.close();
             } else {
                 throw new RuntimeException("暂不支持导出该格式文件！");
             }
@@ -285,6 +297,9 @@ public class ExportExcelController extends BaseController {
             if (fileInputStream != null) {
                 fileInputStream.close();
             }
+            if (workbook != null) {
+                workbook.close();
+            }
         }
     }
 
@@ -295,7 +310,7 @@ public class ExportExcelController extends BaseController {
      * @return
      */
     private Base64Info getTemplate(String template) {
-        Base64Info info = new Base64Info();
+        Base64Info info = null;
         if (Strings.isNotBlank(template)) {
             if (template.length() > 64) {
                 try {
