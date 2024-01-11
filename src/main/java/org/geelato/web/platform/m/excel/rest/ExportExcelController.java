@@ -18,15 +18,15 @@ import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.web.platform.m.base.entity.Attach;
 import org.geelato.web.platform.m.base.entity.Base64Info;
+import org.geelato.web.platform.m.base.entity.SysConfig;
 import org.geelato.web.platform.m.base.rest.BaseController;
 import org.geelato.web.platform.m.base.service.AttachService;
+import org.geelato.web.platform.m.base.service.SysConfigService;
 import org.geelato.web.platform.m.base.service.UploadService;
 import org.geelato.web.platform.m.excel.entity.ExportTemplate;
 import org.geelato.web.platform.m.excel.entity.PlaceholderMeta;
-import org.geelato.web.platform.m.excel.service.ExcelWriter;
-import org.geelato.web.platform.m.excel.service.ExcelXSSFWriter;
-import org.geelato.web.platform.m.excel.service.ExportTemplateService;
-import org.geelato.web.platform.m.excel.service.WordXWPFWriter;
+import org.geelato.web.platform.m.excel.entity.WordWaterMarkMeta;
+import org.geelato.web.platform.m.excel.service.*;
 import org.geelato.web.platform.m.security.entity.DataItems;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -73,6 +73,8 @@ public class ExportExcelController extends BaseController {
     private UploadService uploadService;
     @Autowired
     private AttachService attachService;
+    @Autowired
+    private SysConfigService sysConfigService;
 
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     @ResponseBody
@@ -110,7 +112,8 @@ public class ExportExcelController extends BaseController {
      */
     @RequestMapping(value = "/{dataType}/{templateId}", method = {RequestMethod.POST, RequestMethod.GET})
     @ResponseBody
-    public ApiResult exportWps(HttpServletRequest request, HttpServletResponse response, @PathVariable String dataType, @PathVariable String templateId, String fileName) {
+    public ApiResult exportWps(HttpServletRequest request, HttpServletResponse response, @PathVariable String dataType, @PathVariable String templateId,
+                               String fileName, String markText, String markKey, boolean readonly) {
         ApiResult result = new ApiResult();
         try {
             // 表单数据
@@ -127,6 +130,8 @@ public class ExportExcelController extends BaseController {
             } else {
                 throw new RuntimeException("暂不支持解析该数据类型！");
             }
+            // 水印
+            WordWaterMarkMeta markMeta = setWaterMark(markText, markKey);
             // 模型
             ExportTemplate exportTemplate = exportTemplateService.getModel(ExportTemplate.class, templateId);
             Assert.notNull(exportTemplate, "导出模板不存在");
@@ -155,8 +160,7 @@ public class ExportExcelController extends BaseController {
             // 读取，模板源数据
             Map<String, PlaceholderMeta> metaMap = getPlaceholderMeta(templateRuleAttach.getFile());
             // 生成实体文件
-            generateEntityFile(templateAttach.getFile(), exportFile, metaMap, valueMapList, valueMap);
-
+            generateEntityFile(templateAttach.getFile(), exportFile, metaMap, valueMapList, valueMap, markMeta, readonly);
             // 保存文件信息
             BasicFileAttributes attributes = Files.readAttributes(exportFile.toPath(), BasicFileAttributes.class);
             Attach attach = new Attach();
@@ -172,6 +176,31 @@ public class ExportExcelController extends BaseController {
         }
 
         return result;
+    }
+
+    private WordWaterMarkMeta setWaterMark(String markText, String markKey) {
+        WordWaterMarkMeta meta = null;
+        if (Strings.isNotBlank(markKey)) {
+            Map<String, Object> params = new HashMap<>();
+            params.put("configKey", markKey);
+            List<SysConfig> list = sysConfigService.queryModel(SysConfig.class, params);
+            if (list != null && list.size() > 0 && list.get(0) != null) {
+                try {
+                    meta = JSON.parseObject(list.get(0).getConfigValue(), WordWaterMarkMeta.class);
+                    Assert.notNull(meta, "水印功能，系统配置值解析识别。");
+                    meta.setDefaultText(markText);
+                } catch (Exception e) {
+                    throw new RuntimeException("水印功能，配置值查询失败");
+                }
+            } else {
+                throw new RuntimeException("水印功能，配置值查询失败");
+            }
+        } else if (Strings.isNotBlank(markText)) {
+            meta = WordWaterMarkMeta.defaultWaterMarkMeta();
+            meta.setDefaultText(markText);
+        }
+
+        return meta;
     }
 
     /**
@@ -233,7 +262,7 @@ public class ExportExcelController extends BaseController {
      * @param valueMap     单个数据
      * @throws IOException
      */
-    private void generateEntityFile(File templateFile, File exportFile, Map<String, PlaceholderMeta> metaMap, List<Map> valueMapList, Map valueMap) throws IOException {
+    private void generateEntityFile(File templateFile, File exportFile, Map<String, PlaceholderMeta> metaMap, List<Map> valueMapList, Map valueMap, WordWaterMarkMeta markMeta, Boolean readonly) throws IOException {
         FileInputStream fileInputStream = null;
         BufferedInputStream bufferedInputStream = null;
         OutputStream outputStream = null;
@@ -251,6 +280,8 @@ public class ExportExcelController extends BaseController {
                 HSSFSheet sheet = (HSSFSheet) workbook.getSheetAt(0);
                 excelWriter.writeSheet(sheet, metaMap, valueMapList, valueMap);
                 sheet.setForceFormulaRecalculation(true);
+                // 水印
+                // 只读
                 // 写入文件
                 outputStream = new FileOutputStream(exportFile);
                 workbook.write(outputStream);
@@ -261,9 +292,15 @@ public class ExportExcelController extends BaseController {
                 XSSFSheet sheet = (XSSFSheet) workbook.getSheetAt(0);
                 excelXSSFWriter.writeSheet(sheet, metaMap, valueMapList, valueMap);
                 sheet.setForceFormulaRecalculation(true);
+                // 水印
+                // 只读
+                if (readonly) {
+                    ((XSSFWorkbook) workbook).lockWindows();
+                }
                 // 写入文件
                 outputStream = new FileOutputStream(exportFile);
                 workbook.write(outputStream);
+                outputStream.flush();
                 workbook.close();
             } else if (WORD_DOC_CONTENT_TYPE.equals(contentType)) {
                 POIFSFileSystem fileSystem = new POIFSFileSystem(bufferedInputStream);
@@ -272,15 +309,23 @@ public class ExportExcelController extends BaseController {
                 // 写入文件
                 outputStream = new FileOutputStream(exportFile);
                 document.write(outputStream);
+                outputStream.flush();
                 document.close();
             } else if (WORD_DOCX_CONTENT_TYPE.equals(contentType)) {
                 XWPFDocument document = new XWPFDocument(bufferedInputStream);
                 document.getParagraphs();
                 // 替换占位符
                 wordXWPFWriter.writeDocument(document, metaMap, valueMapList, valueMap);
+                // 写入水印
+                DocxWaterMarkUtils.setXWPFDocumentWaterMark(document, markMeta);
+                // 只读
+                if (readonly) {
+                    document.enforceReadonlyProtection();
+                }
                 // 写入文件
                 outputStream = new FileOutputStream(exportFile);
                 document.write(outputStream);
+                outputStream.flush();
                 document.close();
             } else {
                 throw new RuntimeException("暂不支持导出该格式文件！");
