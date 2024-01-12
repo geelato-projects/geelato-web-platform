@@ -123,11 +123,11 @@ public class DocxWaterMarkUtils {
         shape.setId("PowerPlusWaterMarkObject");
         shape.setSpid("_x0000_s102");
         shape.setType("#_x0000_t136");
-        shape.setStyle(getShapeStyle(markText, styleTop, String.valueOf(markMeta.getRotationAngle()))); // 设置形状样式（旋转，位置，相对路径等参数）
+        shape.setStyle(getShapeStyle(markText, styleTop, markMeta.getFontSize(), markMeta.getRotationAngle())); // 设置形状样式（旋转，位置，相对路径等参数）
         shape.setFillcolor(markMeta.getFontColor());
         shape.setStroked(STTrueFalse.FALSE); // 字体设置为实心
         CTTextPath shapeTextPath = shape.addNewTextpath(); // 绘制文本的路径
-        shapeTextPath.setStyle(String.format("font-family:%s;font-size:%spt", markMeta.getFontFamily(), markMeta.getFontSize())); // 设置文本字体与大小
+        shapeTextPath.setStyle(String.format("font-family:%s;font-size:%spt;", markMeta.getFontFamily(), markMeta.getFontSize())); // 设置文本字体与大小
         shapeTextPath.setString(markText);
         CTPicture pict = ctr.addNewPict();
         pict.set(group);
@@ -141,11 +141,12 @@ public class DocxWaterMarkUtils {
      * @param styleRotation
      * @return
      */
-    private static String getShapeStyle(String customText, String styleTop, String styleRotation) {
+    private static String getShapeStyle(String customText, String styleTop, double fontSize, double styleRotation) {
         StringBuilder sb = new StringBuilder();
         sb.append("position: ").append("absolute"); // 文本path绘制的定位方式
         sb.append(";width: ").append(customText.length() * 10).append("pt"); // 计算文本占用的长度（文本总个数*单字长度）
-        sb.append(";height: ").append("20pt"); // 字体高度
+        sb.append(";height: ").append(fontSize + "pt"); // 字体高度
+        sb.append(";font-size: ").append(fontSize + "pt");
         sb.append(";z-index: ").append("-251654144");
         sb.append(";mso-wrap-edited: ").append("f");
         sb.append(";margin-top: ").append(styleTop);

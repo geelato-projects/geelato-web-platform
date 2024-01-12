@@ -187,10 +187,10 @@ public class ExportExcelController extends BaseController {
             if (list != null && list.size() > 0 && list.get(0) != null) {
                 try {
                     meta = JSON.parseObject(list.get(0).getConfigValue(), WordWaterMarkMeta.class);
-                    Assert.notNull(meta, "水印功能，系统配置值解析识别。");
+                    Assert.notNull(meta, "水印功能，系统配置值解析为空。");
                     meta.setDefaultText(markText);
                 } catch (Exception e) {
-                    throw new RuntimeException("水印功能，配置值查询失败");
+                    throw new RuntimeException("水印功能，系统配置值解析失败");
                 }
             } else {
                 throw new RuntimeException("水印功能，配置值查询失败");

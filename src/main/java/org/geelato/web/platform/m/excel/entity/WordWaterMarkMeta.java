@@ -20,7 +20,7 @@ public class WordWaterMarkMeta {
     public static final double ROTATION_ANGLE = -45;
     public static final String FONT_FAMILY = "宋体";
     public static final String FONT_COLOR = "#d8d8d8";
-    public static final double FONT_SIZE = 0.5;
+    public static final double FONT_SIZE = 20;
     private static final Pattern templatePatten = Pattern.compile("\\$\\{[\\\u4e00-\\\u9fa5,\\w,\\.]+\\}");
     private static final SimpleDateFormat SDF_DATE = new SimpleDateFormat("yyyy-MM-dd");
     private static final SimpleDateFormat SDF_TIME = new SimpleDateFormat("HH:mm:ss");
@@ -143,8 +143,9 @@ public class WordWaterMarkMeta {
             Matcher temMatcher = templatePatten.matcher(this.template);
             while (temMatcher.find()) {
                 String replaceStr = getMarkTypeString(this.defaultText, temMatcher.group());
-                setTemplate(this.template.replace(temMatcher.group(), replaceStr));
+                setTemplate(this.template.replace(temMatcher.group(), Strings.isNotBlank(replaceStr) ? replaceStr : ""));
             }
+            sb.append(this.template);
         } else {
             sb.append(this.defaultText);
         }
