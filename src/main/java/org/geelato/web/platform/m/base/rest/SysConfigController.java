@@ -32,7 +32,7 @@ public class SysConfigController extends BaseController {
     private static final String CONFIG_TYPE_UPLOAD = "UPLOAD";
 
     static {
-        OPERATORMAP.put("contains", Arrays.asList("configKey", "configValue", "remark"));
+        OPERATORMAP.put("contains", Arrays.asList("configKey", "configValue", "keyType", "remark"));
         OPERATORMAP.put("intervals", Arrays.asList("createAt", "updateAt"));
     }
 
@@ -189,7 +189,7 @@ public class SysConfigController extends BaseController {
         List<String> fileIds = new ArrayList<>();
         if (sysConfigs != null && sysConfigs.size() > 0) {
             for (SysConfig model : sysConfigs) {
-                if (CONFIG_TYPE_UPLOAD.equalsIgnoreCase(model.getConfigType()) && !fileIds.contains(model.getConfigValue())) {
+                if (CONFIG_TYPE_UPLOAD.equalsIgnoreCase(model.getValueType()) && !fileIds.contains(model.getConfigValue())) {
                     fileIds.add(model.getConfigValue());
                 }
             }
@@ -200,7 +200,7 @@ public class SysConfigController extends BaseController {
             List<Attach> attachList = dao.queryList(Attach.class, filter, "");
             if (attachList != null && attachList.size() > 0) {
                 for (SysConfig model : sysConfigs) {
-                    if (CONFIG_TYPE_UPLOAD.equalsIgnoreCase(model.getConfigType()) && Strings.isNotBlank(model.getConfigValue())) {
+                    if (CONFIG_TYPE_UPLOAD.equalsIgnoreCase(model.getValueType()) && Strings.isNotBlank(model.getConfigValue())) {
                         for (Attach attach : attachList) {
                             if (Strings.isNotBlank(attach.getName()) && model.getConfigValue().equals(attach.getId())) {
                                 model.setConfigAssist(attach.getName());
