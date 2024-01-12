@@ -314,7 +314,7 @@ public class RolePermissionMapService extends BaseService {
         // 规则对应权限，
         List<Permission> permissionList = new ArrayList<>();
         FilterGroup filter = new FilterGroup();
-        filter.addFilter("type", PermissionTypeEnum.EP.getValue());
+        filter.addFilter("type", PermissionTypeEnum.COLUMN.getValue());
         filter.addFilter("object", String.format("%s:%s", column.getTableName(), column.getName()));
         filter.addFilter("tenantCode", getSessionTenantCode());
         List<Permission> permissions = queryModel(Permission.class, filter);
@@ -332,7 +332,7 @@ public class RolePermissionMapService extends BaseService {
                 Permission permission = new Permission();
                 permission.setName(dModel.getName());
                 permission.setCode(String.format("%s:%s%s", column.getTableName(), column.getName(), dModel.getCode()));
-                permission.setType(PermissionTypeEnum.EP.getValue());
+                permission.setType(PermissionTypeEnum.COLUMN.getValue());
                 permission.setObject(String.format("%s:%s", column.getTableName(), column.getName()));
                 permission.setRule(dModel.getRule());
                 permission.setDescription(dModel.getDescription());

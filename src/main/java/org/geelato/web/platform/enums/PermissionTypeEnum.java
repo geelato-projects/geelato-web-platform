@@ -8,7 +8,10 @@ import org.apache.logging.log4j.util.Strings;
  * @date 2023/9/27 11:09
  */
 public enum PermissionTypeEnum {
-    DP("表单权限", "dp"), EP("字段权限", "ep");
+    DATA("数据权限", "dp"),
+    ELEMENT("页面元素权限", "ep"),
+    MODEL("实体模型权限", "mp"),
+    COLUMN("实体字段权限", "cp");
 
     private final String label;//选项内容
     private final String value;//选项值

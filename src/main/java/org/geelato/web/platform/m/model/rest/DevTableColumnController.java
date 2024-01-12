@@ -119,13 +119,13 @@ public class DevTableColumnController extends BaseController {
                 Map<String, Object> resultMap = devTableColumnService.updateModel(form);
                 if (!meta.getName().equalsIgnoreCase(form.getName())) {
                     permissionService.columnPermissionChangeObject(form.getTableName(), form.getName(), meta.getName());
-                    permissionService.resetDefaultPermission(PermissionTypeEnum.EP.getValue(), form.getTableName());
+                    permissionService.resetDefaultPermission(PermissionTypeEnum.COLUMN.getValue(), form.getTableName());
                 }
                 result.setData(resultMap);
             } else {
                 form.setSynced(ColumnSyncedEnum.FALSE.getValue());
                 Map<String, Object> resultMap = devTableColumnService.createModel(form);
-                permissionService.resetDefaultPermission(PermissionTypeEnum.EP.getValue(), form.getTableName());
+                permissionService.resetDefaultPermission(PermissionTypeEnum.COLUMN.getValue(), form.getTableName());
                 result.setData(resultMap);
             }
             // 选择类型为 组织、用户时

@@ -54,14 +54,14 @@ public class PermissionService extends BaseService {
             return isDef;
         }
         List<Permission> defaultPermissions = new ArrayList<>();
-        if (PermissionTypeEnum.DP.getValue().equals(model.getType())) {
+        if (PermissionTypeEnum.MODEL.getValue().equals(model.getType())) {
             defaultPermissions = getDefaultPermission(PermissionService.PERMISSION_TABLE);
-        } else if (PermissionTypeEnum.EP.getValue().equals(model.getType())) {
+        } else if (PermissionTypeEnum.COLUMN.getValue().equals(model.getType())) {
             defaultPermissions = getDefaultPermission(PermissionService.PERMISSION_COLUMN);
         }
         if (defaultPermissions != null && defaultPermissions.size() > 0) {
-            for (Permission dp : defaultPermissions) {
-                if (model.getCode().equals(String.format("%s%s", model.getObject(), dp.getCode()))) {
+            for (Permission permission : defaultPermissions) {
+                if (model.getCode().equals(String.format("%s%s", model.getObject(), permission.getCode()))) {
                     isDef = true;
                     break;
                 }
@@ -98,7 +98,7 @@ public class PermissionService extends BaseService {
         List<Permission> permissions = new ArrayList<>();
         // 表格权限
         Map<String, Object> params = new HashMap<>();
-        params.put("type", PermissionTypeEnum.DP.getValue());
+        params.put("type", PermissionTypeEnum.MODEL.getValue());
         params.put("object", sorObject);
         params.put("tenantCode", getSessionTenantCode());
         List<Permission> tPermissions = queryModel(Permission.class, params);
@@ -116,7 +116,7 @@ public class PermissionService extends BaseService {
         }
         // 字段权限
         FilterGroup filter = new FilterGroup();
-        filter.addFilter("type", PermissionTypeEnum.EP.getValue());
+        filter.addFilter("type", PermissionTypeEnum.COLUMN.getValue());
         filter.addFilter("object", FilterGroup.Operator.startWith, String.format("%s:", sorObject));
         filter.addFilter("tenantCode", getSessionTenantCode());
         List<Permission> cPermissions = queryModel(Permission.class, filter);
@@ -144,7 +144,7 @@ public class PermissionService extends BaseService {
     public void columnPermissionChangeObject(String tableName, String curObject, String sorObject) {
         // 字段权限
         Map<String, Object> params = new HashMap<>();
-        params.put("type", PermissionTypeEnum.EP.getValue());
+        params.put("type", PermissionTypeEnum.COLUMN.getValue());
         params.put("object", String.format("%s:%s", tableName, sorObject));
         params.put("tenantCode", getSessionTenantCode());
         List<Permission> permissions = queryModel(Permission.class, params);
@@ -164,9 +164,9 @@ public class PermissionService extends BaseService {
     }
 
     public void resetDefaultPermission(String type, String object) {
-        if (PermissionTypeEnum.DP.getValue().equals(type)) {
+        if (PermissionTypeEnum.MODEL.getValue().equals(type)) {
             resetTableDefaultPermission(type, object);
-        } else if (PermissionTypeEnum.EP.getValue().equals(type)) {
+        } else if (PermissionTypeEnum.COLUMN.getValue().equals(type)) {
             resetColumnDefaultPermission(type, object);
         } else {
             throw new RuntimeException("[type] non-being");
