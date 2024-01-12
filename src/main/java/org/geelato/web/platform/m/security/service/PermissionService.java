@@ -24,7 +24,7 @@ import java.util.*;
 public class PermissionService extends BaseService {
     public static final String PERMISSION_COLUMN = ResourcesFiles.PERMISSION_COLUMN_DEFAULT_JSON;
     public static final String PERMISSION_TABLE = ResourcesFiles.PERMISSION_TABLE_DEFAULT_JSON;
-    private static final String[] PERMISSION_TO_ROLE = {"&myself", "&insert", "&update", "&delete"};
+    public static final String[] PERMISSION_TO_ROLE = {"&myself", "&insert", "&update", "&delete"};
     @Lazy
     @Autowired
     private RolePermissionMapService rolePermissionMapService;

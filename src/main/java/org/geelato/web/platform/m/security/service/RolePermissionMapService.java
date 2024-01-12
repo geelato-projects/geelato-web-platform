@@ -16,7 +16,6 @@ import org.geelato.web.platform.m.security.entity.RolePermissionMap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.*;
 
@@ -283,7 +282,7 @@ public class RolePermissionMapService extends BaseService {
         return tablePermissionMap;
     }
 
-    public void insertTablePermission(@RequestBody RolePermissionMap form) {
+    public void insertTablePermission(RolePermissionMap form) {
         if (Strings.isNotBlank(form.getRoleId()) && Strings.isNotBlank(form.getPermissionId())) {
             Map<String, Object> params = new HashMap<>();
             params.put("roleId", form.getRoleId());
@@ -295,6 +294,28 @@ public class RolePermissionMapService extends BaseService {
                     this.isDeleteModel(map);
                 }
             } else {
+                insertModel(form);
+            }
+        } else {
+            throw new RuntimeException(ApiErrorMsg.PARAMETER_MISSING);
+        }
+    }
+
+    public void insertTableViewPermission(RolePermissionMap form) {
+        if (Strings.isNotBlank(form.getRoleId()) && Strings.isNotBlank(form.getPermissionIds())) {
+            FilterGroup filter = new FilterGroup();
+            filter.addFilter("roleId", form.getRoleId());
+            filter.addFilter("permissionId", FilterGroup.Operator.in, form.getPermissionIds());
+            filter.addFilter("tenantCode", Strings.isNotBlank(form.getTenantCode()) ? form.getTenantCode() : getSessionTenantCode());
+            List<RolePermissionMap> maps = queryModel(RolePermissionMap.class, filter);
+            // 删除所有权限
+            if (maps != null && maps.size() > 0) {
+                for (RolePermissionMap map : maps) {
+                    this.isDeleteModel(map);
+                }
+            }
+            // 传入 需要打开的权限
+            if (Strings.isNotBlank(form.getPermissionId())) {
                 insertModel(form);
             }
         } else {

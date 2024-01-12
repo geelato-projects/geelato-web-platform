@@ -155,6 +155,20 @@ public class RolePermissionMapController extends BaseController {
         return result;
     }
 
+    @RequestMapping(value = "/insertTable/view", method = RequestMethod.POST)
+    @ResponseBody
+    public ApiResult insertTableViewPermission(@RequestBody RolePermissionMap form) {
+        ApiResult result = new ApiResult();
+        try {
+            rolePermissionMapService.insertTableViewPermission(form);
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            result.error().setMsg(ApiErrorMsg.OPERATE_FAIL);
+        }
+
+        return result;
+    }
+
     @RequestMapping(value = "/insertColumn", method = RequestMethod.POST)
     @ResponseBody
     public ApiResult insertColumnPermission(@RequestBody Map<String, Object> form) {

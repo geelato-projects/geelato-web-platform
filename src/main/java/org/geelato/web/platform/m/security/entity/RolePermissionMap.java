@@ -1,10 +1,7 @@
 package org.geelato.web.platform.m.security.entity;
 
 
-import org.geelato.core.meta.annotation.Col;
-import org.geelato.core.meta.annotation.Entity;
-import org.geelato.core.meta.annotation.ForeignKey;
-import org.geelato.core.meta.annotation.Title;
+import org.geelato.core.meta.annotation.*;
 import org.geelato.core.meta.model.entity.BaseEntity;
 
 /**
@@ -18,6 +15,7 @@ public class RolePermissionMap extends BaseEntity {
     private String appId;
     private String roleId;
     private String permissionId;
+    private String permissionIds;
     private String roleName;
     private String permissionName;
 
@@ -51,6 +49,16 @@ public class RolePermissionMap extends BaseEntity {
 
     public void setPermissionId(String permissionId) {
         this.permissionId = permissionId;
+    }
+
+    @Title(title = "角色所有的权限id")
+    @Transient
+    public String getPermissionIds() {
+        return permissionIds;
+    }
+
+    public void setPermissionIds(String permissionIds) {
+        this.permissionIds = permissionIds;
     }
 
     @Title(title = "角色名称")
