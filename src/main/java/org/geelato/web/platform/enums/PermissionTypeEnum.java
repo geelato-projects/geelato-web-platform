@@ -39,4 +39,22 @@ public enum PermissionTypeEnum {
         }
         return null;
     }
+
+    /**
+     * 获取模型拥有的权限
+     *
+     * @return
+     */
+    public static String getTablePermissions() {
+        return String.format("%s,%s", PermissionTypeEnum.DATA.getValue(), PermissionTypeEnum.MODEL.getValue());
+    }
+
+    /**
+     * 获取模型权限+字段权限
+     *
+     * @return
+     */
+    public static String getTableAndColumnPermissions() {
+        return String.format("%s,%s,%s", PermissionTypeEnum.DATA.getValue(), PermissionTypeEnum.MODEL.getValue(), PermissionTypeEnum.COLUMN.getValue());
+    }
 }

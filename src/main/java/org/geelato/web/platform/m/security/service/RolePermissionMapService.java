@@ -24,7 +24,6 @@ import java.util.*;
  */
 @Component
 public class RolePermissionMapService extends BaseService {
-    private static final String[] PERMISSION_CLASSIFY = {"Insert", "Update", "Delete"};
     @Autowired
     private RoleService roleService;
     @Autowired
@@ -76,7 +75,7 @@ public class RolePermissionMapService extends BaseService {
         for (Permission model : permissions) {
             if (model.isDefault()) {
                 boolean isEdit = false;
-                for (String clazz : PERMISSION_CLASSIFY) {
+                for (String clazz : PermissionService.PERMISSION_MODEL_CLASSIFY) {
                     if (String.format("%s&%s", model.getObject(), clazz).equalsIgnoreCase(model.getCode())) {
                         editPermissions.add(model);
                         isEdit = true;
@@ -107,16 +106,18 @@ public class RolePermissionMapService extends BaseService {
         tenantCode = Strings.isNotBlank(tenantCode) ? tenantCode : getSessionTenantCode();
         Map<String, JSONArray> tablePermissionMap = new HashMap<>();
         // 表头，表格权限
-        Map<String, Object> perParams = new HashMap<>();
-        perParams.put("type", type);
-        perParams.put("object", object);
-        perParams.put("tenantCode", tenantCode);
-        List<Permission> permissions = permissionService.queryModel(Permission.class, perParams);
+        FilterGroup tableFilter = new FilterGroup();
+        tableFilter.addFilter("type", FilterGroup.Operator.in, type);
+        tableFilter.addFilter("object", object);
+        tableFilter.addFilter("tenantCode", tenantCode);
+        List<Permission> permissions = permissionService.queryModel(Permission.class, tableFilter);
+        // 默认权限
+        List<Permission> defaultPermissions = permissionService.getDefaultTypePermission(type);
         // 默认字段
         List<String> permissionIds = new ArrayList<>();
         if (permissions != null && permissions.size() > 0) {
             for (Permission model : permissions) {
-                model.setDefault(permissionService.isDefault(model));
+                model.setDefault(permissionService.isDefault(model, defaultPermissions));
                 permissionIds.add(model.getId());
             }
             Set<Map<String, Object>> permissionMap = permissionClassify(permissions);
@@ -331,7 +332,7 @@ public class RolePermissionMapService extends BaseService {
         Role role = getModel(Role.class, roleId);
         Assert.notNull(role, ApiErrorMsg.IS_NULL);
         // 默认权限
-        List<Permission> defPermissions = permissionService.getDefaultPermission(PermissionService.PERMISSION_COLUMN);
+        List<Permission> defPermissions = permissionService.getDefaultPermission(PermissionService.PERMISSION_COLUMN_JSON);
         // 规则对应权限，
         List<Permission> permissionList = new ArrayList<>();
         FilterGroup filter = new FilterGroup();

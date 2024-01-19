@@ -22,9 +22,12 @@ import java.util.*;
  */
 @Component
 public class PermissionService extends BaseService {
-    public static final String PERMISSION_COLUMN = ResourcesFiles.PERMISSION_COLUMN_DEFAULT_JSON;
-    public static final String PERMISSION_TABLE = ResourcesFiles.PERMISSION_TABLE_DEFAULT_JSON;
-    public static final String[] PERMISSION_TO_ROLE = {"&myself", "&insert", "&update", "&delete"};
+    public static final String PERMISSION_DATA_JSON = ResourcesFiles.PERMISSION_DATA_DEFAULT_JSON;
+    public static final String PERMISSION_MODEL_JSON = ResourcesFiles.PERMISSION_MODEL_DEFAULT_JSON;
+    public static final String PERMISSION_COLUMN_JSON = ResourcesFiles.PERMISSION_COLUMN_DEFAULT_JSON;
+    public static final String[] PERMISSION_DEFAULT_TO_ROLE = {"&myself", "&insert", "&update", "&delete"};
+    public static final String[] PERMISSION_MODEL_CLASSIFY = {"Insert", "Update", "Delete"};
+    public static final String[] PERMISSION_DATA_ORDER = {"&all", "&myBusiness", "&myDept", "&myself"};
     @Lazy
     @Autowired
     private RolePermissionMapService rolePermissionMapService;
@@ -48,20 +51,33 @@ public class PermissionService extends BaseService {
         }
     }
 
+    /**
+     * 是否是默认权限
+     *
+     * @param model
+     * @return
+     */
     public boolean isDefault(Permission model) {
+        List<Permission> defaultPermissions = getDefaultTypePermission(model.getType());
+
+        return isDefault(model, defaultPermissions);
+    }
+
+    /**
+     * 是否是默认权限
+     *
+     * @param model
+     * @param defaultPermissions 对比的权限
+     * @return
+     */
+    public boolean isDefault(Permission model, List<Permission> defaultPermissions) {
         boolean isDef = false;
         if (Strings.isBlank(model.getCode()) || Strings.isBlank(model.getType()) || Strings.isBlank(model.getObject())) {
             return isDef;
         }
-        List<Permission> defaultPermissions = new ArrayList<>();
-        if (PermissionTypeEnum.MODEL.getValue().equals(model.getType())) {
-            defaultPermissions = getDefaultPermission(PermissionService.PERMISSION_TABLE);
-        } else if (PermissionTypeEnum.COLUMN.getValue().equals(model.getType())) {
-            defaultPermissions = getDefaultPermission(PermissionService.PERMISSION_COLUMN);
-        }
         if (defaultPermissions != null && defaultPermissions.size() > 0) {
             for (Permission permission : defaultPermissions) {
-                if (model.getCode().equals(String.format("%s%s", model.getObject(), permission.getCode()))) {
+                if (model.getType().equalsIgnoreCase(permission.getType()) && model.getCode().equals(String.format("%s%s", model.getObject(), permission.getCode()))) {
                     isDef = true;
                     break;
                 }
@@ -71,6 +87,43 @@ public class PermissionService extends BaseService {
         return isDef;
     }
 
+    /**
+     * 根据不同类型获取默认权限
+     *
+     * @param type
+     * @return
+     */
+    public List<Permission> getDefaultTypePermission(String type) {
+        List<Permission> defaultPermissions = new ArrayList<>();
+        // 默认权限
+        List<Permission> dataJson = getDefaultPermission(PermissionService.PERMISSION_DATA_JSON);
+        List<Permission> modelJson = getDefaultPermission(PermissionService.PERMISSION_MODEL_JSON);
+        List<Permission> columnJson = getDefaultPermission(PermissionService.PERMISSION_COLUMN_JSON);
+        // 不同类型查询
+        if (PermissionTypeEnum.DATA.getValue().equalsIgnoreCase(type)) {
+            defaultPermissions.addAll(dataJson);
+        } else if (PermissionTypeEnum.MODEL.getValue().equalsIgnoreCase(type)) {
+            defaultPermissions.addAll(modelJson);
+        } else if (PermissionTypeEnum.COLUMN.getValue().equalsIgnoreCase(type)) {
+            defaultPermissions.addAll(columnJson);
+        } else if (PermissionTypeEnum.getTablePermissions().equalsIgnoreCase(type)) {
+            defaultPermissions.addAll(dataJson);
+            defaultPermissions.addAll(modelJson);
+        } else if (PermissionTypeEnum.getTableAndColumnPermissions().equalsIgnoreCase(type)) {
+            defaultPermissions.addAll(dataJson);
+            defaultPermissions.addAll(modelJson);
+            defaultPermissions.addAll(columnJson);
+        }
+
+        return defaultPermissions;
+    }
+
+    /**
+     * 默认权限，读取json文件
+     *
+     * @param jsonFile
+     * @return
+     */
     public List<Permission> getDefaultPermission(String jsonFile) {
         List<Permission> defaultPermissions = new ArrayList<Permission>();
 
@@ -97,11 +150,11 @@ public class PermissionService extends BaseService {
     public void tablePermissionChangeObject(String curObject, String sorObject) {
         List<Permission> permissions = new ArrayList<>();
         // 表格权限
-        Map<String, Object> params = new HashMap<>();
-        params.put("type", PermissionTypeEnum.MODEL.getValue());
-        params.put("object", sorObject);
-        params.put("tenantCode", getSessionTenantCode());
-        List<Permission> tPermissions = queryModel(Permission.class, params);
+        FilterGroup tableFilter = new FilterGroup();
+        tableFilter.addFilter("type", FilterGroup.Operator.in, PermissionTypeEnum.getTablePermissions());
+        tableFilter.addFilter("object", sorObject);
+        tableFilter.addFilter("tenantCode", getSessionTenantCode());
+        List<Permission> tPermissions = queryModel(Permission.class, tableFilter);
         // 修改 object
         if (tPermissions != null && tPermissions.size() > 0) {
             for (Permission permission : tPermissions) {
@@ -115,11 +168,11 @@ public class PermissionService extends BaseService {
             }
         }
         // 字段权限
-        FilterGroup filter = new FilterGroup();
-        filter.addFilter("type", PermissionTypeEnum.COLUMN.getValue());
-        filter.addFilter("object", FilterGroup.Operator.startWith, String.format("%s:", sorObject));
-        filter.addFilter("tenantCode", getSessionTenantCode());
-        List<Permission> cPermissions = queryModel(Permission.class, filter);
+        FilterGroup columnFilter = new FilterGroup();
+        columnFilter.addFilter("type", PermissionTypeEnum.COLUMN.getValue());
+        columnFilter.addFilter("object", FilterGroup.Operator.startWith, String.format("%s:", sorObject));
+        columnFilter.addFilter("tenantCode", getSessionTenantCode());
+        List<Permission> cPermissions = queryModel(Permission.class, columnFilter);
         // 修改 object
         if (cPermissions != null && cPermissions.size() > 0) {
             for (Permission permission : cPermissions) {
@@ -163,8 +216,16 @@ public class PermissionService extends BaseService {
         }
     }
 
+    /**
+     * 重置默认权限
+     *
+     * @param type
+     * @param object
+     */
     public void resetDefaultPermission(String type, String object) {
-        if (PermissionTypeEnum.MODEL.getValue().equals(type)) {
+        if (PermissionTypeEnum.MODEL.getValue().equals(type) ||
+                PermissionTypeEnum.DATA.getValue().equalsIgnoreCase(type) ||
+                PermissionTypeEnum.getTablePermissions().equalsIgnoreCase(type)) {
             resetTableDefaultPermission(type, object);
         } else if (PermissionTypeEnum.COLUMN.getValue().equals(type)) {
             resetColumnDefaultPermission(type, object);
@@ -173,15 +234,21 @@ public class PermissionService extends BaseService {
         }
     }
 
-    public void resetTableDefaultPermission(String type, String object) {
+    /**
+     * 重置模型默认权限，data，model
+     *
+     * @param types
+     * @param object
+     */
+    public void resetTableDefaultPermission(String types, String object) {
         // 当前权限
-        Map<String, Object> params = new HashMap<>();
-        params.put("type", type);
-        params.put("object", object);
-        params.put("tenantCode", getSessionTenantCode());
-        List<Permission> curPermissions = queryModel(Permission.class, params);
+        FilterGroup tableFilter = new FilterGroup();
+        tableFilter.addFilter("type", FilterGroup.Operator.in, types);
+        tableFilter.addFilter("object", object);
+        tableFilter.addFilter("tenantCode", getSessionTenantCode());
+        List<Permission> curPermissions = queryModel(Permission.class, tableFilter);
         // 默认权限
-        List<Permission> defPermissions = getDefaultPermission(PermissionService.PERMISSION_TABLE);
+        List<Permission> defPermissions = getDefaultTypePermission(types);
         if (defPermissions != null && defPermissions.size() > 0) {
             if (curPermissions != null && curPermissions.size() > 0) {
                 for (Permission dModel : defPermissions) {
@@ -208,16 +275,28 @@ public class PermissionService extends BaseService {
         }
     }
 
+    /**
+     * 初始化，默认权限
+     *
+     * @param object
+     * @param dModel
+     */
     private void createDefaultPermission(String object, Permission dModel) {
         String defaultCode = dModel.getCode();
         dModel.setObject(object);
         dModel.setCode(String.format("%s%s", object, defaultCode));
         Map<String, Object> permission = createModel(dModel);
-        if (Arrays.asList(PERMISSION_TO_ROLE).contains(defaultCode)) {
+        if (Arrays.asList(PERMISSION_DEFAULT_TO_ROLE).contains(defaultCode)) {
             rolePermissionMapService.createAllRoleOfDefaultPermission(JSON.parseObject(JSON.toJSONString(permission), Permission.class));
         }
     }
 
+    /**
+     * 重置模型字段默认权限
+     *
+     * @param type      cp
+     * @param tableName 模型名称
+     */
     public void resetColumnDefaultPermission(String type, String tableName) {
         // 表头
         Map<String, Object> colParams = new HashMap<>();
@@ -248,7 +327,7 @@ public class PermissionService extends BaseService {
             }
         }
         // 默认权限
-        List<Permission> defPermissions = getDefaultPermission(PermissionService.PERMISSION_COLUMN);
+        List<Permission> defPermissions = getDefaultTypePermission(type);
         // 构建权限
         if (columnMetas != null && columnMetas.size() > 0) {
             for (ColumnMeta column : columnMetas) {

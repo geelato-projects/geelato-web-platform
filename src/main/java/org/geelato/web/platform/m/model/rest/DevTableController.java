@@ -124,7 +124,7 @@ public class DevTableController extends BaseController {
                         // 修正权限
                         permissionService.tablePermissionChangeObject(form.getEntityName(), model.getEntityName());
                         // 添加默认权限
-                        permissionService.resetTableDefaultPermission(PermissionTypeEnum.MODEL.getValue(), form.getEntityName());
+                        permissionService.resetTableDefaultPermission(PermissionTypeEnum.getTablePermissions(), form.getEntityName());
                     }
                     result.setData(resultMap);
                 } else {
@@ -135,7 +135,7 @@ public class DevTableController extends BaseController {
                 Map<String, Object> resultMap = devTableService.createModel(form);
                 form.setId(resultMap.get("id").toString());
                 // 添加默认权限
-                permissionService.resetDefaultPermission(PermissionTypeEnum.MODEL.getValue(), form.getEntityName());
+                permissionService.resetDefaultPermission(PermissionTypeEnum.getTablePermissions(), form.getEntityName());
                 devTableColumnService.createDefaultColumn(form);
                 result.setData(resultMap);
             }
