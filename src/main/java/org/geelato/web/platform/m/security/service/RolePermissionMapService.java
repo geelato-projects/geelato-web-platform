@@ -53,6 +53,12 @@ public class RolePermissionMapService extends BaseService {
         return dao.save(model);
     }
 
+    /**
+     * 权限进行分类，适合模型权限，dp，mp
+     *
+     * @param permissions
+     * @return
+     */
     private Set<Map<String, Object>> permissionClassify(List<Permission> permissions) {
         Set<Map<String, Object>> permissionMapSet = new LinkedHashSet<>();
         Map<String, Object> viewPermissionMap = new LinkedHashMap<>();
@@ -89,8 +95,33 @@ public class RolePermissionMapService extends BaseService {
                 customPermissions.add(model);
             }
         }
+        viewPermissionMap.put("data", permissionSort(viewPermissions, PermissionService.PERMISSION_DATA_ORDER));
+        editPermissionMap.put("data", permissionSort(editPermissions, PermissionService.PERMISSION_MODEL_CLASSIFY));
 
         return permissionMapSet;
+    }
+
+    /**
+     * 权限按照编码排序
+     *
+     * @param permissions
+     * @param orders      编码组
+     * @return
+     */
+    private Set<Permission> permissionSort(Set<Permission> permissions, String[] orders) {
+        Set<Permission> orderPermissions = new LinkedHashSet<>();
+        List<Permission> sortedPermissions = new ArrayList<>(permissions);
+        for (String order : orders) {
+            for (Permission model : sortedPermissions) {
+                String code = String.format("%s&%s", model.getObject(), order.toLowerCase(Locale.ENGLISH));
+                if (code.equalsIgnoreCase(model.getCode())) {
+                    orderPermissions.add(model);
+                    break;
+                }
+            }
+        }
+
+        return orderPermissions;
     }
 
     /**
