@@ -340,10 +340,10 @@ public class ImportExcelController extends BaseController {
         }
         // 表头应该包含所有业务数据类型
         if (!businessDataNames.containsAll(businessTypeDataNames)) {
-            throw new FileException("business data table header deficiency");
+            throw new FileException(String.format("business data table header deficiency：[%s]", listSubtraction(businessTypeDataNames, businessDataNames)));
         }
         if (!businessTypeDataNames.containsAll(businessDataNames)) {
-            throw new FileException("business type data name deficiency");
+            throw new FileException(String.format("business type data name deficiency：[%s]", listSubtraction(businessDataNames, businessTypeDataNames)));
         }
         if (businessMetaListMap != null && businessMetaListMap.size() > 0) {
             for (Map.Entry<String, List<BusinessMeta>> businessMetaEntry : businessMetaListMap.entrySet()) {
@@ -373,14 +373,21 @@ public class ImportExcelController extends BaseController {
                 }
                 // 元数据必须包含 必填项
                 if (!metaColumnNames.containsAll(nullableColumnNames)) {
-                    throw new FileException("business meta required fields are missing");
+                    throw new FileException(String.format("business meta required fields are missing：[%s]", listSubtraction(nullableColumnNames, metaColumnNames)));
                 }
                 // 数据类型必须包含 用到的所有变量
                 if (!businessTypeDataNames.containsAll(metaVariableValues)) {
-                    throw new FileException("business meta variable values are missing");
+                    throw new FileException(String.format("business meta variable values are missing：[%s]", listSubtraction(metaVariableValues, businessTypeDataNames)));
                 }
             }
         }
+    }
+
+    private String listSubtraction(List<String> listA, List<String> listB) {
+        List<String> difference = new ArrayList<>(listA);
+        difference.removeAll(listB);
+
+        return String.join(",", difference);
     }
 
     /**
