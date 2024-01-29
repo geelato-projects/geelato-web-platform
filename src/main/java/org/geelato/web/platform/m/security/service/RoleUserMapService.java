@@ -3,6 +3,7 @@ package org.geelato.web.platform.m.security.service;
 import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.enums.DeleteStatusEnum;
+import org.geelato.core.gql.parser.FilterGroup;
 import org.geelato.web.platform.m.base.service.BaseService;
 import org.geelato.web.platform.m.security.entity.Role;
 import org.geelato.web.platform.m.security.entity.RoleUserMap;
@@ -46,6 +47,50 @@ public class RoleUserMapService extends BaseService {
             model.setTenantCode(getSessionTenantCode());
         }
         return dao.save(model);
+    }
+
+    /**
+     * 批量，不重复插入
+     *
+     * @param model
+     */
+    public void insertModels(RoleUserMap model) {
+        String tenantCode = Strings.isNotBlank(model.getTenantCode()) ? model.getTenantCode() : getSessionTenantCode();
+        // 角色存在，
+        Role rModel = roleService.getModel(Role.class, model.getRoleId());
+        Assert.notNull(rModel, ApiErrorMsg.IS_NULL);
+        // 用户信息，
+        FilterGroup userFilter = new FilterGroup();
+        userFilter.addFilter("id", FilterGroup.Operator.in, model.getUserId());
+        userFilter.addFilter("tenantCode", tenantCode);
+        List<User> users = userService.queryModel(User.class, userFilter);
+        Assert.notNull(users, ApiErrorMsg.IS_NULL);
+        // 角色用户信息，
+        FilterGroup roleUserFilter = new FilterGroup();
+        roleUserFilter.addFilter("roleId", model.getRoleId());
+        roleUserFilter.addFilter("userId", FilterGroup.Operator.in, model.getUserId());
+        roleUserFilter.addFilter("tenantCode", tenantCode);
+        List<RoleUserMap> roleUserMaps = this.queryModel(RoleUserMap.class, roleUserFilter);
+        // 对比插入
+        List<String> existUserIds = new ArrayList<>();
+        if (roleUserMaps != null && roleUserMaps.size() > 0) {
+            for (RoleUserMap map : roleUserMaps) {
+                if (Strings.isNotBlank(map.getUserId()) && !existUserIds.contains(map.getUserId())) {
+                    existUserIds.add(map.getUserId());
+                }
+            }
+        }
+        // 构建
+        for (User user : users) {
+            if (!existUserIds.contains(user.getId())) {
+                RoleUserMap userMap = new RoleUserMap();
+                userMap.setRoleId(rModel.getId());
+                userMap.setRoleName(rModel.getName());
+                userMap.setUserId(user.getId());
+                userMap.setUserName(user.getName());
+                this.createModel(userMap);
+            }
+        }
     }
 
     /**

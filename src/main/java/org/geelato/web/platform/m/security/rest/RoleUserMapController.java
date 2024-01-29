@@ -93,6 +93,20 @@ public class RoleUserMapController extends BaseController {
         return result;
     }
 
+    @RequestMapping(value = "/inserts", method = RequestMethod.POST)
+    @ResponseBody
+    public ApiResult inserts(@RequestBody RoleUserMap form) {
+        ApiResult result = new ApiResult();
+        try {
+            roleUserMapService.insertModels(form);
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            result.error().setMsg(ApiErrorMsg.OPERATE_FAIL);
+        }
+
+        return result;
+    }
+
     @RequestMapping(value = "/isDelete/{id}", method = RequestMethod.DELETE)
     @ResponseBody
     public ApiResult isDelete(@PathVariable(required = true) String id) {

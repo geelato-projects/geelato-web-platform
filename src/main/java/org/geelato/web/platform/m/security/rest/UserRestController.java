@@ -92,6 +92,24 @@ public class UserRestController extends BaseController {
         return result;
     }
 
+    @RequestMapping(value = "/queryByParams", method = RequestMethod.POST)
+    @ResponseBody
+    public ApiResult query(@RequestBody Map<String, Object> params) {
+        ApiResult result = new ApiResult();
+        try {
+            if (params != null && !params.isEmpty()) {
+                FilterGroup filterGroup = new FilterGroup();
+                filterGroup.addFilter("id", FilterGroup.Operator.in, String.valueOf(params.get("ids")));
+                return result.setData(userService.queryModel(User.class, filterGroup));
+            }
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
+        }
+
+        return result;
+    }
+
     @RequestMapping(value = "/get/{id}", method = RequestMethod.GET)
     @ResponseBody
     public ApiResult get(@PathVariable(required = true) String id) {
