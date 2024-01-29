@@ -271,7 +271,10 @@ public class RuleService {
                     try {
                         recursiveSave(subCommand, dataSourceTransactionManager, transactionStatus);
                     } catch (DaoException e) {
-                        TransactionHelper.rollbackTransaction(dataSourceTransactionManager, transactionStatus);
+                        if(!transactionStatus.isCompleted()){
+                            TransactionHelper.rollbackTransaction(dataSourceTransactionManager, transactionStatus);
+                        }
+                        throw e;
                     }
                 });
             }

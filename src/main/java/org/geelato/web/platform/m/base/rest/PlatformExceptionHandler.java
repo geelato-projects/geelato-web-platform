@@ -41,7 +41,15 @@ public class PlatformExceptionHandler extends ResponseEntityExceptionHandler {
         headers.setContentType(MediaType.parseMediaType(MediaTypes.TEXT_PLAIN_UTF_8));
         return handleExceptionInternal(ex, body, headers, HttpStatus.BAD_REQUEST, request);
     }
-
+    @org.springframework.web.bind.annotation.ExceptionHandler(value = {DaoException.class})
+    public final ResponseEntity<?> handleException(DaoException ex, WebRequest request) {
+        ApiResult apiResult=new ApiResult();
+        apiResult.setCode(ex.getCode());
+        apiResult.setMsg(ex.getMsg());
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.parseMediaType(MediaTypes.JSON_UTF_8));
+        return handleExceptionInternal(ex, apiResult, headers, HttpStatus.BAD_REQUEST, request);
+    }
     @org.springframework.web.bind.annotation.ExceptionHandler(value = {PlatformRuntimeException.class})
     public final ResponseEntity<?> handleException(PlatformRuntimeException ex, WebRequest request) {
         ApiResult apiResult=new ApiResult();

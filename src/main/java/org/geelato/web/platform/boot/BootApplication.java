@@ -95,7 +95,7 @@ public class BootApplication implements CommandLineRunner, InitializingBean {
                 int index = arg.indexOf(IGNORE_ENTITY_PREFIX);
                 if (index != -1) {
                     String entityNamePrefix = arg.substring(index + IGNORE_ENTITY_PREFIX.length()).trim();
-                    if (entityNamePrefix.length() > 0) {
+                    if (!entityNamePrefix.isEmpty()) {
                         ignoreEntityNamePrefixList.add(entityNamePrefix);
                     }
                 }
