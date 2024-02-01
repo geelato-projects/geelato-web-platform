@@ -1,10 +1,12 @@
 package org.geelato.web.platform.m.model.service;
 
 import org.apache.logging.log4j.util.Strings;
+import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.constants.ColumnDefault;
 import org.geelato.core.constants.MetaDaoSql;
 import org.geelato.core.enums.*;
 import org.geelato.core.meta.model.entity.TableMeta;
+import org.geelato.core.meta.model.field.ColumnMeta;
 import org.geelato.core.meta.schema.SchemaTable;
 import org.geelato.core.util.SchemaUtils;
 import org.geelato.web.platform.m.base.service.BaseSortableService;
@@ -13,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
+import org.springframework.util.Assert;
 
 import java.lang.reflect.InvocationTargetException;
 import java.text.ParseException;
@@ -197,5 +200,38 @@ public class DevTableService extends BaseSortableService {
             tableList = dao.getJdbcTemplate().queryForList(tableSql);
         }
         return tableList;
+    }
+
+    public TableMeta copyTable(String title, String entityName, String tableId) {
+        // 源模型
+        TableMeta form = this.getModel(TableMeta.class, tableId);
+        Assert.notNull(form, ApiErrorMsg.IS_NULL);
+        title = Strings.isBlank(title) ? form.getTitle() : title;
+        // 新模型
+        form.setId(null);
+        form.setEntityName(entityName);
+        form.setTitle(title);
+        form.setTableName(null);
+        form.setSynced(ColumnSyncedEnum.FALSE.getValue());
+        form.setSourceType(TableSourceTypeEnum.CREATION.getValue());
+        Map<String, Object> formMap = this.createModel(form);
+        form.setId(formMap.get("id").toString());
+        // 源模型字段
+        Map<String, Object> params = new HashMap<>();
+        params.put("tableId", tableId);
+        List<ColumnMeta> columnMetas = devTableColumnService.queryModel(ColumnMeta.class, params);
+        if (columnMetas == null || columnMetas.size() < 1) {
+            return form;
+        }
+        // 新模型字段
+        for (ColumnMeta meta : columnMetas) {
+            meta.setId(null);
+            meta.setTableId(form.getId());
+            meta.setTableName(form.getEntityName());
+            meta.setSynced(ColumnSyncedEnum.FALSE.getValue());
+            devTableColumnService.createModel(meta);
+        }
+
+        return form;
     }
 }

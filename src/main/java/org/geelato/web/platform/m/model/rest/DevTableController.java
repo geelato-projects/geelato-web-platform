@@ -153,6 +153,36 @@ public class DevTableController extends BaseController {
         return result;
     }
 
+    @RequestMapping(value = "/copy", method = RequestMethod.POST)
+    @ResponseBody
+    public ApiResult<TableMeta> copy(@RequestBody Map<String, Object> params) {
+        ApiResult<TableMeta> result = new ApiResult<>();
+        try {
+            String title = String.valueOf(params.get("title"));
+            String entityName = String.valueOf(params.get("entityName"));
+            String tableId = String.valueOf(params.get("id"));
+            if (Strings.isBlank(entityName) || Strings.isBlank(tableId)) {
+                return result.error().setMsg(ApiErrorMsg.PARAMETER_MISSING);
+            }
+            TableMeta form = devTableService.copyTable(title, entityName, tableId);
+            result.setData(form);
+            // 添加默认权限
+            permissionService.resetDefaultPermission(PermissionTypeEnum.getTablePermissions(), form.getEntityName());
+            if (result.isSuccess() && Strings.isNotEmpty(form.getEntityName())) {
+                // 刷新实体缓存
+                metaManager.refreshDBMeta(form.getEntityName());
+                // 刷新默认视图
+                devViewService.createOrUpdateDefaultTableView(form, devTableColumnService.getDefaultViewSql(form.getEntityName()));
+            }
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            result.error().setMsg(ApiErrorMsg.OPERATE_FAIL);
+        }
+
+        return result;
+    }
+
+
     @RequestMapping(value = "/isDelete/{id}", method = RequestMethod.DELETE)
     @ResponseBody
     public ApiResult isDelete(@PathVariable(required = true) String id) {

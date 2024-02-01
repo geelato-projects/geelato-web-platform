@@ -146,6 +146,63 @@ public class DevTableColumnController extends BaseController {
         return result;
     }
 
+    @RequestMapping(value = "/insertCommon", method = RequestMethod.POST)
+    @ResponseBody
+    public ApiResult<Map> insertCommon(@RequestBody Map<String, Object> params) {
+        ApiResult<Map> result = new ApiResult<>();
+        try {
+            String tableId = String.valueOf(params.get("tableId"));
+            String tableName = String.valueOf(params.get("tableName"));
+            String columnIds = String.valueOf(params.get("columnIds"));
+            if (Strings.isBlank(tableId) || Strings.isBlank(columnIds)) {
+                return result.error().setMsg(ApiErrorMsg.PARAMETER_MISSING);
+            }
+            //
+            TableMeta tableMeta = devTableColumnService.getModel(TableMeta.class, tableId);
+            Assert.notNull(tableMeta, ApiErrorMsg.IS_NULL);
+            // 需要添加的字段
+            FilterGroup columnFilter = new FilterGroup();
+            columnFilter.addFilter("id", FilterGroup.Operator.in, columnIds);
+            List<ColumnMeta> columnMetas = devTableColumnService.queryModel(ColumnMeta.class, columnFilter);
+            if (columnMetas == null || columnMetas.size() == 0) {
+                return result;
+            }
+            // 已有字段，
+            List<String> existColumnNames = new ArrayList<>();
+            Map<String, Object> columnParams = new HashMap<>();
+            columnParams.put("tableId", tableId);
+            List<ColumnMeta> existColumns = devTableColumnService.queryModel(ColumnMeta.class, columnParams);
+            if (existColumns != null && existColumns.size() > 0) {
+                for (ColumnMeta meta : existColumns) {
+                    if (!existColumnNames.contains(meta.getName())) {
+                        existColumnNames.add(meta.getName());
+                    }
+                }
+            }
+            // 添加字段
+            for (ColumnMeta meta : columnMetas) {
+                if (!existColumnNames.contains(meta.getName())) {
+                    meta.setId(null);
+                    meta.setTableId(tableMeta.getId());
+                    meta.setTableName(tableMeta.getEntityName());
+                    meta.setSynced(ColumnSyncedEnum.FALSE.getValue());
+                    devTableColumnService.createModel(meta);
+                }
+            }
+            // 刷新实体缓存
+            if (result.isSuccess() && Strings.isNotEmpty(tableMeta.getEntityName())) {
+                metaManager.refreshDBMeta(tableMeta.getEntityName());
+                // 刷新默认视图
+                devViewService.createOrUpdateDefaultTableView(devTableColumnService.getModel(TableMeta.class, tableMeta.getId()), devTableColumnService.getDefaultViewSql(tableMeta.getEntityName()));
+            }
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            result.error().setMsg(ApiErrorMsg.OPERATE_FAIL);
+        }
+
+        return result;
+    }
+
     @RequestMapping(value = "/isDelete/{id}", method = RequestMethod.DELETE)
     @ResponseBody
     public ApiResult isDelete(@PathVariable(required = true) String id) {
