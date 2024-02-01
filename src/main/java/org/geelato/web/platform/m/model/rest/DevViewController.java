@@ -98,6 +98,7 @@ public class DevViewController extends BaseController {
     public ApiResult<Map> createOrUpdate(@RequestBody TableView form) {
         ApiResult<Map> result = new ApiResult<>();
         try {
+            form.afterSet();
             // ID为空方可插入
             if (Strings.isNotBlank(form.getId())) {
                 // 存在，方可更新
@@ -143,7 +144,7 @@ public class DevViewController extends BaseController {
         ApiResult result = new ApiResult();
         try {
             Map<String, String> params = new HashMap<>();
-            params.put("view_name", form.getViewName());
+            params.put("view_name", form.getViewName().toLowerCase(Locale.ENGLISH));
             params.put("connect_id", form.getConnectId());
             params.put("del_status", String.valueOf(DeleteStatusEnum.NO.getCode()));
             params.put("app_id", form.getAppId());

@@ -49,6 +49,7 @@ public class DevViewService extends BaseSortableService {
             meta.setViewColumn(viewColumns);
             meta.setTitle(String.format("%s的默认视图", tableMeta.getTitle()));
             meta.setViewName(String.format("v_%s", tableMeta.getEntityName()));
+            meta.afterSet();
             updateModel(meta);
         } else {
             TableView meta = new TableView();
@@ -63,6 +64,7 @@ public class DevViewService extends BaseSortableService {
             meta.setViewColumn(viewColumns);
             meta.setLinked(tableMeta.getLinked());
             meta.setSeqNo(ColumnDefault.SEQ_NO_FIRST);
+            meta.afterSet();
             createModel(meta);
         }
     }
