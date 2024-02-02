@@ -30,7 +30,7 @@ public class DevViewController extends BaseController {
     private static final Map<String, List<String>> OPERATORMAP = new LinkedHashMap<>();
 
     static {
-        OPERATORMAP.put("contains", Arrays.asList("entityName", "title", "viewName", "description"));
+        OPERATORMAP.put("contains", Arrays.asList("title", "viewName", "description"));
         OPERATORMAP.put("intervals", Arrays.asList("createAt", "updateAt"));
     }
 
@@ -84,7 +84,9 @@ public class DevViewController extends BaseController {
     public ApiResult<TableView> get(@PathVariable(required = true) String id) {
         ApiResult<TableView> result = new ApiResult<>();
         try {
-            return result.setData(devViewService.getModel(TableView.class, id));
+            TableView tableView = devViewService.getModel(TableView.class, id);
+            devViewService.viewColumnMeta(tableView);
+            return result.setData(tableView);
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
@@ -99,6 +101,8 @@ public class DevViewController extends BaseController {
         ApiResult<Map> result = new ApiResult<>();
         try {
             form.afterSet();
+            // 视图
+            devViewService.viewColumnMapperDBObject(form);
             // ID为空方可插入
             if (Strings.isNotBlank(form.getId())) {
                 // 存在，方可更新

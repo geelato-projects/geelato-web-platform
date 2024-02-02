@@ -1,15 +1,19 @@
 package org.geelato.web.platform.m.model.service;
 
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONArray;
 import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.constants.ColumnDefault;
 import org.geelato.core.enums.ViewTypeEnum;
 import org.geelato.core.meta.model.entity.TableMeta;
+import org.geelato.core.meta.model.field.ColumnMeta;
 import org.geelato.core.meta.model.view.TableView;
 import org.geelato.web.platform.m.base.service.BaseSortableService;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -68,4 +72,30 @@ public class DevViewService extends BaseSortableService {
             createModel(meta);
         }
     }
+
+    public void viewColumnMapperDBObject(TableView form) {
+        if (Strings.isNotBlank(form.getViewColumn())) {
+            List<Object> list = new ArrayList<>();
+            JSONArray columnData = JSONArray.parse(form.getViewColumn());
+            columnData.forEach(x -> {
+                ColumnMeta m = JSON.parseObject(x.toString(), ColumnMeta.class);
+                m.afterSet();
+                list.add(m.toMapperDBObject());
+            });
+            form.setViewColumn(JSON.toJSONString(list));
+        }
+    }
+
+    public void viewColumnMeta(TableView form) {
+        if (Strings.isNotBlank(form.getViewColumn())) {
+            List<Object> list = new ArrayList<>();
+            JSONArray columnData = JSONArray.parse(form.getViewColumn());
+            columnData.forEach(x -> {
+                Map<String, Object> m = JSON.parseObject(x.toString(), Map.class);
+                list.add(ColumnMeta.toMeta(m));
+            });
+            form.setViewColumn(JSON.toJSONString(list));
+        }
+    }
+
 }

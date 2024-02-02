@@ -11,7 +11,6 @@ import org.geelato.core.meta.MetaManager;
 import org.geelato.core.meta.model.entity.TableMeta;
 import org.geelato.core.meta.model.field.ColumnMeta;
 import org.geelato.core.meta.model.field.ColumnSelectType;
-import org.geelato.core.meta.model.view.ViewColumn;
 import org.geelato.core.meta.schema.SchemaColumn;
 import org.geelato.core.meta.schema.SchemaIndex;
 import org.geelato.core.util.SchemaUtils;
@@ -146,14 +145,15 @@ public class DevTableColumnService extends BaseSortableService {
                 }
             }
             // 拼接
-            List<ViewColumn> viewColumns = new ArrayList<>();
+            List<Object> viewColumns = new ArrayList<>();
             if (!columnMetaMap.isEmpty()) {
                 List<String> asList = new ArrayList<>();
                 for (Map.Entry<String, ColumnMeta> metaMap : columnMetaMap.entrySet()) {
                     ColumnMeta meta = metaMap.getValue();
                     asList.add(meta.getName());
                     // 保存视图字段
-                    viewColumns.add(ViewColumn.fromColumnMeta(meta));
+                    meta.afterSet();
+                    viewColumns.add(meta.toMapperDBObject());
                 }
                 viewParams.put("viewColumns", JSON.toJSONString(viewColumns));
                 viewParams.put("viewConstruct", String.format(MetaDaoSql.SQL_TABLE_DEFAULT_VIEW, String.join(",", asList), entityName));
