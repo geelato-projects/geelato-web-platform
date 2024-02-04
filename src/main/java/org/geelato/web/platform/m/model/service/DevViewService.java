@@ -5,7 +5,10 @@ import com.alibaba.fastjson2.JSONArray;
 import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.constants.ColumnDefault;
+import org.geelato.core.enums.ColumnEncryptedEnum;
+import org.geelato.core.enums.ColumnSyncedEnum;
 import org.geelato.core.enums.ViewTypeEnum;
+import org.geelato.core.meta.MetaManager;
 import org.geelato.core.meta.model.entity.TableMeta;
 import org.geelato.core.meta.model.field.ColumnMeta;
 import org.geelato.core.meta.model.view.TableView;
@@ -77,12 +80,28 @@ public class DevViewService extends BaseSortableService {
     public void viewColumnMapperDBObject(TableView form) {
         if (Strings.isNotBlank(form.getViewColumn())) {
             List<Object> list = new ArrayList<>();
+            List<String> columnNames = new ArrayList<>();
             JSONArray columnData = JSONArray.parse(form.getViewColumn());
             columnData.forEach(x -> {
                 ColumnMeta meta = JSON.parseObject(x.toString(), ColumnMeta.class);
                 meta.afterSet();
+                columnNames.add(meta.getName());
                 list.add(ClassUtils.toMapperDBObject(meta));
             });
+            // 默认字段
+            List<ColumnMeta> metaList = MetaManager.singleInstance().getDefaultColumn();
+            if (metaList != null && metaList.size() > 0) {
+                for (ColumnMeta meta : metaList) {
+                    if (!columnNames.contains(meta.getName())) {
+                        meta.setAppId(form.getAppId());
+                        meta.setTenantCode(form.getTenantCode());
+                        meta.setSynced(ColumnSyncedEnum.FALSE.getValue());
+                        meta.setEncrypted(ColumnEncryptedEnum.FALSE.getValue());
+                        meta.setTableName(form.getViewName());
+                        list.add(ClassUtils.toMapperDBObject(meta));
+                    }
+                }
+            }
             form.setViewColumn(JSON.toJSONString(list));
         }
     }
