@@ -9,6 +9,7 @@ import org.geelato.core.enums.ViewTypeEnum;
 import org.geelato.core.meta.model.entity.TableMeta;
 import org.geelato.core.meta.model.field.ColumnMeta;
 import org.geelato.core.meta.model.view.TableView;
+import org.geelato.core.util.ClassUtils;
 import org.geelato.web.platform.m.base.service.BaseSortableService;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
@@ -78,9 +79,9 @@ public class DevViewService extends BaseSortableService {
             List<Object> list = new ArrayList<>();
             JSONArray columnData = JSONArray.parse(form.getViewColumn());
             columnData.forEach(x -> {
-                ColumnMeta m = JSON.parseObject(x.toString(), ColumnMeta.class);
-                m.afterSet();
-                list.add(m.toMapperDBObject());
+                ColumnMeta meta = JSON.parseObject(x.toString(), ColumnMeta.class);
+                meta.afterSet();
+                list.add(ClassUtils.toMapperDBObject(meta));
             });
             form.setViewColumn(JSON.toJSONString(list));
         }
@@ -92,7 +93,7 @@ public class DevViewService extends BaseSortableService {
             JSONArray columnData = JSONArray.parse(form.getViewColumn());
             columnData.forEach(x -> {
                 Map<String, Object> m = JSON.parseObject(x.toString(), Map.class);
-                list.add(ColumnMeta.toMeta(m));
+                list.add(ClassUtils.toMeta(ColumnMeta.class, m));
             });
             form.setViewColumn(JSON.toJSONString(list));
         }
