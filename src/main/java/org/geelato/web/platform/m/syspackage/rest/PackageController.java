@@ -85,13 +85,12 @@ public class PackageController extends BaseController {
         appPackage.setSourceAppId(appId);
         List<AppMeta> appMetaList=new ArrayList<>();
         for (String key : appMetaMap.keySet()) {
-            String metaName=key;
             String value = appMetaMap.get(key);
             List<Map<String, Object>> metaData= dao.getJdbcTemplate().queryForList(value);
-            if(metaName.equals("platform_app")&&metaData.size()>0) {
+            if(key.equals("platform_app")&& !metaData.isEmpty()) {
                 appPackage.setAppCode(metaData.get(0).get("code").toString());
             }
-            AppMeta appMeta=new AppMeta(metaName,metaData);
+            AppMeta appMeta=new AppMeta(key,metaData);
             appMetaList.add(appMeta);
         }
         appPackage.setAppMetaList(appMetaList);
@@ -202,7 +201,7 @@ public class PackageController extends BaseController {
     /*
     删除版本
     */
-    @RequestMapping(value = {"/delelteVersion/{versionId}"}, method = RequestMethod.GET, produces = MediaTypes.JSON_UTF_8)
+    @RequestMapping(value = {"/deleteVersion/{versionId}"}, method = RequestMethod.GET, produces = MediaTypes.JSON_UTF_8)
     @ResponseBody
     public ApiResult deleteVersion(@PathVariable("versionId") String appId){
         return null;
@@ -222,24 +221,22 @@ public class PackageController extends BaseController {
             default:
                 break;
         }
-        map.put("platform_app",String.format("%s platform_app where id='%s'",preOperateSql,appId));
         map.put("platform_app_page",String.format("%s  platform_app_page where app_id='%s'",preOperateSql,appId));
         map.put("platform_tree_node",String.format("%s  platform_tree_node where tree_id='%s'",preOperateSql,appId));
-        map.put("platform_dev_db_connect",String.format("%s platform_dev_db_connect",preOperateSql,appId));
-        map.put("platform_dev_table",String.format("%s  platform_dev_table ",preOperateSql));
-        map.put("platform_dev_table_foreign",String.format("%s  platform_dev_table_foreign ",preOperateSql));
-        map.put("platform_dev_view",String.format("%s  platform_dev_view ",preOperateSql));
-        map.put("platform_dev_column",String.format("%s  platform_dev_column ",preOperateSql));
+        map.put("platform_dev_db_connect",String.format("%s platform_dev_db_connect where app_id='%s'",preOperateSql,appId));
+        map.put("platform_dev_table",String.format("%s  platform_dev_table where app_id='%s' ",preOperateSql,appId));
+        map.put("platform_dev_column",String.format("%s  platform_dev_column where app_id='%s'",preOperateSql,appId));
+        map.put("platform_dev_table_foreign",String.format("%s  platform_dev_table_foreign where app_id='%s'",preOperateSql,appId));
+        map.put("platform_dev_view",String.format("%s  platform_dev_view where app_id='%s'",preOperateSql,appId));
         map.put("platform_dict",String.format("%s  platform_dict where app_id='%s'",preOperateSql,appId));
         map.put("platform_dict_item",String.format("%s  platform_dict_item where app_id='%s'",preOperateSql,appId));
         map.put("platform_permission",String.format("%s platform_permission where app_id='%s'",preOperateSql,appId));
         map.put("platform_role",String.format("%s  platform_role where app_id='%s'",preOperateSql,appId));
+        map.put("platform_role_r_permission",String.format("%s  platform_role_r_permission where app_id='%s'",preOperateSql,appId));
+        map.put("platform_role_r_tree_node",String.format("%s  platform_role_r_tree_node where app_id='%s'",preOperateSql,appId));
         map.put("platform_sys_config",String.format("%s  platform_sys_config where app_id='%s'",preOperateSql,appId));
         map.put("platform_resources",String.format("%s  platform_resources where app_id='%s'",preOperateSql,appId));
         map.put("platform_role_r_app",String.format("%s  platform_role_r_app where app_id='%s'",preOperateSql,appId));
-        map.put("platform_role_r_permission",String.format("%s  platform_role_r_permission where app_id='%s'",preOperateSql,appId));
-        map.put("platform_role_r_tree_node",String.format("%s  platform_role_r_tree_node where app_id='%s'",preOperateSql,appId));
-        map.put("platform_encoding",String.format("%s  platform_encoding where app_id='%s'",preOperateSql,appId));
         return map;
     }
 
@@ -292,7 +289,7 @@ public class PackageController extends BaseController {
         return appPackage;
     }
     private void deployAppPackageData(AppPackage appPackage) throws DaoException {
-        logger.info(String.format("----------------------部署开始--------------------"));
+        logger.info("----------------------deploy start--------------------");
         DataSourceTransactionManager dataSourceTransactionManager = new DataSourceTransactionManager(dao.getJdbcTemplate().getDataSource());
         TransactionStatus transactionStatus = TransactionHelper.beginTransaction(dataSourceTransactionManager);
         for (AppMeta appMeta : appPackage.getAppMetaList()) {
@@ -326,6 +323,6 @@ public class PackageController extends BaseController {
             logger.info(String.format("结束处理元数据：%s",appMeta.getMetaName()));
         }
         TransactionHelper.commitTransaction(dataSourceTransactionManager,transactionStatus);
-        logger.info(String.format("----------------------部署结束--------------------"));
+        logger.info("----------------------deploy end--------------------");
     }
 }
