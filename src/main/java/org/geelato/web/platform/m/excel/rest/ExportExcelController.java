@@ -168,7 +168,7 @@ public class ExportExcelController extends BaseController {
             attach.setName(fileName);
             attach.setType(Files.probeContentType(exportFile.toPath()));
             attach.setSize(attributes.size());
-            attach.setUrl(directory);
+            attach.setPath(directory);
             attachService.createModel(attach);
         } catch (Exception e) {
             logger.error("表单信息导出Excel出错。", e);
@@ -400,7 +400,7 @@ public class ExportExcelController extends BaseController {
     private Attach getFile(String attachId) {
         if (Strings.isNotBlank(attachId)) {
             Attach attach = attachService.getModel(Attach.class, attachId);
-            File file = new File(attach.getUrl());
+            File file = new File(attach.getPath());
             if (file.exists()) {
                 return attach;
             }

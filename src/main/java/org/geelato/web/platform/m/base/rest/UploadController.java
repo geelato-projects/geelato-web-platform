@@ -43,16 +43,23 @@ public class UploadController extends BaseController {
 
     @RequestMapping(value = "/file", method = RequestMethod.POST)
     @ResponseBody
-    public ApiResult uploadFile(@RequestParam("file") MultipartFile file, Boolean isRename, HttpServletRequest request) {
+    public ApiResult uploadFile(@RequestParam("file") MultipartFile file, Boolean isRename, HttpServletRequest request,
+                                String objectId, String genre, String root) {
         ApiResult result = new ApiResult();
         if (file == null || file.isEmpty()) {
             return result.error().setMsg(ApiErrorMsg.OPERATE_FAIL);
         }
         try {
             Attach attach = new Attach(file);
-            attach.setUrl(uploadService.getSavePath(ROOT_DIRECTORY, attach.getName(), true));
+            attach.setObjectId(objectId);
+            attach.setGenre(genre);
+            if (Strings.isNotBlank(root)) {
+                attach.setPath(uploadService.getSaveRootPath(root, attach.getName(), true));
+            } else {
+                attach.setPath(uploadService.getSavePath(ROOT_DIRECTORY, attach.getName(), true));
+            }
             byte[] bytes = file.getBytes();
-            Files.write(Paths.get(attach.getUrl()), bytes);
+            Files.write(Paths.get(attach.getPath()), bytes);
             result.success().setData(attachService.createModel(attach));
         } catch (Exception e) {
             logger.error(e.getMessage());

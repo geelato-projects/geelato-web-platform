@@ -24,8 +24,8 @@ public class AttachService extends BaseService {
      */
     public boolean deleteFile(Attach model) {
         Assert.notNull(model, ApiErrorMsg.IS_NULL);
-        if (Strings.isNotBlank(model.getUrl())) {
-            File file = new File(model.getUrl());
+        if (Strings.isNotBlank(model.getPath())) {
+            File file = new File(model.getPath());
             if (file.exists()) {
                 return file.delete();
             }

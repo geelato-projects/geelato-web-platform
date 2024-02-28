@@ -51,7 +51,7 @@ public class DownloadController extends BaseController {
             File file = null;
             if (Strings.isNotBlank(id)) {
                 Attach attach = attachService.getModel(Attach.class, id);
-                file = downloadService.downloadFile(attach.getName(), attach.getUrl());
+                file = downloadService.downloadFile(attach.getName(), attach.getPath());
                 name = attach.getName();
             } else if (Strings.isNotBlank(path)) {
                 file = downloadService.downloadFile(name, path);
