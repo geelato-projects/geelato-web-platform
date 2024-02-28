@@ -7,6 +7,7 @@ import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.enums.DeleteStatusEnum;
 import org.geelato.core.gql.parser.FilterGroup;
+import org.geelato.core.meta.MetaManager;
 import org.geelato.core.meta.model.view.TableView;
 import org.geelato.web.platform.m.base.rest.BaseController;
 import org.geelato.web.platform.m.model.service.DevViewService;
@@ -28,6 +29,7 @@ import java.util.*;
 @RequestMapping(value = "/api/model/view")
 public class DevViewController extends BaseController {
     private static final Map<String, List<String>> OPERATORMAP = new LinkedHashMap<>();
+    private final MetaManager metaManager = MetaManager.singleInstance();
 
     static {
         OPERATORMAP.put("contains", Arrays.asList("title", "viewName", "description"));
@@ -114,6 +116,10 @@ public class DevViewController extends BaseController {
             } else {
                 result.setData(devViewService.createModel(form));
             }
+            if (result.isSuccess() && Strings.isNotEmpty(form.getViewName())) {
+                // 刷新实体缓存
+                metaManager.refreshDBMeta(form.getViewName());
+            }
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.OPERATE_FAIL);
@@ -133,6 +139,10 @@ public class DevViewController extends BaseController {
                 result.success();
             } else {
                 result.error().setMsg(ApiErrorMsg.IS_NULL);
+            }
+            if (result.isSuccess() && Strings.isNotEmpty(mResult.getViewName())) {
+                // 刷新实体缓存
+                metaManager.removeLiteMeta(mResult.getViewName());
             }
         } catch (Exception e) {
             logger.error(e.getMessage());
