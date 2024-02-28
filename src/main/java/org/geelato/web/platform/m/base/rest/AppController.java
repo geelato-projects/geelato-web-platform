@@ -2,6 +2,7 @@ package org.geelato.web.platform.m.base.rest;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.logging.log4j.util.Strings;
+import org.geelato.core.Ctx;
 import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiErrorMsg;
@@ -69,6 +70,31 @@ public class AppController extends BaseController {
         try {
             Map<String, Object> params = this.getQueryParameters(App.class, req);
             return result.setData(appService.queryModel(App.class, params, AppController.DEFAULT_ORDER_BY));
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
+        }
+
+        return result;
+    }
+
+    @RequestMapping(value = "/queryByUser", method = RequestMethod.GET)
+    @ResponseBody
+    public ApiResult queryByUser(String tenantCode, String userId) {
+        ApiResult result = new ApiResult<>();
+        try {
+            if (Strings.isBlank(userId)) {
+                org.geelato.core.env.entity.User user = Ctx.getCurrentUser();
+                userId = user != null ? user.getUserId() : "";
+            }
+            if (Strings.isBlank(tenantCode) || Strings.isBlank(userId)) {
+                return result.error().setMsg(ApiErrorMsg.PARAMETER_MISSING);
+            }
+            Map<String, Object> map = new HashMap<>();
+            map.put("tenantCode", tenantCode);
+            map.put("userId", userId);
+            List<Map<String, Object>> appList = dao.queryForMapList("query_app_by_role_user", map);
+            result.setData(appList);
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
