@@ -89,9 +89,10 @@ public class PackageController extends BaseController {
             List<Map<String, Object>> metaData= dao.getJdbcTemplate().queryForList(value);
             if(key.equals("platform_app")&& !metaData.isEmpty()) {
                 appPackage.setAppCode(metaData.get(0).get("code").toString());
+            }else{
+                AppMeta appMeta=new AppMeta(key,metaData);
+                appMetaList.add(appMeta);
             }
-            AppMeta appMeta=new AppMeta(key,metaData);
-            appMetaList.add(appMeta);
         }
         appPackage.setAppMetaList(appMetaList);
         String filePath=writePackageData(appPackage);
@@ -214,6 +215,7 @@ public class PackageController extends BaseController {
         switch (type){
             case "package":
                 preOperateSql="select * from ";
+                map.put("platform_app",String.format("%s platform_app where id='%s'",preOperateSql,appId));
                 break;
             case "remove":
                 preOperateSql="delete from  ";
@@ -235,7 +237,6 @@ public class PackageController extends BaseController {
         map.put("platform_role_r_permission",String.format("%s  platform_role_r_permission where app_id='%s'",preOperateSql,appId));
         map.put("platform_role_r_tree_node",String.format("%s  platform_role_r_tree_node where app_id='%s'",preOperateSql,appId));
         map.put("platform_sys_config",String.format("%s  platform_sys_config where app_id='%s'",preOperateSql,appId));
-        map.put("platform_resources",String.format("%s  platform_resources where app_id='%s'",preOperateSql,appId));
         map.put("platform_role_r_app",String.format("%s  platform_role_r_app where app_id='%s'",preOperateSql,appId));
         return map;
     }
@@ -266,8 +267,7 @@ public class PackageController extends BaseController {
             e.printStackTrace();
         }
         writePackageResourceData(appPackage);
-        String packagePath= compressAppPackage( packageConfigurationProperties.getPath()+tempFolderPath,appPackage);
-        return packagePath;
+        return compressAppPackage( packageConfigurationProperties.getPath()+tempFolderPath,appPackage);
     }
 
     private void writePackageResourceData(AppPackage appPackage){
