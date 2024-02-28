@@ -13,6 +13,7 @@ import org.geelato.core.meta.model.field.ColumnMeta;
 import org.geelato.core.meta.model.field.ColumnSelectType;
 import org.geelato.core.meta.schema.SchemaColumn;
 import org.geelato.core.meta.schema.SchemaIndex;
+import org.geelato.core.util.ClassUtils;
 import org.geelato.core.util.SchemaUtils;
 import org.geelato.core.util.StringUtils;
 import org.geelato.web.platform.arco.select.SelectOptionData;
@@ -153,7 +154,7 @@ public class DevTableColumnService extends BaseSortableService {
                     asList.add(meta.getName());
                     // 保存视图字段
                     meta.afterSet();
-                    viewColumns.add(meta.toMapperDBObject());
+                    viewColumns.add(ClassUtils.toMapperDBObject(meta));
                 }
                 viewParams.put("viewColumns", JSON.toJSONString(viewColumns));
                 viewParams.put("viewConstruct", String.format(MetaDaoSql.SQL_TABLE_DEFAULT_VIEW, String.join(",", asList), entityName));

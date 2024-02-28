@@ -53,6 +53,22 @@ public class UploadService {
         return "/" + subPath + datePath + fileName;
     }
 
+    public String getSaveRootPath(String subPath, String fileName, boolean isRename) {
+        // 处理子路径
+        subPath = subPath.startsWith("/") ? subPath : "/" + subPath;
+        subPath = subPath.endsWith("/") ? subPath : "/" + subPath;
+
+        // 处理文件名称
+        if (isRename) {
+            String ext = this.getFileExtension(fileName);
+            fileName = UIDGenerator.generate() + ext;
+        }
+        // 路径检验
+        this.fileMkdirs(subPath);
+
+        return subPath + fileName;
+    }
+
     /**
      * 创建全部路径
      *

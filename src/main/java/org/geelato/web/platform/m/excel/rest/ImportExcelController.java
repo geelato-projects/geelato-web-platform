@@ -176,7 +176,7 @@ public class ImportExcelController extends BaseController {
             //事务，模板元数据
             // Attach templateRuleAttach = getFile(exportTemplate.getTemplateRule());
             // ExcelCommonUtils.notNull(templateRuleAttach, new FileNotFoundException("Business Data Type And Meta File Not Found"));
-            // logger.info(String.format("数据类型+元数据（%s[%s]）%s", templateRuleAttach.getName(), templateRuleAttach.getId(), templateRuleAttach.getUrl()));
+            // logger.info(String.format("数据类型+元数据（%s[%s]）%s", templateRuleAttach.getName(), templateRuleAttach.getId(), templateRuleAttach.getPath()));
             File templateRuleFile = getTemplate(currentUUID, exportTemplate.getTemplateRule());
             ExcelCommonUtils.notNull(templateRuleFile, new FileNotFoundException("Business Data Type And Meta File Not Found"));
             businessMetaListMap = getBusinessMeta(templateRuleFile, 2);
@@ -703,7 +703,7 @@ public class ImportExcelController extends BaseController {
         try {
             String contentType = null;
             if (businessFile != null) {
-                File file = new File(businessFile.getUrl());
+                File file = new File(businessFile.getPath());
                 contentType = Files.probeContentType(file.toPath());
                 fileInputStream = new FileInputStream(file);
                 bufferedInputStream = new BufferedInputStream(fileInputStream);
@@ -795,7 +795,7 @@ public class ImportExcelController extends BaseController {
             String contentType = null;
             String fileName = null;
             if (businessFile != null) {
-                File file = new File(businessFile.getUrl());
+                File file = new File(businessFile.getPath());
                 contentType = Files.probeContentType(file.toPath());
                 fileName = businessFile.getName();
                 // 输入流
@@ -861,7 +861,7 @@ public class ImportExcelController extends BaseController {
             attach.setName(errorFileName);
             attach.setType(Files.probeContentType(errorFile.toPath()));
             attach.setSize(attributes.size());
-            attach.setUrl(directory);
+            attach.setPath(directory);
             attachMap = attachService.createModel(attach);
             // 可下载
             /*responseOut = response.getOutputStream();
@@ -942,7 +942,7 @@ public class ImportExcelController extends BaseController {
             } else {
                 Attach attach = getFile(template);
                 if (attach != null) {
-                    file = new File(attach.getUrl());
+                    file = new File(attach.getPath());
                     logger.info(String.format("AttachName：%s；tempFilePath：%s", attach.getName(), file.getAbsolutePath()));
                 }
             }
@@ -961,7 +961,7 @@ public class ImportExcelController extends BaseController {
         try {
             if (Strings.isNotBlank(attachId)) {
                 Attach attach = attachService.getModel(Attach.class, attachId);
-                File file = new File(attach.getUrl());
+                File file = new File(attach.getPath());
                 if (file.exists()) {
                     return attach;
                 }

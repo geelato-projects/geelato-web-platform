@@ -189,15 +189,16 @@ public class DevTableController extends BaseController {
         ApiResult result = new ApiResult();
         try {
             TableMeta mResult = devTableService.getModel(TableMeta.class, id);
+            String entityName = mResult.getEntityName();
             if (mResult != null) {
                 devTableService.isDeleteModel(mResult);
                 result.success();
             } else {
                 result.error().setMsg(ApiErrorMsg.IS_NULL);
             }
-            if (result.isSuccess() && Strings.isNotEmpty(mResult.getEntityName())) {
+            if (result.isSuccess() && Strings.isNotEmpty(entityName)) {
                 // 刷新实体缓存
-                metaManager.refreshDBMeta(mResult.getEntityName());
+                metaManager.removeLiteMeta(entityName);
             }
         } catch (Exception e) {
             logger.error(e.getMessage());

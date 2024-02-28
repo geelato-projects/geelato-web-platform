@@ -22,6 +22,7 @@ public class Attach extends BaseEntity {
     private Long size;
     private String path;
     private String url;
+    private String objectId;
 
     public Attach() {
     }
@@ -101,5 +102,15 @@ public class Attach extends BaseEntity {
 
     public void setUrl(String url) {
         this.url = url;
+    }
+
+    @Col(name = "object_id")
+    @Title(title = "对象id")
+    public String getObjectId() {
+        return objectId;
+    }
+
+    public void setObjectId(String objectId) {
+        this.objectId = objectId;
     }
 }

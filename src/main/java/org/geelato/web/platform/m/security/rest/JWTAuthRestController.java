@@ -139,9 +139,9 @@ public class JWTAuthRestController extends BaseController {
             }
             // 存入附件表
             // Attach attach = new Attach(file);
-            // attach.setUrl(uploadService.getSavePath(ROOT_AVATAR_DIRECTORY, attach.getName(), true));
+            // attach.setPath(uploadService.getSavePath(ROOT_AVATAR_DIRECTORY, attach.getName(), true));
             // byte[] bytes = file.getBytes();
-            // Files.write(Paths.get(attach.getUrl()), bytes);
+            // Files.write(Paths.get(attach.getPath()), bytes);
             // Map<String, Object> attachMap = attachService.createModel(attach);
             // Base64，存数据库
             byte[] fileBytes = file.getBytes();
