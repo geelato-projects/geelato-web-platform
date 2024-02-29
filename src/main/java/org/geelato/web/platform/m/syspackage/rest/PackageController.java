@@ -149,7 +149,7 @@ public class PackageController extends BaseController {
         AppVersion av=new AppVersion();
         av.setAppId(appId);
         av.setPacketTime(new Date());
-        av.setPackagePath(file.getOriginalFilename());
+        av.setPackagePath(targetPath);
         apiResult.setData( appVersionService.createModel(av));
         return apiResult;
 
