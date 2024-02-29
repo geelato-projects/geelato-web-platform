@@ -121,7 +121,7 @@ public class PackageController extends BaseController {
     @ResponseBody
     public void downloadPackage(@PathVariable("versionId") String versionId) throws IOException {
         AppVersion appVersion = appVersionService.getModel(AppVersion.class, versionId);
-        String filePath = packageConfigurationProperties.getPath() + appVersion.getPackagePath();
+        String filePath = appVersion.getPackagePath();
         File file = new File(filePath);
         FileInputStream fileInputStream = new FileInputStream(file);
         response.setHeader("Content-Disposition", "attachment; filename=\"" + file.getName() + "\"");
@@ -162,19 +162,21 @@ public class PackageController extends BaseController {
     @ResponseBody
     public void deployPackage(@PathVariable("versionId") String versionId) throws DaoException {
         AppVersion appVersion= appVersionService.getModel(AppVersion.class,versionId);
+        String appPackageData;
         if(appVersion!=null&&!StringUtils.isEmpty(appVersion.getPackagePath())) {
             if(appVersion.getPackagePath().contains(".zgdp")){
-                String appPackageData = ZipUtils.readPackageData(packageConfigurationProperties.getUploadPath()+appVersion.getPackagePath(), ".gdp");
-                deleteCurrentVersion(appVersion.getAppId());
-                AppPackage appPackage = resolveAppPackageData(appPackageData);
-                deployAppPackageData(appPackage);
+                appPackageData = ZipUtils.readPackageData(appVersion.getPackagePath(), ".gdp");
             }else{
                 Attach attach = attachService.getModel(Attach.class, appVersion.getPackagePath());
                 File file = downloadService.downloadFile(attach.getName(), attach.getPath());
-                String appPackageData = ZipUtils.readPackageData(file, ".gdp");
+                appPackageData = ZipUtils.readPackageData(file, ".gdp");
+            }
+            AppPackage appPackage = resolveAppPackageData(appPackageData);
+            if (appPackage != null && !appPackage.getAppMetaList().isEmpty()) {
                 deleteCurrentVersion(appVersion.getAppId());
-                AppPackage appPackage = resolveAppPackageData(appPackageData);
                 deployAppPackageData(appPackage);
+            }else{
+                logger.info("deploy error：无法读取到应用包数据，请检查应用包");
             }
         }
     }
@@ -303,7 +305,10 @@ public class PackageController extends BaseController {
     }
 
     private AppPackage resolveAppPackageData(String appPackageData) {
-        AppPackage appPackage=JSONObject.parseObject(appPackageData,AppPackage.class);
+        AppPackage appPackage=null;
+        if(!StringUtils.isEmpty(appPackageData)){
+            appPackage=JSONObject.parseObject(appPackageData,AppPackage.class);
+        }
         return appPackage;
     }
     private void deployAppPackageData(AppPackage appPackage) throws DaoException {
