@@ -164,6 +164,11 @@ public class PackageController extends BaseController {
     @ResponseBody
     public ApiResult deployPackage(@PathVariable("versionId") String versionId) throws DaoException {
         ApiResult apiResult=new ApiResult();
+        if(packageConfigurationProperties.getPackageEnv().equals("init_source")){
+            apiResult.setMsg("本环境无法部署任何应用，请联系管理员！");
+            apiResult.setCode(ApiResultCode.ERROR);
+            return apiResult;
+        }
         AppVersion appVersion= appVersionService.getModel(AppVersion.class,versionId);
         String appPackageData;
         if(appVersion!=null&&!StringUtils.isEmpty(appVersion.getPackagePath())) {

@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 @Component
 @ConfigurationProperties(prefix = "geelato.package")
 public class PackageConfigurationProperties {
+    private String packageEnv;
     private String path;
     private String uploadFolder;
 
@@ -28,5 +29,13 @@ public class PackageConfigurationProperties {
 
     public void setUploadFolder(String uploadFolder) {
         this.uploadFolder = uploadFolder;
+    }
+
+    public String getPackageEnv() {
+        return packageEnv;
+    }
+
+    public void setPackageEnv(String packageEnv) {
+        this.packageEnv = packageEnv;
     }
 }
