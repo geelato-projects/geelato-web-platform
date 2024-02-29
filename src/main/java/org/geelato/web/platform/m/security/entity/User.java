@@ -36,6 +36,7 @@ public class User extends BaseSortableEntity {
     private String description;
     private String orgName;
     private String jobNumber;
+    private String cooperatingOrgId;
 
     public User() {
     }
@@ -274,5 +275,15 @@ public class User extends BaseSortableEntity {
 
     public void setJobNumber(String jobNumber) {
         this.jobNumber = jobNumber;
+    }
+
+    @Title(title = "合作单位id")
+    @Col(name = "cooperating_org_id")
+    public String getCooperatingOrgId() {
+        return cooperatingOrgId;
+    }
+
+    public void setCooperatingOrgId(String cooperatingOrgId) {
+        this.cooperatingOrgId = cooperatingOrgId;
     }
 }
