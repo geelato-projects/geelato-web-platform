@@ -27,8 +27,11 @@ import org.geelato.core.sql.SqlManager;
 import org.geelato.core.util.StringUtils;
 import org.geelato.utils.ZipUtils;
 import org.geelato.web.platform.m.base.entity.AppPage;
+import org.geelato.web.platform.m.base.entity.Attach;
 import org.geelato.web.platform.m.base.rest.BaseController;
 import org.geelato.web.platform.m.base.rest.CacheController;
+import org.geelato.web.platform.m.base.service.AttachService;
+import org.geelato.web.platform.m.base.service.DownloadService;
 import org.geelato.web.platform.m.security.service.SecurityHelper;
 import org.geelato.web.platform.m.syspackage.PackageConfigurationProperties;
 import org.geelato.web.platform.m.syspackage.entity.AppMeta;
@@ -58,16 +61,19 @@ import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 @Controller
-@RequestMapping(value = "/package")
+@RequestMapping(value = "/api/package")
 public class PackageController extends BaseController {
 
     private static Logger logger = LoggerFactory.getLogger(PackageController.class);
     private String defaultPackageName="geelatoApp";
     @Resource
     private PackageConfigurationProperties packageConfigurationProperties;
+    @Resource
+    private AttachService attachService;
+    @Resource
+    private DownloadService downloadService;
 
     private MetaManager metaManager= MetaManager.singleInstance();
-    private GqlManager gqlManager = GqlManager.singleInstance();
     private SqlManager sqlManager = SqlManager.singleInstance();
     private JsonTextSaveParser jsonTextSaveParser = new JsonTextSaveParser();
 
@@ -100,6 +106,8 @@ public class PackageController extends BaseController {
         av.setAppId(appId);
         av.setVersion(version);
         av.setDescription(description);
+        av.setPackageSource("current packet");
+        av.setStatus("release");
         av.setPacketTime(new Date());
         av.setPackagePath(filePath);
         apiResult.setData(appVersionService.createModel(av));
@@ -155,10 +163,19 @@ public class PackageController extends BaseController {
     public void deployPackage(@PathVariable("versionId") String versionId) throws DaoException {
         AppVersion appVersion= appVersionService.getModel(AppVersion.class,versionId);
         if(appVersion!=null&&!StringUtils.isEmpty(appVersion.getPackagePath())) {
-            String appPackageData = ZipUtils.readPackageData(packageConfigurationProperties.getUploadPath()+appVersion.getPackagePath(), ".gdp");
-            deleteCurrentVersion(appVersion.getAppId());
-            AppPackage appPackage = resolveAppPackageData(appPackageData);
-            deployAppPackageData(appPackage);
+            if(appVersion.getPackagePath().contains(".zgdp")){
+                String appPackageData = ZipUtils.readPackageData(packageConfigurationProperties.getUploadPath()+appVersion.getPackagePath(), ".gdp");
+                deleteCurrentVersion(appVersion.getAppId());
+                AppPackage appPackage = resolveAppPackageData(appPackageData);
+                deployAppPackageData(appPackage);
+            }else{
+                Attach attach = attachService.getModel(Attach.class, appVersion.getPackagePath());
+                File file = downloadService.downloadFile(attach.getName(), attach.getPath());
+                String appPackageData = ZipUtils.readPackageData(file, ".gdp");
+                deleteCurrentVersion(appVersion.getAppId());
+                AppPackage appPackage = resolveAppPackageData(appPackageData);
+                deployAppPackageData(appPackage);
+            }
         }
     }
 
@@ -236,8 +253,9 @@ public class PackageController extends BaseController {
         map.put("platform_role",String.format("%s  platform_role where app_id='%s'",preOperateSql,appId));
         map.put("platform_role_r_permission",String.format("%s  platform_role_r_permission where app_id='%s'",preOperateSql,appId));
         map.put("platform_role_r_tree_node",String.format("%s  platform_role_r_tree_node where app_id='%s'",preOperateSql,appId));
-        map.put("platform_sys_config",String.format("%s  platform_sys_config where app_id='%s'",preOperateSql,appId));
         map.put("platform_role_r_app",String.format("%s  platform_role_r_app where app_id='%s'",preOperateSql,appId));
+        map.put("platform_sys_config",String.format("%s  platform_sys_config where app_id='%s'",preOperateSql,appId));
+
         return map;
     }
 

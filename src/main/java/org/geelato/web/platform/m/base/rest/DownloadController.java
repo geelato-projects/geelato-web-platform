@@ -45,6 +45,7 @@ public class DownloadController extends BaseController {
     @RequestMapping(value = "/file", method = RequestMethod.GET)
     @ResponseBody
     public void downloadFile(String id, String name, String path, boolean isPdf, HttpServletRequest request, HttpServletResponse response) throws Exception {
+        //抽取出来
         OutputStream out = null;
         FileInputStream in = null;
         try {

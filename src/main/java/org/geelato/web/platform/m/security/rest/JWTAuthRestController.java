@@ -246,7 +246,7 @@ public class JWTAuthRestController extends BaseController {
         }
         logger.info(String.format("当前用户菜单查询，租户：%s；应用：%s", tenantCode, appId));
         // 菜单查询
-        if (user != null && Strings.isNotBlank(appId) && Strings.isNotBlank(tenantCode)) {
+        if (Strings.isNotBlank(appId) && Strings.isNotBlank(tenantCode)) {
             map.put("currentUser", user.getId());
             map.put("appId", appId);
             map.put("tenantCode", tenantCode);

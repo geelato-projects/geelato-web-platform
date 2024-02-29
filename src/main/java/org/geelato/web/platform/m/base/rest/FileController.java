@@ -52,10 +52,7 @@ public class FileController extends BaseController implements InitializingBean {
 
     /**
      * 处理文件上传
-     * e.g.:http://localhost:8080/api/file/upload/
      *
-     * @param file
-     * @param request
      * @return 上传的字节数，-1表示上传失败
      */
     @RequestMapping(value = "/upload", method = RequestMethod.POST)
@@ -64,9 +61,6 @@ public class FileController extends BaseController implements InitializingBean {
                                     HttpServletRequest request) {
         String contentType = file.getContentType();
         String originalFilename = file.getOriginalFilename();
-        /*System.out.println("fileName-->" + fileName);
-        System.out.println("getContentType-->" + contentType);*/
-//        String filePath = request.getSession().getServletContext().getRealPath("upload/");
         String relativePath = sdf.format(new Date());
         String filePath = this.fileRootPath +"\\upload\\"+ relativePath + "\\";
         String fileType = originalFilename.substring(originalFilename.lastIndexOf(".")+1);
@@ -97,10 +91,6 @@ public class FileController extends BaseController implements InitializingBean {
     }
 
     /**
-     * @param file
-     * @param filePath
-     * @param fileName
-     * @throws Exception
      */
     private void saveToFileSystem(byte[] file, String filePath, String fileName) throws IOException {
         File targetFile = new File(filePath);
