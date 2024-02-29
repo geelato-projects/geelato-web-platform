@@ -61,7 +61,7 @@ import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 @Controller
-@RequestMapping(value = "/api/package")
+@RequestMapping(value = "/package")
 public class PackageController extends BaseController {
 
     private static Logger logger = LoggerFactory.getLogger(PackageController.class);
@@ -299,7 +299,7 @@ public class PackageController extends BaseController {
         String appPackageFullName=appPackageName+packageSuffix;
         String targetZipPath=packageConfigurationProperties.getPath()+appPackageFullName;
         ZipUtils.compressDirectory(sourcePackageFolder,targetZipPath);
-        return appPackageFullName;
+        return targetZipPath;
     }
 
     private AppPackage resolveAppPackageData(String appPackageData) {
