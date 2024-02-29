@@ -11,6 +11,8 @@ import org.bouncycastle.cms.PasswordRecipientId;
 import org.geelato.core.Ctx;
 import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
+import org.geelato.core.constants.ApiErrorMsg;
+import org.geelato.core.constants.ApiResultCode;
 import org.geelato.core.constants.MediaTypes;
 import org.geelato.core.gql.GqlManager;
 import org.geelato.core.gql.execute.BoundPageSql;
@@ -160,7 +162,8 @@ public class PackageController extends BaseController {
      */
     @RequestMapping(value = {"/deploy/{versionId}"}, method = RequestMethod.GET, produces = MediaTypes.JSON_UTF_8)
     @ResponseBody
-    public void deployPackage(@PathVariable("versionId") String versionId) throws DaoException {
+    public ApiResult deployPackage(@PathVariable("versionId") String versionId) throws DaoException {
+        ApiResult apiResult=new ApiResult();
         AppVersion appVersion= appVersionService.getModel(AppVersion.class,versionId);
         String appPackageData;
         if(appVersion!=null&&!StringUtils.isEmpty(appVersion.getPackagePath())) {
@@ -173,12 +176,20 @@ public class PackageController extends BaseController {
             }
             AppPackage appPackage = resolveAppPackageData(appPackageData);
             if (appPackage != null && !appPackage.getAppMetaList().isEmpty()) {
-                deleteCurrentVersion(appVersion.getAppId());
-                deployAppPackageData(appPackage);
+                try{
+                    deleteCurrentVersion(appVersion.getAppId());
+                    deployAppPackageData(appPackage);
+                }catch (Exception ex){
+                    apiResult.setMsg(ex.getMessage());
+                    apiResult.setCode(ApiResultCode.ERROR);
+                }
             }else{
+                apiResult.setMsg("无法读取到应用包数据，请检查应用");
+                apiResult.setCode(ApiResultCode.ERROR);
                 logger.info("deploy error：无法读取到应用包数据，请检查应用包");
             }
         }
+        return apiResult;
     }
 
     private void deleteCurrentVersion(String appId) {
