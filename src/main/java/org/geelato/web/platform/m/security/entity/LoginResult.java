@@ -24,6 +24,7 @@ public class LoginResult {
     private String address;
     private String description;
     private String tenantCode;
+    private String cooperatingOrgId;
 
     private String token;
     private String homePath;
@@ -189,6 +190,14 @@ public class LoginResult {
         this.jobNumber = jobNumber;
     }
 
+    public String getCooperatingOrgId() {
+        return cooperatingOrgId;
+    }
+
+    public void setCooperatingOrgId(String cooperatingOrgId) {
+        this.cooperatingOrgId = cooperatingOrgId;
+    }
+
     /**
      * 对象转换
      *
@@ -214,6 +223,7 @@ public class LoginResult {
         loginResult.setAddress(user.getAddress());
         loginResult.setDescription(user.getDescription());
         loginResult.setTenantCode(user.getTenantCode());
+        loginResult.setCooperatingOrgId(user.getCooperatingOrgId());
 
         return loginResult;
     }
