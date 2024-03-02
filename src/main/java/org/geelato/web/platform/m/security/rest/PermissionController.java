@@ -2,6 +2,7 @@ package org.geelato.web.platform.m.security.rest;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.logging.log4j.util.Strings;
+import org.geelato.core.Ctx;
 import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiErrorMsg;
@@ -69,6 +70,29 @@ public class PermissionController extends BaseController {
         try {
             Map<String, Object> params = this.getQueryParameters(Permission.class, req);
             return result.setData(permissionService.queryModel(Permission.class, params));
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
+        }
+
+        return result;
+    }
+
+    @RequestMapping(value = "/queryByUser", method = RequestMethod.GET)
+    @ResponseBody
+    public ApiResult queryByUser(HttpServletRequest req) {
+        ApiResult result = new ApiResult();
+        try {
+            Map<String, Object> params = this.getQueryParameters(req);
+            if (params.get("userId") == null) {
+                org.geelato.core.env.entity.User user = Ctx.getCurrentUser();
+                params.put("userId", user.getUserId());
+            }
+            if (params.get("userId") == null) {
+                return result.error().setMsg(ApiErrorMsg.PARAMETER_MISSING);
+            }
+            List<Map<String, Object>> appList = dao.queryForMapList("query_permission_by_role_user", params);
+            result.setData(appList);
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.QUERY_FAIL);

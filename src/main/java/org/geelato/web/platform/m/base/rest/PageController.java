@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author itechgee@126.com
@@ -72,20 +73,33 @@ public class PageController extends BaseController {
             HashMap pageMap = new HashMap(6);
             if (page != null) {
                 pageMap.put("id", page.getId());
-                pageMap.put("type", page.getId());
-                pageMap.put("appId", page.getId());
+                pageMap.put("type", page.getType());
+                pageMap.put("appId", page.getAppId());
                 pageMap.put("code", page.getCode());
                 pageMap.put("releaseContent", page.getReleaseContent());
             }
             User user = Ctx.getCurrentUser();
-            ApiPagedResult apiPagedResult = ruleService.queryForMapList("{\"platform_my_page_custom\":{\"@fs\":\"id,cfg,pageId\",\"creator|eq\":\"" + user.getUserId() + "\",\"delStatus|eq\":0,\"@p\":\"1,1\"}}", false);
+            // 用户自定义信息
+            ApiPagedResult apiPagedResult = ruleService.queryForMapList("{\"platform_my_page_custom\":{\"@fs\":\"id,cfg,pageId\",\"creator|eq\":\"" + user.getUserId() + "\",\"pageId|eq\":\""+page.getId()+"\",\"delStatus|eq\":0,\"@p\":\"1,1\"}}", false);
             if (apiPagedResult.getDataSize() > 0) {
                 pageMap.put("pageCustom", ((List) apiPagedResult.getData()).get(0));
-            } else {
+            }else{
                 pageMap.put("pageCustom", null);
             }
-            apiResult.setData(pageMap);
+            // 用户对该页面的操作权限
+            Map params = new HashMap<String, String>(1);
+            params.put("userId", user.getUserId());
+            params.put("object", page.getId());
+            params.put("appId", page.getAppId());
+            params.put("type", "ep");
+            List<Map<String, Object>> permsList = dao.queryForMapList("query_permission_code_and_rule_by_role_user", params);
+            if (permsList != null && permsList.size() > 0) {
+                pageMap.put("pagePerms", permsList);
+            }else{
+                pageMap.put("pagePerms", null);
+            }
 
+            apiResult.setData(pageMap);
         } catch (Exception e) {
             logger.error("获取页面配置信息出错！", e);
             apiResult.error(e);

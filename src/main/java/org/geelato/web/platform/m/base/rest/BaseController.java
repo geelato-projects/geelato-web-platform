@@ -55,6 +55,20 @@ public class BaseController {
         //可以在此处拿到当前登录的用户
     }
 
+    public Map<String, Object> getQueryParameters(HttpServletRequest request) {
+        Map<String, Object> queryParamsMap = new LinkedHashMap<>();
+        for (Map.Entry<String, String[]> entry : request.getParameterMap().entrySet()) {
+            List<String> values = List.of(entry.getValue());
+            if (values.size() == 1) {
+                queryParamsMap.put(entry.getKey(), values.get(0));
+            } else {
+                queryParamsMap.put(entry.getKey(), values.toArray(new String[values.size()]));
+            }
+        }
+
+        return queryParamsMap;
+    }
+
     public Map<String, Object> getQueryParameters(Class elementType, HttpServletRequest request) {
         Map<String, Object> queryParamsMap = new LinkedHashMap<>();
         for (Map.Entry<String, String[]> entry : request.getParameterMap().entrySet()) {
