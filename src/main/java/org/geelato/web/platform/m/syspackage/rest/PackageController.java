@@ -56,6 +56,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -66,21 +67,22 @@ import java.util.zip.ZipOutputStream;
 @RequestMapping(value = "/package")
 public class PackageController extends BaseController {
 
-    private static Logger logger = LoggerFactory.getLogger(PackageController.class);
-    private String defaultPackageName="geelatoApp";
+    private static final Logger logger = LoggerFactory.getLogger(PackageController.class);
+    private final String defaultPackageName="geelatoApp";
     @Resource
     private PackageConfigurationProperties packageConfigurationProperties;
     @Resource
     private AttachService attachService;
     @Resource
     private DownloadService downloadService;
-
-    private MetaManager metaManager= MetaManager.singleInstance();
-    private SqlManager sqlManager = SqlManager.singleInstance();
-    private JsonTextSaveParser jsonTextSaveParser = new JsonTextSaveParser();
-
-    @Autowired
+    @Resource
     AppVersionService appVersionService;
+
+    private final MetaManager metaManager= MetaManager.singleInstance();
+    private final SqlManager sqlManager = SqlManager.singleInstance();
+    private final JsonTextSaveParser jsonTextSaveParser = new JsonTextSaveParser();
+
+
     /*
     打包应用
      */
@@ -106,14 +108,30 @@ public class PackageController extends BaseController {
         String filePath=writePackageData(appPackage);
         AppVersion av=new AppVersion();
         av.setAppId(appId);
-        av.setVersion(version);
-        av.setDescription(description);
-        av.setPackageSource("current packet");
+        if(StringUtils.isEmpty(version)){
+            av.setVersion(generateVersionCode(appPackage.getAppCode()));
+        }else{
+            av.setVersion(version);
+        }
+        if(StringUtils.isEmpty(description)){
+            av.setDescription("当前环境打包形成的应用包");
+        }else{
+            av.setDescription(description);
+        }
+
+        av.setPackageSource("current environment packet");
         av.setStatus("release");
         av.setPacketTime(new Date());
         av.setPackagePath(filePath);
+
         apiResult.setData(appVersionService.createModel(av));
         return apiResult;
+    }
+
+    private String generateVersionCode(String appCode) {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
+        String dateStr = sdf.format(new Date());
+        return  String.format("%s_version%s",appCode,dateStr);
     }
 
     /*
@@ -194,16 +212,19 @@ public class PackageController extends BaseController {
                 logger.info("deploy error：无法读取到应用包数据，请检查应用包");
             }
         }
+        apiResult.setMsg("应用部署成功！");
         return apiResult;
     }
 
     private void deleteCurrentVersion(String appId) {
+        logger.info("----------------------delete version start--------------------");
         Map<String,String> appMetaMap= appMetaMap(appId,"remove");
         for (String key : appMetaMap.keySet()) {
             String value = appMetaMap.get(key);
              logger.info(String.format("remove sql：%s ",value));
              dao.getJdbcTemplate().execute(value);
         }
+        logger.info("----------------------delete version end--------------------");
     }
 
 
@@ -307,8 +328,7 @@ public class PackageController extends BaseController {
     }
 
     private void writePackageResourceData(AppPackage appPackage){
-
-
+        //todo 处理打包资源文件
     }
     private String  compressAppPackage(String sourcePackageFolder,AppPackage appPackage ){
         String packageSuffix=".zgdp";
