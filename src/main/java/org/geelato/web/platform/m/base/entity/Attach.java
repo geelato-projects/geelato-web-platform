@@ -7,6 +7,10 @@ import org.geelato.core.meta.annotation.Title;
 import org.geelato.core.meta.model.entity.BaseEntity;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+
 /**
  * @author diabl
  * @description: TODO
@@ -33,7 +37,12 @@ public class Attach extends BaseEntity {
         this.type = file.getContentType();
         this.size = file.getSize();
     }
-
+    public Attach(File file) throws IOException {
+        setDelStatus(DeleteStatusEnum.NO.getCode());
+        this.name = file.getName();
+        this.type = Files.probeContentType(file.toPath());;
+        this.size = file.length();
+    }
     @Col(name = "app_id")
     @Title(title = "所属应用")
     public String getAppId() {

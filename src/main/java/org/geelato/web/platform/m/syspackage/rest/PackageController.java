@@ -88,7 +88,7 @@ public class PackageController extends BaseController {
      */
     @RequestMapping(value = {"/packet/{appId}"}, method = RequestMethod.GET, produces = MediaTypes.JSON_UTF_8)
     @ResponseBody
-    public ApiResult packetApp(@PathVariable("appId") String appId,String version,String description){
+    public ApiResult packetApp(@PathVariable("appId") String appId,String version,String description) throws IOException {
         ApiResult apiResult=new ApiResult();
         Map<String,String> appMetaMap=appMetaMap(appId,"package");
         AppPackage appPackage=new AppPackage();
@@ -305,7 +305,7 @@ public class PackageController extends BaseController {
 //        map.put("platform_resources",String.format("select * from platform_permission where app_id='%s'",appId));   //表需要加app_id
         return map;
     }
-    private String writePackageData(AppPackage appPackage){
+    private String writePackageData(AppPackage appPackage) throws IOException {
         String jsonStr= JSONObject.toJSONString(appPackage);
         String packageSuffix=".gdp";
         String dataFileName=StringUtils.isEmpty(appPackage.getAppCode())?
@@ -330,14 +330,20 @@ public class PackageController extends BaseController {
     private void writePackageResourceData(AppPackage appPackage){
         //todo 处理打包资源文件
     }
-    private String  compressAppPackage(String sourcePackageFolder,AppPackage appPackage ){
+    private String  compressAppPackage(String sourcePackageFolder,AppPackage appPackage ) throws IOException {
         String packageSuffix=".zgdp";
         String appPackageName = StringUtils.isEmpty(appPackage.getAppCode())?
                 defaultPackageName:appPackage.getAppCode();
         String appPackageFullName=appPackageName+packageSuffix;
         String targetZipPath=packageConfigurationProperties.getPath()+appPackageFullName;
         ZipUtils.compressDirectory(sourcePackageFolder,targetZipPath);
-        return targetZipPath;
+        File file=new File(targetZipPath);
+        Attach attach = new Attach(file);
+        attach.setPath(targetZipPath);
+        attach.setUrl(targetZipPath);
+        attach.setGenre("package");
+        Map  attachRst=attachService.createModel(attach);
+        return attachRst.get("id").toString();
     }
 
     private AppPackage resolveAppPackageData(String appPackageData) {
