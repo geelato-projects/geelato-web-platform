@@ -8,6 +8,7 @@ import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.gql.parser.FilterGroup;
 import org.geelato.web.platform.m.base.rest.BaseController;
 import org.geelato.web.platform.m.security.entity.DataItems;
+import org.geelato.web.platform.m.security.entity.Permission;
 import org.geelato.web.platform.m.security.entity.RolePermissionMap;
 import org.geelato.web.platform.m.security.service.RolePermissionMapService;
 import org.slf4j.Logger;
@@ -84,6 +85,12 @@ public class RolePermissionMapController extends BaseController {
     public ApiResult insert(@RequestBody RolePermissionMap form) {
         ApiResult result = new ApiResult();
         try {
+            if (Strings.isNotBlank(form.getPermissionId())) {
+                Permission permission = rolePermissionMapService.getModel(Permission.class, form.getPermissionId());
+                if (permission != null) {
+                    form.setAppId(permission.getAppId());
+                }
+            }
             rolePermissionMapService.insertModel(form);
         } catch (Exception e) {
             logger.error(e.getMessage());
@@ -160,6 +167,12 @@ public class RolePermissionMapController extends BaseController {
     public ApiResult insertTableViewPermission(@RequestBody RolePermissionMap form) {
         ApiResult result = new ApiResult();
         try {
+            if (Strings.isNotBlank(form.getPermissionId())) {
+                Permission permission = rolePermissionMapService.getModel(Permission.class, form.getPermissionId());
+                if (permission != null) {
+                    form.setAppId(permission.getAppId());
+                }
+            }
             rolePermissionMapService.insertTableViewPermission(form);
         } catch (Exception e) {
             logger.error(e.getMessage());

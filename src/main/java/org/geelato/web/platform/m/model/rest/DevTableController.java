@@ -124,7 +124,7 @@ public class DevTableController extends BaseController {
                         // 修正权限
                         permissionService.tablePermissionChangeObject(form.getEntityName(), model.getEntityName());
                         // 添加默认权限
-                        permissionService.resetTableDefaultPermission(PermissionTypeEnum.getTablePermissions(), form.getEntityName());
+                        permissionService.resetTableDefaultPermission(PermissionTypeEnum.getTablePermissions(), form.getEntityName(), form.getAppId());
                     }
                     result.setData(resultMap);
                 } else {
@@ -135,7 +135,7 @@ public class DevTableController extends BaseController {
                 Map<String, Object> resultMap = devTableService.createModel(form);
                 form.setId(resultMap.get("id").toString());
                 // 添加默认权限
-                permissionService.resetDefaultPermission(PermissionTypeEnum.getTablePermissions(), form.getEntityName());
+                permissionService.resetDefaultPermission(PermissionTypeEnum.getTablePermissions(), form.getEntityName(), form.getAppId());
                 devTableColumnService.createDefaultColumn(form);
                 result.setData(resultMap);
             }
@@ -167,7 +167,7 @@ public class DevTableController extends BaseController {
             TableMeta form = devTableService.copyTable(title, entityName, tableId);
             result.setData(form);
             // 添加默认权限
-            permissionService.resetDefaultPermission(PermissionTypeEnum.getTablePermissions(), form.getEntityName());
+            permissionService.resetDefaultPermission(PermissionTypeEnum.getTablePermissions(), form.getEntityName(), form.getAppId());
             if (result.isSuccess() && Strings.isNotEmpty(form.getEntityName())) {
                 // 刷新实体缓存
                 metaManager.refreshDBMeta(form.getEntityName());

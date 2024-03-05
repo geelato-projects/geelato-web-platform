@@ -4,6 +4,7 @@ import com.alibaba.fastjson2.JSON;
 import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.constants.ResourcesFiles;
 import org.geelato.core.gql.parser.FilterGroup;
+import org.geelato.core.meta.model.entity.TableMeta;
 import org.geelato.core.meta.model.field.ColumnMeta;
 import org.geelato.core.util.FastJsonUtils;
 import org.geelato.web.platform.enums.PermissionTypeEnum;
@@ -222,13 +223,13 @@ public class PermissionService extends BaseService {
      * @param type
      * @param object
      */
-    public void resetDefaultPermission(String type, String object) {
+    public void resetDefaultPermission(String type, String object, String appId) {
         if (PermissionTypeEnum.MODEL.getValue().equals(type) ||
                 PermissionTypeEnum.DATA.getValue().equalsIgnoreCase(type) ||
                 PermissionTypeEnum.getTablePermissions().equalsIgnoreCase(type)) {
-            resetTableDefaultPermission(type, object);
+            resetTableDefaultPermission(type, object, appId);
         } else if (PermissionTypeEnum.COLUMN.getValue().equals(type)) {
-            resetColumnDefaultPermission(type, object);
+            resetColumnDefaultPermission(type, object, appId);
         } else {
             throw new RuntimeException("[type] non-being");
         }
@@ -240,7 +241,7 @@ public class PermissionService extends BaseService {
      * @param types
      * @param object
      */
-    public void resetTableDefaultPermission(String types, String object) {
+    public void resetTableDefaultPermission(String types, String object, String appId) {
         // 当前权限
         FilterGroup tableFilter = new FilterGroup();
         tableFilter.addFilter("type", FilterGroup.Operator.in, types);
@@ -257,6 +258,7 @@ public class PermissionService extends BaseService {
                         if (cModel.getCode().equals(String.format("%s%s", cModel.getObject(), dModel.getCode()))) {
                             cModel.setName(dModel.getName());
                             cModel.setRule(dModel.getRule());
+                            cModel.setAppId(appId);
                             cModel.setDescription(dModel.getDescription());
                             updateModel(cModel);
                             isExist = true;
@@ -269,6 +271,7 @@ public class PermissionService extends BaseService {
                 }
             } else {
                 for (Permission dModel : defPermissions) {
+                    dModel.setAppId(appId);
                     createDefaultPermission(object, dModel);
                 }
             }
@@ -297,7 +300,7 @@ public class PermissionService extends BaseService {
      * @param type      cp
      * @param tableName 模型名称
      */
-    public void resetColumnDefaultPermission(String type, String tableName) {
+    public void resetColumnDefaultPermission(String type, String tableName, String appId) {
         // 表头
         Map<String, Object> colParams = new HashMap<>();
         colParams.put("tableName", tableName);
@@ -335,6 +338,7 @@ public class PermissionService extends BaseService {
                     for (Permission dModel : defPermissions) {
                         Permission permission = new Permission();
                         permission.setName(dModel.getName());
+                        permission.setAppId(appId);
                         permission.setCode(String.format("%s:%s%s", column.getTableName(), column.getName(), dModel.getCode()));
                         permission.setType(type);
                         permission.setObject(String.format("%s:%s", column.getTableName(), column.getName()));
@@ -345,6 +349,7 @@ public class PermissionService extends BaseService {
                             for (Permission cModel : permissions) {
                                 if (permission.getCode().equals(cModel.getCode()) && permission.getObject().equals(cModel.getObject())) {
                                     isExist = true;
+                                    cModel.setAppId(appId);
                                     cModel.setName(permission.getName());
                                     cModel.setDescription(permission.getDescription());
                                     cModel.setRule(permission.getRule());

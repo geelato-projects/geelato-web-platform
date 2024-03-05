@@ -181,10 +181,10 @@ public class PermissionController extends BaseController {
 
     @RequestMapping(value = "/default/{type}/{object}", method = RequestMethod.POST)
     @ResponseBody
-    public ApiResult defaultTablePermission(@PathVariable(required = true) String type, @PathVariable(required = true) String object) {
+    public ApiResult defaultTablePermission(@PathVariable(required = true) String type, @PathVariable(required = true) String object, String appId) {
         ApiResult result = new ApiResult();
         try {
-            permissionService.resetDefaultPermission(type, object);
+            permissionService.resetDefaultPermission(type, object, appId);
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.OPERATE_FAIL);

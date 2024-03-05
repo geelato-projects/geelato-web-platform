@@ -383,6 +383,7 @@ public class RolePermissionMapService extends BaseService {
         if (defPermissions != null && defPermissions.size() > 0) {
             for (Permission dModel : defPermissions) {
                 Permission permission = new Permission();
+                permission.setAppId(permission.getAppId());
                 permission.setName(dModel.getName());
                 permission.setCode(String.format("%s:%s%s", column.getTableName(), column.getName(), dModel.getCode()));
                 permission.setType(PermissionTypeEnum.COLUMN.getValue());
@@ -394,6 +395,7 @@ public class RolePermissionMapService extends BaseService {
                     for (Permission cModel : permissionList) {
                         if (permission.getCode().equals(cModel.getCode()) && permission.getObject().equals(cModel.getObject())) {
                             isExist = true;
+                            cModel.setAppId(column.getAppId());
                             cModel.setName(permission.getName());
                             cModel.setDescription(permission.getDescription());
                             cModel.setRule(permission.getRule());
@@ -428,6 +430,7 @@ public class RolePermissionMapService extends BaseService {
                 RolePermissionMap map = new RolePermissionMap();
                 map.setRoleId(role.getId());
                 map.setRoleName(role.getName());
+                map.setAppId(column.getAppId());
                 map.setPermissionId(permission.getId());
                 map.setPermissionName(permission.getName());
                 createModel(map);
