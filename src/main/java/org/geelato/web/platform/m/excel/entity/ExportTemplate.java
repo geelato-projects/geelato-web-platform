@@ -25,6 +25,9 @@ public class ExportTemplate extends BaseEntity implements EntityEnableAble {
     private String templateRule;
     private int enableStatus = EnableStatusEnum.ENABLED.getCode();
     private String description;
+    private String businessTypeData;// 数据类型
+    private String businessRuleData;// 清洗规则
+    private String businessMetaData;// 元数据
 
     @Title(title = "状态")
     @Col(name = "app_id")
@@ -116,5 +119,35 @@ public class ExportTemplate extends BaseEntity implements EntityEnableAble {
     @Override
     public void setEnableStatus(int enableStatus) {
         this.enableStatus = enableStatus;
+    }
+
+    @Title(title = "数据类型")
+    @Col(name = "business_type_data")
+    public String getBusinessTypeData() {
+        return businessTypeData;
+    }
+
+    public void setBusinessTypeData(String businessTypeData) {
+        this.businessTypeData = businessTypeData;
+    }
+
+    @Title(title = "清洗规则")
+    @Col(name = "business_rule_data")
+    public String getBusinessRuleData() {
+        return businessRuleData;
+    }
+
+    public void setBusinessRuleData(String businessRuleData) {
+        this.businessRuleData = businessRuleData;
+    }
+
+    @Title(title = "元数据")
+    @Col(name = "business_meta_data")
+    public String getBusinessMetaData() {
+        return businessMetaData;
+    }
+
+    public void setBusinessMetaData(String businessMetaData) {
+        this.businessMetaData = businessMetaData;
     }
 }
