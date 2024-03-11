@@ -53,6 +53,7 @@ public class DevViewService extends BaseSortableService {
                     isDeleteModel(tableViewList.get(i));
                 }
             }
+            meta.setAppId(tableMeta.getAppId());
             meta.setViewConstruct(viewConstruct);
             meta.setViewColumn(viewColumns);
             meta.setTitle(String.format("%s的默认视图", tableMeta.getTitle()));
