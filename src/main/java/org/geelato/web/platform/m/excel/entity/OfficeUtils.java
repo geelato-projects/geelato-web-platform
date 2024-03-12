@@ -1,5 +1,6 @@
 package org.geelato.web.platform.m.excel.entity;
 
+import com.aspose.words.PdfSaveOptions;
 import com.itextpdf.text.Document;
 import com.itextpdf.text.*;
 import com.itextpdf.text.pdf.BaseFont;
@@ -24,9 +25,12 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.*;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Locale;
+import java.util.Map;
 
 /**
  * @author diabl
@@ -39,14 +43,62 @@ public class OfficeUtils {
     private static final String WORD_DOCX_CONTENT_TYPE = ".DOCX";
     private static final String WORD_DOC_CONTENT_TYPE = ".DOC";
 
-    public static void wordToPdf(String inputPath, String outputPath, String contentType) throws DocumentException, IOException, ParserConfigurationException, TransformerException {
-        if (Strings.isNotBlank(contentType) && WORD_DOCX_CONTENT_TYPE.equals(contentType.toUpperCase(Locale.ENGLISH))) {
-            docxToPdf(inputPath, outputPath);
-        } else if (Strings.isNotBlank(contentType) && WORD_DOC_CONTENT_TYPE.equals(contentType.toUpperCase(Locale.ENGLISH))) {
-            docToPdf(inputPath, outputPath);
+    public static void toPdf(String officePath, String pdfPath, String contentType) throws Exception {
+        if (WORD_DOCX_CONTENT_TYPE.equalsIgnoreCase(contentType)) {
+            asposeToPdf(officePath, pdfPath);
+        } else if (WORD_DOC_CONTENT_TYPE.equalsIgnoreCase(contentType)) {
+            asposeToPdf(officePath, pdfPath);
+        } else {
+            throw new RuntimeException("暂不支持该格式文件转PDF，敬请期待！");
+        }
+    }
+
+    public static void wordToPdf(String inputPath, String outputPath, String contentType, String printType, int width, int height) throws Exception {
+        if (Strings.isNotBlank(contentType)) {
+            if (WORD_DOCX_CONTENT_TYPE.equalsIgnoreCase(contentType)) {
+                asposeToPdf(inputPath, outputPath);
+            } else if (WORD_DOC_CONTENT_TYPE.equalsIgnoreCase(contentType)) {
+                Rectangle pageSize = null;
+                if (printType.equalsIgnoreCase("RM") && width > 0 && height > 0) {
+                    pageSize = new Rectangle(width * 72f / 25.4f, height * 72f / 25.4f);
+                } else if (Strings.isNotBlank(printType)) {
+                    Map<String, Rectangle> rectangleMap = getRectangle();
+                    if (rectangleMap != null && !rectangleMap.isEmpty()) {
+                        for (Map.Entry<String, Rectangle> entry : rectangleMap.entrySet()) {
+                            if (entry.getKey().equalsIgnoreCase(printType)) {
+                                pageSize = entry.getValue();
+                                break;
+                            }
+                        }
+                    }
+                }
+                docToPdf(inputPath, outputPath, pageSize);
+            }
         } else {
             throw new RuntimeException("文件格式错误！");
         }
+    }
+
+    private static Map<String, Rectangle> getRectangle() {
+        Map<String, Rectangle> pageSizeMap = new HashMap<>();
+        Field[] fields = PageSize.class.getDeclaredFields();
+        for (Field field : fields) {
+            int modifiers = field.getModifiers();
+            if (Modifier.isStatic(modifiers) && Modifier.isFinal(modifiers)) {
+                try {
+                    // 获取字段的值，注意这里可能抛出IllegalAccessException
+                    // 如果字段不是public的，则需要先设置setAccessible(true)
+                    field.setAccessible(true); // 允许访问私有字段
+                    Object value = field.get(null); // static字段的实例为null
+                    System.out.println("Name: " + field.getName() + ", Value: " + value);
+                    pageSizeMap.put(field.getName(), (Rectangle) value);
+                } catch (IllegalAccessException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        return pageSizeMap;
     }
 
     /**
@@ -103,6 +155,22 @@ public class OfficeUtils {
         baos.close();
     }
 
+    public static void asposeToPdf(String inputPath, String outputPath) throws Exception {
+        com.aspose.words.Document wordDoc = new com.aspose.words.Document(inputPath);
+        PdfSaveOptions pso = new PdfSaveOptions();
+        wordDoc.save(outputPath, pso);
+    }
+
+    public static void spireToPdf(String inputPath, String outputPath) {
+        //  com.spire.license.LicenseProvider.setLicenseFile("license.elic.xml");
+        //实例化Document类的对象
+        //  com.spire.doc.Document doc = new com.spire.doc.Document();
+        //加载Word
+        //   doc.loadFromFile(inputPath);
+        //保存为PDF格式
+        //   doc.saveToFile(outputPath, FileFormat.PDF);
+    }
+
     /**
      * doc 转为 pdf
      *
@@ -111,10 +179,10 @@ public class OfficeUtils {
      * @throws IOException
      * @throws DocumentException
      */
-    public static void docToPdf(String inputPath, String outputPath) throws IOException, DocumentException, ParserConfigurationException, TransformerException {
+    public static void docToPdf(String inputPath, String outputPath, Rectangle pageSize) throws IOException, DocumentException, ParserConfigurationException, TransformerException {
         String html = docToHtml(inputPath);
         html = formatHtml(html);
-        htmlToPdf(html, outputPath);
+        htmlToPdf(html, outputPath, pageSize);
     }
 
     /**
@@ -188,9 +256,9 @@ public class OfficeUtils {
      * @throws DocumentException
      * @throws IOException
      */
-    public static void htmlToPdf(String html, String outputPath) throws DocumentException, IOException {
+    public static void htmlToPdf(String html, String outputPath, Rectangle pageSize) throws DocumentException, IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        Document document = new com.itextpdf.text.Document(PageSize.A4);
+        Document document = new com.itextpdf.text.Document(pageSize);
         PdfWriter writer = PdfWriter.getInstance(document, baos);
         document.open();
         ByteArrayInputStream bais = new ByteArrayInputStream(html.getBytes());

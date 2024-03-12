@@ -62,7 +62,7 @@ public class DownloadController extends BaseController {
                 String ext = name.substring(name.lastIndexOf("."));
                 name = Strings.isNotBlank(name) ? name.replace(ext, ".pdf") : null;
                 String outputPath = uploadService.getSavePath(ROOT_DIRECTORY, "word-to-pdf.pdf", true);
-                OfficeUtils.wordToPdf(file.getAbsolutePath(), outputPath, ext);
+                OfficeUtils.toPdf(file.getAbsolutePath(), outputPath, ext);
                 File pFile = new File(outputPath);
                 file = pFile.exists() ? pFile : null;
             }
