@@ -138,4 +138,19 @@ public class ExportTemplateController extends BaseController {
 
         return result;
     }
+
+    @RequestMapping(value = "/generateFile/{id}", method = RequestMethod.POST)
+    @ResponseBody
+    public ApiResult generateFile(@PathVariable(required = true) String id, @RequestBody Map<String, Object> params) {
+        ApiResult result = new ApiResult();
+        try {
+            String fileType = (String) params.get("fileType");
+            result = exportTemplateService.generateFile(id, fileType);
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            result.error().setMsg(ApiErrorMsg.OPERATE_FAIL);
+        }
+
+        return result;
+    }
 }
