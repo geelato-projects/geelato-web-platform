@@ -5,17 +5,12 @@ import com.alibaba.fastjson2.JSONObject;
 import com.itextpdf.text.Meta;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
-import netscape.javascript.JSObject;
-import okio.FileMetadata;
-import org.bouncycastle.cms.PasswordRecipientId;
+import jakarta.validation.constraints.NotNull;
+
 import org.geelato.core.Ctx;
-import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
-import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.constants.ApiResultCode;
 import org.geelato.core.constants.MediaTypes;
-import org.geelato.core.gql.GqlManager;
-import org.geelato.core.gql.execute.BoundPageSql;
 import org.geelato.core.gql.execute.BoundSql;
 import org.geelato.core.gql.parser.JsonTextSaveParser;
 import org.geelato.core.gql.parser.QueryCommand;
@@ -42,26 +37,18 @@ import org.geelato.web.platform.m.syspackage.entity.AppVersion;
 import org.geelato.web.platform.m.syspackage.service.AppVersionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.jdbc.core.JdbcTemplate;
+
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.w3c.dom.stylesheets.LinkStyle;
 
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
-import java.util.zip.ZipInputStream;
-import java.util.zip.ZipOutputStream;
 
 @Controller
 @RequestMapping(value = "/package")
@@ -88,21 +75,27 @@ public class PackageController extends BaseController {
      */
     @RequestMapping(value = {"/packet/{appId}"}, method = RequestMethod.GET, produces = MediaTypes.JSON_UTF_8)
     @ResponseBody
-    public ApiResult packetApp(@PathVariable("appId") String appId,String version,String description) throws IOException {
+    public ApiResult packetApp(@NotNull @PathVariable("appId") String appId, String version, String description) throws IOException {
         ApiResult apiResult=new ApiResult();
         Map<String,String> appMetaMap=appMetaMap(appId,"package");
         AppPackage appPackage=new AppPackage();
-        appPackage.setSourceAppId(appId);
+
         List<AppMeta> appMetaList=new ArrayList<>();
         for (String key : appMetaMap.keySet()) {
             String value = appMetaMap.get(key);
             List<Map<String, Object>> metaData= dao.getJdbcTemplate().queryForList(value);
             if(key.equals("platform_app")&& !metaData.isEmpty()) {
                 appPackage.setAppCode(metaData.get(0).get("code").toString());
+                appPackage.setSourceAppId(appId);
             }else{
                 AppMeta appMeta=new AppMeta(key,metaData);
                 appMetaList.add(appMeta);
             }
+        }
+        if(StringUtils.isEmpty(appPackage.getAppCode())){
+            apiResult.setCode(ApiResultCode.ERROR);
+            apiResult.setMsg("找不到可打包的应用");
+            return apiResult;
         }
         appPackage.setAppMetaList(appMetaList);
         String filePath=writePackageData(appPackage);

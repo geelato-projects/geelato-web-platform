@@ -72,7 +72,7 @@ public class RolePermissionMap extends BaseEntity {
     }
 
     @Title(title = "权限名称")
-    @Col(name = "permission_name", isRefColumn = true, refLocalCol = "permission_id", refColName = "platform_permission.name")
+    @Col(name = "permission_name")
     public String getPermissionName() {
         return permissionName;
     }
