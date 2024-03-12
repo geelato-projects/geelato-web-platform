@@ -340,7 +340,7 @@ public class ExcelXSSFWriter {
         return map;
     }
 
-    private boolean validatePlaceholderMeta(PlaceholderMeta placeholderMeta) {
+    public boolean validatePlaceholderMeta(PlaceholderMeta placeholderMeta) {
         // TODO
         return true;
     }

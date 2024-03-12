@@ -68,11 +68,11 @@ public class ExcelWriter {
                     }
                     listIndex++;
                 }
-            }else if (rowMeta.isDeleteGroupRow()) {
+            } else if (rowMeta.isDeleteGroupRow()) {
                 sheet.shiftRows(rowIndex + 1, lastRowIndex, -1, true, false);
                 rowIndex -= 1;
                 lastRowIndex -= 1;
-            }  else {
+            } else {
                 newRowCount = setRowValue(sheet, rowIndex, rowMeta, valueMap);
                 // 完成列表的设置后，若创建了新行，则需要同步设置整个sheet当前的row索引值、最后一行的索引值
                 rowIndex += newRowCount;
@@ -374,7 +374,7 @@ public class ExcelWriter {
         return map;
     }
 
-    private boolean validatePlaceholderMeta(PlaceholderMeta placeholderMeta) {
+    public boolean validatePlaceholderMeta(PlaceholderMeta placeholderMeta) {
         // TODO
         return true;
     }
