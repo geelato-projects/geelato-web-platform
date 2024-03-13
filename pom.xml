@@ -214,11 +214,6 @@
             <artifactId>dingtalk</artifactId>
             <version>${dingtalk.sdk.version}</version>
         </dependency>
-        <dependency>
-            <groupId>com.aspose</groupId>
-            <artifactId>aspose-words</artifactId>
-            <version>22.5</version>
-        </dependency>
 
 
     </dependencies>
@@ -243,5 +238,4 @@
             </plugin>
         </plugins>
     </build>
-
 </project>
