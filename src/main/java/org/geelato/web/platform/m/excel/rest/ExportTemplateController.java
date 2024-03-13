@@ -1,5 +1,6 @@
 package org.geelato.web.platform.m.excel.rest;
 
+import com.alibaba.fastjson2.JSON;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.api.ApiPagedResult;
@@ -16,10 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author diabl
@@ -100,17 +98,21 @@ public class ExportTemplateController extends BaseController {
     public ApiResult createOrUpdate(@RequestBody ExportTemplate form) {
         ApiResult result = new ApiResult();
         try {
+            Map<String, Object> extMap = new HashMap<>();
             // ID为空方可插入
             if (Strings.isNotBlank(form.getId())) {
                 // 存在，方可更新
                 if (exportTemplateService.isExist(ExportTemplate.class, form.getId())) {
-                    result.setData(exportTemplateService.updateModel(form));
+                    extMap = exportTemplateService.updateModel(form);
                 } else {
                     result.error().setMsg(ApiErrorMsg.IS_NULL);
                 }
             } else {
-                result.setData(exportTemplateService.createModel(form));
+                extMap = exportTemplateService.createModel(form);
             }
+            ExportTemplate model = JSON.parseObject(JSON.toJSONString(extMap), ExportTemplate.class);
+            exportTemplateService.generateFile(model.getId(), "template");
+            result.setData(model);
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.OPERATE_FAIL);

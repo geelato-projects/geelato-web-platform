@@ -29,6 +29,8 @@ public class BusinessTypeRuleData {
     // 执行次序
     private Integer order;
 
+    private String remark;
+
     public String getColumnName() {
         return columnName;
     }
@@ -83,6 +85,14 @@ public class BusinessTypeRuleData {
 
     public void setOrder(Integer order) {
         this.order = order;
+    }
+
+    public String getRemark() {
+        return remark;
+    }
+
+    public void setRemark(String remark) {
+        this.remark = remark;
     }
 
     public boolean isRuleTypeDeletes() {
