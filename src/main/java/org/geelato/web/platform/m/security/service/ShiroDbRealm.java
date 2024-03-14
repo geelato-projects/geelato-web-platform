@@ -28,7 +28,6 @@ import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.util.ByteSource;
 import org.geelato.core.orm.Dao;
 import org.geelato.utils.Encodes;
-import org.geelato.web.platform.common.SqlIdConstants;
 import org.geelato.web.platform.m.security.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -46,7 +45,8 @@ public class ShiroDbRealm extends AuthorizingRealm {
     @Autowired
     @Qualifier("primaryDao")
     protected Dao dao;
-
+    private final static String SECURITY_USER_PERMISSION_STRING_LIST="security_user_permission_string_list";
+    private final static String SECURITY_USER_ROLE_CODE_LIST="security_user_role_code_list";
     /**
      * 认证回调函数,登录时调用.
      */
@@ -75,8 +75,8 @@ public class ShiroDbRealm extends AuthorizingRealm {
         ShiroUser shiroUser = (ShiroUser) principals.getPrimaryPrincipal();
         Map params = new HashMap(1);
         params.put("loginName", shiroUser.loginName);
-        List<String> permissionTexts = dao.queryForOneColumnList(SqlIdConstants.SECURITY_USER_PERMISSION_STRING_LIST, params, String.class);
-        List<String> roles = dao.queryForOneColumnList(SqlIdConstants.SECURITY_USER_ROLE_CODE_LIST, params, String.class);
+        List<String> permissionTexts = dao.queryForOneColumnList(SECURITY_USER_PERMISSION_STRING_LIST, params, String.class);
+        List<String> roles = dao.queryForOneColumnList(SECURITY_USER_ROLE_CODE_LIST, params, String.class);
         SimpleAuthorizationInfo info = new SimpleAuthorizationInfo();
         info.addStringPermissions(permissionTexts);
         info.addRoles(roles);

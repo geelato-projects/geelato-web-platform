@@ -35,11 +35,7 @@ import java.util.Random;
 @Component
 @Controller
 @RequestMapping(value = "/api/file/")
-public class FileController extends BaseController implements InitializingBean {
-
-
-    @Autowired
-    protected RuleService ruleService;
+public class FileController extends BaseController {
 
     @Value(value = "${geelato.file.root.path}")
     protected String fileRootPath;
@@ -103,8 +99,4 @@ public class FileController extends BaseController implements InitializingBean {
         out.close();
     }
 
-    @Override
-    public void afterPropertiesSet() throws Exception {
-        ruleService.setDao(dao);
-    }
 }

@@ -29,7 +29,7 @@ import java.util.Map;
  */
 @Controller
 @RequestMapping(value = "/api/meta/ddl/")
-public class MetaDdlController extends BaseController implements InitializingBean {
+public class MetaDdlController extends BaseController {
 
     @Autowired
     protected DbGenerateDao dbGenerateDao;
@@ -123,8 +123,4 @@ public class MetaDdlController extends BaseController implements InitializingBea
         return result;
     }
 
-    @Override
-    public void afterPropertiesSet() throws Exception {
-        dbGenerateDao.setDao(dao);
-    }
 }

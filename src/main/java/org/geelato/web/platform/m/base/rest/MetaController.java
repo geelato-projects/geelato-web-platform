@@ -36,14 +36,11 @@ import java.io.IOException;
 @RequestMapping(value = "/api/meta/")
 public class MetaController extends BaseController implements InitializingBean {
 
-    private MetaManager metaManager = MetaManager.singleInstance();
+    private final MetaManager metaManager = MetaManager.singleInstance();
 
-    private static Logger logger = LoggerFactory.getLogger(MetaController.class);
+    private static final Logger logger = LoggerFactory.getLogger(MetaController.class);
 
-    /**
-     * @param request
-     * @return
-     */
+
     @RequestMapping(value = {"list", "list/*"}, method = {RequestMethod.POST, RequestMethod.GET}, produces = MediaTypes.JSON_UTF_8)
     @ResponseBody
     public ApiPagedResult list(@RequestParam(value = "withMeta", defaultValue = "true") boolean withMeta, HttpServletRequest request) {
@@ -55,8 +52,6 @@ public class MetaController extends BaseController implements InitializingBean {
     /**
      * 多列表查询，一次查询返回多个列表
      *
-     * @param request
-     * @return
      */
     @RequestMapping(value = {"multiList", "multiList/*"}, method = RequestMethod.POST, produces = MediaTypes.JSON_UTF_8)
     @ResponseBody
@@ -116,7 +111,6 @@ public class MetaController extends BaseController implements InitializingBean {
      * 获取数据定义信息，即元数据信息
      *
      * @param entityOrQueryKey 实体名称或查询键
-     * @return
      */
     @RequestMapping(value = {"defined/{entityOrQueryKey}"}, method = {RequestMethod.POST, RequestMethod.GET}, produces = MediaTypes.JSON_UTF_8)
     @ResponseBody
@@ -161,7 +155,6 @@ public class MetaController extends BaseController implements InitializingBean {
 
     /**
      * 获取通用树数据（platform_tree_node）
-     * e.g.:http://localhost:8080/api/meta/tree/
      *
      * @param biz     业务代码
      * @param request HttpServletRequest
@@ -192,17 +185,9 @@ public class MetaController extends BaseController implements InitializingBean {
         }
         return stringBuilder.toString();
     }
-
-    @Override
-    public void afterPropertiesSet() throws Exception {
-        ruleService.setDao(dao);
-    }
-
     /**
      * 唯一性校验
      *
-     * @param request
-     * @return
      */
     @RequestMapping(value = {"uniqueness"}, method = {RequestMethod.POST, RequestMethod.GET}, produces = MediaTypes.JSON_UTF_8)
     @ResponseBody
@@ -225,4 +210,5 @@ public class MetaController extends BaseController implements InitializingBean {
         result.setData(page.getTotal() == 0);
         return result;
     }
+
 }
