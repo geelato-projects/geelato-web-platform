@@ -24,6 +24,7 @@ public class SysConfig extends BaseSortableEntity implements EntityEnableAble {
     private String configAssist;
     private int enableStatus = ColumnDefault.ENABLE_STATUS_VALUE;
     private String remark;
+    private String purpose;
 
     @Col(name = "app_id")
     @Title(title = "应用ID")
@@ -100,6 +101,16 @@ public class SysConfig extends BaseSortableEntity implements EntityEnableAble {
     @Override
     public int getEnableStatus() {
         return enableStatus;
+    }
+
+    @Col(name = "purpose")
+    @Title(title = "目的，应用范围")
+    public String getPurpose() {
+        return purpose;
+    }
+
+    public void setPurpose(String purpose) {
+        this.purpose = purpose;
     }
 
     /**
