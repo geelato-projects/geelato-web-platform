@@ -18,8 +18,8 @@ import java.util.Map;
 @Component
 public class AliMobileService {
     private final Logger logger = LoggerFactory.getLogger(AliMobileService.class);
-    private static final String SIGN_NAME = "阿里云短信测试";
-    private static final String TEMPLATE_CODE = "SMS_154950909";
+    private static final String SIGN_NAME = "深圳海桥物流";// 阿里云短信测试
+    private static final String TEMPLATE_CODE = "SMS_465430460";// SMS_154950909
     private static final int SEND_SMS_RESPONSE_STATUS_CODE = 200;
     private static final String SEND_SMS_RESPONSE_BODY_CODE = "OK";
 
