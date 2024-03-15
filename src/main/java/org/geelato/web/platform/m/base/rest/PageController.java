@@ -27,23 +27,6 @@ import java.util.Map;
 public class PageController extends BaseController {
     private static final Logger logger = LoggerFactory.getLogger(PageController.class);
 
-//    @RequestMapping(value = {"{pageCode}", "{pageCode}/*"}, method = RequestMethod.POST, produces = MediaTypes.JSON_UTF_8)
-//    @ResponseBody
-//    public ApiMetaResult pageConfig(@PathVariable String pageCode) {
-//        ApiMetaResult apiMetaResult = new ApiMetaResult();
-//        try {
-//            apiMetaResult.setData(dao.queryForObject(AppPage.class, "code", pageCode));
-//            if (apiMetaResult.getData() == null) {
-//                apiMetaResult.error();
-//                apiMetaResult.setMsg("未能获取到pageCode(" + pageCode + ")对应配置信息。");
-//            }
-//        } catch (Exception e) {
-//            apiMetaResult.error();
-//            apiMetaResult.setMsg("未能获取到pageCode(" + pageCode + ")对应配置信息。");
-//            logger.error("pageCode：" + pageCode, e);
-//        }
-//        return apiMetaResult;
-//    }
 
 
     /**

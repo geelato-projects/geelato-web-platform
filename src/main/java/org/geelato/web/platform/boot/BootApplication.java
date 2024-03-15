@@ -30,7 +30,7 @@ import java.util.Properties;
 //@SpringBootApplication
 @ComponentScan(basePackages = {"org.geelato"})
 public class BootApplication implements CommandLineRunner, InitializingBean {
-    private static Logger logger = LoggerFactory.getLogger(BootApplication.class);
+    private static final Logger logger = LoggerFactory.getLogger(BootApplication.class);
     @Autowired
     protected ApplicationContext applicationContext;
 
@@ -68,7 +68,6 @@ public class BootApplication implements CommandLineRunner, InitializingBean {
 
     /**
      * @param args 每一个参数
-     * @throws Exception
      */
     @Override
     public void run(String... args) throws Exception {
@@ -125,7 +124,6 @@ public class BootApplication implements CommandLineRunner, InitializingBean {
     /**
      * 配置文件不打包在jar包中运行，可基于文件系统加载配置文件
      *
-     * @throws IOException
      */
     protected void initFromExploreFile(String... args) throws IOException {
         //String path =applicationContext.getEnvironment().getProperty("geelato.res.path").trim();
@@ -163,7 +161,6 @@ public class BootApplication implements CommandLineRunner, InitializingBean {
     /**
      * 打包成单个fatJar文件运行时，加载的资源不能采用文件系统加载，需采用流的方式加载
      *
-     * @throws IOException
      */
     protected void initFromFatJar(String... args) throws IOException {
         //--1、sql

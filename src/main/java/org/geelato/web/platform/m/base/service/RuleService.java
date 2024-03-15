@@ -1,5 +1,6 @@
 package org.geelato.web.platform.m.base.service;
 
+import jakarta.annotation.Resource;
 import net.oschina.j2cache.CacheChannel;
 import net.oschina.j2cache.J2Cache;
 import org.apache.commons.collections.map.HashedMap;
@@ -49,13 +50,13 @@ public class RuleService {
     @Autowired
     @Qualifier("primaryDao")
     private Dao dao;
-    private GqlManager gqlManager = GqlManager.singleInstance();
-    private SqlManager sqlManager = SqlManager.singleInstance();
-    private MetaManager metaManager = MetaManager.singleInstance();
-    private BizMvelRuleManager bizMvelRuleManager = BizManagerFactory.getBizMvelRuleManager("mvelRule");
-    private RulesEngine rulesEngine = new DefaultRulesEngine();
+    private final GqlManager gqlManager = GqlManager.singleInstance();
+    private final SqlManager sqlManager = SqlManager.singleInstance();
+    private final MetaManager metaManager = MetaManager.singleInstance();
+    private final BizMvelRuleManager bizMvelRuleManager = BizManagerFactory.getBizMvelRuleManager("mvelRule");
+    private final RulesEngine rulesEngine = new DefaultRulesEngine();
     private final static String VARS_PARENT = "$parent";
-    private CacheChannel cache = J2Cache.getChannel();
+    private final CacheChannel cache = J2Cache.getChannel();
     private static final Logger logger = LoggerFactory.getLogger(RuleService.class);
     /**
      * <p>注意: 在使用之前，需先设置dao
@@ -92,8 +93,6 @@ public class RuleService {
 
     /**
      * @param entity 与platform_tree_node 关联的业务实体带有tree_node_id字段
-     * @param treeId
-     * @return
      */
     public ApiResult<List<Map>> queryForTreeNodeList(String entity, Long treeId) {
         ApiResult<List<Map>> result = new ApiResult<List<Map>>();
@@ -112,8 +111,6 @@ public class RuleService {
 
     /**
      * @param entity 与platform_tree_node 关联的业务实体带有tree_node_id字段
-     * @param treeId
-     * @return
      */
     public ApiResult queryForTree(String entity, long treeId, String childrenKey) {
         ApiResult<List<Map>> result = queryForTreeNodeList(entity, treeId);

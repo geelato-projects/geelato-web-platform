@@ -26,15 +26,10 @@ public class ListService {
         Map<String, Map<String, Double>> newGroupList = new HashMap<>();
         for (Map map : list) {
             if (!map.containsKey(groupByField)) {
-                // 过滤无效的数据，如map的value都为空
                 continue;
             }
             String groupName = map.get(groupByField).toString();
-            Map<String, Double> groupMap = newGroupList.get(groupName);
-            if (groupMap == null) {
-                groupMap = new HashMap();
-                newGroupList.put(groupName, groupMap);
-            }
+            Map<String, Double> groupMap = newGroupList.computeIfAbsent(groupName, k -> new HashMap());
             for (String sumField : fields) {
                 double sumFieldValue = Double.parseDouble(map.getOrDefault(sumField, "0").toString());
                 sumFieldValue += groupMap.getOrDefault(sumField, 0.0);

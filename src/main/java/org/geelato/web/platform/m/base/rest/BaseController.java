@@ -1,5 +1,6 @@
 package org.geelato.web.platform.m.base.rest;
 
+import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
@@ -7,6 +8,7 @@ import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.gql.parser.FilterGroup;
 import org.geelato.core.orm.Dao;
 import org.geelato.web.platform.m.base.service.RuleService;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -22,14 +24,11 @@ import java.util.*;
  * @author geemeta
  */
 @ControllerAdvice
-public class BaseController {
+public class BaseController implements InitializingBean  {
     @Autowired
     @Qualifier("primaryDao")
     protected Dao dao;
 
-    @Autowired
-    @Qualifier("secondaryDao")
-    protected Dao dao2;
     @Autowired
     protected RuleService ruleService;
     /**
@@ -43,8 +42,6 @@ public class BaseController {
      * 在每个子类方法调用之前先调用
      * 设置request,response,session这三个对象
      *
-     * @param request
-     * @param response
      */
     @ModelAttribute
     public void setReqAndRes(HttpServletRequest request, HttpServletResponse response) {
@@ -62,7 +59,7 @@ public class BaseController {
             if (values.size() == 1) {
                 queryParamsMap.put(entry.getKey(), values.get(0));
             } else {
-                queryParamsMap.put(entry.getKey(), values.toArray(new String[values.size()]));
+                queryParamsMap.put(entry.getKey(), values.toArray(new String[0]));
             }
         }
 
@@ -73,7 +70,7 @@ public class BaseController {
         Map<String, Object> queryParamsMap = new LinkedHashMap<>();
         for (Map.Entry<String, String[]> entry : request.getParameterMap().entrySet()) {
             Set<String> fieldNames = getClassFieldNames(elementType);
-            if (fieldNames == null || fieldNames.contains(entry.getKey())) {
+            if (fieldNames.contains(entry.getKey())) {
                 List<String> values = List.of(entry.getValue());
                 if (values.size() == 1) {
                     queryParamsMap.put(entry.getKey(), values.get(0));
@@ -110,10 +107,6 @@ public class BaseController {
     /**
      * 构建查询条件
      *
-     * @param params
-     * @param operatorMap
-     * @return
-     * @throws ParseException
      */
     public FilterGroup getFilterGroup(Map<String, Object> params, Map<String, List<String>> operatorMap) throws ParseException {
         FilterGroup filterGroup = new FilterGroup();
@@ -151,5 +144,11 @@ public class BaseController {
         }
 
         return filterGroup;
+    }
+
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        ruleService.setDao(dao);
     }
 }
