@@ -74,20 +74,28 @@ public class PlaceholderMeta {
         this.valueComputeMode = valueComputeMode;
     }
 
-    public boolean isList() {
+    public boolean isIsList() {
         return isList;
     }
 
-    public void setList(boolean list) {
-        isList = list;
+    public void setIsList(boolean isList) {
+        this.isList = isList;
     }
 
-    public boolean isMerge() {
+    public boolean isIsMerge() {
         return isMerge;
     }
 
-    public void setMerge(boolean merge) {
-        isMerge = merge;
+    public void setIsMerge(boolean isMerge) {
+        this.isMerge = isMerge;
+    }
+
+    public boolean isIsImage() {
+        return isImage;
+    }
+
+    public void setIsImage(boolean isImage) {
+        this.isImage = isImage;
     }
 
     public String getDescription() {
@@ -136,14 +144,6 @@ public class PlaceholderMeta {
 
     public boolean isValueTypeDateTime() {
         return "DATETIME".equalsIgnoreCase(this.valueType);
-    }
-
-    public boolean isImage() {
-        return isImage;
-    }
-
-    public void setImage(boolean image) {
-        isImage = image;
     }
 
     public Double getImageWidth() {

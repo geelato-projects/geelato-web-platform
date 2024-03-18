@@ -115,7 +115,7 @@ public class ExcelXSSFWriter {
                         logger.info("通过cellValue:" + cellValue + "获到不到元数据。");
                         continue;
                     }
-                    if (meta.isList()) {
+                    if (meta.isIsList()) {
                         if (!StringUtils.isEmpty(meta.getListVar())) {
                             List<CellMeta> cellMetaList = listCellMetaMap.get(meta.getListVar());
                             if (cellMetaList == null) {
@@ -204,7 +204,7 @@ public class ExcelXSSFWriter {
             for (String key : rowMeta.getListCellMetaMap().keySet()) {
                 List<CellMeta> cellMetaList = rowMeta.getListCellMetaMap().get(key);
                 for (CellMeta cellMeta : cellMetaList) {
-                    if (cellMeta.getPlaceholderMeta().isMerge()) {
+                    if (cellMeta.getPlaceholderMeta().isIsMerge()) {
                         CellRangeAddress region = new CellRangeAddress(rowIndex, rowIndex + newRowCount, cellMeta.getIndex(), cellMeta.getIndex());
                         // CellRangeAddress region  = new CellRangeAddress("A1:E10");
                         sheet.addMergedRegion(region);
@@ -229,7 +229,7 @@ public class ExcelXSSFWriter {
     private void setCellValue(XSSFCell cell, PlaceholderMeta meta, Map valueMap, Map listValueMap) {
         // 不是列表，且是变更
         if (meta.isValueComputeModeVar()) {
-            if (meta.isList()) {
+            if (meta.isIsList()) {
                 Object v = listValueMap.get(meta.getVar());
                 setCellValueByValueType(cell, meta, v);
             } else {
@@ -327,9 +327,9 @@ public class ExcelXSSFWriter {
             placeholderMeta.setExpression(row.getCell(4).getStringCellValue());
             placeholderMeta.setValueType(row.getCell(5).getStringCellValue());
             placeholderMeta.setValueComputeMode(row.getCell(6).getStringCellValue());
-            placeholderMeta.setList(getBoolean(row.getCell(7)));
-            placeholderMeta.setMerge(getBoolean(row.getCell(8)));
-            placeholderMeta.setImage(getBoolean(row.getCell(9)));
+            placeholderMeta.setIsList(getBoolean(row.getCell(7)));
+            placeholderMeta.setIsMerge(getBoolean(row.getCell(8)));
+            placeholderMeta.setIsImage(getBoolean(row.getCell(9)));
             placeholderMeta.setImageWidth(row.getCell(10).getNumericCellValue());
             placeholderMeta.setImageHeight(row.getCell(11).getNumericCellValue());
             placeholderMeta.setDescription(row.getCell(12).getStringCellValue());
