@@ -83,6 +83,34 @@ public class ExcelXSSFWriter {
         }
     }
 
+    /**
+     * 按一组值valueMap写入sheet
+     *
+     * @param sheet
+     * @param placeholderMetaMap
+     * @param valueMap
+     */
+    public void writeSheet(XSSFSheet sheet, Map<String, PlaceholderMeta> placeholderMetaMap, Map valueMap) {
+        System.out.println("writeData:" + sheet.getSheetName());
+        int lastRowIndex = sheet.getLastRowNum();
+        for (int rowIndex = 0; rowIndex <= lastRowIndex; rowIndex++) {
+            // 按行扫描处理
+            XSSFRow row = sheet.getRow(rowIndex);
+            if (row == null) {
+                break;
+            }
+
+            RowMeta rowMeta = parseTemplateRow(row, placeholderMetaMap);
+            logger.info("完成第" + rowIndex + "行的元数据解析。");
+
+            int newRowCount = setRowValue(sheet, rowIndex, rowMeta, valueMap);
+            // 完成列表的设置后，若创建了新行，则需要同步设置整个sheet当前的row索引值、最后一行的索引值
+            rowIndex += newRowCount;
+            lastRowIndex += newRowCount;
+        }
+    }
+
+
     private RowMeta parseTemplateRow(XSSFRow row, Map<String, PlaceholderMeta> placeholderMetaMap) {
         RowMeta rowMeta = new RowMeta();
         // 将列表与非列表cellMeta分组，存在不同的ArrayList中
@@ -241,7 +269,7 @@ public class ExcelXSSFWriter {
         } else if (meta.isValueComputeModeConst()) {
             setCellValueByValueType(cell, meta, meta.getConstValue());
         } else if (meta.isValueComputeModeExpression()) {
-            Object v = JsProvider.executeExpression(meta.getExpression(), valueMap);
+            Object v = JsProvider.executeExpression(meta.getExpression(), meta.isIsList() ? listValueMap : valueMap);
             setCellValueByValueType(cell, meta, v);
         }
     }

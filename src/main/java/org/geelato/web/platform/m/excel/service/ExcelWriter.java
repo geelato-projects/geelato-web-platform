@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.Pattern;
@@ -201,15 +202,7 @@ public class ExcelWriter {
         int newRowCount = 0;
         while (newRowCount < listMaxRowCount - 1) {
             newRowCount++;
-            HSSFRow newRow = createRowWithPreRowStyle(sheet, rowIndex + newRowCount);
-//            newRow.setHeight(row.getHeight());
-//            for (int cellIndex = 0; cellIndex < row.getLastCellNum(); cellIndex++) {
-//                HSSFCell templateCell = row.getCell(cellIndex);
-//                // 这里里要createCell，否则getCell返回空值
-//                HSSFCell newCell = newRow.createCell(cellIndex);
-//                newCell.setCellStyle(templateCell.getCellStyle());
-//            }
-            // lastRowIndex++;
+            createRowWithPreRowStyle(sheet, rowIndex + newRowCount);
         }
 
         // ----2.2 为模板行及动态创建的行设置值
@@ -275,7 +268,7 @@ public class ExcelWriter {
         } else if (meta.isValueComputeModeConst()) {
             setCellValueByValueType(cell, meta, meta.getConstValue());
         } else if (meta.isValueComputeModeExpression()) {
-            Object v = JsProvider.executeExpression(meta.getExpression(), valueMap);
+            Object v = JsProvider.executeExpression(meta.getExpression(), meta.isIsList() ? listValueMap : valueMap);
             setCellValueByValueType(cell, meta, v);
         }
     }
@@ -286,7 +279,7 @@ public class ExcelWriter {
                 if (value.toString().indexOf(".") == -1) {
                     cell.setCellValue(Long.parseLong(value.toString()));
                 } else {
-                    cell.setCellValue(Float.parseFloat(value.toString()));
+                    cell.setCellValue(new BigDecimal(value.toString()).doubleValue());
                 }
             } else if (meta.isValueTypeDate()) {
                 // value 应为时间戳
