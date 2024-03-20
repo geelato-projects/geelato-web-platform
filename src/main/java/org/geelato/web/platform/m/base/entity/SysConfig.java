@@ -1,6 +1,6 @@
 package org.geelato.web.platform.m.base.entity;
 
-import org.geelato.core.constants.ColumnDefault;
+import org.geelato.core.enums.EnableStatusEnum;
 import org.geelato.core.meta.annotation.Col;
 import org.geelato.core.meta.annotation.Entity;
 import org.geelato.core.meta.annotation.Title;
@@ -22,9 +22,10 @@ public class SysConfig extends BaseSortableEntity implements EntityEnableAble {
     private String valueType;
     private String configValue;
     private String configAssist;
-    private int enableStatus = ColumnDefault.ENABLE_STATUS_VALUE;
+    private int enableStatus = EnableStatusEnum.ENABLED.getCode();
     private String remark;
     private String purpose;
+    private boolean encrypted = false;
 
     @Col(name = "app_id")
     @Title(title = "应用ID")
@@ -111,6 +112,16 @@ public class SysConfig extends BaseSortableEntity implements EntityEnableAble {
 
     public void setPurpose(String purpose) {
         this.purpose = purpose;
+    }
+
+    @Col(name = "encrypted")
+    @Title(title = "是否加密")
+    public boolean isEncrypted() {
+        return encrypted;
+    }
+
+    public void setEncrypted(boolean encrypted) {
+        this.encrypted = encrypted;
     }
 
     /**
