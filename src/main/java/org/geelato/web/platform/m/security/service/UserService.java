@@ -2,6 +2,7 @@ package org.geelato.web.platform.m.security.service;
 
 import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.enums.DeleteStatusEnum;
+import org.geelato.core.enums.EnableStatusEnum;
 import org.geelato.web.platform.enums.IsDefaultOrgEnum;
 import org.geelato.web.platform.m.base.service.BaseSortableService;
 import org.geelato.web.platform.m.security.entity.OrgUserMap;
@@ -34,6 +35,7 @@ public class UserService extends BaseSortableService {
      */
     public void isDeleteModel(User model) {
         // 用户删除
+        model.setEnableStatus(EnableStatusEnum.DISABLED.getCode());
         super.isDeleteModel(model);
         // 清理 组织用户表
         Map<String, Object> params = new HashMap<>();
