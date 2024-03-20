@@ -25,6 +25,7 @@ public class LoginResult {
     private String description;
     private String tenantCode;
     private String cooperatingOrgId;
+    private int enableStatus;
 
     private String token;
     private String homePath;
@@ -198,6 +199,14 @@ public class LoginResult {
         this.cooperatingOrgId = cooperatingOrgId;
     }
 
+    public int getEnableStatus() {
+        return enableStatus;
+    }
+
+    public void setEnableStatus(int enableStatus) {
+        this.enableStatus = enableStatus;
+    }
+
     /**
      * 对象转换
      *
@@ -224,6 +233,7 @@ public class LoginResult {
         loginResult.setDescription(user.getDescription());
         loginResult.setTenantCode(user.getTenantCode());
         loginResult.setCooperatingOrgId(user.getCooperatingOrgId());
+        loginResult.setEnableStatus(user.getEnableStatus());
 
         return loginResult;
     }

@@ -1,18 +1,20 @@
 package org.geelato.web.platform.m.security.entity;
 
 
+import org.geelato.core.enums.EnableStatusEnum;
 import org.geelato.core.meta.annotation.Col;
 import org.geelato.core.meta.annotation.Entity;
 import org.geelato.core.meta.annotation.Title;
 import org.geelato.core.meta.annotation.Transient;
 import org.geelato.core.meta.model.entity.BaseSortableEntity;
+import org.geelato.core.meta.model.entity.EntityEnableAble;
 
 /**
  * @author geelato
  */
 @Entity(name = "platform_user")
 @Title(title = "用户")
-public class User extends BaseSortableEntity {
+public class User extends BaseSortableEntity implements EntityEnableAble {
     private String name;
     private String enName;
     private String loginName;
@@ -37,6 +39,7 @@ public class User extends BaseSortableEntity {
     private String orgName;
     private String jobNumber;
     private String cooperatingOrgId;
+    private int enableStatus = EnableStatusEnum.ENABLED.getCode();
 
     public User() {
     }
@@ -285,5 +288,17 @@ public class User extends BaseSortableEntity {
 
     public void setCooperatingOrgId(String cooperatingOrgId) {
         this.cooperatingOrgId = cooperatingOrgId;
+    }
+
+    @Title(title = "启用状态", description = "1表示启用、0表示未启用")
+    @Col(name = "enable_status", nullable = false, dataType = "tinyint", numericPrecision = 1)
+    @Override
+    public int getEnableStatus() {
+        return this.enableStatus;
+    }
+
+    @Override
+    public void setEnableStatus(int enableStatus) {
+        this.enableStatus = enableStatus;
     }
 }
