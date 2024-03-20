@@ -1,11 +1,13 @@
 package org.geelato.web.platform.m.excel.entity;
 
+import com.aspose.words.FontSettings;
 import com.aspose.words.PdfSaveOptions;
 import com.itextpdf.text.Document;
 import com.itextpdf.text.*;
 import com.itextpdf.text.pdf.BaseFont;
 import com.itextpdf.text.pdf.PdfWriter;
 import com.itextpdf.tool.xml.XMLWorkerHelper;
+import org.apache.commons.lang3.SystemUtils;
 import org.apache.logging.log4j.util.Strings;
 import org.apache.poi.hwpf.HWPFDocument;
 import org.apache.poi.hwpf.converter.PicturesManager;
@@ -42,6 +44,7 @@ public class OfficeUtils {
     private static final String CHINA_FONT_RESOURCE = "geelato/fonts/simfang.ttf";
     private static final String WORD_DOCX_CONTENT_TYPE = ".DOCX";
     private static final String WORD_DOC_CONTENT_TYPE = ".DOC";
+    public static final String OS_UNIX_FONT_FOLDER = "/usr/share/fonts";
 
     public static void toPdf(String officePath, String pdfPath, String contentType) throws Exception {
         if (WORD_DOCX_CONTENT_TYPE.equalsIgnoreCase(contentType)) {
@@ -157,6 +160,9 @@ public class OfficeUtils {
 
     public static void asposeToPdf(String inputPath, String outputPath) throws Exception {
         com.aspose.words.Document wordDoc = new com.aspose.words.Document(inputPath);
+        if (SystemUtils.IS_OS_UNIX || SystemUtils.IS_OS_LINUX) {
+            FontSettings.getDefaultInstance().setFontsFolder(OS_UNIX_FONT_FOLDER, true);
+        }
         PdfSaveOptions pso = new PdfSaveOptions();
         wordDoc.save(outputPath, pso);
     }

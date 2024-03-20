@@ -389,9 +389,9 @@ public class ExportTemplateService extends BaseService {
             setCell(dRow, 4, cellStyle, metas.get(i).getExpression());
             setCell(dRow, 5, cellStyle, metas.get(i).getValueType());
             setCell(dRow, 6, cellStyle, metas.get(i).getValueComputeMode());
-            setCell(dRow, 7, cellStyle, metas.get(i).isList());
-            setCell(dRow, 8, cellStyle, metas.get(i).isMerge());
-            setCell(dRow, 9, cellStyle, metas.get(i).isImage());
+            setCell(dRow, 7, cellStyle, metas.get(i).isIsList());
+            setCell(dRow, 8, cellStyle, metas.get(i).isIsMerge());
+            setCell(dRow, 9, cellStyle, metas.get(i).isIsImage());
             setCell(dRow, 10, cellStyle, metas.get(i).getImageWidth());
             setCell(dRow, 11, cellStyle, metas.get(i).getImageHeight());
             setCell(dRow, 12, cellStyle, metas.get(i).getDescription());
