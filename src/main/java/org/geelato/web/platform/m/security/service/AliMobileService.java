@@ -2,11 +2,21 @@ package org.geelato.web.platform.m.security.service;
 
 import com.alibaba.fastjson2.JSON;
 import org.apache.logging.log4j.util.Strings;
+import org.geelato.core.constants.ColumnDefault;
+import org.geelato.core.enums.DeleteStatusEnum;
+import org.geelato.core.enums.EnableStatusEnum;
+import org.geelato.core.gql.parser.FilterGroup;
+import org.geelato.core.orm.Dao;
+import org.geelato.web.platform.m.base.entity.SysConfig;
+import org.geelato.web.platform.m.security.entity.AliMobile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -18,29 +28,26 @@ import java.util.Map;
 @Component
 public class AliMobileService {
     private final Logger logger = LoggerFactory.getLogger(AliMobileService.class);
-    private static final String SIGN_NAME = "深圳海桥物流";// 阿里云短信测试
-    private static final String TEMPLATE_CODE = "SMS_465430460";// SMS_154950909
+    // private static final String SIGN_NAME = "深圳海桥物流";// 阿里云短信测试
+    // private static final String TEMPLATE_CODE = "SMS_465430460";// SMS_154950909
     private static final int SEND_SMS_RESPONSE_STATUS_CODE = 200;
     private static final String SEND_SMS_RESPONSE_BODY_CODE = "OK";
 
-    @Value("${spring.ali.mobile.accessKeyId}")
-    private String accessKeyId;
-    @Value("${spring.ali.mobile.accessKeySecret}")
-    private String accessKeySecret;
-    @Value("${spring.ali.mobile.securityToken}")
-    private String securityToken;
+    @Autowired
+    @Qualifier("primaryDao")
+    public Dao dao;
 
     /**
      * 使用AK&SK初始化账号Client
      *
      * @throws Exception
      */
-    private com.aliyun.dysmsapi20170525.Client createClient() throws Exception {
+    private com.aliyun.dysmsapi20170525.Client createClient(AliMobile aliMobile) throws Exception {
         com.aliyun.teaopenapi.models.Config config = new com.aliyun.teaopenapi.models.Config()
                 // 必填，您的 AccessKey ID
-                .setAccessKeyId(accessKeyId)
+                .setAccessKeyId(aliMobile.getAccessKeyId())
                 // 必填，您的 AccessKey Secret
-                .setAccessKeySecret(accessKeySecret);
+                .setAccessKeySecret(aliMobile.getAccessKeySecret());
         // Endpoint 请参考 https://api.aliyun.com/product/Dysmsapi
         config.endpoint = "dysmsapi.aliyuncs.com";
         return new com.aliyun.dysmsapi20170525.Client(config);
@@ -51,14 +58,14 @@ public class AliMobileService {
      *
      * @throws Exception
      */
-    private com.aliyun.dysmsapi20170525.Client createClientWithSTS() throws Exception {
+    private com.aliyun.dysmsapi20170525.Client createClientWithSTS(AliMobile aliMobile) throws Exception {
         com.aliyun.teaopenapi.models.Config config = new com.aliyun.teaopenapi.models.Config()
                 // 必填，您的 AccessKey ID
-                .setAccessKeyId(accessKeyId)
+                .setAccessKeyId(aliMobile.getAccessKeyId())
                 // 必填，您的 AccessKey Secret
-                .setAccessKeySecret(accessKeySecret)
+                .setAccessKeySecret(aliMobile.getAccessKeySecret())
                 // 必填，您的 Security Token
-                .setSecurityToken(securityToken)
+                .setSecurityToken(aliMobile.getSecurityToken())
                 // 必填，表明使用 STS 方式
                 .setType("sts");
         // Endpoint 请参考 https://api.aliyun.com/product/Dysmsapi
@@ -75,13 +82,15 @@ public class AliMobileService {
      * @throws Exception
      */
     public boolean sendMobile(String phoneNumbers, Map<String, Object> templateParam) throws Exception {
+        // 查询参数值
+        AliMobile aliMobile = getAliMobileBySysConfig();
         // 请确保代码运行环境设置了环境变量 ALIBABA_CLOUD_ACCESS_KEY_ID 和 ALIBABA_CLOUD_ACCESS_KEY_SECRET。
         // 工程代码泄露可能会导致 AccessKey 泄露，并威胁账号下所有资源的安全性。以下代码示例仅供参考，建议使用更安全的 STS 方式，更多鉴权访问方式请参见：https://help.aliyun.com/document_detail/378657.html
         // com.aliyun.dysmsapi20170525.Client client = AliMobileUtils.createClient(System.getenv("ALIBABA_CLOUD_ACCESS_KEY_ID"), System.getenv("ALIBABA_CLOUD_ACCESS_KEY_SECRET"));
-        com.aliyun.dysmsapi20170525.Client client = createClient();
+        com.aliyun.dysmsapi20170525.Client client = createClient(aliMobile);
         com.aliyun.dysmsapi20170525.models.SendSmsRequest sendSmsRequest = new com.aliyun.dysmsapi20170525.models.SendSmsRequest()
-                .setSignName(SIGN_NAME)
-                .setTemplateCode(TEMPLATE_CODE)
+                .setSignName(aliMobile.getSignName())
+                .setTemplateCode(aliMobile.getTemplateCode())
                 .setPhoneNumbers(phoneNumbers)
                 .setTemplateParam(JSON.toJSONString(templateParam));
         com.aliyun.teautil.models.RuntimeOptions runtime = new com.aliyun.teautil.models.RuntimeOptions();
@@ -94,5 +103,59 @@ public class AliMobileService {
             }
         }
         return false;
+    }
+
+    /**
+     * 获取配置值
+     *
+     * @return
+     */
+    private AliMobile getAliMobileBySysConfig() {
+        AliMobile aliMobile = new AliMobile();
+        // 配置键
+        List<String> configKeys = new ArrayList<>();
+        configKeys.add("mobileSignName");
+        configKeys.add("mobileTemplateCode");
+        configKeys.add("mobileAccessKeyId");
+        configKeys.add("mobileAccessKeySecret");
+        configKeys.add("mobileSecurityToken");
+        // 查询配置值
+        FilterGroup filterGroup = new FilterGroup();
+        filterGroup.addFilter(ColumnDefault.ENABLE_STATUS_FIELD, String.valueOf(EnableStatusEnum.ENABLED.getCode()));
+        filterGroup.addFilter(ColumnDefault.DEL_STATUS_FIELD, String.valueOf(DeleteStatusEnum.NO.getCode()));
+        filterGroup.addFilter("configKey", FilterGroup.Operator.in, String.join(",", configKeys));
+        List<SysConfig> sysConfigs = dao.queryList(SysConfig.class, filterGroup, null);
+        // 填充
+        if (sysConfigs != null && sysConfigs.size() > 0) {
+            for (SysConfig config : sysConfigs) {
+                String value = config.isEncrypted() ? null : config.getConfigValue();
+                switch (config.getConfigKey()) {
+                    case "mobileSignName":
+                        aliMobile.setSignName(value);
+                        break;
+                    case "mobileTemplateCode":
+                        aliMobile.setTemplateCode(value);
+                        break;
+                    case "mobileAccessKeyId":
+                        aliMobile.setAccessKeyId(value);
+                        break;
+                    case "mobileAccessKeySecret":
+                        aliMobile.setAccessKeySecret(value);
+                        break;
+                    case "mobileSecurityToken":
+                        aliMobile.setSecurityToken(value);
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+        // 校验
+        if (Strings.isBlank(aliMobile.getSignName()) || Strings.isBlank(aliMobile.getTemplateCode()) ||
+                Strings.isBlank(aliMobile.getAccessKeyId()) || Strings.isBlank(aliMobile.getAccessKeySecret())) {
+            throw new RuntimeException("短信模板需要的参数缺失。");
+        }
+
+        return aliMobile;
     }
 }
