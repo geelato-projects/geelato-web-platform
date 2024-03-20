@@ -36,15 +36,13 @@ public class MetaDdlController extends BaseController {
     @Autowired
     private DevTableService devTableService;
 
-    private static Logger logger = LoggerFactory.getLogger(MetaDdlController.class);
+    private static final Logger logger = LoggerFactory.getLogger(MetaDdlController.class);
 
 
     /**
-     * e.g.:http://localhost:8080/api/meta/ddl/recreate/xxxentity
      * 新建或更新表，不删除表字段
      *
      * @param entity 实体名称
-     * @return
      */
     @RequestMapping(value = {"table/{entity}"}, method = {RequestMethod.POST}, produces = MediaTypes.JSON_UTF_8)
     @ResponseBody
@@ -98,8 +96,6 @@ public class MetaDdlController extends BaseController {
 
     /**
      * 新建更新视图
-     *
-     * @return
      */
     @RequestMapping(value = {"view/{view}"}, method = {RequestMethod.POST}, produces = MediaTypes.JSON_UTF_8)
     @ResponseBody

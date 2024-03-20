@@ -29,6 +29,7 @@ public class BaseController implements InitializingBean  {
     @Qualifier("primaryDao")
     protected Dao dao;
 
+
     @Autowired
     protected RuleService ruleService;
     /**
@@ -149,6 +150,6 @@ public class BaseController implements InitializingBean  {
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        ruleService.setDao(dao);
+//        ruleService.setDao(dao);
     }
 }

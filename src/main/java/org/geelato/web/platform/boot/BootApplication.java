@@ -58,12 +58,8 @@ public class BootApplication implements CommandLineRunner, InitializingBean {
     private void assertOS() {
         Properties prop = System.getProperties();
         String os = prop.getProperty("os.name");
-        logger.info("[操作系统]" + os);
-        if (os.toLowerCase().startsWith("win")) {
-            isWinOS = true;
-        } else {
-            isWinOS = false;
-        }
+        logger.info("[operate system]" + os);
+        isWinOS = os.toLowerCase().startsWith("win");
     }
 
     /**
@@ -71,15 +67,18 @@ public class BootApplication implements CommandLineRunner, InitializingBean {
      */
     @Override
     public void run(String... args) throws Exception {
-        logger.info("[启动参数]：" + StringUtils.join(args, ","));
-        logger.info("[配置文件]：" + applicationContext.getEnvironment().getProperty("geelato.env"));
-        logger.info("[启动应用]...ing");
+        logger.info("[start args]：" + StringUtils.join(args, ","));
+        logger.info("[configuration file]：" + applicationContext.getEnvironment().getProperty("geelato.env"));
+        logger.info("[start application]...start");
         assertOS();
         parseStartArgs(args);
-        initMeta(args);
+        initMeta();
+        resolveScript(args);
         initEnv();
-        logger.info("[启动应用]...OK");
+        logger.info("[start application]...finish");
     }
+
+
 
 
     private void parseStartArgs(String... args) {
@@ -102,25 +101,36 @@ public class BootApplication implements CommandLineRunner, InitializingBean {
         }
     }
 
-    public void initEnv(){
-        EnvManager.singleInstance().SetDao(dbGenerateDao.getDao());
-        EnvManager.singleInstance().EnvInit();
-    }
-    public void initMeta(String... args) throws IOException {
+
+    public void initMeta() throws IOException {
         MetaRelf.setApplicationContext(applicationContext);
+        initClassPackageMeta();
+        initDataBaseMeta();
+    }
+
+
+
+    private void initClassPackageMeta() {
         String[] packageNames = getProperty("geelato.meta.scan-package-names", "org.geelato").split(",");
         for (String packageName : packageNames) {
             MetaManager.singleInstance().scanAndParse(packageName, false);
         }
-        MetaManager.singleInstance().parseDBMeta(dbGenerateDao.getDao());
-        // 解析脚本：sql、业务规则
+    }
+    private void initDataBaseMeta() {
+        MetaManager.singleInstance().parseDBMeta(dao);
+    }
+    private void resolveScript(String... args) throws IOException {
         if (this.getClass().getClassLoader() == null || this.getClass().getClassLoader().getResource("//") == null) {
-            initFromFatJar(args);
+            initFromFatJar();
         } else {
             initFromExploreFile(args);
         }
     }
 
+    public void initEnv(){
+        EnvManager.singleInstance().SetDao(dao);
+        EnvManager.singleInstance().EnvInit();
+    }
     /**
      * 配置文件不打包在jar包中运行，可基于文件系统加载配置文件
      *
@@ -136,7 +146,7 @@ public class BootApplication implements CommandLineRunner, InitializingBean {
         BizManagerFactory.getBizRuleScriptManager("rule").setDao(dao);
         BizManagerFactory.getBizRuleScriptManager("rule").loadFiles(path + "/geelato/web/platform/rule/");
         if (isNeedResetDb) {
-            logger.info("收到重置数据库命令，开始创建表结构、初始化表数据。");
+            logger.info("start reset database");
             //--3、创建表结构
             dbGenerateDao.createAllTables(true, ignoreEntityNamePrefixList);
             //--4、初始化表数据
@@ -145,14 +155,12 @@ public class BootApplication implements CommandLineRunner, InitializingBean {
                 String[] sqlFiles = filePaths.split(",");
                 for (String sqlFile : sqlFiles) {
                     InputStream is = this.getClass().getClassLoader().getResourceAsStream(sqlFile);
-                    if (is == null) {
-                        // jar:file:/data/geelato-web-quickstart-1.0.0-SNAPSHOT.jar!/BOOT-INF/lib/geelato-web-platform-1.0.0-SNAPSHOT.jar!/geelato.web.platform/data/init.sql
+                    if (is != null) {
+                        SqlFiles.loadAndExecute(is, dao.getJdbcTemplate(), isWinOS);
                     }
-                    SqlFiles.loadAndExecute(is, dao.getJdbcTemplate(), isWinOS);
+
                 }
             }
-        } else {
-            logger.info("未收到重置数据库命令，跳过创建表结构、跳过初始化表数据。");
         }
         BizManagerFactory.getBizMvelRuleManager("mvelRule").setDao(dao);
         BizManagerFactory.getBizMvelRuleManager("mvelRule").loadDb(null);
@@ -162,13 +170,14 @@ public class BootApplication implements CommandLineRunner, InitializingBean {
      * 打包成单个fatJar文件运行时，加载的资源不能采用文件系统加载，需采用流的方式加载
      *
      */
-    protected void initFromFatJar(String... args) throws IOException {
+    protected void initFromFatJar() throws IOException {
         //--1、sql
         SqlScriptManagerFactory.get(Dao.SQL_TEMPLATE_MANAGER).loadResource("/geelato/web/platform/sql/**/*.sql");
         //--2、业务规则
         BizManagerFactory.getBizRuleScriptManager("rule").setDao(dao);
         BizManagerFactory.getBizRuleScriptManager("rule").loadResource("/geelato/web/platform/rule/**/*.js");
         if (isNeedResetDb) {
+            logger.info("start reset database");
             //--3、创建表结构
             dbGenerateDao.createAllTables(true, ignoreEntityNamePrefixList);
             //--4、初始化表数据
@@ -188,8 +197,6 @@ public class BootApplication implements CommandLineRunner, InitializingBean {
                     }
                 }
             }
-        } else {
-            logger.info("未收到重置数据库命令，跳过创建表结构、跳过初始化表数据。");
         }
         BizManagerFactory.getBizMvelRuleManager("mvelRule").setDao(dao);
         BizManagerFactory.getBizMvelRuleManager("mvelRule").loadDb(null);

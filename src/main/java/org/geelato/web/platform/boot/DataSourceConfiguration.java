@@ -1,5 +1,6 @@
 package org.geelato.web.platform.boot;
 
+import com.zaxxer.hikari.HikariDataSource;
 import org.geelato.core.orm.Dao;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -10,6 +11,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.sql.DataSource;
+import javax.xml.crypto.Data;
 
 
 /**
@@ -26,10 +28,14 @@ public class DataSourceConfiguration extends BaseConfiguration {
 
     @Bean(name = "secondaryDataSource")
     @Qualifier("secondaryDataSource")
-    @Primary
     @ConfigurationProperties(prefix = "spring.datasource.secondary")
     public DataSource secondaryDataSource() {
         return DataSourceBuilder.create().build();
+    }
+    @Bean(name = "dynamicDataSource")
+    @Qualifier("dynamicDataSource")
+    public DataSource dynamicDataSource() {
+        return secondaryDataSource();
     }
 
     @Bean(name = "primaryJdbcTemplate")
@@ -42,6 +48,11 @@ public class DataSourceConfiguration extends BaseConfiguration {
         return new JdbcTemplate(dataSource);
     }
 
+    @Bean(name = "dynamicJdbcTemplate")
+    public JdbcTemplate dynamicJdbcTemplate(@Qualifier("dynamicDataSource") DataSource dataSource) {
+        return new JdbcTemplate(dataSource);
+    }
+
     @Bean(name = "primaryDao")
     public Dao primaryDao(@Qualifier("primaryJdbcTemplate") JdbcTemplate jdbcTemplate) {
         return new Dao(jdbcTemplate);
@@ -49,6 +60,11 @@ public class DataSourceConfiguration extends BaseConfiguration {
 
     @Bean(name = "secondaryDao")
     public Dao secondaryDao(@Qualifier("secondaryJdbcTemplate") JdbcTemplate jdbcTemplate) {
+        return new Dao(jdbcTemplate);
+    }
+
+    @Bean(name = "dynamicDao")
+    public Dao dynamicDao(@Qualifier("dynamicJdbcTemplate") JdbcTemplate jdbcTemplate) {
         return new Dao(jdbcTemplate);
     }
 }

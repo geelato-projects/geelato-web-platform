@@ -160,7 +160,7 @@ public class RuleService {
     }
 
     public ApiMultiPagedResult queryForMultiMapList(String gql, boolean withMeta) {
-        Map<String, ApiMultiPagedResult.PageData> dataMap = new HashMap<String, ApiMultiPagedResult.PageData>();
+        Map<String, ApiMultiPagedResult.PageData> dataMap = new HashMap<>();
         List<QueryCommand> commandList = gqlManager.generateMultiQuerySql(gql, getSessionCtx());
         for (QueryCommand command : commandList) {
             BoundPageSql boundPageSql = sqlManager.generatePageQuerySql(command);
