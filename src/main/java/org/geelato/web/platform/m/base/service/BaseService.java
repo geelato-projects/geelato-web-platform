@@ -25,6 +25,7 @@ public class BaseService {
     @Autowired
     @Qualifier("primaryDao")
     public Dao dao;
+
     public FilterGroup filterGroup = new FilterGroup().addFilter(ColumnDefault.DEL_STATUS_FIELD, String.valueOf(DeleteStatusEnum.NO.getCode()));
 
     /**
@@ -72,8 +73,6 @@ public class BaseService {
      *
      * @param entity 查询实体
      * @param params 条件参数
-     * @param <T>
-     * @return
      */
     public <T> List<T> queryModel(Class<T> entity, Map<String, Object> params, String orderBy) {
         dao.setDefaultFilter(true, filterGroup);
@@ -90,8 +89,6 @@ public class BaseService {
      *
      * @param entity 查询实体
      * @param filter 条件参数
-     * @param <T>
-     * @return
      */
     public <T> List<T> queryModel(Class<T> entity, FilterGroup filter, String orderBy) {
         dao.setDefaultFilter(true, filterGroup);
@@ -109,8 +106,6 @@ public class BaseService {
      *
      * @param entity 查询实体
      * @param id     实体id
-     * @param <T>
-     * @return
      */
     public <T> T getModel(Class<T> entity, String id) {
         return dao.queryForObject(entity, id);
@@ -185,8 +180,6 @@ public class BaseService {
      * @param entity     查询实体
      * @param fieldName  关联实体字段名称
      * @param fieldValue 关联实体字段值
-     * @param <T>
-     * @return
      */
     public <T> boolean isExist(Class<T> entity, String fieldName, Object fieldValue) {
         if (fieldValue != null) {

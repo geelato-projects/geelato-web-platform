@@ -113,7 +113,6 @@ public class PermissionController extends BaseController {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
         }
-
         return result;
     }
 
