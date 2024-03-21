@@ -118,8 +118,6 @@ public class MetaController extends BaseController implements InitializingBean {
         ApiMetaResult result = new ApiMetaResult();
         if (metaManager.containsEntity(entityOrQueryKey)) {
             result.setMeta(metaManager.getByEntityName(entityOrQueryKey).getAllSimpleFieldMetas());
-        } else {
-            // TODO
         }
         return result;
     }
@@ -128,7 +126,6 @@ public class MetaController extends BaseController implements InitializingBean {
     /**
      * 获取实体名称列表
      *
-     * @return
      */
     @RequestMapping(value = {"entityNames"}, method = {RequestMethod.POST, RequestMethod.GET}, produces = MediaTypes.JSON_UTF_8)
     @ResponseBody
@@ -142,7 +139,6 @@ public class MetaController extends BaseController implements InitializingBean {
      * 获取指定应用下的精简版实体元数据信息列表
      *
      * @param appCode 应用编码
-     * @return
      */
     @RequestMapping(value = {"entityLiteMetas"}, method = {RequestMethod.POST, RequestMethod.GET}, produces = MediaTypes.JSON_UTF_8)
     @ResponseBody

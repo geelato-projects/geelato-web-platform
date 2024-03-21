@@ -95,13 +95,13 @@ public class RuleService {
      * @param entity 与platform_tree_node 关联的业务实体带有tree_node_id字段
      */
     public ApiResult<List<Map>> queryForTreeNodeList(String entity, Long treeId) {
-        ApiResult<List<Map>> result = new ApiResult<List<Map>>();
+        ApiResult<List<Map>> result = new ApiResult<>();
         if (!metaManager.containsEntity(entity)) {
             result.setCode(ApiResultCode.ERROR);
             result.setMsg("不存在该实体");
             return result;
         }
-        Map params = new HashedMap(2);
+        Map params = new HashedMap();
         EntityMeta entityMeta = metaManager.getByEntityName(entity);
         params.put("tableName", entityMeta.getTableName());
         params.put("treeId", treeId);

@@ -33,10 +33,10 @@ import java.util.Map;
 public class AuthRestController extends BaseController {
 
     @Autowired
-    protected AccountService accountService;
+    private AccountService accountService;
 
 
-    private Logger logger = LoggerFactory.getLogger(AuthRestController.class);
+    private final Logger logger = LoggerFactory.getLogger(AuthRestController.class);
 
     @RequestMapping(value = "/login", method = RequestMethod.POST)
     @ResponseBody
@@ -85,13 +85,13 @@ public class AuthRestController extends BaseController {
         return accountService.wrapUser(user);
     }
 
-    @RequestMapping(value = "/loginSecurity", method = RequestMethod.POST)
-    @ResponseBody
-    public ApiResult loginMD5(@RequestBody User user, HttpServletRequest req) {
-        ApiResult apiResult = new ApiResult();
-        apiResult.setData(login(user, req));
-        return apiResult;
-    }
+//    @RequestMapping(value = "/loginSecurity", method = RequestMethod.POST)
+//    @ResponseBody
+//    public ApiResult loginMD5(@RequestBody User user, HttpServletRequest req) {
+//        ApiResult apiResult = new ApiResult();
+//        apiResult.setData(login(user, req));
+//        return apiResult;
+//    }
 
 
     @RequestMapping(value = "/logout")
@@ -111,26 +111,23 @@ public class AuthRestController extends BaseController {
     /**
      * 获取当前用户的菜单 TODO 待按当前用户过滤
      *
-     * @param req
-     * @return
      */
-    @RequestMapping(value = "/currentUserMenu", method = {RequestMethod.POST, RequestMethod.GET})
-    @ResponseBody
-    public ApiResult getCurrentUserMenu(HttpServletRequest req) {
-        // 菜单
-        Map map = new HashMap<>();
-        map.put("userId", 1);
-        List<Map<String, Object>> menuItemList = dao.queryForMapList("select_platform_menu", map);
-
-        return new ApiResult().setData(menuItemList);
-    }
+//    @RequestMapping(value = "/currentUserMenu", method = {RequestMethod.POST, RequestMethod.GET})
+//    @ResponseBody
+//    public ApiResult getCurrentUserMenu(HttpServletRequest req) {
+//        // 菜单
+//        Map map = new HashMap<>();
+//        map.put("userId", 1);
+//        List<Map<String, Object>> menuItemList = dao.queryForMapList("select_platform_menu", map);
+//
+//        return new ApiResult().setData(menuItemList);
+//    }
 
     /**
      * 用于管理员重置密码
      *
      * @param userId         用户id
      * @param passwordLength 默认为8位，最长为32位
-     * @return
      */
     @RequestMapping(value = "/resetPassword", method = {RequestMethod.POST, RequestMethod.GET})
     @ResponseBody
