@@ -72,13 +72,16 @@ public class BootApplication implements CommandLineRunner, InitializingBean {
         logger.info("[start application]...start");
         assertOS();
         parseStartArgs(args);
+        initDataSource();
         initMeta();
         resolveScript(args);
         initEnv();
         logger.info("[start application]...finish");
     }
 
+    private void initDataSource() {
 
+    }
 
 
     private void parseStartArgs(String... args) {
