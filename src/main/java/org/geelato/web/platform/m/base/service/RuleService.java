@@ -48,7 +48,7 @@ import java.util.*;
 public class RuleService {
 
     @Autowired
-    @Qualifier("primaryDao")
+    @Qualifier("dynamicDao")
     private Dao dao;
     private final GqlManager gqlManager = GqlManager.singleInstance();
     private final SqlManager sqlManager = SqlManager.singleInstance();

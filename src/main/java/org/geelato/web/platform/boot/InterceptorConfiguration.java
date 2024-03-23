@@ -1,5 +1,6 @@
 package org.geelato.web.platform.boot;
 
+import org.geelato.web.platform.m.base.interceptor.DataSourceInterceptor;
 import org.geelato.web.platform.m.base.interceptor.JWTInterceptor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
@@ -22,5 +23,6 @@ public class InterceptorConfiguration implements WebMvcConfigurer {
                 .excludePathPatterns("/v3/**")
                 .excludePathPatterns("/api/config")
                 .excludePathPatterns("/api/resources/**");
+        registry.addInterceptor(new DataSourceInterceptor()).addPathPatterns("/**");
     }
 }

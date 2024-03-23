@@ -12,6 +12,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.sql.DataSource;
 import javax.xml.crypto.Data;
+import java.util.HashMap;
+import java.util.Map;
 
 
 /**
@@ -19,48 +21,50 @@ import javax.xml.crypto.Data;
  */
 @Configuration
 public class DataSourceConfiguration extends BaseConfiguration {
+    public Map<Object, Object> dataSourceMap=new HashMap<>();
     @Bean(name = "primaryDataSource")
     @Qualifier("primaryDataSource")
     @ConfigurationProperties(prefix = "spring.datasource.primary")
     public DataSource primaryDataSource() {
         return DataSourceBuilder.create().build();
     }
-
-    @Bean(name = "secondaryDataSource")
-    @Qualifier("secondaryDataSource")
-    @ConfigurationProperties(prefix = "spring.datasource.secondary")
-    public DataSource secondaryDataSource() {
-        return DataSourceBuilder.create().build();
-    }
-    @Bean(name = "dynamicDataSource")
-    @Qualifier("dynamicDataSource")
-    public DataSource dynamicDataSource() {
-        return secondaryDataSource();
-    }
-
     @Bean(name = "primaryJdbcTemplate")
     public JdbcTemplate primaryJdbcTemplate(@Qualifier("primaryDataSource") DataSource dataSource) {
         return new JdbcTemplate(dataSource);
     }
-
+    @Bean(name = "primaryDao")
+    public Dao primaryDao(@Qualifier("primaryJdbcTemplate") JdbcTemplate jdbcTemplate) {
+        return new Dao(jdbcTemplate);
+    }
+    @Bean(name = "secondaryDataSource")
+    @Qualifier("secondaryDataSource")
+    @ConfigurationProperties(prefix = "spring.datasource.secondary")
+    public DataSource secondaryDataSource() {
+       return DataSourceBuilder.create().build();
+    }
     @Bean(name = "secondaryJdbcTemplate")
     public JdbcTemplate secondaryJdbcTemplate(@Qualifier("secondaryDataSource") DataSource dataSource) {
         return new JdbcTemplate(dataSource);
+    }
+    @Bean(name = "secondaryDao")
+    public Dao secondaryDao(@Qualifier("secondaryJdbcTemplate") JdbcTemplate jdbcTemplate) {
+        return new Dao(jdbcTemplate);
+    }
+
+    @Bean(name = "dynamicDataSource")
+    @Qualifier("dynamicDataSource")
+    public DataSource dynamicDataSource() {
+        DynamicDataSource dynamicDatasource=new DynamicDataSource();
+        dataSourceMap.put("primary",primaryDataSource());
+        dataSourceMap.put("secondary",secondaryDataSource());
+        dynamicDatasource.setTargetDataSources(dataSourceMap);
+        dynamicDatasource.setDefaultTargetDataSource(primaryDataSource());
+        return dynamicDatasource;
     }
 
     @Bean(name = "dynamicJdbcTemplate")
     public JdbcTemplate dynamicJdbcTemplate(@Qualifier("dynamicDataSource") DataSource dataSource) {
         return new JdbcTemplate(dataSource);
-    }
-
-    @Bean(name = "primaryDao")
-    public Dao primaryDao(@Qualifier("primaryJdbcTemplate") JdbcTemplate jdbcTemplate) {
-        return new Dao(jdbcTemplate);
-    }
-
-    @Bean(name = "secondaryDao")
-    public Dao secondaryDao(@Qualifier("secondaryJdbcTemplate") JdbcTemplate jdbcTemplate) {
-        return new Dao(jdbcTemplate);
     }
 
     @Bean(name = "dynamicDao")
