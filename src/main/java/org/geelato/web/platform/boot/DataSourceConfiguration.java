@@ -1,6 +1,7 @@
 package org.geelato.web.platform.boot;
 
 import com.zaxxer.hikari.HikariDataSource;
+import org.geelato.core.ds.DataSourceManager;
 import org.geelato.core.orm.Dao;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -21,7 +22,8 @@ import java.util.Map;
  */
 @Configuration
 public class DataSourceConfiguration extends BaseConfiguration {
-    public Map<Object, Object> dataSourceMap=new HashMap<>();
+
+
     @Bean(name = "primaryDataSource")
     @Qualifier("primaryDataSource")
     @ConfigurationProperties(prefix = "spring.datasource.primary")
@@ -55,9 +57,9 @@ public class DataSourceConfiguration extends BaseConfiguration {
     @Qualifier("dynamicDataSource")
     public DataSource dynamicDataSource() {
         DynamicDataSource dynamicDatasource=new DynamicDataSource();
-        dataSourceMap.put("primary",primaryDataSource());
-        dataSourceMap.put("secondary",secondaryDataSource());
-        dynamicDatasource.setTargetDataSources(dataSourceMap);
+        Map<Object, Object> dymanicDataSourceMap=DataSourceManager.singleInstance().getDymanicDataSourceMap();
+        dymanicDataSourceMap.put("primary",primaryDataSource());
+        dynamicDatasource.setTargetDataSources(dymanicDataSourceMap);
         dynamicDatasource.setDefaultTargetDataSource(primaryDataSource());
         return dynamicDatasource;
     }

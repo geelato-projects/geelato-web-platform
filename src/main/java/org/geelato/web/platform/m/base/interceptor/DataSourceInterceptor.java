@@ -20,8 +20,9 @@ import java.lang.reflect.Method;
 public class DataSourceInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(@NotNull HttpServletRequest request, @NotNull HttpServletResponse response, @NotNull Object handler) {
-        String ds=request.getHeader("ds");
-        DynamicDatasourceHolder.setDataSource(ds);
+        String tenant=request.getHeader("tenant");
+        String app=request.getHeader("app");
+        DynamicDatasourceHolder.setDataSource(app);
         return true;
     }
 }
