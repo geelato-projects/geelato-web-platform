@@ -14,6 +14,7 @@ import org.geelato.core.exception.TestException;
 import org.geelato.core.meta.MetaManager;
 import org.geelato.core.orm.Dao;
 import org.geelato.core.orm.DaoException;
+import org.geelato.core.script.js.graaljstest;
 import org.geelato.web.platform.m.base.service.RuleService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,6 +46,7 @@ public class MetaController extends BaseController implements InitializingBean {
     @ResponseBody
     public ApiPagedResult list(@RequestParam(value = "withMeta", defaultValue = "true") boolean withMeta, HttpServletRequest request) {
         String gql = getGql(request);
+        graaljstest.test(gql);
         ApiPagedResult page = ruleService.queryForMapList(gql, withMeta);
         return page;
     }

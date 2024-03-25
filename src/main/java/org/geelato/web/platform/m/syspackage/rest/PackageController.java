@@ -374,7 +374,6 @@ public class PackageController extends BaseController {
             metaData.put(appMeta.getMetaName(), metaDataArray);
             List<SaveCommand> saveCommandList = jsonTextSaveParser.parseBatch(JSONObject.toJSONString(metaData), new Ctx());
             for (SaveCommand saveCommand : saveCommandList) {
-
                 BoundSql boundSql = sqlManager.generateSaveSql(saveCommand);
                 String pkValue = dao.save(boundSql);
             }
