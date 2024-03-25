@@ -185,6 +185,8 @@ public class PackageController extends BaseController {
         if(appVersion!=null&&!StringUtils.isEmpty(appVersion.getPackagePath())) {
             if(appVersion.getPackagePath().contains(".zgdp")){
                 appPackageData = ZipUtils.readPackageData(appVersion.getPackagePath(), ".gdp");
+                //测试用
+               // appPackageData = ZipUtils.readPackageData("D:\\geelato-project\\app_package_temp\\upload_temp\\ob.zgdp", ".gdp");
             }else{
                 Attach attach = attachService.getModel(Attach.class, appVersion.getPackagePath());
                 File file = downloadService.downloadFile(attach.getName(), attach.getPath());
@@ -198,6 +200,7 @@ public class PackageController extends BaseController {
                 }catch (Exception ex){
                     apiResult.setMsg(ex.getMessage());
                     apiResult.setCode(ApiResultCode.ERROR);
+                    return apiResult;
                 }
             }else{
                 apiResult.setMsg("无法读取到应用包数据，请检查应用");

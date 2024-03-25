@@ -25,6 +25,8 @@ public class Role extends BaseSortableEntity implements EntityEnableAble {
     //    private String treeNodeId;
     private String description;
 
+    private Integer weight;
+
     @Title(title = "应用")
     @Col(name = "app_id")
     public String getAppId() {
@@ -92,6 +94,15 @@ public class Role extends BaseSortableEntity implements EntityEnableAble {
     @Override
     public void setEnableStatus(int enableStatus) {
         this.enableStatus = enableStatus;
+    }
+    @Title(title = "权重")
+    @Col(name = "weight")
+    public Integer getWeight() {
+        return weight;
+    }
+
+    public void setWeight(Integer weight) {
+        this.weight = weight;
     }
 
 //    @Title(title = "树节点")
