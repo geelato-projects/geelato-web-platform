@@ -87,7 +87,7 @@ public class RuleService {
 
     public ApiPagedResult queryForMapList(String gql, boolean withMeta) {
         QueryCommand command = gqlManager.generateQuerySql(gql, getSessionCtx());
-        BoundPageSql boundPageSql = sqlManager.generatePageQuerySqlMulti(command);
+        BoundPageSql boundPageSql = sqlManager.generatePageQuerySql(command);
         return dao.queryForMapList(boundPageSql, withMeta);
     }
 
