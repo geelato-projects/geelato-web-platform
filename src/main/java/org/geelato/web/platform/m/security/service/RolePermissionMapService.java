@@ -186,6 +186,7 @@ public class RolePermissionMapService extends BaseService {
                 Map<String, Object> tableMap = new HashMap<>();
                 tableMap.put("id", role.getId());
                 tableMap.put("appName", role.getAppName());
+                tableMap.put("appId", role.getAppId());
                 tableMap.put("name", role.getName());
                 tableMap.put("code", role.getCode());
                 tableMap.put("type", role.getType());
@@ -283,6 +284,7 @@ public class RolePermissionMapService extends BaseService {
                 Map<String, Object> tableMap = new HashMap<>();
                 tableMap.put("id", role.getId());
                 tableMap.put("appName", role.getAppName());
+                tableMap.put("appId", role.getAppId());
                 tableMap.put("name", role.getName());
                 tableMap.put("code", role.getCode());
                 tableMap.put("type", role.getType());

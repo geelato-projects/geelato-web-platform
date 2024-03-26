@@ -75,6 +75,52 @@ public class RoleService extends BaseSortableService {
         }
     }
 
+    public Map<String, Object> updateModel(Role form) {
+        // 原来的数据
+        Role model = getModel(Role.class, form.getId());
+        // 更新
+        Map<String, Object> formMap = super.updateModel(form);
+        // 关联表修改
+        if (Strings.isNotBlank(form.getName()) && !form.getName().equals(model.getName())) {
+            // 角色APP关系表
+            Map<String, Object> params = new HashMap<>();
+            params.put("roleId", model.getId());
+            List<RoleAppMap> aList = roleAppMapService.queryModel(RoleAppMap.class, params);
+            if (aList != null) {
+                for (RoleAppMap rModel : aList) {
+                    rModel.setRoleName(form.getName());
+                    roleAppMapService.updateModel(rModel);
+                }
+            }
+            // 角色权限关系表
+            List<RolePermissionMap> pList = rolePermissionMapService.queryModel(RolePermissionMap.class, params);
+            if (aList != null) {
+                for (RolePermissionMap rModel : pList) {
+                    rModel.setRoleName(form.getName());
+                    rolePermissionMapService.updateModel(rModel);
+                }
+            }
+            // 角色菜单关系表
+            List<RoleTreeNodeMap> tList = roleTreeNodeMapService.queryModel(RoleTreeNodeMap.class, params);
+            if (aList != null) {
+                for (RoleTreeNodeMap rModel : tList) {
+                    rModel.setRoleName(form.getName());
+                    roleTreeNodeMapService.updateModel(rModel);
+                }
+            }
+            // 角色用户关系表
+            List<RoleUserMap> uList = roleUserMapService.queryModel(RoleUserMap.class, params);
+            if (uList != null) {
+                for (RoleUserMap rModel : uList) {
+                    rModel.setRoleName(form.getName());
+                    roleUserMapService.updateModel(rModel);
+                }
+            }
+        }
+
+        return formMap;
+    }
+
     /**
      * 查询，平台级、应用级角色
      *
