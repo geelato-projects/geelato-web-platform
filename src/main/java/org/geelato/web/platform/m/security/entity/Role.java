@@ -95,8 +95,8 @@ public class Role extends BaseSortableEntity implements EntityEnableAble {
     public void setEnableStatus(int enableStatus) {
         this.enableStatus = enableStatus;
     }
-    @Title(title = "权重")
-    @Col(name = "weight")
+//    @Title(title = "权重")
+//    @Col(name = "weight")
     public Integer getWeight() {
         return weight;
     }

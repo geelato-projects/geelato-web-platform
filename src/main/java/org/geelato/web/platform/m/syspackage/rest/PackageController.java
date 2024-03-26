@@ -53,7 +53,8 @@ import java.util.*;
 @Controller
 @RequestMapping(value = "/package")
 public class PackageController extends BaseController {
-
+    private DataSourceTransactionManager dataSourceTransactionManager;
+    private TransactionStatus transactionStatus;
     private static final Logger logger = LoggerFactory.getLogger(PackageController.class);
     private final String defaultPackageName="geelatoApp";
     @Resource
@@ -186,7 +187,7 @@ public class PackageController extends BaseController {
             if(appVersion.getPackagePath().contains(".zgdp")){
                 appPackageData = ZipUtils.readPackageData(appVersion.getPackagePath(), ".gdp");
                 //测试用
-               // appPackageData = ZipUtils.readPackageData("D:\\geelato-project\\app_package_temp\\upload_temp\\ob.zgdp", ".gdp");
+                //appPackageData = ZipUtils.readPackageData("D:\\geelato-project\\app_package_temp\\upload_temp\\ob.zgdp", ".gdp");
             }else{
                 Attach attach = attachService.getModel(Attach.class, appVersion.getPackagePath());
                 File file = downloadService.downloadFile(attach.getName(), attach.getPath());
@@ -195,11 +196,15 @@ public class PackageController extends BaseController {
             AppPackage appPackage = resolveAppPackageData(appPackageData);
             if (appPackage != null && !appPackage.getAppMetaList().isEmpty()) {
                 try{
+                    backupCurrentVersion(appVersion.getAppId());
                     deleteCurrentVersion(appVersion.getAppId());
                     deployAppPackageData(appPackage);
                 }catch (Exception ex){
                     apiResult.setMsg(ex.getMessage());
                     apiResult.setCode(ApiResultCode.ERROR);
+                    if(transactionStatus!=null){
+                        dataSourceTransactionManager.rollback(transactionStatus);
+                    }
                     return apiResult;
                 }
             }else{
@@ -210,6 +215,17 @@ public class PackageController extends BaseController {
         }
         apiResult.setMsg("应用部署成功！");
         return apiResult;
+    }
+
+    private void backupCurrentVersion(String appId) {
+        logger.info("----------------------backup version start--------------------");
+        Map<String,String> appMetaMap= appMetaMap(appId,"remove");
+        for (String key : appMetaMap.keySet()) {
+            String value = appMetaMap.get(key);
+//            logger.info(String.format("remove sql：%s ",value));
+//            dao.getJdbcTemplate().execute(value);
+        }
+        logger.info("----------------------backup version end--------------------");
     }
 
     private void deleteCurrentVersion(String appId) {
@@ -351,8 +367,8 @@ public class PackageController extends BaseController {
     }
     private void deployAppPackageData(AppPackage appPackage) throws DaoException {
         logger.info("----------------------deploy start--------------------");
-        DataSourceTransactionManager dataSourceTransactionManager = new DataSourceTransactionManager(dao.getJdbcTemplate().getDataSource());
-        TransactionStatus transactionStatus = TransactionHelper.beginTransaction(dataSourceTransactionManager);
+        dataSourceTransactionManager= new DataSourceTransactionManager(dao.getJdbcTemplate().getDataSource());
+        transactionStatus = TransactionHelper.beginTransaction(dataSourceTransactionManager);
         for (AppMeta appMeta : appPackage.getAppMetaList()) {
             logger.info(String.format("开始处理元数据：%s",appMeta.getMetaName()));
             Map<String, Object> metaData = new HashMap<>();
