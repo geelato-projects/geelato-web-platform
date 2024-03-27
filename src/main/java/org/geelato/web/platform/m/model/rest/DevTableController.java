@@ -158,13 +158,17 @@ public class DevTableController extends BaseController {
     public ApiResult<TableMeta> copy(@RequestBody Map<String, Object> params) {
         ApiResult<TableMeta> result = new ApiResult<>();
         try {
+            String tableId = String.valueOf(params.get("id"));
             String title = String.valueOf(params.get("title"));
             String entityName = String.valueOf(params.get("entityName"));
-            String tableId = String.valueOf(params.get("id"));
+            String connectId = String.valueOf(params.get("connectId"));
+            String tableComment = String.valueOf(params.get("tableComment"));
+            String appId = String.valueOf(params.get("appId"));
+            String tenantCode = String.valueOf(params.get("tenantCode"));
             if (Strings.isBlank(entityName) || Strings.isBlank(tableId)) {
                 return result.error().setMsg(ApiErrorMsg.PARAMETER_MISSING);
             }
-            TableMeta form = devTableService.copyTable(title, entityName, tableId);
+            TableMeta form = devTableService.copyTable(tableId, title, entityName, connectId,tableComment, appId, tenantCode);
             result.setData(form);
             // 添加默认权限
             permissionService.resetDefaultPermission(PermissionTypeEnum.getTablePermissions(), form.getEntityName(), form.getAppId());

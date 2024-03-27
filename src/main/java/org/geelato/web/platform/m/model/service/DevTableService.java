@@ -202,7 +202,7 @@ public class DevTableService extends BaseSortableService {
         return tableList;
     }
 
-    public TableMeta copyTable(String title, String entityName, String tableId) {
+    public TableMeta copyTable(String tableId,String title, String entityName, String connectId,String tableComment,String appId,String tenantCode) {
         // 源模型
         TableMeta form = this.getModel(TableMeta.class, tableId);
         Assert.notNull(form, ApiErrorMsg.IS_NULL);
@@ -212,6 +212,10 @@ public class DevTableService extends BaseSortableService {
         form.setEntityName(entityName);
         form.setTitle(title);
         form.setTableName(null);
+        if (Strings.isNotBlank(connectId)){form.setConnectId(connectId);}
+        if (Strings.isNotBlank(tableComment)){form.setTableComment(tableComment);}
+        if (Strings.isNotBlank(appId)){form.setAppId(appId);}
+        if (Strings.isNotBlank(tenantCode)){form.setTenantCode(tenantCode);}
         form.setSynced(ColumnSyncedEnum.FALSE.getValue());
         form.setSourceType(TableSourceTypeEnum.CREATION.getValue());
         Map<String, Object> formMap = this.createModel(form);
