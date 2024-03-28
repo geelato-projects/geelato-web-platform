@@ -4,12 +4,12 @@ import com.alibaba.fastjson2.JSON;
 import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.constants.ResourcesFiles;
 import org.geelato.core.gql.parser.FilterGroup;
-import org.geelato.core.meta.model.entity.TableMeta;
 import org.geelato.core.meta.model.field.ColumnMeta;
 import org.geelato.core.util.FastJsonUtils;
 import org.geelato.web.platform.enums.PermissionTypeEnum;
 import org.geelato.web.platform.m.base.service.BaseService;
 import org.geelato.web.platform.m.security.entity.Permission;
+import org.geelato.web.platform.m.security.entity.Role;
 import org.geelato.web.platform.m.security.entity.RolePermissionMap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -32,6 +32,9 @@ public class PermissionService extends BaseService {
     @Lazy
     @Autowired
     private RolePermissionMapService rolePermissionMapService;
+    @Lazy
+    @Autowired
+    private RoleService roleService;
 
     /**
      * 逻辑删除
@@ -273,6 +276,42 @@ public class PermissionService extends BaseService {
                 for (Permission dModel : defPermissions) {
                     dModel.setAppId(appId);
                     createDefaultPermission(object, dModel);
+                }
+            }
+        }
+        // 当前权限
+        Map<String, Object> params = new HashMap<>();
+        params.put("appId", appId);
+        List<Role> roleList = roleService.queryRoles(params);
+        List<String> roleIds = new ArrayList<>();
+        for (Role role : roleList) {
+            roleIds.add(role.getId());
+        }
+        List<Permission> permissionList = queryModel(Permission.class, tableFilter);
+        List<String> permissionIds = new ArrayList<>();
+        for (Permission permission : curPermissions) {
+            permissionIds.add(permission.getId());
+        }
+        if (roleIds.size() > 0 && permissionIds.size() > 0) {
+            FilterGroup filterGroup1 = new FilterGroup();
+            filterGroup1.addFilter("permissionId", FilterGroup.Operator.in, String.join(",", permissionIds));
+            filterGroup1.addFilter("roleId", FilterGroup.Operator.in, String.join(",", roleIds));
+            List<RolePermissionMap> rolePermissionMaps = rolePermissionMapService.queryModel(RolePermissionMap.class, filterGroup1);
+            List<String> isExistIds = new ArrayList<>();
+            for (RolePermissionMap map : rolePermissionMaps) {
+                if (!isExistIds.contains(map.getRoleId())) {
+                    isExistIds.add(map.getRoleId());
+                }
+            }
+            for (Role role : roleList) {
+                if (!isExistIds.contains(role.getId())) {
+                    for (Permission permission : permissionList) {
+                        for (String code : PERMISSION_DEFAULT_TO_ROLE) {
+                            if (permission.getCode().equals(String.format("%s%s", permission.getObject(), code))) {
+                                rolePermissionMapService.createByRoleAndPermission(role, permission);
+                            }
+                        }
+                    }
                 }
             }
         }
