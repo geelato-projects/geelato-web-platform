@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import jakarta.validation.ConstraintViolationException;
 import org.geelato.core.api.ApiResult;
+import org.geelato.core.constants.ApiResultStatus;
 import org.geelato.core.constants.MediaTypes;
 import org.geelato.core.exception.TestException;
 import org.geelato.core.orm.DaoException;
@@ -46,6 +47,7 @@ public class PlatformExceptionHandler extends ResponseEntityExceptionHandler {
         ApiResult apiResult=new ApiResult();
         apiResult.setCode(ex.getCode());
         apiResult.setMsg(ex.getMsg());
+        apiResult.setStatus(ApiResultStatus.FAIL);
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.parseMediaType(MediaTypes.JSON_UTF_8));
         return handleExceptionInternal(ex, apiResult, headers, HttpStatus.BAD_REQUEST, request);
@@ -53,9 +55,9 @@ public class PlatformExceptionHandler extends ResponseEntityExceptionHandler {
     @org.springframework.web.bind.annotation.ExceptionHandler(value = {PlatformRuntimeException.class})
     public final ResponseEntity<?> handleException(PlatformRuntimeException ex, WebRequest request) {
         ApiResult apiResult=new ApiResult();
-        ex.printStackTrace();
         apiResult.setCode(ex.getCode());
         apiResult.setMsg(ex.getMsg());
+        apiResult.setStatus(ApiResultStatus.FAIL);
         String content="错误详细已经做了统一记录,请复制并依据该标识向系统管理员进行沟通交流,标识依据是:;"+ UIDGenerator.generate();
         apiResult.setData(content);
         HttpHeaders headers = new HttpHeaders();
