@@ -131,6 +131,7 @@ public class RoleService extends BaseSortableService {
         List<Role> roles = new ArrayList<>();
         String tenantCode = (String) params.get("tenantCode");
         tenantCode = Strings.isNotBlank(tenantCode) ? tenantCode : getSessionTenantCode();
+        params.put("tenantCode", tenantCode);
         String appId = (String) params.get("appId");
         if (Strings.isNotBlank(appId)) {
             params.put("type", RoleTypeEnum.APP.getValue());
