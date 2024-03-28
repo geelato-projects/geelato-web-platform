@@ -47,10 +47,12 @@ public class RoleRestController extends BaseController {
         try {
             int pageNum = Strings.isNotBlank(req.getParameter("current")) ? Integer.parseInt(req.getParameter("current")) : -1;
             int pageSize = Strings.isNotBlank(req.getParameter("pageSize")) ? Integer.parseInt(req.getParameter("pageSize")) : -1;
+            String orderBy = Strings.isNotBlank(req.getParameter("order")) ? String.valueOf(req.getParameter("order")) : "";
+            orderBy = orderBy.replaceAll("\\|", " ");
             Map<String, Object> params = this.getQueryParameters(Role.class, req);
             FilterGroup filterGroup = this.getFilterGroup(params, OPERATORMAP);
 
-            List<Role> pageQueryList = roleService.pageQueryModel(Role.class, pageNum, pageSize, filterGroup);
+            List<Role> pageQueryList = roleService.pageQueryModel(Role.class, pageNum, pageSize, orderBy, filterGroup);
             List<Role> queryList = roleService.queryModel(Role.class, filterGroup);
 
             result.setTotal(queryList != null ? queryList.size() : 0);
