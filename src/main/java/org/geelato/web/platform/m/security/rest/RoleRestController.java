@@ -109,12 +109,7 @@ public class RoleRestController extends BaseController {
         try {
             // ID为空方可插入
             if (Strings.isNotBlank(form.getId())) {
-                // 存在，方可更新
-                if (roleService.isExist(Role.class, form.getId())) {
-                    result.setData(roleService.updateModel(form));
-                } else {
-                    result.error().setMsg(ApiErrorMsg.IS_NULL);
-                }
+                result.setData(roleService.updateModel(form));
             } else {
                 result.setData(roleService.createModel(form));
             }
