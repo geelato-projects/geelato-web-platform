@@ -1,8 +1,11 @@
 package org.geelato.web.platform.m.security.service;
 
+import com.alibaba.fastjson2.JSON;
 import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.enums.EnableStatusEnum;
 import org.geelato.core.gql.parser.FilterGroup;
+import org.geelato.core.meta.model.entity.TableMeta;
+import org.geelato.web.platform.enums.PermissionTypeEnum;
 import org.geelato.web.platform.enums.RoleTypeEnum;
 import org.geelato.web.platform.m.base.entity.App;
 import org.geelato.web.platform.m.base.service.BaseSortableService;
@@ -33,6 +36,9 @@ public class RoleService extends BaseSortableService {
     @Lazy
     @Autowired
     private RoleUserMapService roleUserMapService;
+    @Lazy
+    @Autowired
+    private PermissionService permissionService;
 
     /**
      * 逻辑删除
@@ -121,6 +127,46 @@ public class RoleService extends BaseSortableService {
         return formMap;
     }
 
+    public Map<String, Object> createModel(Role form) {
+        // 创建
+        Map<String, Object> map = super.createModel(form);
+        // 默认权限
+        Map<String, Object> params = new HashMap<>();
+        params.put("appId", form.getAppId());
+        params.put("tenantCode", form.getTenantCode());
+        List<TableMeta> tableMetaList = queryModel(TableMeta.class, params);
+        List<String> objects = new ArrayList<>();
+        for (TableMeta meta : tableMetaList) {
+            objects.add(meta.getEntityName());
+        }
+        if (objects.size() == 0) {
+            return map;
+        }
+        // 拥有的权限
+        FilterGroup tableFilter = new FilterGroup();
+        tableFilter.addFilter("type", FilterGroup.Operator.in, PermissionTypeEnum.getTablePermissions());
+        tableFilter.addFilter("object", FilterGroup.Operator.in, String.join(",", objects));
+        tableFilter.addFilter("tenantCode", form.getTenantCode());
+        List<Permission> curPermissions = permissionService.queryModel(Permission.class, tableFilter);
+        List<String> permissionIds = new ArrayList<>();
+        for (Permission permission : curPermissions) {
+            permissionIds.add(permission.getId());
+        }
+        if (permissionIds.size() == 0) {
+            return map;
+        }
+        // 默认权限
+        for (Permission permission : curPermissions) {
+            for (String code : PermissionService.PERMISSION_DEFAULT_TO_ROLE) {
+                if (permission.getCode().equals(String.format("%s%s", permission.getObject(), code))) {
+                    rolePermissionMapService.createByRoleAndPermission(JSON.parseObject(JSON.toJSONString(map), Role.class), permission);
+                }
+            }
+        }
+
+        return map;
+    }
+
     /**
      * 查询，平台级、应用级角色
      *
@@ -131,6 +177,7 @@ public class RoleService extends BaseSortableService {
         List<Role> roles = new ArrayList<>();
         String tenantCode = (String) params.get("tenantCode");
         tenantCode = Strings.isNotBlank(tenantCode) ? tenantCode : getSessionTenantCode();
+        params.put("tenantCode", tenantCode);
         String appId = (String) params.get("appId");
         if (Strings.isNotBlank(appId)) {
             params.put("type", RoleTypeEnum.APP.getValue());

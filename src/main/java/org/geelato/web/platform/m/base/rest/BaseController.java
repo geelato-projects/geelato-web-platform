@@ -1,6 +1,5 @@
 package org.geelato.web.platform.m.base.rest;
 
-import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
@@ -24,7 +23,7 @@ import java.util.*;
  * @author geemeta
  */
 @ControllerAdvice
-public class BaseController implements InitializingBean  {
+public class BaseController implements InitializingBean {
     @Autowired
     @Qualifier("primaryDao")
     protected Dao dao;
@@ -42,7 +41,6 @@ public class BaseController implements InitializingBean  {
     /**
      * 在每个子类方法调用之前先调用
      * 设置request,response,session这三个对象
-     *
      */
     @ModelAttribute
     public void setReqAndRes(HttpServletRequest request, HttpServletResponse response) {
@@ -50,7 +48,7 @@ public class BaseController implements InitializingBean  {
         this.response = response;
         this.session = request.getSession(true);
 
-        //可以在此处拿到当前登录的用户
+        // 可以在此处拿到当前登录的用户
     }
 
     public Map<String, Object> getQueryParameters(HttpServletRequest request) {
@@ -107,7 +105,6 @@ public class BaseController implements InitializingBean  {
 
     /**
      * 构建查询条件
-     *
      */
     public FilterGroup getFilterGroup(Map<String, Object> params, Map<String, List<String>> operatorMap) throws ParseException {
         FilterGroup filterGroup = new FilterGroup();
@@ -127,6 +124,10 @@ public class BaseController implements InitializingBean  {
                 List<String> intervals = operatorMap.get("intervals");
                 if (intervals != null && !intervals.isEmpty()) {
                     for (String list : intervals) {
+                        Object value = params.get(list);
+                        if (value instanceof String && Strings.isBlank(String.valueOf(value))) {
+                            continue;
+                        }
                         String[] times = (String[]) params.get(list);
                         if (times != null && Strings.isNotBlank(times[1]) && Strings.isNotBlank(times[1])) {
                             filterGroup.addFilter(list, FilterGroup.Operator.gte, new SimpleDateFormat("yyyy-MM-dd 00:00:00").format(new SimpleDateFormat("yyyy-MM-dd").parse(times[0])));

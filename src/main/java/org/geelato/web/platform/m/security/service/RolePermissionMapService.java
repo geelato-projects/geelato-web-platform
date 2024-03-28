@@ -458,6 +458,16 @@ public class RolePermissionMapService extends BaseService {
                 createModel(map);
             }
         }
+    }
 
+    public void createByRoleAndPermission(Role role, Permission permission) {
+        RolePermissionMap map = new RolePermissionMap();
+        map.setRoleId(role.getId());
+        map.setRoleName(role.getName());
+        map.setPermissionId(permission.getId());
+        map.setPermissionName(permission.getName());
+        map.setAppId(permission.getAppId());
+        map.setTenantCode(permission.getTenantCode());
+        createModel(map);
     }
 }
