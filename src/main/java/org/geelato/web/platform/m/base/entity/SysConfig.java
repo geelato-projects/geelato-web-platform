@@ -125,7 +125,6 @@ public class SysConfig extends BaseSortableEntity implements EntityEnableAble {
     }
 
     /**
-     * @param enableStatus
      */
     @Override
     public void setEnableStatus(int enableStatus) {

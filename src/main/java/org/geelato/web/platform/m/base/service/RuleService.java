@@ -140,10 +140,10 @@ public class RuleService {
             }
         }
 
-        if (resultList.size() > 0) {
+        if (!resultList.isEmpty()) {
             for (Map item : resultList) {
                 List<Map> items = toTree(toParseList, Long.parseLong(item.get("tn_id").toString()), childrenKey);
-                if (items.size() > 0) {
+                if (!items.isEmpty()) {
                     item.put(childrenKey, items);
                 }
             }
