@@ -8,13 +8,14 @@ import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.enums.DeleteStatusEnum;
 import org.geelato.core.gql.parser.FilterGroup;
+import org.geelato.core.gql.parser.PageQueryRequest;
 import org.geelato.web.platform.m.base.entity.App;
 import org.geelato.web.platform.m.base.service.AppService;
-import org.geelato.web.platform.m.security.entity.DataItems;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -26,6 +27,7 @@ import java.util.*;
 @RequestMapping(value = "/api/app")
 public class AppController extends BaseController {
     private static final Map<String, List<String>> OPERATORMAP = new LinkedHashMap<>();
+    private static final Class<App> CLAZZ = App.class;
     private static final String DEFAULT_ORDER_BY = "seq_no ASC,update_at DESC";
 
     static {
@@ -42,19 +44,9 @@ public class AppController extends BaseController {
     public ApiPagedResult pageQuery(HttpServletRequest req) {
         ApiPagedResult result = new ApiPagedResult();
         try {
-            int pageNum = Strings.isNotBlank(req.getParameter("current")) ? Integer.parseInt(req.getParameter("current")) : -1;
-            int pageSize = Strings.isNotBlank(req.getParameter("pageSize")) ? Integer.parseInt(req.getParameter("pageSize")) : -1;
-            Map<String, Object> params = this.getQueryParameters(App.class, req);
-            FilterGroup filterGroup = this.getFilterGroup(params, OPERATORMAP);
-
-            List<App> pageQueryList = appService.pageQueryModel(App.class, pageNum, pageSize, filterGroup);
-            List<App> queryList = appService.queryModel(App.class, filterGroup);
-
-            result.setTotal(queryList != null ? queryList.size() : 0);
-            result.setData(new DataItems(pageQueryList, result.getTotal()));
-            result.setPage(pageNum);
-            result.setSize(pageSize);
-            result.setDataSize(pageQueryList != null ? pageQueryList.size() : 0);
+            PageQueryRequest pageQueryRequest = this.getPageQueryParameters(req, DEFAULT_ORDER_BY);
+            FilterGroup filterGroup = this.getFilterGroup(CLAZZ, req, OPERATORMAP);
+            result = appService.pageQueryModel(CLAZZ, filterGroup, pageQueryRequest);
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
@@ -68,8 +60,9 @@ public class AppController extends BaseController {
     public ApiResult<List<App>> query(HttpServletRequest req) {
         ApiResult<List<App>> result = new ApiResult<>();
         try {
-            Map<String, Object> params = this.getQueryParameters(App.class, req);
-            return result.setData(appService.queryModel(App.class, params, AppController.DEFAULT_ORDER_BY));
+            PageQueryRequest pageQueryRequest = this.getPageQueryParameters(req, DEFAULT_ORDER_BY);
+            Map<String, Object> params = this.getQueryParameters(CLAZZ, req);
+            result.setData(appService.queryModel(CLAZZ, params, pageQueryRequest.getOrderBy()));
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
@@ -108,7 +101,7 @@ public class AppController extends BaseController {
     public ApiResult get(@PathVariable(required = true) String id) {
         ApiResult result = new ApiResult();
         try {
-            return result.setData(appService.getModel(App.class, id));
+            result.setData(appService.getModel(CLAZZ, id));
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
@@ -124,12 +117,7 @@ public class AppController extends BaseController {
         try {
             // ID为空方可插入
             if (Strings.isNotBlank(form.getId())) {
-                // 存在，方可更新
-                if (appService.isExist(App.class, form.getId())) {
-                    result.setData(appService.updateModel(form));
-                } else {
-                    result.error().setMsg(ApiErrorMsg.IS_NULL);
-                }
+                result.setData(appService.updateModel(form));
             } else {
                 result.setData(appService.createModel(form));
             }
@@ -146,13 +134,9 @@ public class AppController extends BaseController {
     public ApiResult<App> isDelete(@PathVariable(required = true) String id) {
         ApiResult<App> result = new ApiResult<>();
         try {
-            App mResult = appService.getModel(App.class, id);
-            if (mResult != null) {
-                appService.isDeleteModel(mResult);
-                result.success();
-            } else {
-                result.error().setMsg(ApiErrorMsg.IS_NULL);
-            }
+            App model = appService.getModel(CLAZZ, id);
+            Assert.notNull(model, ApiErrorMsg.IS_NULL);
+            appService.isDeleteModel(model);
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.DELETE_FAIL);

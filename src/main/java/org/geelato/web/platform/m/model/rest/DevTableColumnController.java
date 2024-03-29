@@ -7,7 +7,9 @@ import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.enums.ColumnSyncedEnum;
 import org.geelato.core.enums.DeleteStatusEnum;
+import org.geelato.core.enums.EnableStatusEnum;
 import org.geelato.core.gql.parser.FilterGroup;
+import org.geelato.core.gql.parser.PageQueryRequest;
 import org.geelato.core.meta.MetaManager;
 import org.geelato.core.meta.model.entity.TableMeta;
 import org.geelato.core.meta.model.field.ColumnMeta;
@@ -34,6 +36,7 @@ import java.util.*;
 @RequestMapping(value = "/api/model/table/column")
 public class DevTableColumnController extends BaseController {
     private static final Map<String, List<String>> OPERATORMAP = new LinkedHashMap<>();
+    private static final Class<ColumnMeta> CLAZZ = ColumnMeta.class;
 
     static {
         OPERATORMAP.put("contains", Arrays.asList("title", "fieldName", "name", "comment", "description"));
@@ -54,19 +57,9 @@ public class DevTableColumnController extends BaseController {
     public ApiPagedResult<DataItems> pageQuery(HttpServletRequest req) {
         ApiPagedResult<DataItems> result = new ApiPagedResult<>();
         try {
-            int pageNum = Strings.isNotBlank(req.getParameter("current")) ? Integer.parseInt(req.getParameter("current")) : -1;
-            int pageSize = Strings.isNotBlank(req.getParameter("pageSize")) ? Integer.parseInt(req.getParameter("pageSize")) : -1;
-            Map<String, Object> params = this.getQueryParameters(ColumnMeta.class, req);
-            FilterGroup filterGroup = this.getFilterGroup(params, OPERATORMAP);
-
-            List<ColumnMeta> pageQueryList = devTableColumnService.pageQueryModel(ColumnMeta.class, pageNum, pageSize, filterGroup);
-            List<ColumnMeta> queryList = devTableColumnService.queryModel(ColumnMeta.class, filterGroup);
-
-            result.setTotal(queryList != null ? queryList.size() : 0);
-            result.setData(new DataItems(pageQueryList, result.getTotal()));
-            result.setPage(pageNum);
-            result.setSize(pageSize);
-            result.setDataSize(pageQueryList != null ? pageQueryList.size() : 0);
+            PageQueryRequest pageQueryRequest = this.getPageQueryParameters(req);
+            FilterGroup filterGroup = this.getFilterGroup(CLAZZ, req, OPERATORMAP);
+            result = devTableColumnService.pageQueryModel(CLAZZ, filterGroup, pageQueryRequest);
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
@@ -77,11 +70,12 @@ public class DevTableColumnController extends BaseController {
 
     @RequestMapping(value = "/query", method = RequestMethod.GET)
     @ResponseBody
-    public ApiResult<List<ColumnMeta>> query(HttpServletRequest req) {
-        ApiResult<List<ColumnMeta>> result = new ApiResult<>();
+    public ApiResult query(HttpServletRequest req) {
+        ApiResult result = new ApiResult<>();
         try {
-            Map<String, Object> params = this.getQueryParameters(ColumnMeta.class, req);
-            return result.setData(devTableColumnService.queryModel(ColumnMeta.class, params));
+            PageQueryRequest pageQueryRequest = this.getPageQueryParameters(req);
+            Map<String, Object> params = this.getQueryParameters(CLAZZ, req);
+            result.setData(devTableColumnService.queryModel(CLAZZ, params, pageQueryRequest.getOrderBy()));
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
@@ -92,10 +86,10 @@ public class DevTableColumnController extends BaseController {
 
     @RequestMapping(value = "/get/{id}", method = RequestMethod.GET)
     @ResponseBody
-    public ApiResult<ColumnMeta> get(@PathVariable(required = true) String id) {
-        ApiResult<ColumnMeta> result = new ApiResult<>();
+    public ApiResult get(@PathVariable(required = true) String id) {
+        ApiResult result = new ApiResult<>();
         try {
-            return result.setData(devTableColumnService.getModel(ColumnMeta.class, id));
+            result.setData(devTableColumnService.getModel(CLAZZ, id));
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
@@ -113,7 +107,7 @@ public class DevTableColumnController extends BaseController {
             // ID为空方可插入
             if (Strings.isNotBlank(form.getId())) {
                 // 存在，方可更新
-                ColumnMeta meta = devTableColumnService.getModel(ColumnMeta.class, form.getId());
+                ColumnMeta meta = devTableColumnService.getModel(CLAZZ, form.getId());
                 Assert.notNull(meta, ApiErrorMsg.IS_NULL);
                 form = devTableColumnService.upgradeTable(form, meta);
                 Map<String, Object> resultMap = devTableColumnService.updateModel(form);
@@ -163,7 +157,7 @@ public class DevTableColumnController extends BaseController {
             // 需要添加的字段
             FilterGroup columnFilter = new FilterGroup();
             columnFilter.addFilter("id", FilterGroup.Operator.in, columnIds);
-            List<ColumnMeta> columnMetas = devTableColumnService.queryModel(ColumnMeta.class, columnFilter);
+            List<ColumnMeta> columnMetas = devTableColumnService.queryModel(CLAZZ, columnFilter);
             if (columnMetas == null || columnMetas.size() == 0) {
                 return result;
             }
@@ -171,7 +165,7 @@ public class DevTableColumnController extends BaseController {
             List<String> existColumnNames = new ArrayList<>();
             Map<String, Object> columnParams = new HashMap<>();
             columnParams.put("tableId", tableId);
-            List<ColumnMeta> existColumns = devTableColumnService.queryModel(ColumnMeta.class, columnParams);
+            List<ColumnMeta> existColumns = devTableColumnService.queryModel(CLAZZ, columnParams);
             if (existColumns != null && existColumns.size() > 0) {
                 for (ColumnMeta meta : existColumns) {
                     if (!existColumnNames.contains(meta.getName())) {
@@ -208,18 +202,14 @@ public class DevTableColumnController extends BaseController {
     public ApiResult isDelete(@PathVariable(required = true) String id) {
         ApiResult result = new ApiResult();
         try {
-            ColumnMeta mResult = devTableColumnService.getModel(ColumnMeta.class, id);
-            if (mResult != null) {
-                devTableColumnService.isDeleteModel(mResult);
-                result.success();
-            } else {
-                result.error().setMsg(ApiErrorMsg.IS_NULL);
-            }
+            ColumnMeta model = devTableColumnService.getModel(CLAZZ, id);
+            Assert.notNull(model, ApiErrorMsg.IS_NULL);
+            devTableColumnService.isDeleteModel(model);
             // 刷新实体缓存
-            if (result.isSuccess() && Strings.isNotEmpty(mResult.getTableName())) {
-                metaManager.refreshDBMeta(mResult.getTableName());
+            if (Strings.isNotEmpty(model.getTableName())) {
+                metaManager.refreshDBMeta(model.getTableName());
                 // 刷新默认视图
-                devViewService.createOrUpdateDefaultTableView(devTableColumnService.getModel(TableMeta.class, mResult.getTableId()), devTableColumnService.getDefaultViewSql(mResult.getTableName()));
+                devViewService.createOrUpdateDefaultTableView(devTableColumnService.getModel(TableMeta.class, model.getTableId()), devTableColumnService.getDefaultViewSql(model.getTableName()));
             }
         } catch (Exception e) {
             logger.error(e.getMessage());
@@ -235,7 +225,7 @@ public class DevTableColumnController extends BaseController {
         ApiResult<List<ColumnMeta>> result = new ApiResult<>();
         try {
             List<ColumnMeta> defaultColumnMetaList = metaManager.getDefaultColumn();
-            return result.setData(defaultColumnMetaList);
+            result.setData(defaultColumnMetaList);
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
@@ -250,7 +240,7 @@ public class DevTableColumnController extends BaseController {
         ApiResult<List<ColumnSelectType>> result = new ApiResult<>();
         try {
             List<ColumnSelectType> selectTypes = metaManager.getColumnSelectType();
-            return result.success().setData(selectTypes);
+            result.setData(selectTypes);
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.QUERY_FAIL);

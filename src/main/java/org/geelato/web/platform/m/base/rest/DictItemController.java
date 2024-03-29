@@ -8,16 +8,18 @@ import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.constants.ColumnDefault;
 import org.geelato.core.enums.DeleteStatusEnum;
+import org.geelato.core.enums.EnableStatusEnum;
 import org.geelato.core.gql.parser.FilterGroup;
+import org.geelato.core.gql.parser.PageQueryRequest;
 import org.geelato.web.platform.m.base.entity.Dict;
 import org.geelato.web.platform.m.base.entity.DictItem;
 import org.geelato.web.platform.m.base.service.DictItemService;
 import org.geelato.web.platform.m.base.service.DictService;
-import org.geelato.web.platform.m.security.entity.DataItems;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -32,9 +34,9 @@ public class DictItemController extends BaseController {
     private static final String DICT_CODE = "dictCode";
     private static final String DICT_ID = "dictId";
     private static final String ROOT_PARENT_ID = "";
-    private static final String DEFAULT_ORDER_BY = "seq_no ASC";
 
     private static final Map<String, List<String>> OPERATORMAP = new LinkedHashMap<>();
+    private static final Class<DictItem> CLAZZ = DictItem.class;
 
     static {
         OPERATORMAP.put("contains", Arrays.asList("itemCode", "itemName", "itemRemark"));
@@ -52,19 +54,9 @@ public class DictItemController extends BaseController {
     public ApiPagedResult pageQuery(HttpServletRequest req) {
         ApiPagedResult result = new ApiPagedResult();
         try {
-            int pageNum = Strings.isNotBlank(req.getParameter("current")) ? Integer.parseInt(req.getParameter("current")) : -1;
-            int pageSize = Strings.isNotBlank(req.getParameter("pageSize")) ? Integer.parseInt(req.getParameter("pageSize")) : -1;
-            Map<String, Object> params = this.getQueryParameters(DictItem.class, req);
-            FilterGroup filterGroup = this.getFilterGroup(params, OPERATORMAP);
-
-            List<DictItem> pageQueryList = dictItemService.pageQueryModel(DictItem.class, pageNum, pageSize, DEFAULT_ORDER_BY, filterGroup);
-            List<DictItem> queryList = dictItemService.queryModel(DictItem.class, filterGroup);
-
-            result.setTotal(queryList != null ? queryList.size() : 0);
-            result.setData(new DataItems(pageQueryList, result.getTotal()));
-            result.setPage(pageNum);
-            result.setSize(pageSize);
-            result.setDataSize(pageQueryList != null ? pageQueryList.size() : 0);
+            PageQueryRequest pageQueryRequest = this.getPageQueryParameters(req);
+            FilterGroup filterGroup = this.getFilterGroup(CLAZZ, req, OPERATORMAP);
+            result = dictItemService.pageQueryModel(CLAZZ, filterGroup, pageQueryRequest);
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
@@ -78,8 +70,9 @@ public class DictItemController extends BaseController {
     public ApiResult query(HttpServletRequest req) {
         ApiResult result = new ApiResult();
         try {
-            Map<String, Object> params = this.getQueryParameters(DictItem.class, req);
-            return result.setData(dictItemService.queryModel(DictItem.class, params));
+            PageQueryRequest pageQueryRequest = this.getPageQueryParameters(req);
+            Map<String, Object> params = this.getQueryParameters(CLAZZ, req);
+            result.setData(dictItemService.queryModel(CLAZZ, params, pageQueryRequest.getOrderBy()));
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
@@ -93,7 +86,7 @@ public class DictItemController extends BaseController {
     public ApiResult get(@PathVariable(required = true) String id) {
         ApiResult result = new ApiResult();
         try {
-            return result.setData(dictItemService.getModel(DictItem.class, id));
+            result.setData(dictItemService.getModel(CLAZZ, id));
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
@@ -109,12 +102,7 @@ public class DictItemController extends BaseController {
         try {
             // ID为空方可插入
             if (Strings.isNotBlank(form.getId())) {
-                // 存在，方可更新
-                if (dictItemService.isExist(DictItem.class, form.getId())) {
-                    result.setData(dictItemService.updateModel(form));
-                } else {
-                    result.error().setMsg(ApiErrorMsg.IS_NULL);
-                }
+                result.setData(dictItemService.updateModel(form));
             } else {
                 result.setData(dictItemService.createModel(form));
             }
@@ -145,13 +133,10 @@ public class DictItemController extends BaseController {
     public ApiResult isDelete(@PathVariable(required = true) String id) {
         ApiResult result = new ApiResult();
         try {
-            DictItem mResult = dictItemService.getModel(DictItem.class, id);
-            if (mResult != null) {
-                dictItemService.isDeleteModel(mResult);
-                result.success();
-            } else {
-                result.error().setMsg(ApiErrorMsg.IS_NULL);
-            }
+            DictItem model = dictItemService.getModel(CLAZZ, id);
+            Assert.notNull(model, ApiErrorMsg.IS_NULL);
+            model.setEnableStatus(EnableStatusEnum.DISABLED.getCode());
+            dictItemService.isDeleteModel(model);
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.DELETE_FAIL);
@@ -175,9 +160,9 @@ public class DictItemController extends BaseController {
                 params.remove(DICT_CODE);
                 params.put(DICT_ID, dResult.get(0).getId());
                 params.put(ColumnDefault.ENABLE_STATUS_FIELD, ColumnDefault.ENABLE_STATUS_VALUE);
-                iResult = dictItemService.queryModel(DictItem.class, params);
+                iResult = dictItemService.queryModel(CLAZZ, params);
             }
-            result.success().setData(buildTree(iResult));
+            result.setData(buildTree(iResult));
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
@@ -202,7 +187,7 @@ public class DictItemController extends BaseController {
         }
         Map<String, List<DictItem>> pidListMap = pidList.stream().collect(Collectors.groupingBy(DictItem::getPid));
         pidList.forEach(item -> item.setChildren(pidListMap.get(item.getId())));
-        //返回结果也改为返回顶层节点的list
+        // 返回结果也改为返回顶层节点的list
         return pidListMap.get(ROOT_PARENT_ID);
     }
 

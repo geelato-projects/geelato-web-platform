@@ -32,6 +32,8 @@ import java.util.*;
 @RequestMapping(value = {"/api/user"})
 public class JWTAuthRestController extends BaseController {
 
+    private static final String ROOT_AVATAR_DIRECTORY = "upload/avatar";
+    private static final String AVATAR_BASE64_PREFIX = "data:image/png;base64,";
     @Autowired
     protected AccountService accountService;
     @Autowired
@@ -42,10 +44,7 @@ public class JWTAuthRestController extends BaseController {
     private AttachService attachService;
     @Autowired
     private RuleService ruleService;
-
-    private Logger logger = LoggerFactory.getLogger(JWTAuthRestController.class);
-    private static final String ROOT_AVATAR_DIRECTORY = "upload/avatar";
-    private static final String AVATAR_BASE64_PREFIX = "data:image/png;base64,";
+    private final Logger logger = LoggerFactory.getLogger(JWTAuthRestController.class);
 
     @IgnoreJWTVerify
     @RequestMapping(value = "/login", method = RequestMethod.POST, produces = {"application/json;charset=UTF-8"})
@@ -53,7 +52,7 @@ public class JWTAuthRestController extends BaseController {
     public ApiResult login(@RequestBody LoginParams loginParams, HttpServletRequest req) {
         ApiResult apiResult = new ApiResult();
         try {
-            //用户登录校验
+            // 用户登录校验
             User loginUser = dao.queryForObject(User.class, "loginName", loginParams.getUsername());
             Boolean checkPsdRst = CheckPsd(loginUser, loginParams);
             if (loginUser != null && checkPsdRst) {
@@ -61,7 +60,7 @@ public class JWTAuthRestController extends BaseController {
                 apiResult.setMsg("认证成功！");
                 apiResult.setCode(20000);
 
-                String userId = loginUser.getId().toString();
+                String userId = loginUser.getId();
 
                 Map<String, String> payload = new HashMap<>(3);
                 payload.put("id", userId);
@@ -74,7 +73,7 @@ public class JWTAuthRestController extends BaseController {
                 loginResult.setHomePath("");
                 loginResult.setRoles(getRoles(userId));
 
-                //TODO 将token 写入域名下的cookies
+                // TODO 将token 写入域名下的cookies
 
                 apiResult.setData(loginResult);
             } else {

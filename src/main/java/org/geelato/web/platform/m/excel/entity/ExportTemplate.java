@@ -1,5 +1,6 @@
 package org.geelato.web.platform.m.excel.entity;
 
+import org.geelato.core.constants.ColumnDefault;
 import org.geelato.core.enums.EnableStatusEnum;
 import org.geelato.core.meta.annotation.Col;
 import org.geelato.core.meta.annotation.Entity;
@@ -23,7 +24,7 @@ public class ExportTemplate extends BaseEntity implements EntityEnableAble {
     private String fileCode;
     private String template;
     private String templateRule;
-    private int enableStatus = EnableStatusEnum.ENABLED.getCode();
+    private int enableStatus = ColumnDefault.ENABLE_STATUS_VALUE;
     private String description;
     private String businessTypeData;// 数据类型
     private String businessRuleData;// 清洗规则

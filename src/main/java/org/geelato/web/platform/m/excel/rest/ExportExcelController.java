@@ -8,11 +8,12 @@ import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiErrorMsg;
+import org.geelato.core.gql.parser.FilterGroup;
+import org.geelato.core.gql.parser.PageQueryRequest;
 import org.geelato.web.platform.m.base.entity.Attach;
 import org.geelato.web.platform.m.base.rest.BaseController;
 import org.geelato.web.platform.m.base.service.AttachService;
 import org.geelato.web.platform.m.excel.service.ExportExcelService;
-import org.geelato.web.platform.m.security.entity.DataItems;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,10 +23,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author diabl
@@ -35,8 +33,15 @@ import java.util.Map;
 @Controller
 @RequestMapping(value = "/api/export/file")
 public class ExportExcelController extends BaseController {
-    private final Logger logger = LoggerFactory.getLogger(ExportExcelController.class);
+    private static final Map<String, List<String>> OPERATORMAP = new LinkedHashMap<>();
+    private static final Class<Attach> CLAZZ = Attach.class;
 
+    static {
+        OPERATORMAP.put("contains", List.of("name"));
+        OPERATORMAP.put("intervals", Arrays.asList("createAt", "updateAt"));
+    }
+
+    private final Logger logger = LoggerFactory.getLogger(ExportExcelController.class);
     @Autowired
     private AttachService attachService;
     @Autowired
@@ -47,18 +52,9 @@ public class ExportExcelController extends BaseController {
     public ApiPagedResult pageQuery(HttpServletRequest req) {
         ApiPagedResult result = new ApiPagedResult();
         try {
-            int pageNum = Strings.isNotBlank(req.getParameter("current")) ? Integer.parseInt(req.getParameter("current")) : -1;
-            int pageSize = Strings.isNotBlank(req.getParameter("pageSize")) ? Integer.parseInt(req.getParameter("pageSize")) : -1;
-            Map<String, Object> params = this.getQueryParameters(Attach.class, req);
-
-            List<Attach> pageQueryList = attachService.pageQueryModel(Attach.class, pageNum, pageSize, params);
-            List<Attach> queryList = attachService.queryModel(Attach.class, params);
-
-            result.setTotal(queryList != null ? queryList.size() : 0);
-            result.setData(new DataItems(pageQueryList, result.getTotal()));
-            result.setPage(pageNum);
-            result.setSize(pageSize);
-            result.setDataSize(pageQueryList != null ? pageQueryList.size() : 0);
+            PageQueryRequest pageQueryRequest = this.getPageQueryParameters(req);
+            FilterGroup filterGroup = this.getFilterGroup(CLAZZ, req, OPERATORMAP);
+            result = attachService.pageQueryModel(CLAZZ, filterGroup, pageQueryRequest);
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.QUERY_FAIL);

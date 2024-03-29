@@ -1,7 +1,7 @@
 package org.geelato.web.platform.m.security.entity;
 
 
-import org.geelato.core.enums.EnableStatusEnum;
+import org.geelato.core.constants.ColumnDefault;
 import org.geelato.core.meta.annotation.Col;
 import org.geelato.core.meta.annotation.Entity;
 import org.geelato.core.meta.annotation.Title;
@@ -39,7 +39,7 @@ public class User extends BaseSortableEntity implements EntityEnableAble {
     private String orgName;
     private String jobNumber;
     private String cooperatingOrgId;
-    private int enableStatus = EnableStatusEnum.ENABLED.getCode();
+    private int enableStatus = ColumnDefault.ENABLE_STATUS_VALUE;
 
     public User() {
     }

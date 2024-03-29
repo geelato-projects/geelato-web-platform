@@ -1,5 +1,6 @@
 package org.geelato.web.platform.m.security.entity;
 
+import org.geelato.core.constants.ColumnDefault;
 import org.geelato.core.meta.annotation.Col;
 import org.geelato.core.meta.annotation.Entity;
 import org.geelato.core.meta.annotation.Title;
@@ -16,9 +17,9 @@ public class EncodingLog extends BaseEntity {
     private String encodingId;
     private String template;// 模板
     private String example;
-    private String exampleDate;//时间
+    private String exampleDate;// 时间
     private String exampleSerial;// 流水
-    private int enableStatus;
+    private int enableStatus = ColumnDefault.ENABLE_STATUS_VALUE;
 
     @Title(title = "编码模板")
     @Col(name = "encoding_id")

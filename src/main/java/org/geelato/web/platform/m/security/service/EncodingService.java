@@ -178,10 +178,10 @@ public class EncodingService extends BaseService {
     }
 
     private String getSerialByRedisLock(String redisItemKey, EncodingItem item) {
-        //获取锁 加上uuid防止误删除锁
+        // 获取锁 加上uuid防止误删除锁
         String uuid = System.currentTimeMillis() + UUID.randomUUID().toString().replaceAll("-", "");
         Boolean lock = redisTemplate.opsForValue().setIfAbsent(ENCODING_LOCK_PREFIX, uuid, 10, TimeUnit.SECONDS);
-        //如果获取到锁执行步骤 最后释放锁
+        // 如果获取到锁执行步骤 最后释放锁
         String serial = null;
         if (lock) {
             if (EncodingSerialTypeEnum.ORDER.getValue().equals(item.getSerialType())) {
@@ -191,8 +191,8 @@ public class EncodingService extends BaseService {
                 // 随机
                 serial = getRandomSerial(redisItemKey, item.getSerialDigit());
             }
-            //在极端情况下仍然会误删除锁
-            //因此使用lua脚本的方式来防止误删除
+            // 在极端情况下仍然会误删除锁
+            // 因此使用lua脚本的方式来防止误删除
             String script = "if redis.call(\"get\",KEYS[1]) == ARGV[1]\n" +
                     "then\n" +
                     "    return redis.call(\"del\",KEYS[1])\n" +
@@ -204,7 +204,7 @@ public class EncodingService extends BaseService {
             defaultRedisScript.setResultType(Long.class);
             redisTemplate.execute(defaultRedisScript, List.of(ENCODING_LOCK_PREFIX), uuid);
         } else {
-            //如果没有获取到锁 重试
+            // 如果没有获取到锁 重试
             try {
                 Thread.sleep(100);
                 serial = getSerialByRedisLock(redisItemKey, item);

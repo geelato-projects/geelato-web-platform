@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.gql.parser.FilterGroup;
+import org.geelato.core.gql.parser.PageQueryRequest;
 import org.geelato.core.orm.Dao;
 import org.geelato.web.platform.m.base.service.RuleService;
 import org.springframework.beans.factory.InitializingBean;
@@ -51,56 +52,53 @@ public class BaseController implements InitializingBean {
         // 可以在此处拿到当前登录的用户
     }
 
-    public Map<String, Object> getQueryParameters(HttpServletRequest request) {
-        Map<String, Object> queryParamsMap = new LinkedHashMap<>();
-        for (Map.Entry<String, String[]> entry : request.getParameterMap().entrySet()) {
-            List<String> values = List.of(entry.getValue());
-            if (values.size() == 1) {
-                queryParamsMap.put(entry.getKey(), values.get(0));
-            } else {
-                queryParamsMap.put(entry.getKey(), values.toArray(new String[0]));
-            }
+    /**
+     * 构建分页查询条件，设置默认排序
+     *
+     * @param request
+     * @param defaultOrder
+     * @return
+     */
+    public PageQueryRequest getPageQueryParameters(HttpServletRequest request, String defaultOrder) {
+        PageQueryRequest pageQueryRequest = getPageQueryParameters(request);
+        if (Strings.isNotBlank(pageQueryRequest.getOrderBy())) {
+            pageQueryRequest.setOrderBy(defaultOrder);
         }
-
-        return queryParamsMap;
+        return pageQueryRequest;
     }
 
-    public Map<String, Object> getQueryParameters(Class elementType, HttpServletRequest request) {
-        Map<String, Object> queryParamsMap = new LinkedHashMap<>();
-        for (Map.Entry<String, String[]> entry : request.getParameterMap().entrySet()) {
-            Set<String> fieldNames = getClassFieldNames(elementType);
-            if (fieldNames.contains(entry.getKey())) {
-                List<String> values = List.of(entry.getValue());
-                if (values.size() == 1) {
-                    queryParamsMap.put(entry.getKey(), values.get(0));
-                } else {
-                    queryParamsMap.put(entry.getKey(), values.toArray(new String[values.size()]));
-                }
-            }
-        }
+    /**
+     * 构建分页查询条件
+     *
+     * @param request
+     * @return
+     */
+    public PageQueryRequest getPageQueryParameters(HttpServletRequest request) {
+        PageQueryRequest queryRequest = new PageQueryRequest();
+        int pageNum = Strings.isNotBlank(request.getParameter("current")) ? Integer.parseInt(request.getParameter("current")) : -1;
+        queryRequest.setPageNum(pageNum);
+        int pageSize = Strings.isNotBlank(request.getParameter("pageSize")) ? Integer.parseInt(request.getParameter("pageSize")) : -1;
+        queryRequest.setPageSize(pageSize);
+        String orderBy = Strings.isNotBlank(request.getParameter("order")) ? String.valueOf(request.getParameter("order")) : "";
+        orderBy = orderBy.replaceAll("\\|", " ");
+        queryRequest.setOrderBy(orderBy);
 
-
-        return queryParamsMap;
+        return queryRequest;
     }
 
-    private Set<String> getClassFieldNames(Class elementType) {
-        Set<String> fieldNameList = new HashSet<>();
-        List<Field> fieldsList = getClassFields(elementType);
-        for (Field field : fieldsList) {
-            fieldNameList.add(field.getName());
-        }
-        return fieldNameList;
-    }
-
-    private List<Field> getClassFields(Class elementType) {
-        List<Field> fieldsList = new ArrayList<>();
-        while (elementType != null) {
-            Field[] declaredFields = elementType.getDeclaredFields();
-            fieldsList.addAll(Arrays.asList(declaredFields));
-            elementType = elementType.getSuperclass();
-        }
-
-        return fieldsList;
+    /**
+     * 根据接口传递的参数，构建查询条件
+     *
+     * @param elementType
+     * @param request
+     * @param operatorMap
+     * @return
+     * @throws ParseException
+     */
+    public FilterGroup getFilterGroup(Class elementType, HttpServletRequest request, Map<String, List<String>> operatorMap) throws ParseException {
+        Map<String, Object> params = this.getQueryParameters(elementType, request);
+        FilterGroup filterGroup = this.getFilterGroup(params, operatorMap);
+        return filterGroup;
     }
 
     /**
@@ -146,6 +144,83 @@ public class BaseController implements InitializingBean {
         }
 
         return filterGroup;
+    }
+
+    /**
+     * 获取接口参数，根据对象清理
+     *
+     * @param elementType
+     * @param request
+     * @return
+     */
+    public Map<String, Object> getQueryParameters(Class elementType, HttpServletRequest request) {
+        Map<String, Object> queryParamsMap = new LinkedHashMap<>();
+        for (Map.Entry<String, String[]> entry : request.getParameterMap().entrySet()) {
+            Set<String> fieldNames = getClassFieldNames(elementType);
+            if (fieldNames.contains(entry.getKey())) {
+                List<String> values = List.of(entry.getValue());
+                if (values.size() == 1) {
+                    queryParamsMap.put(entry.getKey(), values.get(0));
+                } else {
+                    queryParamsMap.put(entry.getKey(), values.toArray(new String[values.size()]));
+                }
+            }
+        }
+
+
+        return queryParamsMap;
+    }
+
+    /**
+     * 获取接口参数
+     *
+     * @param request
+     * @return
+     */
+    public Map<String, Object> getQueryParameters(HttpServletRequest request) {
+        Map<String, Object> queryParamsMap = new LinkedHashMap<>();
+        for (Map.Entry<String, String[]> entry : request.getParameterMap().entrySet()) {
+            List<String> values = List.of(entry.getValue());
+            if (values.size() == 1) {
+                queryParamsMap.put(entry.getKey(), values.get(0));
+            } else {
+                queryParamsMap.put(entry.getKey(), values.toArray(new String[0]));
+            }
+        }
+
+        return queryParamsMap;
+    }
+
+    /**
+     * 获取对象拥有的属性
+     *
+     * @param elementType
+     * @return
+     */
+    private Set<String> getClassFieldNames(Class elementType) {
+        Set<String> fieldNameList = new HashSet<>();
+        List<Field> fieldsList = getClassFields(elementType);
+        for (Field field : fieldsList) {
+            fieldNameList.add(field.getName());
+        }
+        return fieldNameList;
+    }
+
+    /**
+     * 获取对象拥有的属性
+     *
+     * @param elementType
+     * @return
+     */
+    private List<Field> getClassFields(Class elementType) {
+        List<Field> fieldsList = new ArrayList<>();
+        while (elementType != null) {
+            Field[] declaredFields = elementType.getDeclaredFields();
+            fieldsList.addAll(Arrays.asList(declaredFields));
+            elementType = elementType.getSuperclass();
+        }
+
+        return fieldsList;
     }
 
 

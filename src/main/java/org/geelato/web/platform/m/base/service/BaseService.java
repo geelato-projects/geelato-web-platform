@@ -4,11 +4,14 @@ import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.Ctx;
+import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.constants.ColumnDefault;
 import org.geelato.core.enums.DeleteStatusEnum;
 import org.geelato.core.gql.parser.FilterGroup;
+import org.geelato.core.gql.parser.PageQueryRequest;
 import org.geelato.core.meta.model.entity.BaseEntity;
 import org.geelato.core.orm.Dao;
+import org.geelato.web.platform.m.security.entity.DataItems;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
@@ -30,41 +33,57 @@ public class BaseService {
     /**
      * 分页查询
      *
-     * @param entity   查询实体
-     * @param pageNum  页码
-     * @param pageSize 分页数量
-     * @param params   条件参数
+     * @param entity
+     * @param params
+     * @param request
      * @param <T>
      * @return
      */
-    public <T> List<T> pageQueryModel(Class<T> entity, int pageNum, int pageSize, String orderBy, Map<String, Object> params) {
+    public <T> ApiPagedResult pageQueryModel(Class<T> entity, Map<String, Object> params, PageQueryRequest request) {
+        ApiPagedResult result = new ApiPagedResult();
+        // 配置参数
         dao.setDefaultFilter(true, filterGroup);
-        orderBy = Strings.isNotBlank(orderBy) ? orderBy : BaseService.DEFAULT_ORDER_BY;
-        return dao.queryList(entity, params, pageNum, pageSize, orderBy);
-    }
+        String orderBy = Strings.isNotBlank(request.getOrderBy()) ? request.getOrderBy() : BaseService.DEFAULT_ORDER_BY;
+        request.setOrderBy(orderBy);
+        // dao查询
+        List<T> pageQueryList = dao.pageQueryList(entity, params, request);
+        List<T> queryList = dao.queryList(entity, params, orderBy);
+        // 分页结果
+        result.setPage(request.getPageNum());
+        result.setSize(request.getPageSize());
+        result.setTotal(queryList != null ? queryList.size() : 0);
+        result.setDataSize(pageQueryList != null ? pageQueryList.size() : 0);
+        result.setData(new DataItems(pageQueryList, result.getTotal()));
 
-    public <T> List<T> pageQueryModel(Class<T> entity, int pageNum, int pageSize, Map<String, Object> params) {
-        return this.pageQueryModel(entity, pageNum, pageSize, BaseService.DEFAULT_ORDER_BY, params);
+        return result;
     }
 
     /**
      * 分页查询
      *
-     * @param entity   查询实体
-     * @param pageNum  页码
-     * @param pageSize 分页数量
-     * @param filter   条件参数
+     * @param entity
+     * @param filter
+     * @param request
      * @param <T>
      * @return
      */
-    public <T> List<T> pageQueryModel(Class<T> entity, int pageNum, int pageSize, String orderBy, FilterGroup filter) {
+    public <T> ApiPagedResult pageQueryModel(Class<T> entity, FilterGroup filter, PageQueryRequest request) {
+        ApiPagedResult result = new ApiPagedResult();
+        // 配置参数
         dao.setDefaultFilter(true, filterGroup);
-        orderBy = Strings.isNotBlank(orderBy) ? orderBy : BaseService.DEFAULT_ORDER_BY;
-        return dao.queryList(entity, filter, pageNum, pageSize, orderBy);
-    }
+        String orderBy = Strings.isNotBlank(request.getOrderBy()) ? request.getOrderBy() : BaseService.DEFAULT_ORDER_BY;
+        request.setOrderBy(orderBy);
+        // dao查询
+        List<T> pageQueryList = dao.pageQueryList(entity, filter, request);
+        List<T> queryList = dao.queryList(entity, filter, orderBy);
+        // 分页结果
+        result.setPage(request.getPageNum());
+        result.setSize(request.getPageSize());
+        result.setTotal(queryList != null ? queryList.size() : 0);
+        result.setDataSize(pageQueryList != null ? pageQueryList.size() : 0);
+        result.setData(new DataItems(pageQueryList, result.getTotal()));
 
-    public <T> List<T> pageQueryModel(Class<T> entity, int pageNum, int pageSize, FilterGroup filter) {
-        return this.pageQueryModel(entity, pageNum, pageSize, BaseService.DEFAULT_ORDER_BY, filter);
+        return result;
     }
 
     /**
@@ -79,6 +98,14 @@ public class BaseService {
         return dao.queryList(entity, params, orderBy);
     }
 
+    /**
+     * 全量查询，默认排序
+     *
+     * @param entity
+     * @param params
+     * @param <T>
+     * @return
+     */
     public <T> List<T> queryModel(Class<T> entity, Map<String, Object> params) {
         return queryModel(entity, params, BaseService.DEFAULT_ORDER_BY);
     }
@@ -95,6 +122,14 @@ public class BaseService {
         return dao.queryList(entity, filter, orderBy);
     }
 
+    /**
+     * 全量查询，默认排序
+     *
+     * @param entity
+     * @param filter
+     * @param <T>
+     * @return
+     */
     public <T> List<T> queryModel(Class<T> entity, FilterGroup filter) {
         dao.setDefaultFilter(true, filterGroup);
         return queryModel(entity, filter, BaseService.DEFAULT_ORDER_BY);
@@ -119,9 +154,11 @@ public class BaseService {
      */
     public <T extends BaseEntity> Map createModel(T model) {
         model.setDelStatus(DeleteStatusEnum.NO.getCode());
+        model.setDeleteAt(null);
         if (Strings.isBlank(model.getTenantCode())) {
             model.setTenantCode(getSessionTenantCode());
         }
+
         return dao.save(model);
     }
 
@@ -134,6 +171,11 @@ public class BaseService {
      */
     public <T extends BaseEntity> Map updateModel(T model) {
         model.setDelStatus(DeleteStatusEnum.NO.getCode());
+        model.setDeleteAt(null);
+        if (Strings.isBlank(model.getTenantCode())) {
+            model.setTenantCode(getSessionTenantCode());
+        }
+
         return dao.save(model);
     }
 
@@ -184,7 +226,7 @@ public class BaseService {
         if (fieldValue != null) {
             Map<String, Object> params = new HashMap<>();
             params.put(fieldName, fieldValue);
-            List<T> userList = dao.queryList(entity, params, null);
+            List<T> userList = this.queryModel(entity, params);
             return userList != null && !userList.isEmpty();
         }
 

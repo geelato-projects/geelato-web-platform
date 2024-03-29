@@ -2,13 +2,15 @@ package org.geelato.web.platform.m.base.rest;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.geelato.core.api.ApiResult;
+import org.geelato.core.constants.ApiErrorMsg;
+import org.geelato.core.gql.parser.PageQueryRequest;
 import org.geelato.web.platform.m.base.entity.TreeNode;
 import org.geelato.web.platform.m.base.service.TreeNodeService;
-import org.geelato.core.constants.ApiErrorMsg;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -23,6 +25,7 @@ import java.util.Map;
 @Controller
 @RequestMapping(value = "/api/treeNode")
 public class TreeNodeController extends BaseController {
+    private static final Class<TreeNode> CLAZZ = TreeNode.class;
     private final Logger logger = LoggerFactory.getLogger(DictController.class);
     @Autowired
     private TreeNodeService treeNodeService;
@@ -32,8 +35,9 @@ public class TreeNodeController extends BaseController {
     public ApiResult<List<TreeNode>> query(HttpServletRequest req) {
         ApiResult<List<TreeNode>> result = new ApiResult<>();
         try {
-            Map<String, Object> params = this.getQueryParameters(TreeNode.class, req);
-            return result.setData(treeNodeService.queryModel(TreeNode.class, params));
+            PageQueryRequest pageQueryRequest = this.getPageQueryParameters(req);
+            Map<String, Object> params = this.getQueryParameters(CLAZZ, req);
+            result.setData(treeNodeService.queryModel(CLAZZ, params, pageQueryRequest.getOrderBy()));
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
@@ -47,13 +51,9 @@ public class TreeNodeController extends BaseController {
     public ApiResult<TreeNode> isDelete(@PathVariable(required = true) String id) {
         ApiResult<TreeNode> result = new ApiResult<>();
         try {
-            TreeNode mResult = treeNodeService.getModel(TreeNode.class, id);
-            if (mResult != null) {
-                treeNodeService.isDeleteModel(mResult);
-                result.success();
-            } else {
-                result.error().setMsg(ApiErrorMsg.IS_NULL);
-            }
+            TreeNode model = treeNodeService.getModel(CLAZZ, id);
+            Assert.notNull(model, ApiErrorMsg.IS_NULL);
+            treeNodeService.isDeleteModel(model);
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.DELETE_FAIL);

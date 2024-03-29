@@ -7,13 +7,14 @@ import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.enums.DeleteStatusEnum;
 import org.geelato.core.gql.parser.FilterGroup;
+import org.geelato.core.gql.parser.PageQueryRequest;
 import org.geelato.web.platform.m.base.entity.Dict;
 import org.geelato.web.platform.m.base.service.DictService;
-import org.geelato.web.platform.m.security.entity.DataItems;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -25,6 +26,7 @@ import java.util.*;
 @RequestMapping(value = "/api/dict")
 public class DictController extends BaseController {
     private static final Map<String, List<String>> OPERATORMAP = new LinkedHashMap<>();
+    private static final Class<Dict> CLAZZ = Dict.class;
 
     static {
         OPERATORMAP.put("contains", Arrays.asList("dictCode", "dictName", "dictRemark"));
@@ -40,19 +42,9 @@ public class DictController extends BaseController {
     public ApiPagedResult pageQuery(HttpServletRequest req) {
         ApiPagedResult result = new ApiPagedResult();
         try {
-            int pageNum = Strings.isNotBlank(req.getParameter("current")) ? Integer.parseInt(req.getParameter("current")) : -1;
-            int pageSize = Strings.isNotBlank(req.getParameter("pageSize")) ? Integer.parseInt(req.getParameter("pageSize")) : -1;
-            Map<String, Object> params = this.getQueryParameters(Dict.class, req);
-            FilterGroup filterGroup = this.getFilterGroup(params, OPERATORMAP);
-
-            List<Dict> pageQueryList = dictService.pageQueryModel(Dict.class, pageNum, pageSize, filterGroup);
-            List<Dict> queryList = dictService.queryModel(Dict.class, filterGroup);
-
-            result.setTotal(queryList != null ? queryList.size() : 0);
-            result.setData(new DataItems(pageQueryList, result.getTotal()));
-            result.setPage(pageNum);
-            result.setSize(pageSize);
-            result.setDataSize(pageQueryList != null ? pageQueryList.size() : 0);
+            PageQueryRequest pageQueryRequest = this.getPageQueryParameters(req);
+            FilterGroup filterGroup = this.getFilterGroup(CLAZZ, req, OPERATORMAP);
+            result = dictService.pageQueryModel(CLAZZ, filterGroup, pageQueryRequest);
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
@@ -66,8 +58,9 @@ public class DictController extends BaseController {
     public ApiResult query(HttpServletRequest req) {
         ApiResult result = new ApiResult();
         try {
-            Map<String, Object> params = this.getQueryParameters(Dict.class, req);
-            return result.setData(dictService.queryModel(Dict.class, params));
+            PageQueryRequest pageQueryRequest = this.getPageQueryParameters(req);
+            Map<String, Object> params = this.getQueryParameters(CLAZZ, req);
+            result.setData(dictService.queryModel(CLAZZ, params, pageQueryRequest.getOrderBy()));
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
@@ -81,7 +74,7 @@ public class DictController extends BaseController {
     public ApiResult get(@PathVariable(required = true) String id) {
         ApiResult result = new ApiResult();
         try {
-            return result.setData(dictService.getModel(Dict.class, id));
+            result.setData(dictService.getModel(CLAZZ, id));
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
@@ -97,12 +90,7 @@ public class DictController extends BaseController {
         try {
             // ID为空方可插入
             if (Strings.isNotBlank(form.getId())) {
-                // 存在，方可更新
-                if (dictService.isExist(Dict.class, form.getId())) {
-                    result.setData(dictService.updateModel(form));
-                } else {
-                    result.error().setMsg(ApiErrorMsg.IS_NULL);
-                }
+                result.setData(dictService.updateModel(form));
             } else {
                 result.setData(dictService.createModel(form));
             }
@@ -119,13 +107,9 @@ public class DictController extends BaseController {
     public ApiResult isDelete(@PathVariable(required = true) String id) {
         ApiResult result = new ApiResult();
         try {
-            Dict mResult = dictService.getModel(Dict.class, id);
-            if (mResult != null) {
-                dictService.isDeleteModel(mResult);
-                result.success();
-            } else {
-                result.error().setMsg(ApiErrorMsg.IS_NULL);
-            }
+            Dict model = dictService.getModel(CLAZZ, id);
+            Assert.notNull(model, ApiErrorMsg.IS_NULL);
+            dictService.isDeleteModel(model);
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.DELETE_FAIL);

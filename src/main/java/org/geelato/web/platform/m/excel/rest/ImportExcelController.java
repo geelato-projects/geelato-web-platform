@@ -47,8 +47,7 @@ public class ImportExcelController extends BaseController {
     public ApiResult getTemplate(HttpServletRequest request, HttpServletResponse response, @PathVariable String templateId) {
         ApiResult result = new ApiResult();
         try {
-            ExportTemplate exportTemplate = exportTemplateService.getModel(ExportTemplate.class, templateId);
-            result.success().setData(exportTemplate);
+            result.setData(exportTemplateService.getModel(ExportTemplate.class, templateId));
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.QUERY_FAIL);

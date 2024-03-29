@@ -7,6 +7,7 @@ import org.geelato.core.meta.model.entity.TableMeta;
 import org.geelato.web.platform.enums.PermissionTypeEnum;
 import org.geelato.web.platform.enums.RoleTypeEnum;
 import org.geelato.web.platform.m.base.entity.App;
+import org.geelato.web.platform.m.base.service.AppService;
 import org.geelato.web.platform.m.base.service.BaseSortableService;
 import org.geelato.web.platform.m.security.entity.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +36,29 @@ public class RoleService extends BaseSortableService {
     @Lazy
     @Autowired
     private PermissionService permissionService;
+    @Lazy
+    @Autowired
+    private AppService appService;
+
+
+    /**
+     * 获取单条
+     *
+     * @param id
+     * @return
+     */
+    public Role getModel(String id) {
+        // 获取
+        Role role = super.getModel(Role.class, id);
+        // 处理
+        if (Strings.isNotBlank(role.getAppId())) {
+            App app = appService.getModel(App.class, role.getAppId());
+            if (app != null) {
+                role.setAppName(app.getName());
+            }
+        }
+        return role;
+    }
 
     /**
      * 逻辑删除

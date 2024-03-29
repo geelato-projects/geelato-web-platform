@@ -1,12 +1,12 @@
 package org.geelato.web.platform.m.settings.rest;
 
 import jakarta.servlet.http.HttpServletRequest;
-import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiErrorMsg;
+import org.geelato.core.gql.parser.FilterGroup;
+import org.geelato.core.gql.parser.PageQueryRequest;
 import org.geelato.web.platform.m.base.rest.BaseController;
-import org.geelato.web.platform.m.security.entity.DataItems;
 import org.geelato.web.platform.m.settings.entity.Message;
 import org.geelato.web.platform.m.settings.service.MessageService;
 import org.slf4j.Logger;
@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -28,6 +27,7 @@ import java.util.Map;
 @Controller
 @RequestMapping(value = "/api/settings/message")
 public class MessageRestController extends BaseController {
+    private static final Class<Message> CLAZZ = Message.class;
     private final Logger logger = LoggerFactory.getLogger(MessageRestController.class);
     @Autowired
     private MessageService messageService;
@@ -37,18 +37,9 @@ public class MessageRestController extends BaseController {
     public ApiPagedResult pageQuery(HttpServletRequest req) {
         ApiPagedResult result = new ApiPagedResult();
         try {
-            int pageNum = Strings.isNotBlank(req.getParameter("current")) ? Integer.parseInt(req.getParameter("current")) : -1;
-            int pageSize = Strings.isNotBlank(req.getParameter("pageSize")) ? Integer.parseInt(req.getParameter("pageSize")) : -1;
-            Map<String, Object> params = this.getQueryParameters(Message.class, req);
-
-            List<Message> pageQueryList = messageService.pageQueryModel(Message.class, pageNum, pageSize, params);
-            List<Message> queryList = messageService.queryModel(Message.class, params);
-
-            result.setTotal(queryList != null ? queryList.size() : 0);
-            result.setData(new DataItems(pageQueryList, result.getTotal()));
-            result.setPage(pageNum);
-            result.setSize(pageSize);
-            result.setDataSize(pageQueryList != null ? pageQueryList.size() : 0);
+            PageQueryRequest pageQueryRequest = this.getPageQueryParameters(req);
+            FilterGroup filterGroup = this.getFilterGroup(CLAZZ, req, null);
+            result = messageService.pageQueryModel(CLAZZ, filterGroup, pageQueryRequest);
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
@@ -62,8 +53,9 @@ public class MessageRestController extends BaseController {
     public ApiResult query(HttpServletRequest req) {
         ApiResult result = new ApiResult();
         try {
-            Map<String, Object> params = this.getQueryParameters(Message.class, req);
-            return result.setData(messageService.queryModel(Message.class, params));
+            PageQueryRequest pageQueryRequest = this.getPageQueryParameters(req);
+            Map<String, Object> params = this.getQueryParameters(CLAZZ, req);
+            result.setData(messageService.queryModel(CLAZZ, params, pageQueryRequest.getOrderBy()));
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.QUERY_FAIL);

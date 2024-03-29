@@ -2,7 +2,6 @@ package org.geelato.web.platform.m.base.service;
 
 import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.constants.ColumnDefault;
-import org.geelato.core.enums.DeleteStatusEnum;
 import org.geelato.core.gql.parser.FilterGroup;
 import org.geelato.core.meta.model.entity.BaseSortableEntity;
 import org.springframework.stereotype.Component;
@@ -27,9 +26,8 @@ public class BaseSortableService extends BaseService {
      */
     @Override
     public <T> List<T> queryModel(Class<T> entity, Map<String, Object> params, String orderBy) {
-        dao.setDefaultFilter(true, filterGroup);
         orderBy = Strings.isNotBlank(orderBy) ? orderBy : BaseSortableService.DEFAULT_ORDER_BY;
-        return dao.queryList(entity, params, orderBy);
+        return super.queryModel(entity, params, orderBy);
     }
 
     @Override
@@ -47,9 +45,8 @@ public class BaseSortableService extends BaseService {
      */
     @Override
     public <T> List<T> queryModel(Class<T> entity, FilterGroup filter, String orderBy) {
-        dao.setDefaultFilter(true, filterGroup);
         orderBy = Strings.isNotBlank(orderBy) ? orderBy : BaseSortableService.DEFAULT_ORDER_BY;
-        return dao.queryList(entity, filter, orderBy);
+        return super.queryModel(entity, filter, orderBy);
     }
 
     @Override
@@ -66,11 +63,7 @@ public class BaseSortableService extends BaseService {
      */
     public <T extends BaseSortableEntity> Map createModel(T model) {
         model.setSeqNo(model.getSeqNo() > 0 ? model.getSeqNo() : ColumnDefault.SEQ_NO_VALUE);
-        model.setDelStatus(DeleteStatusEnum.NO.getCode());
-        if (Strings.isBlank(model.getTenantCode())) {
-            model.setTenantCode(getSessionTenantCode());
-        }
-        return dao.save(model);
+        return super.createModel(model);
     }
 
     /**
@@ -81,8 +74,7 @@ public class BaseSortableService extends BaseService {
      * @return
      */
     public <T extends BaseSortableEntity> Map updateModel(T model) {
-        model.setDelStatus(DeleteStatusEnum.NO.getCode());
-        return dao.save(model);
+        return super.updateModel(model);
     }
 
     /**

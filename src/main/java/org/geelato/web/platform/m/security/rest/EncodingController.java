@@ -5,9 +5,10 @@ import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiErrorMsg;
+import org.geelato.core.enums.EnableStatusEnum;
 import org.geelato.core.gql.parser.FilterGroup;
+import org.geelato.core.gql.parser.PageQueryRequest;
 import org.geelato.web.platform.m.base.rest.BaseController;
-import org.geelato.web.platform.m.security.entity.DataItems;
 import org.geelato.web.platform.m.security.entity.Encoding;
 import org.geelato.web.platform.m.security.service.EncodingService;
 import org.slf4j.Logger;
@@ -31,6 +32,7 @@ import java.util.Map;
 @RequestMapping(value = "/api/encoding")
 public class EncodingController extends BaseController {
     private static final Map<String, List<String>> OPERATORMAP = new LinkedHashMap<>();
+    private static final Class<Encoding> CLAZZ = Encoding.class;
 
     static {
         OPERATORMAP.put("contains", Arrays.asList("title", "description"));
@@ -46,19 +48,9 @@ public class EncodingController extends BaseController {
     public ApiPagedResult pageQuery(HttpServletRequest req) {
         ApiPagedResult result = new ApiPagedResult();
         try {
-            int pageNum = Strings.isNotBlank(req.getParameter("current")) ? Integer.parseInt(req.getParameter("current")) : -1;
-            int pageSize = Strings.isNotBlank(req.getParameter("pageSize")) ? Integer.parseInt(req.getParameter("pageSize")) : -1;
-            Map<String, Object> params = this.getQueryParameters(Encoding.class, req);
-            FilterGroup filterGroup = this.getFilterGroup(params, OPERATORMAP);
-
-            List<Encoding> pageQueryList = encodingService.pageQueryModel(Encoding.class, pageNum, pageSize, filterGroup);
-            List<Encoding> queryList = encodingService.queryModel(Encoding.class, filterGroup);
-
-            result.setTotal(queryList != null ? queryList.size() : 0);
-            result.setData(new DataItems(pageQueryList, result.getTotal()));
-            result.setPage(pageNum);
-            result.setSize(pageSize);
-            result.setDataSize(pageQueryList != null ? pageQueryList.size() : 0);
+            PageQueryRequest pageQueryRequest = this.getPageQueryParameters(req);
+            FilterGroup filterGroup = this.getFilterGroup(CLAZZ, req, OPERATORMAP);
+            result = encodingService.pageQueryModel(CLAZZ, filterGroup, pageQueryRequest);
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
@@ -72,8 +64,9 @@ public class EncodingController extends BaseController {
     public ApiResult query(HttpServletRequest req) {
         ApiResult result = new ApiResult();
         try {
-            Map<String, Object> params = this.getQueryParameters(Encoding.class, req);
-            return result.setData(encodingService.queryModel(Encoding.class, params));
+            PageQueryRequest pageQueryRequest = this.getPageQueryParameters(req);
+            Map<String, Object> params = this.getQueryParameters(CLAZZ, req);
+            result.setData(encodingService.queryModel(CLAZZ, params, pageQueryRequest.getOrderBy()));
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
@@ -87,7 +80,7 @@ public class EncodingController extends BaseController {
     public ApiResult get(@PathVariable(required = true) String id) {
         ApiResult result = new ApiResult();
         try {
-            return result.setData(encodingService.getModel(Encoding.class, id));
+            result.setData(encodingService.getModel(CLAZZ, id));
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
@@ -101,14 +94,8 @@ public class EncodingController extends BaseController {
     public ApiResult createOrUpdate(@RequestBody Encoding form) {
         ApiResult result = new ApiResult();
         try {
-            // ID为空方可插入
             if (Strings.isNotBlank(form.getId())) {
-                // 存在，方可更新
-                if (encodingService.isExist(Encoding.class, form.getId())) {
-                    result.setData(encodingService.updateModel(form));
-                } else {
-                    result.error().setMsg(ApiErrorMsg.IS_NULL);
-                }
+                result.setData(encodingService.updateModel(form));
             } else {
                 result.setData(encodingService.createModel(form));
             }
@@ -128,13 +115,10 @@ public class EncodingController extends BaseController {
     public ApiResult isDelete(@PathVariable(required = true) String id) {
         ApiResult result = new ApiResult();
         try {
-            Encoding mResult = encodingService.getModel(Encoding.class, id);
-            if (mResult != null) {
-                encodingService.isDeleteModel(mResult);
-                result.success();
-            } else {
-                result.error().setMsg(ApiErrorMsg.IS_NULL);
-            }
+            Encoding model = encodingService.getModel(CLAZZ, id);
+            Assert.notNull(model, ApiErrorMsg.IS_NULL);
+            model.setEnableStatus(EnableStatusEnum.DISABLED.getCode());
+            encodingService.isDeleteModel(model);
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.DELETE_FAIL);
@@ -148,14 +132,9 @@ public class EncodingController extends BaseController {
     public ApiResult generate(@PathVariable(required = true) String id) {
         ApiResult result = new ApiResult();
         try {
-            // ID为空方可插入
-            if (Strings.isNotBlank(id)) {
-                Encoding encoding = encodingService.getModel(Encoding.class, id);
-                Assert.notNull(encoding, ApiErrorMsg.IS_NULL);
-                result.success().setData(encodingService.generate(encoding));
-            } else {
-                result.error().setMsg(ApiErrorMsg.ID_IS_NULL);
-            }
+            Encoding encoding = encodingService.getModel(CLAZZ, id);
+            Assert.notNull(encoding, ApiErrorMsg.IS_NULL);
+            result.setData(encodingService.generate(encoding));
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(e.getMessage());

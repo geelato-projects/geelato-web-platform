@@ -9,9 +9,9 @@ import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.constants.ApiResultStatus;
 import org.geelato.core.enums.DeleteStatusEnum;
 import org.geelato.core.gql.parser.FilterGroup;
+import org.geelato.core.gql.parser.PageQueryRequest;
 import org.geelato.core.util.UUIDUtils;
 import org.geelato.web.platform.m.base.rest.BaseController;
-import org.geelato.web.platform.m.security.entity.DataItems;
 import org.geelato.web.platform.m.security.entity.Org;
 import org.geelato.web.platform.m.security.entity.User;
 import org.geelato.web.platform.m.security.service.AccountService;
@@ -36,6 +36,7 @@ public class UserRestController extends BaseController {
     private static final int DEFAULT_PASSWORD_DIGIT = 8;
 
     private static final Map<String, List<String>> OPERATORMAP = new LinkedHashMap<>();
+    private static final Class<User> CLAZZ = User.class;
 
     static {
         OPERATORMAP.put("contains", Arrays.asList("name", "loginName", "orgName", "description"));
@@ -55,19 +56,9 @@ public class UserRestController extends BaseController {
     public ApiPagedResult pageQuery(HttpServletRequest req) {
         ApiPagedResult result = new ApiPagedResult();
         try {
-            int pageNum = Strings.isNotBlank(req.getParameter("current")) ? Integer.parseInt(req.getParameter("current")) : -1;
-            int pageSize = Strings.isNotBlank(req.getParameter("pageSize")) ? Integer.parseInt(req.getParameter("pageSize")) : -1;
-            Map<String, Object> params = this.getQueryParameters(User.class, req);
-            FilterGroup filterGroup = this.getFilterGroup(params, OPERATORMAP);
-
-            List<User> pageQueryList = userService.pageQueryModel(User.class, pageNum, pageSize, filterGroup);
-            List<User> queryList = userService.queryModel(User.class, filterGroup);
-
-            result.setTotal(queryList != null ? queryList.size() : 0);
-            result.setData(new DataItems(pageQueryList, result.getTotal()));
-            result.setPage(pageNum);
-            result.setSize(pageSize);
-            result.setDataSize(pageQueryList != null ? pageQueryList.size() : 0);
+            PageQueryRequest pageQueryRequest = this.getPageQueryParameters(req);
+            Map<String, Object> params = this.getQueryParameters(CLAZZ, req);
+            result.setData(userService.queryModel(CLAZZ, params, pageQueryRequest.getOrderBy()));
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
@@ -80,10 +71,10 @@ public class UserRestController extends BaseController {
     @ResponseBody
     public ApiResult query(HttpServletRequest req) {
         ApiResult result = new ApiResult();
-        Map<String, Object> params = this.getQueryParameters(User.class, req);
-        System.out.println(JSON.toJSON(params));
         try {
-            return result.setData(userService.queryModel(User.class, params));
+            PageQueryRequest pageQueryRequest = this.getPageQueryParameters(req);
+            Map<String, Object> params = this.getQueryParameters(CLAZZ, req);
+            result.setData(userService.queryModel(CLAZZ, params, pageQueryRequest.getOrderBy()));
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
@@ -100,7 +91,7 @@ public class UserRestController extends BaseController {
             if (params != null && !params.isEmpty()) {
                 FilterGroup filterGroup = new FilterGroup();
                 filterGroup.addFilter("id", FilterGroup.Operator.in, String.valueOf(params.get("ids")));
-                return result.setData(userService.queryModel(User.class, filterGroup));
+                return result.setData(userService.queryModel(CLAZZ, filterGroup));
             }
         } catch (Exception e) {
             logger.error(e.getMessage());
@@ -115,10 +106,11 @@ public class UserRestController extends BaseController {
     public ApiResult get(@PathVariable(required = true) String id) {
         ApiResult result = new ApiResult();
         try {
-            User user = userService.getModel(User.class, id);
-            user.setSalt(null);
-            user.setPassword(null);
-            return result.setData(user);
+            User model = userService.getModel(CLAZZ, id);
+            model.setSalt(null);
+            model.setPassword(null);
+            model.setPlainPassword(null);
+            result.setData(model);
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
@@ -146,7 +138,7 @@ public class UserRestController extends BaseController {
             // 组织ID为空方可插入
             if (Strings.isNotBlank(form.getId())) {
                 // 组织存在，方可更新
-                User user = userService.getModel(User.class, form.getId());
+                User user = userService.getModel(CLAZZ, form.getId());
                 if (user != null) {
                     form.setPassword(user.getPassword());
                     form.setSalt(user.getSalt());
@@ -161,56 +153,14 @@ public class UserRestController extends BaseController {
                 uMap.put("plainPassword", form.getPlainPassword());
             }
             if (ApiResultStatus.SUCCESS.equals(result.getStatus())) {
-                userService.setDefaultOrg(uMap);
-                result.setData(uMap);
+                userService.setDefaultOrg(JSON.parseObject(JSON.toJSONString(uMap), User.class));
             }
+            uMap.put("salt", null);
+            uMap.put("password", null);
+            result.setData(uMap);
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.OPERATE_FAIL);
-        }
-
-        return result;
-    }
-
-    @RequestMapping(value = "/create", method = RequestMethod.POST)
-    @ResponseBody
-    public ApiResult create(@RequestBody User form) {
-        ApiResult result = new ApiResult();
-        try {
-            // 用户ID为空方可插入
-            form.setId(null);
-            // 组织ID为空 或 组织ID不为空且组织存在，可插入
-            if (orgService.isExist(Org.class, form.getOrgId())) {
-                return result.setData(userService.createModel(form));
-            } else {
-                result.error().setMsg(ApiErrorMsg.OF_FAIL);
-            }
-        } catch (Exception e) {
-            logger.error(e.getMessage());
-            result.error().setMsg(ApiErrorMsg.CREATE_FAIL);
-        }
-
-        return result;
-    }
-
-    @RequestMapping(value = "/update", method = RequestMethod.POST)
-    @ResponseBody
-    public ApiResult update(@RequestBody User form) {
-        ApiResult result = new ApiResult();
-        try {
-            if (userService.isExist(User.class, form.getId())) {
-                // 组织ID为空 或 组织ID不为空且组织存在，方可更新
-                if (orgService.isExist(Org.class, form.getOrgId())) {
-                    result.setData(userService.updateModel(form));
-                } else {
-                    result.error().setMsg(ApiErrorMsg.OF_FAIL);
-                }
-            } else {
-                result.error().setMsg(ApiErrorMsg.IS_NULL);
-            }
-        } catch (Exception e) {
-            logger.error(e.getMessage());
-            result.error().setMsg(ApiErrorMsg.UPDATE_FAIL);
         }
 
         return result;
@@ -222,7 +172,7 @@ public class UserRestController extends BaseController {
         ApiResult result = new ApiResult();
         try {
             if (Strings.isNotBlank(id)) {
-                User user = userService.getModel(User.class, id);
+                User user = userService.getModel(CLAZZ, id);
                 Assert.notNull(user, ApiErrorMsg.IS_NULL);
                 user.setPlainPassword(UUIDUtils.generatePassword(DEFAULT_PASSWORD_DIGIT));
                 accountService.entryptPassword(user);
@@ -239,39 +189,14 @@ public class UserRestController extends BaseController {
         return result;
     }
 
-    @RequestMapping(value = "/delete/{id}", method = RequestMethod.DELETE)
-    @ResponseBody
-    public ApiResult delete(@PathVariable(required = true) String id) {
-        ApiResult result = new ApiResult();
-        try {
-            if (Strings.isNotBlank(id)) {
-                User user = userService.getModel(User.class, id);
-                if (user != null) {
-                    userService.deleteModel(User.class, id);
-                    return result.success().setData(id);
-                }
-            }
-            result.error().setMsg(ApiErrorMsg.DELETE_FAIL);
-        } catch (Exception e) {
-            logger.error(e.getMessage());
-            result.error().setMsg(ApiErrorMsg.DELETE_FAIL);
-        }
-
-        return result;
-    }
-
     @RequestMapping(value = "/isDelete/{id}", method = RequestMethod.DELETE)
     @ResponseBody
     public ApiResult isDelete(@PathVariable(required = true) String id) {
         ApiResult result = new ApiResult();
         try {
-            User mResult = userService.getModel(User.class, id);
-            if (mResult != null) {
-                userService.isDeleteModel(mResult);
-                result.success();
-            } else {
-                result.error().setMsg(ApiErrorMsg.IS_NULL);
-            }
+            User model = userService.getModel(CLAZZ, id);
+            Assert.notNull(model, ApiErrorMsg.IS_NULL);
+            userService.isDeleteModel(model);
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.DELETE_FAIL);

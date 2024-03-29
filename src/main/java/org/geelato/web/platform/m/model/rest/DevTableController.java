@@ -11,6 +11,7 @@ import org.geelato.core.enums.ColumnSyncedEnum;
 import org.geelato.core.enums.DeleteStatusEnum;
 import org.geelato.core.enums.EnableStatusEnum;
 import org.geelato.core.gql.parser.FilterGroup;
+import org.geelato.core.gql.parser.PageQueryRequest;
 import org.geelato.core.meta.MetaManager;
 import org.geelato.core.meta.model.entity.TableMeta;
 import org.geelato.web.platform.enums.PermissionTypeEnum;
@@ -18,7 +19,6 @@ import org.geelato.web.platform.m.base.rest.BaseController;
 import org.geelato.web.platform.m.model.service.DevTableColumnService;
 import org.geelato.web.platform.m.model.service.DevTableService;
 import org.geelato.web.platform.m.model.service.DevViewService;
-import org.geelato.web.platform.m.security.entity.DataItems;
 import org.geelato.web.platform.m.security.service.PermissionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,6 +36,7 @@ import java.util.*;
 @RequestMapping(value = "/api/model/table")
 public class DevTableController extends BaseController {
     private static final Map<String, List<String>> OPERATORMAP = new LinkedHashMap<>();
+    private static final Class<TableMeta> CLAZZ = TableMeta.class;
 
     static {
         OPERATORMAP.put("contains", Arrays.asList("title", "tableName", "entityName", "description"));
@@ -55,22 +56,12 @@ public class DevTableController extends BaseController {
 
     @RequestMapping(value = "/pageQuery", method = RequestMethod.GET)
     @ResponseBody
-    public ApiPagedResult<DataItems> pageQuery(HttpServletRequest req) {
-        ApiPagedResult<DataItems> result = new ApiPagedResult<>();
+    public ApiPagedResult pageQuery(HttpServletRequest req) {
+        ApiPagedResult result = new ApiPagedResult<>();
         try {
-            int pageNum = Strings.isNotBlank(req.getParameter("current")) ? Integer.parseInt(req.getParameter("current")) : -1;
-            int pageSize = Strings.isNotBlank(req.getParameter("pageSize")) ? Integer.parseInt(req.getParameter("pageSize")) : -1;
-            Map<String, Object> params = this.getQueryParameters(TableMeta.class, req);
-            FilterGroup filterGroup = this.getFilterGroup(params, OPERATORMAP);
-
-            List<TableMeta> pageQueryList = devTableService.pageQueryModel(TableMeta.class, pageNum, pageSize, filterGroup);
-            List<TableMeta> queryList = devTableService.queryModel(TableMeta.class, filterGroup);
-
-            result.setTotal(queryList != null ? queryList.size() : 0);
-            result.setData(new DataItems(pageQueryList, result.getTotal()));
-            result.setPage(pageNum);
-            result.setSize(pageSize);
-            result.setDataSize(pageQueryList != null ? pageQueryList.size() : 0);
+            PageQueryRequest pageQueryRequest = this.getPageQueryParameters(req);
+            FilterGroup filterGroup = this.getFilterGroup(CLAZZ, req, OPERATORMAP);
+            result = devTableService.pageQueryModel(CLAZZ, filterGroup, pageQueryRequest);
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
@@ -84,8 +75,9 @@ public class DevTableController extends BaseController {
     public ApiResult<List<TableMeta>> query(HttpServletRequest req) {
         ApiResult<List<TableMeta>> result = new ApiResult<>();
         try {
-            Map<String, Object> params = this.getQueryParameters(TableMeta.class, req);
-            return result.setData(devTableService.queryModel(TableMeta.class, params));
+            PageQueryRequest pageQueryRequest = this.getPageQueryParameters(req);
+            Map<String, Object> params = this.getQueryParameters(CLAZZ, req);
+            result.setData(devTableService.queryModel(CLAZZ, params, pageQueryRequest.getOrderBy()));
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
@@ -99,7 +91,7 @@ public class DevTableController extends BaseController {
     public ApiResult<TableMeta> get(@PathVariable(required = true) String id) {
         ApiResult<TableMeta> result = new ApiResult<>();
         try {
-            return result.setData(devTableService.getModel(TableMeta.class, id));
+            result.setData(devTableService.getModel(CLAZZ, id));
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
@@ -116,7 +108,7 @@ public class DevTableController extends BaseController {
             // ID为空方可插入
             if (Strings.isNotBlank(form.getId())) {
                 // 存在，方可更新
-                TableMeta model = devTableService.getModel(TableMeta.class, form.getId());
+                TableMeta model = devTableService.getModel(CLAZZ, form.getId());
                 if (model != null) {
                     form = devTableService.handleForm(form, model);
                     Map<String, Object> resultMap = devTableService.updateModel(form);
@@ -168,7 +160,7 @@ public class DevTableController extends BaseController {
             if (Strings.isBlank(entityName) || Strings.isBlank(tableId)) {
                 return result.error().setMsg(ApiErrorMsg.PARAMETER_MISSING);
             }
-            TableMeta form = devTableService.copyTable(tableId, title, entityName, connectId,tableComment, appId, tenantCode);
+            TableMeta form = devTableService.copyTable(tableId, title, entityName, connectId, tableComment, appId, tenantCode);
             result.setData(form);
             // 添加默认权限
             permissionService.resetDefaultPermission(PermissionTypeEnum.getTablePermissions(), form.getEntityName(), form.getAppId());
@@ -192,17 +184,12 @@ public class DevTableController extends BaseController {
     public ApiResult isDelete(@PathVariable(required = true) String id) {
         ApiResult result = new ApiResult();
         try {
-            TableMeta mResult = devTableService.getModel(TableMeta.class, id);
-            String entityName = mResult.getEntityName();
-            if (mResult != null) {
-                devTableService.isDeleteModel(mResult);
-                result.success();
-            } else {
-                result.error().setMsg(ApiErrorMsg.IS_NULL);
-            }
-            if (result.isSuccess() && Strings.isNotEmpty(entityName)) {
-                // 刷新实体缓存
-                metaManager.removeLiteMeta(entityName);
+            TableMeta model = devTableService.getModel(CLAZZ, id);
+            Assert.notNull(model, ApiErrorMsg.IS_NULL);
+            devTableService.isDeleteModel(model);
+            // 刷新实体缓存
+            if (Strings.isNotEmpty(model.getEntityName())) {
+                metaManager.removeLiteMeta(model.getEntityName());
             }
         } catch (Exception e) {
             logger.error(e.getMessage());
@@ -218,7 +205,7 @@ public class DevTableController extends BaseController {
         ApiResult<String> result = new ApiResult<>();
         try {
             Map<String, Object> viewParams = devTableColumnService.getDefaultViewSql(entityName);
-            return result.setData((String) viewParams.get("viewConstruct"));
+            result.setData(String.valueOf(viewParams.get("viewConstruct")));
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
@@ -238,7 +225,7 @@ public class DevTableController extends BaseController {
                 params.put("id", form.getId());
                 params.put("connectId", form.getConnectId());
                 params.put("entityName", form.getEntityName());
-                List<TableMeta> tableMetaList = devTableService.queryModel(TableMeta.class, params);
+                List<TableMeta> tableMetaList = devTableService.queryModel(CLAZZ, params);
                 if (tableMetaList != null && tableMetaList.size() > 0) {
                     for (TableMeta meta : tableMetaList) {
                         devViewService.createOrUpdateDefaultTableView(meta, devTableColumnService.getDefaultViewSql(meta.getEntityName()));
@@ -263,16 +250,13 @@ public class DevTableController extends BaseController {
         try {
             if (Strings.isNotBlank(tableId)) {
                 // dev_table
-                TableMeta tableMeta = devTableService.getModel(TableMeta.class, tableId);
-                Assert.notNull(tableMeta, ApiErrorMsg.IS_NULL);
+                TableMeta model = devTableService.getModel(CLAZZ, tableId);
+                Assert.notNull(model, ApiErrorMsg.IS_NULL);
                 // 禁用的不同步
-                if (EnableStatusEnum.DISABLED.getCode() == tableMeta.getEnableStatus()) {
+                if (EnableStatusEnum.DISABLED.getCode() == model.getEnableStatus()) {
                     return (ApiMetaResult) result.error().setMsg(ApiErrorMsg.OBJECT_DISABLED);
                 }
-                /*if (Strings.isBlank(tableMeta.getTableName())) {
-                    return (ApiMetaResult) result.error().setMsg(ApiErrorMsg.UPDATE_FAIL);
-                }*/
-                devTableService.resetTableByDataBase(tableMeta);
+                devTableService.resetTableByDataBase(model);
             } else {
                 result.error().setMsg(ApiErrorMsg.ID_IS_NULL);
             }

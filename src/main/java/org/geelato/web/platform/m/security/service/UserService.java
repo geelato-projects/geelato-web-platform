@@ -1,7 +1,6 @@
 package org.geelato.web.platform.m.security.service;
 
 import org.apache.logging.log4j.util.Strings;
-import org.geelato.core.enums.DeleteStatusEnum;
 import org.geelato.core.enums.EnableStatusEnum;
 import org.geelato.web.platform.enums.IsDefaultOrgEnum;
 import org.geelato.web.platform.m.base.service.BaseSortableService;
@@ -56,38 +55,34 @@ public class UserService extends BaseSortableService {
         }
     }
 
-    public void setDefaultOrg(Map<String, Object> model) {
+    public void setDefaultOrg(User model) {
         Map<String, Object> params = new HashMap<>();
-        params.put("userId", model.get("id"));
+        params.put("userId", model.getId());
         boolean isExit = false;
         List<OrgUserMap> oList = orgUserMapService.queryModel(OrgUserMap.class, params);
         if (oList != null) {
             for (OrgUserMap oModel : oList) {
-                if (oModel.getOrgId() != null && oModel.getOrgId().equals(model.get("orgId"))) {
+                if (oModel.getOrgId() != null && oModel.getOrgId().equals(model.getOrgId())) {
                     isExit = true;
                     if (IsDefaultOrgEnum.IS.getCode() != oModel.getDefaultOrg()) {
                         oModel.setDefaultOrg(IsDefaultOrgEnum.IS.getCode());
-                        dao.save(oModel);
+                        orgUserMapService.updateModel(oModel);
                     }
                 } else if (IsDefaultOrgEnum.IS.getCode() == oModel.getDefaultOrg()) {
                     oModel.setDefaultOrg(IsDefaultOrgEnum.NO.getCode());
-                    dao.save(oModel);
+                    orgUserMapService.updateModel(oModel);
                 }
             }
         }
-        String orgId = String.valueOf(model.get("orgId"));
+        String orgId = String.valueOf(model.getOrgId());
         if (!isExit && Strings.isNotBlank(orgId)) {
             OrgUserMap oModel = new OrgUserMap();
-            oModel.setUserId(String.valueOf(model.get("id")));
-            oModel.setUserName((String) model.get("name"));
+            oModel.setUserId(model.getId());
+            oModel.setUserName(model.getName());
             oModel.setOrgId(orgId);
-            oModel.setOrgName((String) model.get("orgName"));
-            oModel.setDelStatus(DeleteStatusEnum.NO.getCode());
+            oModel.setOrgName(model.getOrgName());
             oModel.setDefaultOrg(IsDefaultOrgEnum.IS.getCode());
-            if (Strings.isBlank(oModel.getId()) && Strings.isBlank(oModel.getTenantCode())) {
-                oModel.setTenantCode(getSessionTenantCode());
-            }
-            dao.save(oModel);
+            orgUserMapService.createModel(oModel);
         }
     }
 }

@@ -1,5 +1,7 @@
 package org.geelato.web.platform.m.security.entity;
 
+import org.geelato.core.constants.ColumnDefault;
+
 import java.util.ArrayList;
 import java.util.Date;
 
@@ -25,7 +27,7 @@ public class LoginResult {
     private String description;
     private String tenantCode;
     private String cooperatingOrgId;
-    private int enableStatus;
+    private int enableStatus = ColumnDefault.ENABLE_STATUS_VALUE;
 
     private String token;
     private String homePath;

@@ -6,16 +6,18 @@ import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.enums.DeleteStatusEnum;
+import org.geelato.core.enums.EnableStatusEnum;
 import org.geelato.core.gql.parser.FilterGroup;
+import org.geelato.core.gql.parser.PageQueryRequest;
 import org.geelato.web.platform.m.base.entity.Attach;
 import org.geelato.web.platform.m.base.entity.SysConfig;
 import org.geelato.web.platform.m.base.service.AttachService;
 import org.geelato.web.platform.m.base.service.SysConfigService;
-import org.geelato.web.platform.m.security.entity.DataItems;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -29,6 +31,7 @@ import java.util.*;
 @RequestMapping(value = "/api/sys/config")
 public class SysConfigController extends BaseController {
     private static final Map<String, List<String>> OPERATORMAP = new LinkedHashMap<>();
+    private static final Class<SysConfig> CLAZZ = SysConfig.class;
     private static final String CONFIG_TYPE_UPLOAD = "UPLOAD";
 
     static {
@@ -47,20 +50,9 @@ public class SysConfigController extends BaseController {
     public ApiPagedResult pageQuery(HttpServletRequest req) {
         ApiPagedResult result = new ApiPagedResult();
         try {
-            int pageNum = Strings.isNotBlank(req.getParameter("current")) ? Integer.parseInt(req.getParameter("current")) : -1;
-            int pageSize = Strings.isNotBlank(req.getParameter("pageSize")) ? Integer.parseInt(req.getParameter("pageSize")) : -1;
-            Map<String, Object> params = this.getQueryParameters(SysConfig.class, req);
-            FilterGroup filterGroup = this.getFilterGroup(params, OPERATORMAP);
-
-            List<SysConfig> pageQueryList = sysConfigService.pageQueryModel(SysConfig.class, pageNum, pageSize, filterGroup);
-            pageQueryList = setConfigAssist(pageQueryList);
-            List<SysConfig> queryList = sysConfigService.queryModel(SysConfig.class, filterGroup);
-
-            result.setTotal(queryList != null ? queryList.size() : 0);
-            result.setData(new DataItems(pageQueryList, result.getTotal()));
-            result.setPage(pageNum);
-            result.setSize(pageSize);
-            result.setDataSize(pageQueryList != null ? pageQueryList.size() : 0);
+            PageQueryRequest pageQueryRequest = this.getPageQueryParameters(req);
+            FilterGroup filterGroup = this.getFilterGroup(CLAZZ, req, OPERATORMAP);
+            result = sysConfigService.pageQueryModel(CLAZZ, filterGroup, pageQueryRequest);
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
@@ -74,10 +66,11 @@ public class SysConfigController extends BaseController {
     public ApiResult<List<SysConfig>> query(HttpServletRequest req) {
         ApiResult<List<SysConfig>> result = new ApiResult<>();
         try {
-            Map<String, Object> params = this.getQueryParameters(SysConfig.class, req);
-            List<SysConfig> queryList = sysConfigService.queryModel(SysConfig.class, params);
-            queryList = setConfigAssist(queryList);
-            return result.setData(queryList);
+            PageQueryRequest pageQueryRequest = this.getPageQueryParameters(req);
+            Map<String, Object> params = this.getQueryParameters(CLAZZ, req);
+            List<SysConfig> list = sysConfigService.queryModel(CLAZZ, params, pageQueryRequest.getOrderBy());
+            list = setConfigAssist(list);
+            result.setData(list);
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
@@ -91,7 +84,7 @@ public class SysConfigController extends BaseController {
     public ApiResult get(@PathVariable(required = true) String id) {
         ApiResult result = new ApiResult();
         try {
-            return result.setData(sysConfigService.getModel(SysConfig.class, id));
+            result.setData(sysConfigService.getModel(CLAZZ, id));
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
@@ -107,12 +100,7 @@ public class SysConfigController extends BaseController {
         try {
             // ID为空方可插入
             if (Strings.isNotBlank(form.getId())) {
-                // 存在，方可更新
-                if (sysConfigService.isExist(SysConfig.class, form.getId())) {
-                    result.setData(sysConfigService.updateModel(form));
-                } else {
-                    result.error().setMsg(ApiErrorMsg.IS_NULL);
-                }
+                result.setData(sysConfigService.updateModel(form));
             } else {
                 result.setData(sysConfigService.createModel(form));
             }
@@ -129,13 +117,10 @@ public class SysConfigController extends BaseController {
     public ApiResult<SysConfig> isDelete(@PathVariable(required = true) String id) {
         ApiResult<SysConfig> result = new ApiResult<>();
         try {
-            SysConfig mResult = sysConfigService.getModel(SysConfig.class, id);
-            if (mResult != null) {
-                sysConfigService.isDeleteModel(mResult);
-                result.success();
-            } else {
-                result.error().setMsg(ApiErrorMsg.IS_NULL);
-            }
+            SysConfig model = sysConfigService.getModel(CLAZZ, id);
+            Assert.notNull(model, ApiErrorMsg.IS_NULL);
+            model.setEnableStatus(EnableStatusEnum.DISABLED.getCode());
+            sysConfigService.isDeleteModel(model);
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.DELETE_FAIL);
@@ -171,12 +156,12 @@ public class SysConfigController extends BaseController {
             if (Strings.isNotBlank(key)) {
                 Map<String, Object> params = new HashMap<>();
                 params.put("configKey", key);
-                List<SysConfig> list = sysConfigService.queryModel(SysConfig.class, params);
+                List<SysConfig> list = sysConfigService.queryModel(CLAZZ, params);
                 if (list != null && list.size() > 0) {
-                    return result.success().setData(list.get(0).getConfigValue());
+                    result.setData(list.get(0).getConfigValue());
                 }
             }
-            return result.success().setData("");
+            result.setData("");
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
@@ -197,7 +182,7 @@ public class SysConfigController extends BaseController {
         if (fileIds.size() > 0) {
             FilterGroup filter = new FilterGroup();
             filter.addFilter("id", FilterGroup.Operator.in, String.join(",", fileIds));
-            List<Attach> attachList = dao.queryList(Attach.class, filter, "");
+            List<Attach> attachList = dao.queryList(Attach.class, filter, null);
             if (attachList != null && attachList.size() > 0) {
                 for (SysConfig model : sysConfigs) {
                     if (CONFIG_TYPE_UPLOAD.equalsIgnoreCase(model.getValueType()) && Strings.isNotBlank(model.getConfigValue())) {

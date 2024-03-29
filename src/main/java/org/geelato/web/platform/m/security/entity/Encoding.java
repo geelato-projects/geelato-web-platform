@@ -2,6 +2,7 @@ package org.geelato.web.platform.m.security.entity;
 
 import com.alibaba.fastjson2.JSON;
 import org.apache.logging.log4j.util.Strings;
+import org.geelato.core.constants.ColumnDefault;
 import org.geelato.core.meta.annotation.Col;
 import org.geelato.core.meta.annotation.Entity;
 import org.geelato.core.meta.annotation.Title;
@@ -27,7 +28,7 @@ public class Encoding extends BaseEntity implements EntityEnableAble {
     private String template;
     private String separators;
     private String example;
-    private int enableStatus;
+    private int enableStatus = ColumnDefault.ENABLE_STATUS_VALUE;
     private String description;
     private String appId;
     // 解析

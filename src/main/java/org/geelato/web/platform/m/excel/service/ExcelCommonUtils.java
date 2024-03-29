@@ -551,7 +551,7 @@ public class ExcelCommonUtils {
             // 查询
             FilterGroup filter = new FilterGroup();
             filter.addFilter("dictCode", FilterGroup.Operator.in, String.join(",", dictCodes));
-            dictList = dao.queryList(Dict.class, filter, "");
+            dictList = dao.queryList(Dict.class, filter, null);
             if (dictList != null && dictList.size() > 0) {
                 List<String> dictIds = new ArrayList<>();
                 for (Dict dict : dictList) {
@@ -559,7 +559,7 @@ public class ExcelCommonUtils {
                 }
                 FilterGroup filter1 = new FilterGroup();
                 filter1.addFilter("dictId", FilterGroup.Operator.in, String.join(",", dictIds));
-                dictItemList = dao.queryList(DictItem.class, filter1, "");
+                dictItemList = dao.queryList(DictItem.class, filter1, null);
                 // 存入缓存
                 for (Dict dict : dictList) {
                     String dictKey = String.format("%s:%s", currentUUID, dict.getDictCode());
@@ -703,7 +703,7 @@ public class ExcelCommonUtils {
             // 查询
             FilterGroup filter = new FilterGroup();
             filter.addFilter("dictCode", FilterGroup.Operator.in, String.join(",", dictCodes));
-            dictList = dao.queryList(Dict.class, filter, "");
+            dictList = dao.queryList(Dict.class, filter, null);
             if (dictList != null && dictList.size() > 0) {
                 List<String> dictIds = new ArrayList<>();
                 for (Dict dict : dictList) {
@@ -712,7 +712,7 @@ public class ExcelCommonUtils {
                 FilterGroup filter1 = new FilterGroup();
                 filter1.addFilter("dictId", FilterGroup.Operator.in, String.join(",", dictIds));
                 // filter1.addFilter("itemName", FilterGroup.Operator.in, String.join(",", dictItemNames));
-                dictItemList = dao.queryList(DictItem.class, filter1, "");
+                dictItemList = dao.queryList(DictItem.class, filter1, null);
                 // 存入缓存
                 for (Dict dict : dictList) {
                     String dictKey = String.format("%s:%s", currentUUID, dict.getDictCode());
