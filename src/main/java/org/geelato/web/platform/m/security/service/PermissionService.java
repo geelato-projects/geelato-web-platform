@@ -36,6 +36,27 @@ public class PermissionService extends BaseService {
     @Autowired
     private RoleService roleService;
 
+    public Map<String, Object> updateModel(Permission form) {
+        // 原来的数据
+        Permission model = super.getModel(Permission.class, form.getId());
+        // 更新
+        Map<String, Object> permissionMap = super.updateModel(form);
+        // 更新关联表
+        Map<String, Object> params = new HashMap<>();
+        params.put("permissionId", model.getName());
+        if (!form.getName().equals(model.getName())) {
+            List<RolePermissionMap> pList = rolePermissionMapService.queryModel(RolePermissionMap.class, params);
+            if (pList != null) {
+                for (RolePermissionMap rModel : pList) {
+                    rModel.setPermissionName(form.getName());
+                    rolePermissionMapService.updateModel(rModel);
+                }
+            }
+        }
+
+        return permissionMap;
+    }
+
     /**
      * 逻辑删除
      *
@@ -279,6 +300,9 @@ public class PermissionService extends BaseService {
                 }
             }
         }
+    }
+
+    public void resetTableDefaultPermissionByRole(String types, String object, String appId) {
         // 当前权限
         Map<String, Object> params = new HashMap<>();
         params.put("appId", appId);
@@ -287,11 +311,17 @@ public class PermissionService extends BaseService {
         for (Role role : roleList) {
             roleIds.add(role.getId());
         }
+        // 当前权限
+        FilterGroup tableFilter = new FilterGroup();
+        tableFilter.addFilter("type", FilterGroup.Operator.in, types);
+        tableFilter.addFilter("object", object);
+        tableFilter.addFilter("tenantCode", getSessionTenantCode());
         List<Permission> permissionList = queryModel(Permission.class, tableFilter);
         List<String> permissionIds = new ArrayList<>();
-        for (Permission permission : curPermissions) {
+        for (Permission permission : permissionList) {
             permissionIds.add(permission.getId());
         }
+        // 给当前角色添加模型权限
         if (roleIds.size() > 0 && permissionIds.size() > 0) {
             FilterGroup filterGroup1 = new FilterGroup();
             filterGroup1.addFilter("permissionId", FilterGroup.Operator.in, String.join(",", permissionIds));
@@ -329,7 +359,7 @@ public class PermissionService extends BaseService {
         dModel.setCode(String.format("%s%s", object, defaultCode));
         Map<String, Object> permission = createModel(dModel);
         if (Arrays.asList(PERMISSION_DEFAULT_TO_ROLE).contains(defaultCode)) {
-            rolePermissionMapService.createAllRoleOfDefaultPermission(JSON.parseObject(JSON.toJSONString(permission), Permission.class));
+            // rolePermissionMapService.createAllRoleOfDefaultPermission(JSON.parseObject(JSON.toJSONString(permission), Permission.class));
         }
     }
 

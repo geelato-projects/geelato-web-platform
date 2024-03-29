@@ -187,9 +187,11 @@ public class RolePermissionMapService extends BaseService {
                 tableMap.put("id", role.getId());
                 tableMap.put("appName", role.getAppName());
                 tableMap.put("appId", role.getAppId());
+                tableMap.put("enableStatus", role.getEnableStatus());
                 tableMap.put("name", role.getName());
                 tableMap.put("code", role.getCode());
                 tableMap.put("type", role.getType());
+                tableMap.put("weight", role.getWeight());
                 tableMap.put("description", role.getDescription());
                 if (permissions != null && permissions.size() > 0) {
                     for (Permission permission : permissions) {
@@ -285,9 +287,11 @@ public class RolePermissionMapService extends BaseService {
                 tableMap.put("id", role.getId());
                 tableMap.put("appName", role.getAppName());
                 tableMap.put("appId", role.getAppId());
+                tableMap.put("enableStatus", role.getEnableStatus());
                 tableMap.put("name", role.getName());
                 tableMap.put("code", role.getCode());
                 tableMap.put("type", role.getType());
+                tableMap.put("weight", role.getWeight());
                 tableMap.put("description", role.getDescription());
                 if (columnMetas != null && columnMetas.size() > 0) {
                     for (ColumnMeta columnMeta : columnMetas) {
