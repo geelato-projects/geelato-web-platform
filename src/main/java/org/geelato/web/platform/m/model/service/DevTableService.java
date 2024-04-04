@@ -218,8 +218,8 @@ public class DevTableService extends BaseSortableService {
         if (Strings.isNotBlank(tenantCode)){form.setTenantCode(tenantCode);}
         form.setSynced(ColumnSyncedEnum.FALSE.getValue());
         form.setSourceType(TableSourceTypeEnum.CREATION.getValue());
-        Map<String, Object> formMap = this.createModel(form);
-        form.setId(formMap.get("id").toString());
+        TableMeta formMap = this.createModel(form);
+        form.setId(formMap.getId());
         // 源模型字段
         Map<String, Object> params = new HashMap<>();
         params.put("tableId", tableId);

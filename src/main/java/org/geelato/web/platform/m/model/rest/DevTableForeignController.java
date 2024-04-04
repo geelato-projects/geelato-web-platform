@@ -90,8 +90,8 @@ public class DevTableForeignController extends BaseController {
 
     @RequestMapping(value = "/createOrUpdate", method = RequestMethod.POST)
     @ResponseBody
-    public ApiResult<Map> createOrUpdate(@RequestBody TableForeign form) {
-        ApiResult<Map> result = new ApiResult<>();
+    public ApiResult createOrUpdate(@RequestBody TableForeign form) {
+        ApiResult result = new ApiResult<>();
         try {
             if (Strings.isNotBlank(form.getId())) {
                 result.setData(devTableForeignService.updateModel(form));

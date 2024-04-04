@@ -101,11 +101,11 @@ public class RoleService extends BaseSortableService {
         }
     }
 
-    public Map<String, Object> updateModel(Role form) {
+    public Role updateModel(Role form) {
         // 原来的数据
         Role model = getModel(Role.class, form.getId());
         // 更新
-        Map<String, Object> formMap = super.updateModel(form);
+        Role formMap = super.updateModel(form);
         // 关联表修改
         if (Strings.isNotBlank(form.getName()) && !form.getName().equals(model.getName())) {
             // 角色APP关系表
@@ -147,9 +147,9 @@ public class RoleService extends BaseSortableService {
         return formMap;
     }
 
-    public Map<String, Object> createModel(Role form) {
+    public Role createModel(Role form) {
         // 创建
-        Map<String, Object> map = super.createModel(form);
+        Role map = super.createModel(form);
 
         return map;
     }

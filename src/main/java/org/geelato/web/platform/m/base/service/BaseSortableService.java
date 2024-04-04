@@ -61,7 +61,7 @@ public class BaseSortableService extends BaseService {
      * @param <T>
      * @return
      */
-    public <T extends BaseSortableEntity> Map createModel(T model) {
+    public <T extends BaseSortableEntity> T createModel(T model) {
         model.setSeqNo(model.getSeqNo() > 0 ? model.getSeqNo() : ColumnDefault.SEQ_NO_VALUE);
         return super.createModel(model);
     }
@@ -73,7 +73,7 @@ public class BaseSortableService extends BaseService {
      * @param <T>
      * @return
      */
-    public <T extends BaseSortableEntity> Map updateModel(T model) {
+    public <T extends BaseSortableEntity> T updateModel(T model) {
         return super.updateModel(model);
     }
 

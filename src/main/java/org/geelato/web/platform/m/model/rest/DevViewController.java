@@ -94,8 +94,8 @@ public class DevViewController extends BaseController {
 
     @RequestMapping(value = "/createOrUpdate", method = RequestMethod.POST)
     @ResponseBody
-    public ApiResult<Map> createOrUpdate(@RequestBody TableView form) {
-        ApiResult<Map> result = new ApiResult<>();
+    public ApiResult createOrUpdate(@RequestBody TableView form) {
+        ApiResult result = new ApiResult<>();
         try {
             form.afterSet();
             // 视图

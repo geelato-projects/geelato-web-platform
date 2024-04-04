@@ -36,11 +36,11 @@ public class PermissionService extends BaseService {
     @Autowired
     private RoleService roleService;
 
-    public Map<String, Object> updateModel(Permission form) {
+    public Permission updateModel(Permission form) {
         // 原来的数据
         Permission model = super.getModel(Permission.class, form.getId());
         // 更新
-        Map<String, Object> permissionMap = super.updateModel(form);
+        Permission permissionMap = super.updateModel(form);
         // 更新关联表
         Map<String, Object> params = new HashMap<>();
         params.put("permissionId", model.getName());
@@ -357,7 +357,7 @@ public class PermissionService extends BaseService {
         String defaultCode = dModel.getCode();
         dModel.setObject(object);
         dModel.setCode(String.format("%s%s", object, defaultCode));
-        Map<String, Object> permission = createModel(dModel);
+        Permission permission = createModel(dModel);
         if (Arrays.asList(PERMISSION_DEFAULT_TO_ROLE).contains(defaultCode)) {
             // rolePermissionMapService.createAllRoleOfDefaultPermission(JSON.parseObject(JSON.toJSONString(permission), Permission.class));
         }

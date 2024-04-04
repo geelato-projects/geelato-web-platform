@@ -220,8 +220,7 @@ public class DictItemController extends BaseController {
             dict.setDictCode(form.getDictCode());
             dict.setDictName(form.getDictName());
             dict.setDictRemark(form.getDictRemark());
-            Map<String, Object> dictMap = dictService.createModel(dict);
-            dict = JSON.parseObject(JSON.toJSONString(dictMap), Dict.class);
+            dict = dictService.createModel(dict);
             if (form.getDictItems() != null && form.getDictItems().size() > 0) {
                 int orderNum = 1;
                 for (DictItem item : form.getDictItems()) {

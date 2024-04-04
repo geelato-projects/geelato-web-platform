@@ -33,6 +33,32 @@ public class BaseService {
     /**
      * 分页查询
      *
+     * @param params
+     * @param request
+     * @return
+     */
+    public ApiPagedResult pageQueryModel(String sqlId, Map<String, Object> params, PageQueryRequest request) {
+        ApiPagedResult result = new ApiPagedResult();
+        // dao查询
+        params.put("orderBy", request.getOrderBy());
+        params.put("pageSize", null);
+        List<Map<String, Object>> queryList = dao.queryForMapList(sqlId, params);
+        params.put("pageSize", request.getPageSize());
+        params.put("startNum", request.getPageSize() * (request.getPageNum() - 1));
+        List<Map<String, Object>> pageQueryList = dao.queryForMapList(sqlId, params);
+        // 分页结果
+        result.setPage(request.getPageNum());
+        result.setSize(request.getPageSize());
+        result.setTotal(queryList != null ? queryList.size() : 0);
+        result.setDataSize(pageQueryList != null ? pageQueryList.size() : 0);
+        result.setData(new DataItems(pageQueryList, result.getTotal()));
+
+        return result;
+    }
+
+    /**
+     * 分页查询
+     *
      * @param entity
      * @param params
      * @param request
@@ -152,14 +178,15 @@ public class BaseService {
      * @param <T>
      * @return
      */
-    public <T extends BaseEntity> Map createModel(T model) {
+    public <T extends BaseEntity> T createModel(T model) {
         model.setDelStatus(DeleteStatusEnum.NO.getCode());
         model.setDeleteAt(null);
         if (Strings.isBlank(model.getTenantCode())) {
             model.setTenantCode(getSessionTenantCode());
         }
 
-        return dao.save(model);
+        Map<String, Object> map = dao.save(model);
+        return (T) JSON.parseObject(JSON.toJSONString(map), model.getClass());
     }
 
     /**
@@ -169,14 +196,15 @@ public class BaseService {
      * @param <T>
      * @return
      */
-    public <T extends BaseEntity> Map updateModel(T model) {
+    public <T extends BaseEntity> T updateModel(T model) {
         model.setDelStatus(DeleteStatusEnum.NO.getCode());
         model.setDeleteAt(null);
         if (Strings.isBlank(model.getTenantCode())) {
             model.setTenantCode(getSessionTenantCode());
         }
 
-        return dao.save(model);
+        Map<String, Object> map = dao.save(model);
+        return (T) JSON.parseObject(JSON.toJSONString(map), model.getClass());
     }
 
     /**

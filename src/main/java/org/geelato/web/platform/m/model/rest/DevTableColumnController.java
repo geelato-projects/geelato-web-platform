@@ -7,7 +7,6 @@ import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.enums.ColumnSyncedEnum;
 import org.geelato.core.enums.DeleteStatusEnum;
-import org.geelato.core.enums.EnableStatusEnum;
 import org.geelato.core.gql.parser.FilterGroup;
 import org.geelato.core.gql.parser.PageQueryRequest;
 import org.geelato.core.meta.MetaManager;
@@ -100,8 +99,8 @@ public class DevTableColumnController extends BaseController {
 
     @RequestMapping(value = "/createOrUpdate", method = RequestMethod.POST)
     @ResponseBody
-    public ApiResult<Map> createOrUpdate(@RequestBody ColumnMeta form) {
-        ApiResult<Map> result = new ApiResult<>();
+    public ApiResult createOrUpdate(@RequestBody ColumnMeta form) {
+        ApiResult result = new ApiResult<>();
         try {
             form.afterSet();
             // ID为空方可插入
@@ -110,7 +109,7 @@ public class DevTableColumnController extends BaseController {
                 ColumnMeta meta = devTableColumnService.getModel(CLAZZ, form.getId());
                 Assert.notNull(meta, ApiErrorMsg.IS_NULL);
                 form = devTableColumnService.upgradeTable(form, meta);
-                Map<String, Object> resultMap = devTableColumnService.updateModel(form);
+                ColumnMeta resultMap = devTableColumnService.updateModel(form);
                 if (!meta.getName().equalsIgnoreCase(form.getName())) {
                     permissionService.columnPermissionChangeObject(form.getTableName(), form.getName(), meta.getName());
                     permissionService.resetDefaultPermission(PermissionTypeEnum.COLUMN.getValue(), form.getTableName(), form.getAppId());
@@ -118,7 +117,7 @@ public class DevTableColumnController extends BaseController {
                 result.setData(resultMap);
             } else {
                 form.setSynced(ColumnSyncedEnum.FALSE.getValue());
-                Map<String, Object> resultMap = devTableColumnService.createModel(form);
+                ColumnMeta resultMap = devTableColumnService.createModel(form);
                 permissionService.resetDefaultPermission(PermissionTypeEnum.COLUMN.getValue(), form.getTableName(), form.getAppId());
                 result.setData(resultMap);
             }

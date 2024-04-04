@@ -1,6 +1,5 @@
 package org.geelato.web.platform.m.excel.rest;
 
-import com.alibaba.fastjson2.JSON;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.api.ApiPagedResult;
@@ -19,7 +18,10 @@ import org.springframework.stereotype.Controller;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author diabl
@@ -92,14 +94,13 @@ public class ExportTemplateController extends BaseController {
     public ApiResult createOrUpdate(@RequestBody ExportTemplate form) {
         ApiResult result = new ApiResult();
         try {
-            Map<String, Object> extMap = new HashMap<>();
+            ExportTemplate model = new ExportTemplate();
             // ID为空方可插入
             if (Strings.isNotBlank(form.getId())) {
-                extMap = exportTemplateService.updateModel(form);
+                model = exportTemplateService.updateModel(form);
             } else {
-                extMap = exportTemplateService.createModel(form);
+                model = exportTemplateService.createModel(form);
             }
-            ExportTemplate model = JSON.parseObject(JSON.toJSONString(extMap), CLAZZ);
             exportTemplateService.generateFile(model.getId(), "template");
             result.setData(model);
         } catch (Exception e) {

@@ -417,9 +417,8 @@ public class ExportTemplateService extends BaseService {
         attach.setType(Files.probeContentType(excelFile.toPath()));
         attach.setSize(attributes.size());
         attach.setPath(excelPath);
-        Map<String, Object> attachMap = attachService.createModel(attach);
 
-        return JSON.parseObject(JSON.toJSONString(attachMap), Attach.class);
+        return attachService.createModel(attach);
     }
 
     /**

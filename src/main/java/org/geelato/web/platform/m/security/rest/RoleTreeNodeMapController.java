@@ -18,10 +18,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author diabl
@@ -49,6 +46,22 @@ public class RoleTreeNodeMapController extends BaseController {
             PageQueryRequest pageQueryRequest = this.getPageQueryParameters(req);
             FilterGroup filterGroup = this.getFilterGroup(CLAZZ, req, OPERATORMAP);
             result = roleTreeNodeMapService.pageQueryModel(CLAZZ, filterGroup, pageQueryRequest);
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
+        }
+
+        return result;
+    }
+
+    @RequestMapping(value = "/pageQueryOf", method = RequestMethod.GET)
+    @ResponseBody
+    public ApiPagedResult pageQueryOf(HttpServletRequest req) {
+        ApiPagedResult result = new ApiPagedResult();
+        try {
+            PageQueryRequest pageQueryRequest = this.getPageQueryParameters(req);
+            Map<String, Object> params = this.getQueryParameters(req);
+            result = roleTreeNodeMapService.pageQueryModel("page_query_platform_role_r_tree_node", params, pageQueryRequest);
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
@@ -102,6 +115,32 @@ public class RoleTreeNodeMapController extends BaseController {
             RoleTreeNodeMap model = roleTreeNodeMapService.getModel(CLAZZ, id);
             Assert.notNull(model, ApiErrorMsg.IS_NULL);
             roleTreeNodeMapService.isDeleteModel(model);
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            result.error().setMsg(ApiErrorMsg.DELETE_FAIL);
+        }
+
+        return result;
+    }
+
+    @RequestMapping(value = "/isDelete/{roleId}/{treeNodeId}", method = RequestMethod.DELETE)
+    @ResponseBody
+    public ApiResult isDelete(@PathVariable(required = true) String roleId, @PathVariable(required = true) String treeNodeId) {
+        ApiResult result = new ApiResult();
+        try {
+            if (Strings.isNotBlank(roleId) && Strings.isNotBlank(treeNodeId)) {
+                Map<String, Object> params = new HashMap<>();
+                params.put("roleId", roleId);
+                params.put("treeNodeId", treeNodeId);
+                List<RoleTreeNodeMap> roleTreeNodeMaps = roleTreeNodeMapService.queryModel(CLAZZ, params);
+                if (roleTreeNodeMaps != null && roleTreeNodeMaps.size() > 0) {
+                    for (RoleTreeNodeMap model : roleTreeNodeMaps) {
+                        roleTreeNodeMapService.isDeleteModel(model);
+                    }
+                }
+            } else {
+                result.error().setMsg(ApiErrorMsg.PARAMETER_MISSING);
+            }
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.DELETE_FAIL);

@@ -1,8 +1,7 @@
 package org.geelato.web.platform.m.security.service;
 
-import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.constants.ApiErrorMsg;
-import org.geelato.core.enums.DeleteStatusEnum;
+import org.geelato.core.gql.parser.FilterGroup;
 import org.geelato.web.platform.m.base.entity.App;
 import org.geelato.web.platform.m.base.service.AppService;
 import org.geelato.web.platform.m.base.service.BaseService;
@@ -12,7 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author diabl
@@ -30,7 +30,7 @@ public class RoleAppMapService extends BaseService {
      * @param model 实体数据
      * @return
      */
-    public Map insertModel(RoleAppMap model) {
+    public RoleAppMap insertModel(RoleAppMap model) {
         Role rModel = roleService.getModel(Role.class, model.getRoleId());
         Assert.notNull(rModel, ApiErrorMsg.IS_NULL);
         App aModel = appService.getModel(App.class, model.getAppId());
@@ -39,10 +39,48 @@ public class RoleAppMapService extends BaseService {
         model.setId(null);
         model.setRoleName(rModel.getName());
         model.setAppName(aModel.getName());
-        model.setDelStatus(DeleteStatusEnum.NO.getCode());
-        if (Strings.isBlank(model.getTenantCode())) {
-            model.setTenantCode(getSessionTenantCode());
+        return super.createModel(model);
+    }
+
+    /**
+     * 批量添加
+     *
+     * @param model
+     */
+    public void insertModels(RoleAppMap model) {
+        // 角色
+        Role rModel = roleService.getModel(Role.class, model.getRoleId());
+        Assert.notNull(rModel, ApiErrorMsg.IS_NULL);
+        // 应用
+        FilterGroup filter = new FilterGroup();
+        filter.addFilter("id", FilterGroup.Operator.in, model.getAppIds());
+        List<App> appList = appService.queryModel(App.class, filter);
+        if (appList == null || appList.isEmpty()) {
+            throw new RuntimeException(ApiErrorMsg.IS_NULL);
         }
-        return dao.save(model);
+        // 角色-应用
+        FilterGroup filter1 = new FilterGroup();
+        filter1.addFilter("appId", FilterGroup.Operator.in, model.getAppIds());
+        filter1.addFilter("roleId", model.getRoleId());
+        List<RoleAppMap> roleAppMapList = super.queryModel(RoleAppMap.class, filter1);
+        List<String> appIds = new ArrayList<>();
+        if (roleAppMapList != null && roleAppMapList.size() > 0) {
+            for (RoleAppMap roleAppMap : roleAppMapList) {
+                if (!appIds.contains(roleAppMap.getAppId())) {
+                    appIds.add(roleAppMap.getAppId());
+                }
+            }
+        }
+        // 构建
+        for (App app : appList) {
+            if (!appIds.contains(app.getId())) {
+                RoleAppMap roleAppMap = new RoleAppMap();
+                roleAppMap.setRoleId(rModel.getId());
+                roleAppMap.setRoleName(rModel.getName());
+                roleAppMap.setAppId(app.getId());
+                roleAppMap.setAppName(app.getName());
+                super.createModel(roleAppMap);
+            }
+        }
     }
 }

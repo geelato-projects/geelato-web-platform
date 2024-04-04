@@ -35,7 +35,7 @@ public class EncodingController extends BaseController {
     private static final Class<Encoding> CLAZZ = Encoding.class;
 
     static {
-        OPERATORMAP.put("contains", Arrays.asList("title", "description"));
+        OPERATORMAP.put("contains", Arrays.asList("id", "title", "description"));
         OPERATORMAP.put("intervals", Arrays.asList("createAt", "updateAt"));
     }
 

@@ -411,8 +411,8 @@ public class RolePermissionMapService extends BaseService {
                     }
                 }
                 if (!isExist) {
-                    Map<String, Object> map = createModel(permission);
-                    permission.setId((String.valueOf(map.get("id"))));
+                    Permission map = createModel(permission);
+                    permission.setId(map.getId());
                     permissionList.add(permission);
                 }
             }

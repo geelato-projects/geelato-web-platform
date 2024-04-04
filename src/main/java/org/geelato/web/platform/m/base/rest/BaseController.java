@@ -112,8 +112,18 @@ public class BaseController implements InitializingBean {
                 List<String> contains = operatorMap.get("contains");
                 if (contains != null && !contains.isEmpty()) {
                     for (String list : contains) {
-                        if (Strings.isNotBlank((String) params.get(list))) {
-                            filterGroup.addFilter(list, FilterGroup.Operator.contains, (String) params.get(list));
+                        if (params.get(list) != null && Strings.isNotBlank(String.valueOf(params.get(list)))) {
+                            filterGroup.addFilter(list, FilterGroup.Operator.contains, String.valueOf(params.get(list)));
+                            params.remove(list);
+                        }
+                    }
+                }
+                // 存在于列表查询
+                List<String> consists = operatorMap.get("consists");
+                if (consists != null && !consists.isEmpty()) {
+                    for (String list : consists) {
+                        if (params.get(list) != null && Strings.isNotBlank(String.valueOf(params.get(list)))) {
+                            filterGroup.addFilter(list, FilterGroup.Operator.in, String.valueOf(params.get(list)));
                             params.remove(list);
                         }
                     }

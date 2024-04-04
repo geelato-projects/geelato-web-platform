@@ -13,6 +13,7 @@ import org.geelato.web.platform.m.base.entity.Attach;
 import org.geelato.web.platform.m.base.entity.SysConfig;
 import org.geelato.web.platform.m.base.service.AttachService;
 import org.geelato.web.platform.m.base.service.SysConfigService;
+import org.geelato.web.platform.m.security.entity.DataItems;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,6 +54,8 @@ public class SysConfigController extends BaseController {
             PageQueryRequest pageQueryRequest = this.getPageQueryParameters(req);
             FilterGroup filterGroup = this.getFilterGroup(CLAZZ, req, OPERATORMAP);
             result = sysConfigService.pageQueryModel(CLAZZ, filterGroup, pageQueryRequest);
+            DataItems<List<SysConfig>> dataItems = (DataItems<List<SysConfig>>) result.getData();
+            setConfigAssist(dataItems.getItems());
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
@@ -69,8 +72,7 @@ public class SysConfigController extends BaseController {
             PageQueryRequest pageQueryRequest = this.getPageQueryParameters(req);
             Map<String, Object> params = this.getQueryParameters(CLAZZ, req);
             List<SysConfig> list = sysConfigService.queryModel(CLAZZ, params, pageQueryRequest.getOrderBy());
-            list = setConfigAssist(list);
-            result.setData(list);
+            result.setData(setConfigAssist(list));
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.QUERY_FAIL);

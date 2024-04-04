@@ -40,6 +40,7 @@ public class UserRestController extends BaseController {
 
     static {
         OPERATORMAP.put("contains", Arrays.asList("name", "loginName", "orgName", "description"));
+        OPERATORMAP.put("consists", Arrays.asList("orgId"));
         OPERATORMAP.put("intervals", Arrays.asList("createAt", "updateAt"));
     }
 
@@ -57,8 +58,8 @@ public class UserRestController extends BaseController {
         ApiPagedResult result = new ApiPagedResult();
         try {
             PageQueryRequest pageQueryRequest = this.getPageQueryParameters(req);
-            Map<String, Object> params = this.getQueryParameters(CLAZZ, req);
-            result.setData(userService.queryModel(CLAZZ, params, pageQueryRequest.getOrderBy()));
+            FilterGroup filterGroup = this.getFilterGroup(CLAZZ, req, OPERATORMAP);
+            result = userService.pageQueryModel(CLAZZ, filterGroup, pageQueryRequest);
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
@@ -124,7 +125,7 @@ public class UserRestController extends BaseController {
     public ApiResult createOrUpdate(@RequestBody User form) {
         ApiResult result = new ApiResult();
         try {
-            Map<String, Object> uMap = new HashMap<>();
+            User uMap = new User();
             // 组织
             if (Strings.isNotBlank(form.getOrgId())) {
                 Org oForm = orgService.getModel(Org.class, form.getOrgId());
@@ -150,13 +151,13 @@ public class UserRestController extends BaseController {
                 form.setPlainPassword(UUIDUtils.generatePassword(DEFAULT_PASSWORD_DIGIT));
                 accountService.entryptPassword(form);
                 uMap = userService.createModel(form);
-                uMap.put("plainPassword", form.getPlainPassword());
+                uMap.setPlainPassword(form.getPlainPassword());
             }
             if (ApiResultStatus.SUCCESS.equals(result.getStatus())) {
                 userService.setDefaultOrg(JSON.parseObject(JSON.toJSONString(uMap), User.class));
             }
-            uMap.put("salt", null);
-            uMap.put("password", null);
+            uMap.setSalt(null);
+            uMap.setPassword(null);
             result.setData(uMap);
         } catch (Exception e) {
             logger.error(e.getMessage());

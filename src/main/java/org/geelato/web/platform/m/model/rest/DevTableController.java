@@ -102,8 +102,8 @@ public class DevTableController extends BaseController {
 
     @RequestMapping(value = "/createOrUpdate", method = RequestMethod.POST)
     @ResponseBody
-    public ApiResult<Map> createOrUpdate(@RequestBody TableMeta form, Boolean isAlter) {
-        ApiResult<Map> result = new ApiResult<>();
+    public ApiResult createOrUpdate(@RequestBody TableMeta form, Boolean isAlter) {
+        ApiResult result = new ApiResult<>();
         try {
             // ID为空方可插入
             if (Strings.isNotBlank(form.getId())) {
@@ -111,7 +111,7 @@ public class DevTableController extends BaseController {
                 TableMeta model = devTableService.getModel(CLAZZ, form.getId());
                 if (model != null) {
                     form = devTableService.handleForm(form, model);
-                    Map<String, Object> resultMap = devTableService.updateModel(form);
+                    TableMeta resultMap = devTableService.updateModel(form);
                     if (!model.getEntityName().equals(form.getEntityName())) {
                         // 修正权限
                         permissionService.tablePermissionChangeObject(form.getEntityName(), model.getEntityName());
@@ -124,8 +124,8 @@ public class DevTableController extends BaseController {
                 }
             } else {
                 form.setSynced(ColumnSyncedEnum.FALSE.getValue());
-                Map<String, Object> resultMap = devTableService.createModel(form);
-                form.setId(resultMap.get("id").toString());
+                TableMeta resultMap = devTableService.createModel(form);
+                form.setId(resultMap.getId());
                 // 添加默认权限
                 permissionService.resetDefaultPermission(PermissionTypeEnum.getTablePermissions(), form.getEntityName(), form.getAppId());
                 devTableColumnService.createDefaultColumn(form);

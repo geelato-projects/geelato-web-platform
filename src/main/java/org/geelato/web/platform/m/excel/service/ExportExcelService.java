@@ -123,7 +123,7 @@ public class ExportExcelService {
             attach.setType(Files.probeContentType(exportFile.toPath()));
             attach.setSize(attributes.size());
             attach.setPath(directory);
-            Map<String, Object> attachMap = attachService.createModel(attach);
+            Attach attachMap = attachService.createModel(attach);
             result.setData(attachMap);
         } catch (Exception e) {
             logger.error("表单信息导出Excel出错。", e);

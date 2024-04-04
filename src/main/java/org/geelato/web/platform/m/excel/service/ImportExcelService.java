@@ -102,7 +102,7 @@ public class ImportExcelService {
             ExportTemplate exportTemplate = exportTemplateService.getModel(ExportTemplate.class, templateId);
             ExcelCommonUtils.notNull(exportTemplate, new FileNotFoundException("ExportTemplate Data Not Found"));
             logger.info(String.format("事务模板（%s[%s]）", exportTemplate.getTitle(), exportTemplate.getId()));
-            //事务，模板元数据
+            // 事务，模板元数据
             // Attach templateRuleAttach = getFile(exportTemplate.getTemplateRule());
             // ExcelCommonUtils.notNull(templateRuleAttach, new FileNotFoundException("Business Data Type And Meta File Not Found"));
             // logger.info(String.format("数据类型+元数据（%s[%s]）%s", templateRuleAttach.getName(), templateRuleAttach.getId(), templateRuleAttach.getPath()));
@@ -110,7 +110,7 @@ public class ImportExcelService {
             if (templateRuleFile != null) {
                 // 元数据
                 businessMetaListMap = getBusinessMeta(templateRuleFile, 2);
-                //事务，模板数据类型
+                // 事务，模板数据类型
                 businessTypeDataMap = getBusinessTypeData(templateRuleFile, 0);
                 // 清洗规则
                 businessTypeRuleDataSet = getBusinessTypeRuleData(templateRuleFile, 1);
@@ -118,7 +118,7 @@ public class ImportExcelService {
                     Strings.isNotBlank(exportTemplate.getBusinessRuleData()) && Strings.isNotBlank(exportTemplate.getBusinessMetaData())) {
                 // 元数据
                 businessMetaListMap = getBusinessMeta(exportTemplate.getBusinessMetaData());
-                //事务，模板数据类型
+                // 事务，模板数据类型
                 businessTypeDataMap = getBusinessTypeData(exportTemplate.getBusinessTypeData());
                 // 清洗规则
                 businessTypeRuleDataSet = getBusinessTypeRuleData(exportTemplate.getBusinessRuleData());
@@ -146,13 +146,13 @@ public class ImportExcelService {
             logger.info(String.format("BusinessData Handle Rule [TRUE] = %s [%s]", (businessDataMapList == null ? 0 : businessDataMapList.size()), sdf.format(new Date())));
             // 需要转化的业务数据
             // businessDataMapList = excelCommonUtils.handleBusinessDataRule(currentUUID, businessDataMapList, true);
-            //logger.info(String.format("BusinessData Handle Rule [TRUE] = %s [%s]", (businessDataMapList == null ? 0 : businessDataMapList.size()), sdf.format(new Date())));
+            // logger.info(String.format("BusinessData Handle Rule [TRUE] = %s [%s]", (businessDataMapList == null ? 0 : businessDataMapList.size()), sdf.format(new Date())));
             // 需要分割的业务数据，多值数据处理
             // businessDataMapList = excelCommonUtils.handleBusinessDataMultiScene(businessDataMapList);
-            //logger.info(String.format("BusinessData Handle Multi Scene = %s [%s]", (businessDataMapList == null ? 0 : businessDataMapList.size()), sdf.format(new Date())));
+            // logger.info(String.format("BusinessData Handle Multi Scene = %s [%s]", (businessDataMapList == null ? 0 : businessDataMapList.size()), sdf.format(new Date())));
             // 需要转化的业务数据
             // businessDataMapList = excelCommonUtils.handleBusinessDataRule(currentUUID, businessDataMapList, false);
-            //logger.info(String.format("BusinessData Handle Rule [FALSE] = %s [%s]", (businessDataMapList == null ? 0 : businessDataMapList.size()), sdf.format(new Date())));
+            // logger.info(String.format("BusinessData Handle Rule [FALSE] = %s [%s]", (businessDataMapList == null ? 0 : businessDataMapList.size()), sdf.format(new Date())));
             // 设置缓存
             List<String> cacheKeys = excelCommonUtils.setCache(currentUUID, businessMetaListMap, businessDataMapList);
             logger.info(String.format("Redis Template [ADD] = %s [%s]", (cacheKeys == null ? 0 : cacheKeys.size()), sdf.format(new Date())));
@@ -219,7 +219,7 @@ public class ImportExcelService {
             logger.info(String.format("Redis Template [DELETE] [%s]", sdf.format(new Date())));
             // 业务数据校验
             if (!validBusinessData(businessDataMapList) || repeatedData.size() > 0) {
-                Map<String, Object> errorAttach = writeBusinessData(businessFile, request, response, businessDataMapList, repeatedData, 0);
+                Attach errorAttach = writeBusinessData(businessFile, request, response, businessDataMapList, repeatedData, 0);
                 logger.info(String.format("业务数据校验-错误 [%s]", sdf.format(new Date())));
                 return result.error(new FileContentValidFailedException("For more information, see the error file.")).setData(errorAttach);
             }
@@ -725,8 +725,9 @@ public class ImportExcelService {
      * @return
      * @throws IOException
      */
-    private Map<String, Object> writeBusinessData(Attach businessFile, HttpServletRequest request, HttpServletResponse response, List<Map<String, BusinessData>> businessDataMapList, Map<ColumnMeta, Map<Object, Long>> repeatedData, int sheetIndex) throws IOException {
-        Map<String, Object> attachMap = new HashMap<>();
+    private Attach writeBusinessData(Attach businessFile, HttpServletRequest request, HttpServletResponse response, List<Map<String, BusinessData>> businessDataMapList, Map<ColumnMeta, Map<Object, Long>> repeatedData, int sheetIndex) throws IOException {
+        Attach attachMap = new Attach();
+
         InputStream inputStream = null;
         FileInputStream fileInputStream = null;
         BufferedInputStream bufferedInputStream = null;

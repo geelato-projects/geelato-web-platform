@@ -1,6 +1,7 @@
 package org.geelato.web.platform.m.security.rest;
 
 import jakarta.servlet.http.HttpServletRequest;
+import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiErrorMsg;
@@ -55,6 +56,22 @@ public class RoleAppMapController extends BaseController {
         return result;
     }
 
+    @RequestMapping(value = "/pageQueryOf", method = RequestMethod.GET)
+    @ResponseBody
+    public ApiPagedResult pageQueryOf(HttpServletRequest req) {
+        ApiPagedResult result = new ApiPagedResult();
+        try {
+            PageQueryRequest pageQueryRequest = this.getPageQueryParameters(req);
+            Map<String, Object> params = this.getQueryParameters(req);
+            result = roleAppMapService.pageQueryModel("page_query_platform_role_r_app", params, pageQueryRequest);
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
+        }
+
+        return result;
+    }
+
     @RequestMapping(value = "/query", method = RequestMethod.GET)
     @ResponseBody
     public ApiResult query(HttpServletRequest req) {
@@ -76,7 +93,11 @@ public class RoleAppMapController extends BaseController {
     public ApiResult insert(@RequestBody RoleAppMap form) {
         ApiResult result = new ApiResult();
         try {
-            result.setData(roleAppMapService.insertModel(form));
+            if (Strings.isNotBlank(form.getAppId())) {
+                result.setData(roleAppMapService.insertModel(form));
+            } else if (Strings.isNotBlank(form.getAppIds())) {
+                roleAppMapService.insertModels(form);
+            }
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.OPERATE_FAIL);
