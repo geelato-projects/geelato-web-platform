@@ -2,7 +2,6 @@ package org.geelato.web.platform.m.security.service;
 
 import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.constants.ApiErrorMsg;
-import org.geelato.core.enums.DeleteStatusEnum;
 import org.geelato.core.gql.parser.FilterGroup;
 import org.geelato.web.platform.m.base.service.BaseService;
 import org.geelato.web.platform.m.security.entity.Role;
@@ -10,7 +9,6 @@ import org.geelato.web.platform.m.security.entity.RoleUserMap;
 import org.geelato.web.platform.m.security.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.util.Assert;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -28,69 +26,69 @@ public class RoleUserMapService extends BaseService {
     private UserService userService;
 
     /**
-     * 创建一条数据
+     * 根据角色ID和用户ID查询角色用户映射列表
      *
-     * @param model 实体数据
-     * @return
+     * @param roleId 角色ID
+     * @param userId 用户ID
+     * @return 角色用户映射列表
      */
-    public Map insertModel(RoleUserMap model) {
-        Role rModel = roleService.getModel(Role.class, model.getRoleId());
-        Assert.notNull(rModel, ApiErrorMsg.IS_NULL);
-        User uModel = userService.getModel(User.class, model.getUserId());
-        Assert.notNull(uModel, ApiErrorMsg.IS_NULL);
-        // 构建
-        model.setId(null);
-        model.setRoleName(rModel.getName());
-        model.setUserName(uModel.getName());
-        model.setDelStatus(DeleteStatusEnum.NO.getCode());
-        if (Strings.isBlank(model.getTenantCode())) {
-            model.setTenantCode(getSessionTenantCode());
+    public List<RoleUserMap> queryModelByIds(String roleId, String userId) {
+        List<RoleUserMap> list = new ArrayList<>();
+        if (Strings.isBlank(roleId) && Strings.isBlank(userId)) {
+            return list;
         }
-        return dao.save(model);
+        FilterGroup filter = new FilterGroup();
+        filter.addFilter("roleId", FilterGroup.Operator.in, roleId);
+        filter.addFilter("userId", FilterGroup.Operator.in, userId);
+        return this.queryModel(RoleUserMap.class, filter);
     }
 
     /**
-     * 批量，不重复插入
+     * 批量，不重复插入角色用户映射关系
      *
-     * @param model
+     * @param model 角色用户映射关系对象
+     * @return 插入的角色用户映射关系列表
+     * @throws RuntimeException 当角色或用户信息为空时抛出异常
      */
-    public void insertModels(RoleUserMap model) {
-        String tenantCode = Strings.isNotBlank(model.getTenantCode()) ? model.getTenantCode() : getSessionTenantCode();
+    public List<RoleUserMap> insertModels(RoleUserMap model) {
         // 角色存在，
-        Role rModel = roleService.getModel(Role.class, model.getRoleId());
-        Assert.notNull(rModel, ApiErrorMsg.IS_NULL);
+        List<Role> roles = roleService.getModelsById(Role.class, model.getRoleId());
+        if (roles == null || roles.size() == 0) {
+            throw new RuntimeException(ApiErrorMsg.IS_NULL);
+        }
         // 用户信息，
-        FilterGroup userFilter = new FilterGroup();
-        userFilter.addFilter("id", FilterGroup.Operator.in, model.getUserId());
-        userFilter.addFilter("tenantCode", tenantCode);
-        List<User> users = userService.queryModel(User.class, userFilter);
-        Assert.notNull(users, ApiErrorMsg.IS_NULL);
+        List<User> users = userService.getModelsById(User.class, model.getUserId());
+        if (users == null || users.size() == 0) {
+            throw new RuntimeException(ApiErrorMsg.IS_NULL);
+        }
         // 角色用户信息，
-        FilterGroup roleUserFilter = new FilterGroup();
-        roleUserFilter.addFilter("roleId", model.getRoleId());
-        roleUserFilter.addFilter("userId", FilterGroup.Operator.in, model.getUserId());
-        roleUserFilter.addFilter("tenantCode", tenantCode);
-        List<RoleUserMap> roleUserMaps = this.queryModel(RoleUserMap.class, roleUserFilter);
+        List<RoleUserMap> roleUserMaps = this.queryModelByIds(model.getRoleId(), model.getUserId());
         // 对比插入
-        List<String> existUserIds = new ArrayList<>();
-        if (roleUserMaps != null && roleUserMaps.size() > 0) {
-            for (RoleUserMap map : roleUserMaps) {
-                if (Strings.isNotBlank(map.getUserId()) && !existUserIds.contains(map.getUserId())) {
-                    existUserIds.add(map.getUserId());
+        List<RoleUserMap> list = new ArrayList<>();
+        for (Role role : roles) {
+            for (User user : users) {
+                boolean isExist = false;
+                if (roleUserMaps != null && roleUserMaps.size() > 0) {
+                    for (RoleUserMap map : roleUserMaps) {
+                        if (role.getId().equals(map.getRoleId()) && user.getId().equals(map.getUserId())) {
+                            isExist = true;
+                            break;
+                        }
+                    }
+                }
+                if (!isExist) {
+                    RoleUserMap userMap = new RoleUserMap();
+                    userMap.setRoleId(role.getId());
+                    userMap.setRoleName(role.getName());
+                    userMap.setUserId(user.getId());
+                    userMap.setUserName(user.getName());
+                    userMap = this.createModel(userMap);
+                    list.add(userMap);
                 }
             }
         }
-        // 构建
-        for (User user : users) {
-            if (!existUserIds.contains(user.getId())) {
-                RoleUserMap userMap = new RoleUserMap();
-                userMap.setRoleId(rModel.getId());
-                userMap.setRoleName(rModel.getName());
-                userMap.setUserId(user.getId());
-                userMap.setUserName(user.getName());
-                this.createModel(userMap);
-            }
-        }
+
+        return list;
     }
 
     /**

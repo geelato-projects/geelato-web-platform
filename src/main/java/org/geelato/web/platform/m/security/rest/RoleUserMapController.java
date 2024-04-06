@@ -89,24 +89,10 @@ public class RoleUserMapController extends BaseController {
 
     @RequestMapping(value = "/insert", method = RequestMethod.POST)
     @ResponseBody
-    public ApiResult insert(@RequestBody RoleUserMap form) {
-        ApiResult result = new ApiResult();
-        try {
-            result.setData(roleUserMapService.insertModel(form));
-        } catch (Exception e) {
-            logger.error(e.getMessage());
-            result.error().setMsg(ApiErrorMsg.OPERATE_FAIL);
-        }
-
-        return result;
-    }
-
-    @RequestMapping(value = "/inserts", method = RequestMethod.POST)
-    @ResponseBody
     public ApiResult inserts(@RequestBody RoleUserMap form) {
         ApiResult result = new ApiResult();
         try {
-            roleUserMapService.insertModels(form);
+            result.setData(roleUserMapService.insertModels(form));
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.OPERATE_FAIL);

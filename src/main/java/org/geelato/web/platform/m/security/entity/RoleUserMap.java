@@ -15,11 +15,9 @@ import org.geelato.core.meta.model.entity.BaseEntity;
 @Title(title = "角色用户关系表")
 public class RoleUserMap extends BaseEntity {
     private String roleId;
-
-    private String userId;
-
-    private String userName;
     private String roleName;
+    private String userId;
+    private String userName;
 
     @Title(title = "角色ID")
     @Col(name = "role_id", refTables = "platform_role", refColName = "platform_role.id")
