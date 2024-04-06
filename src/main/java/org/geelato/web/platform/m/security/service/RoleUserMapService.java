@@ -34,13 +34,14 @@ public class RoleUserMapService extends BaseService {
      */
     public List<RoleUserMap> queryModelByIds(String roleId, String userId) {
         List<RoleUserMap> list = new ArrayList<>();
-        if (Strings.isBlank(roleId) && Strings.isBlank(userId)) {
-            return list;
+        if (Strings.isNotBlank(roleId) && Strings.isNotBlank(userId)) {
+            FilterGroup filter = new FilterGroup();
+            filter.addFilter("roleId", FilterGroup.Operator.in, roleId);
+            filter.addFilter("userId", FilterGroup.Operator.in, userId);
+            list = this.queryModel(RoleUserMap.class, filter);
         }
-        FilterGroup filter = new FilterGroup();
-        filter.addFilter("roleId", FilterGroup.Operator.in, roleId);
-        filter.addFilter("userId", FilterGroup.Operator.in, userId);
-        return this.queryModel(RoleUserMap.class, filter);
+
+        return list;
     }
 
     /**

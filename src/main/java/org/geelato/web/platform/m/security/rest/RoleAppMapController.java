@@ -1,7 +1,6 @@
 package org.geelato.web.platform.m.security.rest;
 
 import jakarta.servlet.http.HttpServletRequest;
-import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiErrorMsg;
@@ -93,11 +92,7 @@ public class RoleAppMapController extends BaseController {
     public ApiResult insert(@RequestBody RoleAppMap form) {
         ApiResult result = new ApiResult();
         try {
-            if (Strings.isNotBlank(form.getAppId())) {
-                result.setData(roleAppMapService.insertModel(form));
-            } else if (Strings.isNotBlank(form.getAppIds())) {
-                roleAppMapService.insertModels(form);
-            }
+            result.setData(roleAppMapService.insertModels(form));
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.OPERATE_FAIL);

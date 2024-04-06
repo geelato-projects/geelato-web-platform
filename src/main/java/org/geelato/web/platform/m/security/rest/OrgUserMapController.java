@@ -17,7 +17,10 @@ import org.springframework.stereotype.Controller;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author diabl
@@ -45,6 +48,22 @@ public class OrgUserMapController extends BaseController {
             PageQueryRequest pageQueryRequest = this.getPageQueryParameters(req);
             FilterGroup filterGroup = this.getFilterGroup(CLAZZ, req, OPERATORMAP);
             result = orgUserMapService.pageQueryModel(CLAZZ, filterGroup, pageQueryRequest);
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
+        }
+
+        return result;
+    }
+
+    @RequestMapping(value = "/pageQueryOf", method = RequestMethod.GET)
+    @ResponseBody
+    public ApiPagedResult pageQueryOf(HttpServletRequest req) {
+        ApiPagedResult result = new ApiPagedResult();
+        try {
+            PageQueryRequest pageQueryRequest = this.getPageQueryParameters(req);
+            Map<String, Object> params = this.getQueryParameters(req);
+            result = orgUserMapService.pageQueryModel("page_query_platform_org_r_user", params, pageQueryRequest);
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
@@ -88,15 +107,7 @@ public class OrgUserMapController extends BaseController {
     public ApiResult insert(@RequestBody OrgUserMap form) {
         ApiResult result = new ApiResult();
         try {
-            Map<String, Object> params = new HashMap<>();
-            params.put("userId", form.getUserId());
-            params.put("orgId", form.getOrgId());
-            List<OrgUserMap> oList = orgUserMapService.queryModel(CLAZZ, params);
-            if (oList != null && !oList.isEmpty()) {
-                result.error().setMsg(ApiErrorMsg.IS_EXIST);
-            } else {
-                result.setData(orgUserMapService.insertModel(form));
-            }
+            result.setData(orgUserMapService.insertModels(form));
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.OPERATE_FAIL);

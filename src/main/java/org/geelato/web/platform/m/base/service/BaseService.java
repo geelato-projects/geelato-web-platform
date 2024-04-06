@@ -296,4 +296,21 @@ public class BaseService {
     protected String getSessionTenantCode() {
         return Ctx.getCurrentTenantCode();
     }
+
+    /**
+     * 根据ID获取列表
+     *
+     * @param id
+     * @return 列表
+     */
+    public <T extends BaseEntity> List getModelsById(Class<T> entity, String id) {
+        List<T> list = new ArrayList<>();
+        if (Strings.isNotBlank(id)) {
+            FilterGroup filter = new FilterGroup();
+            filter.addFilter("id", FilterGroup.Operator.in, id);
+            list = this.queryModel(entity, filter);
+        }
+
+        return list;
+    }
 }

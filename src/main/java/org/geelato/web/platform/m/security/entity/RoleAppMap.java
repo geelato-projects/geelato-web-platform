@@ -1,7 +1,10 @@
 package org.geelato.web.platform.m.security.entity;
 
 
-import org.geelato.core.meta.annotation.*;
+import org.geelato.core.meta.annotation.Col;
+import org.geelato.core.meta.annotation.Entity;
+import org.geelato.core.meta.annotation.ForeignKey;
+import org.geelato.core.meta.annotation.Title;
 import org.geelato.core.meta.model.entity.BaseEntity;
 import org.geelato.web.platform.m.base.entity.App;
 
@@ -12,7 +15,6 @@ public class RoleAppMap extends BaseEntity {
     private String roleName;
     private String appId;
     private String appName;
-    private String appIds;
 
     @Title(title = "角色ID")
     @Col(name = "role_id", refTables = "platform_role", refColName = "platform_role.id")
@@ -54,15 +56,5 @@ public class RoleAppMap extends BaseEntity {
 
     public void setRoleName(String roleName) {
         this.roleName = roleName;
-    }
-
-    @Title(title = "角色所有的应用id")
-    @Transient
-    public String getAppIds() {
-        return appIds;
-    }
-
-    public void setAppIds(String appIds) {
-        this.appIds = appIds;
     }
 }

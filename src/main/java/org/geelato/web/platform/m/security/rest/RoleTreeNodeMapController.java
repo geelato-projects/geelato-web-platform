@@ -7,7 +7,6 @@ import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.gql.parser.FilterGroup;
 import org.geelato.core.gql.parser.PageQueryRequest;
-import org.geelato.web.platform.m.base.entity.TreeNode;
 import org.geelato.web.platform.m.base.rest.BaseController;
 import org.geelato.web.platform.m.security.entity.RoleTreeNodeMap;
 import org.geelato.web.platform.m.security.service.RoleTreeNodeMapService;
@@ -91,14 +90,7 @@ public class RoleTreeNodeMapController extends BaseController {
     public ApiResult insert(@RequestBody RoleTreeNodeMap form) {
         ApiResult result = new ApiResult();
         try {
-            if (Strings.isNotBlank(form.getTreeNodeId())) {
-                TreeNode treeNode = roleTreeNodeMapService.getModel(TreeNode.class, form.getTreeNodeId());
-                if (treeNode != null) {
-                    form.setAppId(treeNode.getTreeId());
-                    form.setTreeId(treeNode.getTreeId());
-                }
-            }
-            result.setData(roleTreeNodeMapService.insertModel(form));
+            result.setData(roleTreeNodeMapService.insertModels(form));
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.OPERATE_FAIL);

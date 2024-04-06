@@ -2,7 +2,7 @@ package org.geelato.web.platform.m.security.service;
 
 import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.constants.ApiErrorMsg;
-import org.geelato.core.enums.DeleteStatusEnum;
+import org.geelato.core.gql.parser.FilterGroup;
 import org.geelato.web.platform.enums.IsDefaultOrgEnum;
 import org.geelato.web.platform.m.base.service.BaseService;
 import org.geelato.web.platform.m.security.entity.Org;
@@ -10,8 +10,8 @@ import org.geelato.web.platform.m.security.entity.OrgUserMap;
 import org.geelato.web.platform.m.security.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.util.Assert;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,37 +27,73 @@ public class OrgUserMapService extends BaseService {
     private OrgService orgService;
 
     /**
-     * 创建一条数据
+     * 根据组织ID和用户ID查询组织用户映射关系列表
      *
-     * @param model 实体数据
-     * @return
+     * @param orgId  组织ID
+     * @param userId 用户ID
+     * @return 组织用户映射关系列表
      */
-    public Map insertModel(OrgUserMap model) {
-        User uModel = userService.getModel(User.class, model.getUserId());
-        Assert.notNull(uModel, ApiErrorMsg.IS_NULL);
-        Org oModel = orgService.getModel(Org.class, model.getOrgId());
-        Assert.notNull(oModel, ApiErrorMsg.IS_NULL);
-        // 清理用户表单
-        // 当前默认；原来默认
-        if (model.getDefaultOrg() == IsDefaultOrgEnum.IS.getCode()) {
-            uModel.setOrgId(oModel.getId());
-            uModel.setOrgName(oModel.getName());
-            dao.save(uModel);
-        } else if (oModel.getId().equals(uModel.getOrgId())) {
-            uModel.setOrgId(null);
-            uModel.setOrgName(null);
-            dao.save(uModel);
+    public List<OrgUserMap> queryModelByIds(String orgId, String userId) {
+        List<OrgUserMap> list = new ArrayList<>();
+        if (Strings.isNotBlank(orgId) && Strings.isNotBlank(userId)) {
+            FilterGroup filter = new FilterGroup();
+            filter.addFilter("orgId", FilterGroup.Operator.in, orgId);
+            filter.addFilter("userId", FilterGroup.Operator.in, userId);
+            list = this.queryModel(OrgUserMap.class, filter);
         }
-        // 构建
-        model.setId(null);
-        model.setUserName(uModel.getName());
-        model.setOrgName(oModel.getName());
-        model.setDelStatus(DeleteStatusEnum.NO.getCode());
-        if (Strings.isBlank(model.getTenantCode())) {
-            model.setTenantCode(getSessionTenantCode());
-        }
-        return dao.save(model);
+
+        return list;
     }
+
+    /**
+     * 批量插入组织用户映射关系
+     *
+     * @param model 组织用户映射关系对象
+     * @return 插入的组织用户映射关系列表
+     * @throws RuntimeException 当组织或用户信息为空时抛出异常
+     */
+    public List<OrgUserMap> insertModels(OrgUserMap model) {
+        // 角色存在，
+        List<Org> orgs = orgService.getModelsById(Org.class, model.getOrgId());
+        if (orgs == null || orgs.size() == 0) {
+            throw new RuntimeException(ApiErrorMsg.IS_NULL);
+        }
+        // 用户信息，
+        List<User> users = userService.getModelsById(User.class, model.getUserId());
+        if (users == null || users.size() == 0) {
+            throw new RuntimeException(ApiErrorMsg.IS_NULL);
+        }
+        // 角色用户信息，
+        List<OrgUserMap> maps = this.queryModelByIds(model.getOrgId(), model.getUserId());
+        // 对比插入
+        List<OrgUserMap> list = new ArrayList<>();
+        for (Org org : orgs) {
+            for (User user : users) {
+                boolean isExist = false;
+                if (maps != null && maps.size() > 0) {
+                    for (OrgUserMap map : maps) {
+                        if (org.getId().equals(map.getOrgId()) && user.getId().equals(map.getUserId())) {
+                            isExist = true;
+                            break;
+                        }
+                    }
+                }
+                if (!isExist) {
+                    OrgUserMap map = new OrgUserMap();
+                    map.setOrgId(org.getId());
+                    map.setOrgName(org.getName());
+                    map.setUserId(user.getId());
+                    map.setUserName(user.getName());
+                    map.setDefaultOrg(org.getId().equals(user.getOrgId()) ? IsDefaultOrgEnum.IS.getCode() : IsDefaultOrgEnum.NO.getCode());
+                    map = this.createModel(map);
+                    list.add(map);
+                }
+            }
+        }
+
+        return list;
+    }
+
 
     /**
      * 逻辑删除
@@ -75,7 +111,7 @@ public class OrgUserMapService extends BaseService {
             for (User uModel : uList) {
                 uModel.setOrgId(null);
                 uModel.setOrgName(null);
-                dao.save(uModel);
+                userService.updateModel(uModel);
             }
         }
     }

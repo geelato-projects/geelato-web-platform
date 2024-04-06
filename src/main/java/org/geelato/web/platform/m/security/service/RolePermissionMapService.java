@@ -4,7 +4,6 @@ import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
 import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.constants.ApiErrorMsg;
-import org.geelato.core.enums.DeleteStatusEnum;
 import org.geelato.core.gql.parser.FilterGroup;
 import org.geelato.core.meta.model.field.ColumnMeta;
 import org.geelato.web.platform.enums.PermissionTypeEnum;
@@ -32,25 +31,65 @@ public class RolePermissionMapService extends BaseService {
     private DevTableColumnService devTableColumnService;
 
     /**
-     * 创建一条数据
+     * 根据角色ID和权限ID查询角色权限映射关系列表
      *
-     * @param model 实体数据
-     * @return
+     * @param roleId       角色ID
+     * @param permissionId 权限ID
+     * @return 角色权限映射关系列表
      */
-    public Map insertModel(RolePermissionMap model) {
-        Role rModel = roleService.getModel(Role.class, model.getRoleId());
-        Assert.notNull(rModel, ApiErrorMsg.IS_NULL);
-        Permission pModel = permissionService.getModel(Permission.class, model.getPermissionId());
-        Assert.notNull(pModel, ApiErrorMsg.IS_NULL);
-        // 构建
-        model.setId(null);
-        model.setRoleName(rModel.getName());
-        model.setPermissionName(pModel.getName());
-        model.setDelStatus(DeleteStatusEnum.NO.getCode());
-        if (Strings.isBlank(model.getTenantCode())) {
-            model.setTenantCode(getSessionTenantCode());
+    public List<RolePermissionMap> queryModelByIds(String roleId, String permissionId) {
+        List<RolePermissionMap> list = new ArrayList<>();
+        if (Strings.isNotBlank(roleId) && Strings.isNotBlank(permissionId)) {
+            FilterGroup filter = new FilterGroup();
+            filter.addFilter("roleId", FilterGroup.Operator.in, roleId);
+            filter.addFilter("permissionId", FilterGroup.Operator.in, permissionId);
+            list = this.queryModel(RolePermissionMap.class, filter);
         }
-        return dao.save(model);
+
+        return list;
+    }
+
+    /**
+     * 批量插入角色权限映射关系
+     *
+     * @param model 角色权限映射关系对象
+     * @return 插入的角色权限映射关系列表
+     * @throws RuntimeException 当角色或权限信息为空时抛出异常
+     */
+    public List<RolePermissionMap> insertModels(RolePermissionMap model) {
+        // 角色存在，
+        List<Role> roles = roleService.getModelsById(Role.class, model.getRoleId());
+        if (roles == null || roles.size() == 0) {
+            throw new RuntimeException(ApiErrorMsg.IS_NULL);
+        }
+        // 用户信息，
+        List<Permission> permissions = permissionService.getModelsById(Permission.class, model.getPermissionId());
+        if (permissions == null || permissions.size() == 0) {
+            throw new RuntimeException(ApiErrorMsg.IS_NULL);
+        }
+        // 角色用户信息，
+        List<RolePermissionMap> maps = this.queryModelByIds(model.getRoleId(), model.getPermissionId());
+        // 对比插入
+        List<RolePermissionMap> list = new ArrayList<>();
+        for (Role role : roles) {
+            for (Permission permission : permissions) {
+                boolean isExist = false;
+                if (maps != null && maps.size() > 0) {
+                    for (RolePermissionMap map : maps) {
+                        if (role.getId().equals(map.getRoleId()) && permission.getId().equals(map.getPermissionId())) {
+                            isExist = true;
+                            break;
+                        }
+                    }
+                }
+                if (!isExist) {
+                    RolePermissionMap map = this.createByRoleAndPermission(role, permission);
+                    list.add(map);
+                }
+            }
+        }
+
+        return list;
     }
 
     /**
@@ -332,7 +371,7 @@ public class RolePermissionMapService extends BaseService {
                     this.isDeleteModel(map);
                 }
             } else {
-                insertModel(form);
+                insertModels(form);
             }
         } else {
             throw new RuntimeException(ApiErrorMsg.PARAMETER_MISSING);
@@ -354,7 +393,7 @@ public class RolePermissionMapService extends BaseService {
             }
             // 传入 需要打开的权限
             if (Strings.isNotBlank(form.getPermissionId())) {
-                insertModel(form);
+                insertModels(form);
             }
         } else {
             throw new RuntimeException(ApiErrorMsg.PARAMETER_MISSING);
@@ -464,7 +503,7 @@ public class RolePermissionMapService extends BaseService {
         }
     }
 
-    public void createByRoleAndPermission(Role role, Permission permission) {
+    public RolePermissionMap createByRoleAndPermission(Role role, Permission permission) {
         RolePermissionMap map = new RolePermissionMap();
         map.setRoleId(role.getId());
         map.setRoleName(role.getName());
@@ -472,6 +511,6 @@ public class RolePermissionMapService extends BaseService {
         map.setPermissionName(permission.getName());
         map.setAppId(permission.getAppId());
         map.setTenantCode(permission.getTenantCode());
-        createModel(map);
+        return createModel(map);
     }
 }

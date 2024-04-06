@@ -94,13 +94,7 @@ public class RolePermissionMapController extends BaseController {
     public ApiResult insert(@RequestBody RolePermissionMap form) {
         ApiResult result = new ApiResult();
         try {
-            if (Strings.isNotBlank(form.getPermissionId())) {
-                Permission permission = rolePermissionMapService.getModel(Permission.class, form.getPermissionId());
-                if (permission != null) {
-                    form.setAppId(permission.getAppId());
-                }
-            }
-            result.setData(rolePermissionMapService.insertModel(form));
+            result.setData(rolePermissionMapService.insertModels(form));
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.OPERATE_FAIL);
