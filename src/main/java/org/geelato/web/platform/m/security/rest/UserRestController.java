@@ -12,6 +12,7 @@ import org.geelato.core.gql.parser.FilterGroup;
 import org.geelato.core.gql.parser.PageQueryRequest;
 import org.geelato.core.util.UUIDUtils;
 import org.geelato.web.platform.m.base.rest.BaseController;
+import org.geelato.web.platform.m.security.entity.DataItems;
 import org.geelato.web.platform.m.security.entity.Org;
 import org.geelato.web.platform.m.security.entity.User;
 import org.geelato.web.platform.m.security.service.AccountService;
@@ -60,6 +61,24 @@ public class UserRestController extends BaseController {
             PageQueryRequest pageQueryRequest = this.getPageQueryParameters(req);
             FilterGroup filterGroup = this.getFilterGroup(CLAZZ, req, OPERATORMAP);
             result = userService.pageQueryModel(CLAZZ, filterGroup, pageQueryRequest);
+            DataItems<List<User>> dataItems = (DataItems<List<User>>) result.getData();
+            userFormat(dataItems.getItems());
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
+        }
+
+        return result;
+    }
+
+    @RequestMapping(value = "/pageQueryOf", method = RequestMethod.GET)
+    @ResponseBody
+    public ApiPagedResult pageQueryOf(HttpServletRequest req, String appId, String tenantCode) {
+        ApiPagedResult result = new ApiPagedResult();
+        try {
+            PageQueryRequest pageQueryRequest = this.getPageQueryParameters(req);
+            FilterGroup filterGroup = this.getFilterGroup(CLAZZ, req, OPERATORMAP);
+            result = userService.pageQueryModelOf( filterGroup, pageQueryRequest,appId,tenantCode);
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
@@ -75,7 +94,8 @@ public class UserRestController extends BaseController {
         try {
             PageQueryRequest pageQueryRequest = this.getPageQueryParameters(req);
             Map<String, Object> params = this.getQueryParameters(CLAZZ, req);
-            result.setData(userService.queryModel(CLAZZ, params, pageQueryRequest.getOrderBy()));
+            List<User> list = userService.queryModel(CLAZZ, params, pageQueryRequest.getOrderBy());
+            result.setData(userFormat(list));
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
@@ -92,7 +112,8 @@ public class UserRestController extends BaseController {
             if (params != null && !params.isEmpty()) {
                 FilterGroup filterGroup = new FilterGroup();
                 filterGroup.addFilter("id", FilterGroup.Operator.in, String.valueOf(params.get("ids")));
-                return result.setData(userService.queryModel(CLAZZ, filterGroup));
+                List<User> list = userService.queryModel(CLAZZ, filterGroup);
+                return result.setData(userFormat(list));
             }
         } catch (Exception e) {
             logger.error(e.getMessage());
@@ -108,10 +129,7 @@ public class UserRestController extends BaseController {
         ApiResult result = new ApiResult();
         try {
             User model = userService.getModel(CLAZZ, id);
-            model.setSalt(null);
-            model.setPassword(null);
-            model.setPlainPassword(null);
-            result.setData(model);
+            result.setData(userFormat(model));
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
@@ -237,5 +255,21 @@ public class UserRestController extends BaseController {
         }
 
         return result;
+    }
+
+    private List<User> userFormat(List<User> models) {
+        if (models != null && models.size() > 0) {
+            for (User m : models) {
+                userFormat(m);
+            }
+        }
+        return models;
+    }
+
+    private User userFormat(User model) {
+        model.setSalt(null);
+        model.setPassword(null);
+        model.setPlainPassword(null);
+        return model;
     }
 }
