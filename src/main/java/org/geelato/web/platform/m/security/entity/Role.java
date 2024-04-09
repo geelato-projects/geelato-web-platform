@@ -22,10 +22,9 @@ public class Role extends BaseSortableEntity implements EntityEnableAble {
     private String code;
     private String type;
     private int enableStatus = ColumnDefault.ENABLE_STATUS_VALUE;
-    //    private String treeNodeId;
     private String description;
-
     private Integer weight;
+    private String appIds;
 
     @Title(title = "应用")
     @Col(name = "app_id")
@@ -44,6 +43,15 @@ public class Role extends BaseSortableEntity implements EntityEnableAble {
 
     public void setAppName(String appName) {
         this.appName = appName;
+    }
+
+    @Transient
+    public String getAppIds() {
+        return appIds;
+    }
+
+    public void setAppIds(String appIds) {
+        this.appIds = appIds;
     }
 
     @Title(title = "编码")
@@ -95,7 +103,8 @@ public class Role extends BaseSortableEntity implements EntityEnableAble {
     public void setEnableStatus(int enableStatus) {
         this.enableStatus = enableStatus;
     }
-//    @Title(title = "权重")
+
+    //    @Title(title = "权重")
 //    @Col(name = "weight")
     public Integer getWeight() {
         return weight;
@@ -104,16 +113,4 @@ public class Role extends BaseSortableEntity implements EntityEnableAble {
     public void setWeight(Integer weight) {
         this.weight = weight;
     }
-
-//    @Title(title = "树节点")
-//    @Col(name = "tree_node_id")
-//    @Override
-//    public Long getTreeNodeId() {
-//        return this.treeNodeId;
-//    }
-//
-//    @Override
-//    public Long setTreeNodeId(Long treeNodeId) {
-//        return this.treeNodeId = treeNodeId;
-//    }
 }

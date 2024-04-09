@@ -1,10 +1,13 @@
 package org.geelato.web.platform.m.base.service;
 
+import org.apache.logging.log4j.util.Strings;
+import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.enums.EnableStatusEnum;
 import org.geelato.web.platform.m.base.entity.Dict;
 import org.geelato.web.platform.m.base.entity.DictItem;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.Assert;
 
 import java.util.HashMap;
 import java.util.List;
@@ -35,5 +38,32 @@ public class DictService extends BaseSortableService {
                 dictItemService.isDeleteDictItem(iModel);
             }
         }
+    }
+
+    /**
+     * 更新数据字典
+     *
+     * @param model
+     * @return
+     */
+    public Dict updateModel(Dict model) {
+        Dict source = getModel(Dict.class, model.getId());
+        Assert.notNull(source, ApiErrorMsg.IS_NULL);
+        Dict dict = super.updateModel(model);
+        // 应用变更
+        if ((Strings.isNotBlank(source.getAppId()) && !source.getAppId().equals(dict.getAppId())) ||
+                (Strings.isNotBlank(dict.getAppId()) && !dict.getAppId().equals(source.getAppId()))) {
+            Map<String, Object> params = new HashMap<>();
+            params.put("dictId", dict.getId());
+            List<DictItem> iList = dictItemService.queryModel(DictItem.class, params);
+            if (iList != null) {
+                for (DictItem iModel : iList) {
+                    iModel.setAppId(dict.getAppId());
+                    dictItemService.updateModel(iModel);
+                }
+            }
+        }
+
+        return dict;
     }
 }

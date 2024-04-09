@@ -1,5 +1,6 @@
 package org.geelato.web.platform.m.base.service;
 
+import org.apache.logging.log4j.util.Strings;
 import org.geelato.web.platform.m.base.entity.App;
 import org.geelato.web.platform.m.security.entity.RoleAppMap;
 import org.geelato.web.platform.m.security.service.RoleAppMapService;
@@ -37,5 +38,18 @@ public class AppService extends BaseSortableService {
                 roleAppMapService.isDeleteModel(oModel);
             }
         }
+    }
+
+    public App createModel(App model) {
+        App app = super.createModel(model);
+        // 关联平台级角色
+        if (Strings.isNotBlank(model.getRoles())) {
+            RoleAppMap map = new RoleAppMap();
+            map.setAppId(app.getId());
+            map.setRoleId(model.getRoles());
+            roleAppMapService.insertModels(map);
+        }
+
+        return app;
     }
 }

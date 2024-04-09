@@ -5,6 +5,7 @@ import org.geelato.core.meta.annotation.Col;
 import org.geelato.core.meta.annotation.Entity;
 import org.geelato.core.meta.annotation.Title;
 import org.geelato.core.meta.model.entity.BaseSortableEntity;
+import org.geelato.core.meta.annotation.Transient;
 
 /**
  * @author itechgee@126.com
@@ -22,14 +23,15 @@ public class App extends BaseSortableEntity {
     private String tree;
     private String logo;// 标识
     private String theme;
-    private int watermark = 0;//应用水印
-    private String href;//首页链接
+    private int watermark = 0;// 应用水印
+    private String href;// 首页链接
     private String dependAppCode;
     private String powerInfo;
     private String versionInfo;
     private String description;// 描述
     private int applyStatus = 1;
     private int designStatus = 1;
+    private String roles;
 
     @Col(name = "name", nullable = false)
     @Title(title = "应用名称")
@@ -190,5 +192,14 @@ public class App extends BaseSortableEntity {
 
     public void setDesignStatus(int designStatus) {
         this.designStatus = designStatus;
+    }
+
+    @Transient
+    public String getRoles() {
+        return roles;
+    }
+
+    public void setRoles(String roles) {
+        this.roles = roles;
     }
 }

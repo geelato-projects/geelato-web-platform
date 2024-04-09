@@ -147,11 +147,21 @@ public class RoleService extends BaseSortableService {
         return formMap;
     }
 
-    public Role createModel(Role form) {
+    public Role createModel(Role model) {
         // 创建
-        Role map = super.createModel(form);
+        Role role = super.createModel(model);
+        // 关联平台级角色
+        RoleAppMap map = new RoleAppMap();
+        map.setRoleId(role.getId());
+        if (Strings.isNotBlank(model.getAppIds())) {
+            map.setAppId(model.getAppIds());
+            roleAppMapService.insertModels(map);
+        } else if (Strings.isNotBlank(model.getAppId())) {
+            map.setAppId(model.getAppId());
+            roleAppMapService.insertModels(map);
+        }
 
-        return map;
+        return role;
     }
 
     /**

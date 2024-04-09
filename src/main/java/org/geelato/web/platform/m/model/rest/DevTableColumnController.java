@@ -178,6 +178,8 @@ public class DevTableColumnController extends BaseController {
                     meta.setId(null);
                     meta.setTableId(tableMeta.getId());
                     meta.setTableName(tableMeta.getEntityName());
+                    meta.setAppId(tableMeta.getAppId());
+                    meta.setTenantCode(tableMeta.getTenantCode());
                     meta.setSynced(ColumnSyncedEnum.FALSE.getValue());
                     devTableColumnService.createModel(meta);
                 }
