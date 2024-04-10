@@ -6,7 +6,6 @@ import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.enums.EnableStatusEnum;
-import org.geelato.core.gql.parser.FilterGroup;
 import org.geelato.core.gql.parser.PageQueryRequest;
 import org.geelato.web.platform.m.base.rest.BaseController;
 import org.geelato.web.platform.m.excel.entity.ExportTemplate;
@@ -49,8 +48,10 @@ public class ExportTemplateController extends BaseController {
         ApiPagedResult result = new ApiPagedResult();
         try {
             PageQueryRequest pageQueryRequest = this.getPageQueryParameters(req);
-            FilterGroup filterGroup = this.getFilterGroup(CLAZZ, req, OPERATORMAP);
-            result = exportTemplateService.pageQueryModel(CLAZZ, filterGroup, pageQueryRequest);
+            // FilterGroup filterGroup = this.getFilterGroup(CLAZZ, req, OPERATORMAP);
+            // result = exportTemplateService.pageQueryModel(CLAZZ, filterGroup, pageQueryRequest);
+            Map<String, Object> params = this.getQueryParameters(CLAZZ, req);
+            result = exportTemplateService.pageQueryModel("page_query_platform_export_template", params, pageQueryRequest);
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
