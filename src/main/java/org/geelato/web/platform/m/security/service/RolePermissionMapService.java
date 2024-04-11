@@ -5,6 +5,7 @@ import com.alibaba.fastjson2.JSONArray;
 import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.gql.parser.FilterGroup;
+import org.geelato.core.meta.MetaManager;
 import org.geelato.core.meta.model.field.ColumnMeta;
 import org.geelato.web.platform.enums.PermissionTypeEnum;
 import org.geelato.web.platform.m.base.service.BaseService;
@@ -23,6 +24,7 @@ import java.util.*;
  */
 @Component
 public class RolePermissionMapService extends BaseService {
+    private final MetaManager metaManager = MetaManager.singleInstance();
     @Autowired
     private RoleService roleService;
     @Autowired
@@ -264,12 +266,19 @@ public class RolePermissionMapService extends BaseService {
     public Map<String, JSONArray> queryColumnPermissions(String type, String tableName, String appId, String tenantCode) {
         tenantCode = Strings.isNotBlank(tenantCode) ? tenantCode : getSessionTenantCode();
         Map<String, JSONArray> tablePermissionMap = new HashMap<>();
-        // 表头
-        Map<String, Object> colParams = new HashMap<>();
-        colParams.put("tableName", tableName);
-        colParams.put("tenantCode", tenantCode);
-        List<ColumnMeta> columnMetas = devTableColumnService.queryModel(ColumnMeta.class, colParams);
         // 默认字段
+        List<ColumnMeta> defaultColumnMetaList = metaManager.getDefaultColumn();
+        List<String> defaultColumnNames = new ArrayList<>();
+        for (ColumnMeta meta : defaultColumnMetaList) {
+            defaultColumnNames.add(meta.getName());
+        }
+        // 表头
+        FilterGroup colFilter = new FilterGroup();
+        colFilter.addFilter("tableName", tableName);
+        colFilter.addFilter("tenantCode", tenantCode);
+        colFilter.addFilter("name", FilterGroup.Operator.notin, Strings.join(defaultColumnNames, ','));
+        List<ColumnMeta> columnMetas = devTableColumnService.queryModel(ColumnMeta.class, colFilter);
+        // 模型字段
         List<String> columnObjects = new ArrayList<>();
         if (columnMetas != null && columnMetas.size() > 0) {
             for (ColumnMeta model : columnMetas) {
