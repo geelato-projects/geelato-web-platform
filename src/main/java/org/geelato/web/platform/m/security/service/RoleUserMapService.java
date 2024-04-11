@@ -9,7 +9,6 @@ import org.geelato.web.platform.m.security.entity.RoleUserMap;
 import org.geelato.web.platform.m.security.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.util.Assert;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -95,24 +94,37 @@ public class RoleUserMapService extends BaseService {
 
     public void switchModel(RoleUserMap model) {
         // 角色存在，
-        Role role = roleService.getModel(Role.class, model.getRoleId());
-        Assert.notNull(role, ApiErrorMsg.IS_NULL);
+        List<Role> roles = roleService.getModelsById(Role.class, model.getRoleId());
+        if (roles == null || roles.size() == 0) {
+            throw new RuntimeException(ApiErrorMsg.IS_NULL);
+        }
         // 用户信息，
-        User user = userService.getModel(User.class, model.getUserId());
-        Assert.notNull(role, ApiErrorMsg.IS_NULL);
+        List<User> users = userService.getModelsById(User.class, model.getUserId());
+        if (users == null || users.size() == 0) {
+            throw new RuntimeException(ApiErrorMsg.IS_NULL);
+        }
         // 角色用户信息，
         List<RoleUserMap> roleUserMaps = this.queryModelByIds(model.getRoleId(), model.getUserId());
-        if (roleUserMaps != null && roleUserMaps.size() > 0) {
-            for (RoleUserMap map : roleUserMaps) {
-                this.isDeleteModel(map);
+        for (Role role : roles) {
+            for (User user : users) {
+                boolean isExist = false;
+                if (roleUserMaps != null && roleUserMaps.size() > 0) {
+                    for (RoleUserMap map : roleUserMaps) {
+                        if (role.getId().equals(map.getRoleId()) && user.getId().equals(map.getUserId())) {
+                            isExist = true;
+                            this.isDeleteModel(map);
+                        }
+                    }
+                }
+                if (!isExist) {
+                    RoleUserMap userMap = new RoleUserMap();
+                    userMap.setRoleId(role.getId());
+                    userMap.setRoleName(role.getName());
+                    userMap.setUserId(user.getId());
+                    userMap.setUserName(user.getName());
+                    this.createModel(userMap);
+                }
             }
-        } else {
-            RoleUserMap userMap = new RoleUserMap();
-            userMap.setRoleId(role.getId());
-            userMap.setRoleName(role.getName());
-            userMap.setUserId(user.getId());
-            userMap.setUserName(user.getName());
-            this.createModel(userMap);
         }
     }
 
