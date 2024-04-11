@@ -4,6 +4,7 @@ import jakarta.annotation.Resource;
 import net.oschina.j2cache.CacheChannel;
 import net.oschina.j2cache.J2Cache;
 import org.apache.commons.collections.map.HashedMap;
+import org.geelato.core.Fn;
 import org.geelato.core.exception.TestException;
 import org.geelato.core.orm.DaoException;
 import org.geelato.core.orm.TransactionHelper;
@@ -56,6 +57,10 @@ public class RuleService {
     private final BizMvelRuleManager bizMvelRuleManager = BizManagerFactory.getBizMvelRuleManager("mvelRule");
     private final RulesEngine rulesEngine = new DefaultRulesEngine();
     private final static String VARS_PARENT = "$parent";
+    private final static String VARS_CTX = "$ctx";
+    // $fn.now.
+    private final static String VARS_FN = "$fn";
+
     private final CacheChannel cache = J2Cache.getChannel();
     private static final Logger logger = LoggerFactory.getLogger(RuleService.class);
     /**
@@ -291,27 +296,43 @@ public class RuleService {
     /**
      * 解析值表达式
      *
-     * @param currentCommand
+     * @param currentCommand 当前保存命令
      * @param valueExp       e.g. $parent.name
      * @param times          递归调用的次数，在该方法外部调用时，传入0；之后该方法内部递归调用，自增该值
      * @return
      */
     private Object parseValueExp(SaveCommand currentCommand, String valueExp, int times) {
         String valueExpTrim = valueExp.trim();
-        // 检查是否存在变量$parent
-        if (valueExpTrim.startsWith(VARS_PARENT)) {
+        if(valueExpTrim.startsWith(VARS_CTX)){
+            // 检查是否存在变更$ctx.userId等
+           return getSessionCtx().get(valueExpTrim.substring(VARS_CTX.length() + 1));
+        }else if(valueExpTrim.startsWith(VARS_FN)){
+            String fnName = valueExpTrim.substring(VARS_FN.length() + 1);
+            // 检查是否存在变更$fn.now等
+            switch (fnName){
+                case "now":
+                case "nowDateTime":
+                    return Fn.nowDateTime();
+                case "nowDate":
+                    return Fn.nowDate();
+                default:
+                    return null;
+            }
+        }else if (valueExpTrim.startsWith(VARS_PARENT)) {
+            // 检查是否存在变量$parent
             return parseValueExp((SaveCommand) currentCommand.getParentCommand(), valueExpTrim.substring(VARS_PARENT.length() + 1), times + 1);
         } else {
             if (times == 0) {
                 //如果是第一次且无VARS_PARENT关键字，则直接返回值
                 return valueExp;
             } else {
-                if(currentCommand.getParentCommand()!=null){
-                    SaveCommand parentSaveCommand= (SaveCommand) currentCommand.getParentCommand();
-                    return parentSaveCommand.getValueMap().get(valueExpTrim);
-                }else{
-                    return currentCommand.getValueMap().get(valueExpTrim);
-                }
+//                if(currentCommand.getParentCommand()!=null){
+//                    SaveCommand parentSaveCommand= (SaveCommand) currentCommand.getParentCommand();
+//                    return parentSaveCommand.getValueMap().get(valueExpTrim);
+//                }else{
+//                    return currentCommand.getValueMap().get(valueExpTrim);
+//                }
+                return currentCommand.getValueMap().get(valueExpTrim);
             }
         }
     }
