@@ -190,19 +190,27 @@ public class RoleService extends BaseSortableService {
         params.put("tenantCode", tenantCode);
         String appId = (String) params.get("appId");
         if (Strings.isNotBlank(appId)) {
+            // 应用与角色关联
+            List<RoleAppMap> roleAppMapList = roleAppMapService.queryModel(RoleAppMap.class, params);
+            List<String> roleIds = new ArrayList<>();
+            if (roleAppMapList != null) {
+                for (RoleAppMap map : roleAppMapList) {
+                    if (!roleIds.contains(map.getRoleId())) {
+                        roleIds.add(map.getRoleId());
+                    }
+                }
+            }
+            // 应用级角色
             params.put("type", RoleTypeEnum.APP.getValue());
             List<Role> apps = queryModel(Role.class, params, orderBy);
             roles.addAll(apps);
-            params.put("type", RoleTypeEnum.PLATFORM.getValue());
-            params.remove("appId");
-            List<Role> platforms = queryModel(Role.class, params, orderBy);
+            // 平台级角色
+            FilterGroup roleFilter = new FilterGroup();
+            roleFilter.addFilter("type", RoleTypeEnum.PLATFORM.getValue());
+            roleFilter.addFilter("usedApp", "1");
+            roleFilter.addFilter("id", FilterGroup.Operator.in, String.join(",", roleIds));
+            List<Role> platforms = this.queryModel(Role.class, roleFilter, orderBy);
             roles.addAll(platforms);
-            roles.sort(new Comparator<Role>() {
-                @Override
-                public int compare(Role o1, Role o2) {
-                    return o2.getWeight() - o1.getWeight();
-                }
-            });
         } else {
             // params.put("type", RoleTypeEnum.PLATFORM.getValue());
             roles = queryModel(Role.class, params, orderBy);
