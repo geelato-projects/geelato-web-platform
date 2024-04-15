@@ -25,6 +25,7 @@ public class Role extends BaseSortableEntity implements EntityEnableAble {
     private String description;
     private Integer weight;
     private String appIds;
+    private boolean usedApp = false;
 
     @Title(title = "应用")
     @Col(name = "app_id")
@@ -112,5 +113,15 @@ public class Role extends BaseSortableEntity implements EntityEnableAble {
 
     public void setWeight(Integer weight) {
         this.weight = weight;
+    }
+
+    @Title(title = "是否用于应用")
+    @Col(name = "used_app")
+    public boolean getUsedApp() {
+        return usedApp;
+    }
+
+    public void setUsedApp(boolean usedApp) {
+        this.usedApp = usedApp;
     }
 }

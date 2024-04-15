@@ -106,6 +106,18 @@ public class RoleService extends BaseSortableService {
         Role model = getModel(Role.class, form.getId());
         // 更新
         Role formMap = super.updateModel(form);
+        // 是否用于应用
+        if (RoleTypeEnum.PLATFORM.getValue().equals(model.getType()) && !model.getUsedApp()) {
+            // 角色APP关系表
+            Map<String, Object> params = new HashMap<>();
+            params.put("roleId", model.getId());
+            List<RoleAppMap> aList = roleAppMapService.queryModel(RoleAppMap.class, params);
+            if (aList != null) {
+                for (RoleAppMap rModel : aList) {
+                    roleAppMapService.isDeleteModel(rModel);
+                }
+            }
+        }
         // 关联表修改
         if (Strings.isNotBlank(form.getName()) && !form.getName().equals(model.getName())) {
             // 角色APP关系表
