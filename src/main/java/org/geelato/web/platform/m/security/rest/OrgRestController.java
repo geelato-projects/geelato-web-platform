@@ -168,4 +168,18 @@ public class OrgRestController extends BaseController {
 
         return result;
     }
+
+    @RequestMapping(value = "/getCompany/{id}", method = RequestMethod.GET)
+    @ResponseBody
+    public ApiResult getCompany(@PathVariable(required = true) String id) {
+        ApiResult result = new ApiResult();
+        try {
+            result.setData(orgService.getCompany(id));
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
+        }
+
+        return result;
+    }
 }

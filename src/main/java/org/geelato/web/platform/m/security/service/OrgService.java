@@ -1,5 +1,7 @@
 package org.geelato.web.platform.m.security.service;
 
+import org.apache.logging.log4j.util.Strings;
+import org.geelato.web.platform.enums.OrgTypeEnum;
 import org.geelato.web.platform.m.base.service.BaseSortableService;
 import org.geelato.web.platform.m.security.entity.Org;
 import org.geelato.web.platform.m.security.entity.OrgUserMap;
@@ -59,5 +61,25 @@ public class OrgService extends BaseSortableService {
      */
     public List<Map<String, Object>> queryTree(Map<String, Object> params) {
         return dao.queryForMapList("query_tree_platform_org", params);
+    }
+
+    /**
+     * 获取组织所属公司
+     *
+     * @param id
+     * @return
+     */
+    public Org getCompany(String id) {
+        if (Strings.isNotBlank(id)) {
+            Org model = this.getModel(Org.class, id);
+            if (model != null) {
+                if (OrgTypeEnum.COMPANY.getValue().equals(model.getType())) {
+                    return model;
+                } else if (Strings.isNotBlank(model.getPid()) && OrgTypeEnum.DEPT.getValue().equals(model.getType())) {
+                    return getCompany(model.getPid());
+                }
+            }
+        }
+        return null;
     }
 }

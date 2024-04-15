@@ -78,7 +78,7 @@ public class UserRestController extends BaseController {
         try {
             PageQueryRequest pageQueryRequest = this.getPageQueryParameters(req);
             FilterGroup filterGroup = this.getFilterGroup(CLAZZ, req, OPERATORMAP);
-            result = userService.pageQueryModelOf( filterGroup, pageQueryRequest,appId,tenantCode);
+            result = userService.pageQueryModelOf(filterGroup, pageQueryRequest, appId, tenantCode);
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
@@ -149,10 +149,18 @@ public class UserRestController extends BaseController {
                 Org oForm = orgService.getModel(Org.class, form.getOrgId());
                 if (oForm != null) {
                     form.setOrgName(oForm.getName());
+                    form.setDeptId(oForm.getId());
+                    Org cForm = orgService.getCompany(oForm.getId());
+                    form.setBuId(cForm == null ? null : cForm.getId());
                 } else {
                     form.setOrgId(null);
-                    form.setOrgName(null);
                 }
+            }
+            if (Strings.isBlank(form.getOrgId())) {
+                form.setOrgId(null);
+                form.setOrgName(null);
+                form.setBuId(null);
+                form.setDeptId(null);
             }
             // 组织ID为空方可插入
             if (Strings.isNotBlank(form.getId())) {
@@ -252,6 +260,50 @@ public class UserRestController extends BaseController {
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.VALIDATE_FAIL);
+        }
+
+        return result;
+    }
+
+    @RequestMapping(value = "/getCompany/{id}", method = RequestMethod.GET)
+    @ResponseBody
+    public ApiResult getCompany(@PathVariable(required = true) String id) {
+        ApiResult result = new ApiResult();
+        try {
+            User user = userService.getModel(User.class, id);
+            if (user != null && Strings.isNotBlank(user.getOrgId())) {
+                result.setData(orgService.getCompany(user.getOrgId()));
+            }
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
+        }
+
+        return result;
+    }
+
+    @RequestMapping(value = "/resetCompany", method = RequestMethod.POST)
+    @ResponseBody
+    public ApiResult resetCompany(HttpServletRequest req) {
+        ApiResult result = new ApiResult();
+        try {
+            List<User> users = userService.queryModel(User.class, new HashMap<>());
+            if (users != null && users.size() > 0) {
+                for (User user : users) {
+                    if (Strings.isNotBlank(user.getOrgId())) {
+                        Org org = orgService.getCompany(user.getOrgId());
+                        user.setBuId(org.getId());
+                        user.setDeptId(user.getOrgId());
+                    } else {
+                        user.setBuId(null);
+                        user.setDeptId(null);
+                    }
+                    orgService.updateModel(user);
+                }
+            }
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            result.error().setMsg(ApiErrorMsg.OPERATE_FAIL);
         }
 
         return result;
