@@ -2,12 +2,14 @@ package org.geelato.web.platform.m.base.service;
 
 import org.apache.logging.log4j.util.Strings;
 import org.geelato.web.platform.m.base.entity.App;
+import org.geelato.web.platform.m.base.entity.AppConnectMap;
 import org.geelato.web.platform.m.security.entity.RoleAppMap;
 import org.geelato.web.platform.m.security.service.RoleAppMapService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,6 +22,27 @@ public class AppService extends BaseSortableService {
     @Lazy
     @Autowired
     private RoleAppMapService roleAppMapService;
+    @Lazy
+    @Autowired
+    private AppConnectMapService appConnectMapService;
+
+    /**
+     * 应用拥有的数据链接
+     *
+     * @param app
+     */
+    public void setConnects(App app) {
+        List<AppConnectMap> appConnectMaps = appConnectMapService.queryModelByIds(null, app.getId());
+        if (appConnectMaps != null) {
+            List<String> connectIds = new ArrayList<>();
+            for (AppConnectMap map : appConnectMaps) {
+                if (!connectIds.contains(map.getConnectId())) {
+                    connectIds.add(map.getConnectId());
+                }
+            }
+            app.setConnects(String.join(",", connectIds));
+        }
+    }
 
     /**
      * 逻辑删除
@@ -40,8 +63,20 @@ public class AppService extends BaseSortableService {
         }
     }
 
+    public App updateModel(App model) {
+        App app = super.updateModel(model);
+        app.setConnects(model.getConnects());
+        // 关联应用数据链接
+        appConnectMapService.insertModels(app);
+
+        return app;
+    }
+
     public App createModel(App model) {
         App app = super.createModel(model);
+        app.setConnects(model.getConnects());
+        // 关联应用数据链接
+        appConnectMapService.insertModels(app);
         // 关联平台级角色
         if (Strings.isNotBlank(model.getRoles())) {
             RoleAppMap map = new RoleAppMap();

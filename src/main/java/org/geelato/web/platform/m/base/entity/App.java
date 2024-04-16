@@ -4,8 +4,8 @@ package org.geelato.web.platform.m.base.entity;
 import org.geelato.core.meta.annotation.Col;
 import org.geelato.core.meta.annotation.Entity;
 import org.geelato.core.meta.annotation.Title;
-import org.geelato.core.meta.model.entity.BaseSortableEntity;
 import org.geelato.core.meta.annotation.Transient;
+import org.geelato.core.meta.model.entity.BaseSortableEntity;
 
 /**
  * @author itechgee@126.com
@@ -32,6 +32,7 @@ public class App extends BaseSortableEntity {
     private int applyStatus = 1;
     private int designStatus = 1;
     private String roles;
+    private String connects;
 
     @Col(name = "name", nullable = false)
     @Title(title = "应用名称")
@@ -201,5 +202,14 @@ public class App extends BaseSortableEntity {
 
     public void setRoles(String roles) {
         this.roles = roles;
+    }
+
+    @Transient
+    public String getConnects() {
+        return connects;
+    }
+
+    public void setConnects(String connects) {
+        this.connects = connects;
     }
 }

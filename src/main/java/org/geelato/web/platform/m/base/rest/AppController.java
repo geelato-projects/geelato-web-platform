@@ -101,7 +101,9 @@ public class AppController extends BaseController {
     public ApiResult get(@PathVariable(required = true) String id) {
         ApiResult result = new ApiResult();
         try {
-            result.setData(appService.getModel(CLAZZ, id));
+            App model = appService.getModel(CLAZZ, id);
+            appService.setConnects(model);
+            result.setData(model);
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.QUERY_FAIL);

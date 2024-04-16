@@ -79,7 +79,9 @@ public class DevDbConnectController extends BaseController {
     public ApiResult get(@PathVariable(required = true) String id) {
         ApiResult result = new ApiResult<>();
         try {
-            result.setData(devDbConnectService.getModel(CLAZZ, id));
+            ConnectMeta meta = devDbConnectService.getModel(CLAZZ, id);
+            devDbConnectService.setApps(meta);
+            result.setData(meta);
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
