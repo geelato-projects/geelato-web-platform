@@ -164,4 +164,36 @@ public class AppController extends BaseController {
 
         return result;
     }
+
+    @RequestMapping(value = "/queryPermissionByPage", method = RequestMethod.GET)
+    @ResponseBody
+    public ApiResult queryPermissionByPage(HttpServletRequest req) {
+        ApiResult result = new ApiResult();
+        try {
+            Map<String, Object> params = this.getQueryParameters(req);
+            List<Map<String, Object>> queryList = dao.queryForMapList("platform_permission_by_app_page", params);
+            result.setData(queryList);
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
+        }
+
+        return result;
+    }
+
+    @RequestMapping(value = "/queryRolePermissionByPage", method = RequestMethod.GET)
+    @ResponseBody
+    public ApiResult queryRolePermissionByPage(HttpServletRequest req) {
+        ApiResult result = new ApiResult();
+        try {
+            Map<String, Object> params = this.getQueryParameters(req);
+            List<Map<String, Object>> queryList = dao.queryForMapList("platform_role_r_permission_by_app_page", params);
+            result.setData(queryList);
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
+        }
+
+        return result;
+    }
 }

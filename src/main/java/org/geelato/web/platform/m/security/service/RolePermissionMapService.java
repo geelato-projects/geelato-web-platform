@@ -94,6 +94,39 @@ public class RolePermissionMapService extends BaseService {
         return list;
     }
 
+    public void switchModel(RolePermissionMap model) {
+        // 角色存在，
+        List<Role> roles = roleService.getModelsById(Role.class, model.getRoleId());
+        if (roles == null || roles.size() == 0) {
+            throw new RuntimeException(ApiErrorMsg.IS_NULL);
+        }
+        // 用户信息，
+        List<Permission> permissions = permissionService.getModelsById(Permission.class, model.getPermissionId());
+        if (permissions == null || permissions.size() == 0) {
+            throw new RuntimeException(ApiErrorMsg.IS_NULL);
+        }
+        // 角色用户信息，
+        List<RolePermissionMap> maps = this.queryModelByIds(model.getRoleId(), model.getPermissionId());
+        // 对比插入
+        List<RolePermissionMap> list = new ArrayList<>();
+        for (Role role : roles) {
+            for (Permission permission : permissions) {
+                boolean isExist = false;
+                if (maps != null && maps.size() > 0) {
+                    for (RolePermissionMap map : maps) {
+                        if (role.getId().equals(map.getRoleId()) && permission.getId().equals(map.getPermissionId())) {
+                            isExist = true;
+                            this.isDeleteModel(map);
+                        }
+                    }
+                }
+                if (!isExist) {
+                    this.createByRoleAndPermission(role, permission);
+                }
+            }
+        }
+    }
+
     /**
      * 权限进行分类，适合模型权限，dp，mp
      *

@@ -103,6 +103,20 @@ public class RolePermissionMapController extends BaseController {
         return result;
     }
 
+    @RequestMapping(value = "/switch", method = RequestMethod.POST)
+    @ResponseBody
+    public ApiResult switchModel(@RequestBody RolePermissionMap form) {
+        ApiResult result = new ApiResult();
+        try {
+            rolePermissionMapService.switchModel(form);
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            result.error().setMsg(ApiErrorMsg.OPERATE_FAIL);
+        }
+
+        return result;
+    }
+
     @RequestMapping(value = "/isDelete/{id}", method = RequestMethod.DELETE)
     @ResponseBody
     public ApiResult isDelete(@PathVariable(required = true) String id) {
