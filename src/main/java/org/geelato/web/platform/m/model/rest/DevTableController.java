@@ -40,6 +40,7 @@ public class DevTableController extends BaseController {
 
     static {
         OPERATORMAP.put("contains", Arrays.asList("title", "tableName", "entityName", "description"));
+        OPERATORMAP.put("consists", Arrays.asList("connectId"));
         OPERATORMAP.put("intervals", Arrays.asList("createAt", "updateAt"));
     }
 
