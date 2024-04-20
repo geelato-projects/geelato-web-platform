@@ -20,6 +20,7 @@ public class AppTableMap extends BaseEntity {
     private String tableId;
     private String tableName;
     private String tableTitle;
+    private String tableAppId;
     private String permissionId;
     private String permissionName;
     private boolean approvalNeed = false;
@@ -137,5 +138,15 @@ public class AppTableMap extends BaseEntity {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    @Title(title = "模型所属应用ID")
+    @Col(name = "table_app_id")
+    public String getTableAppId() {
+        return tableAppId;
+    }
+
+    public void setTableAppId(String tableAppId) {
+        this.tableAppId = tableAppId;
     }
 }

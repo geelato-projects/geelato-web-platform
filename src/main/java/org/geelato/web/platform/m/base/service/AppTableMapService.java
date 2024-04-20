@@ -40,6 +40,9 @@ public class AppTableMapService extends BaseService {
             TableMeta tableMeta = devTableService.getModel(TableMeta.class, form.getTableId());
             form.setTableName(tableMeta.getEntityName());
             form.setTableTitle(tableMeta.getTitle());
+            if (Strings.isBlank(form.getTableAppId())) {
+                form.setTableAppId(tableMeta.getAppId());
+            }
         }
         if (Strings.isNotBlank(form.getPermissionId())) {
             FilterGroup filter = new FilterGroup();
