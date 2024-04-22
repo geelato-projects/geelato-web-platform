@@ -34,17 +34,19 @@ public class JWTAuthRestController extends BaseController {
 
     private static final String ROOT_AVATAR_DIRECTORY = "upload/avatar";
     private static final String AVATAR_BASE64_PREFIX = "data:image/png;base64,";
+    private final Logger logger = LoggerFactory.getLogger(JWTAuthRestController.class);
     @Autowired
     protected AccountService accountService;
     @Autowired
     protected AuthCodeService authCodeService;
+    @Autowired
+    protected OrgService orgService;
     @Autowired
     private UploadService uploadService;
     @Autowired
     private AttachService attachService;
     @Autowired
     private RuleService ruleService;
-    private final Logger logger = LoggerFactory.getLogger(JWTAuthRestController.class);
 
     @IgnoreJWTVerify
     @RequestMapping(value = "/login", method = RequestMethod.POST, produces = {"application/json;charset=UTF-8"})
@@ -72,6 +74,8 @@ public class JWTAuthRestController extends BaseController {
                 loginResult.setToken(token);
                 loginResult.setHomePath("");
                 loginResult.setRoles(getRoles(userId));
+                // 用户所属公司
+                setCompany(loginResult);
 
                 // TODO 将token 写入域名下的cookies
 
@@ -113,6 +117,8 @@ public class JWTAuthRestController extends BaseController {
             loginResult.setToken(this.getToken(req));
             loginResult.setHomePath("");
             loginResult.setRoles(null);
+            // 用户所属公司
+            setCompany(loginResult);
 
             return new ApiResult().success().setData(loginResult);
         } catch (Exception e) {
@@ -446,5 +452,23 @@ public class JWTAuthRestController extends BaseController {
 
     private String getToken(HttpServletRequest req) {
         return req.getHeader("Authorization");
+    }
+
+    /**
+     * 用户所属公司
+     *
+     * @param loginResult
+     */
+    private void setCompany(LoginResult loginResult) {
+        if (Strings.isNotBlank(loginResult.getCompanyId())) {
+            Org org = orgService.getModel(Org.class, loginResult.getCompanyId());
+            loginResult.setCompanyName(org.getName());
+        } else if (Strings.isNotBlank(loginResult.getOrgId())) {
+            Org org = orgService.getCompany(loginResult.getOrgId());
+            if (org != null) {
+                loginResult.setCompanyId(org.getId());
+                loginResult.setCompanyName(org.getName());
+            }
+        }
     }
 }
