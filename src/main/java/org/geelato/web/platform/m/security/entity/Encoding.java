@@ -157,6 +157,16 @@ public class Encoding extends BaseEntity implements EntityEnableAble {
                         if (Strings.isNotBlank(item.getConstantValue())) {
                             examples.add(item.getConstantValue());
                         }
+                    } else if (EncodingItemTypeEnum.VARIABLE.getValue().equals(item.getItemType())) {
+                        // 常量
+                        if (Strings.isNotBlank(item.getConstantValue())) {
+                            examples.add(String.format("{%s}",item.getConstantValue()));
+                        }
+                    } else if (EncodingItemTypeEnum.ARGUMENT.getValue().equals(item.getItemType())) {
+                        // 常量
+                        if (Strings.isNotBlank(item.getConstantValue())) {
+                            examples.add(String.format("[%s]",item.getConstantValue()));
+                        }
                     } else if (EncodingItemTypeEnum.SERIAL.getValue().equals(item.getItemType())) {
                         // 序列号
                         if (EncodingSerialTypeEnum.ORDER.getValue().equals(item.getSerialType())) {

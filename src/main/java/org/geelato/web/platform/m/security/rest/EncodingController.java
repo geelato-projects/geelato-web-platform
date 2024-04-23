@@ -119,6 +119,7 @@ public class EncodingController extends BaseController {
             Assert.notNull(model, ApiErrorMsg.IS_NULL);
             model.setEnableStatus(EnableStatusEnum.DISABLED.getCode());
             encodingService.isDeleteModel(model);
+            encodingService.redisTemplateEncodingDelete(model);
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.DELETE_FAIL);
@@ -129,12 +130,12 @@ public class EncodingController extends BaseController {
 
     @RequestMapping(value = "/generate/{id}", method = RequestMethod.POST)
     @ResponseBody
-    public ApiResult generate(@PathVariable(required = true) String id) {
+    public ApiResult generate(@PathVariable(required = true) String id, @RequestBody Map<String, Object> argument) {
         ApiResult result = new ApiResult();
         try {
             Encoding encoding = encodingService.getModel(CLAZZ, id);
             Assert.notNull(encoding, ApiErrorMsg.IS_NULL);
-            result.setData(encodingService.generate(encoding));
+            result.setData(encodingService.generate(encoding, argument));
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(e.getMessage());
