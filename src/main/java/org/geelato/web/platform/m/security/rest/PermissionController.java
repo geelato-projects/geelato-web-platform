@@ -31,7 +31,7 @@ public class PermissionController extends BaseController {
     private static final Class<Permission> CLAZZ = Permission.class;
 
     static {
-        OPERATORMAP.put("contains", Arrays.asList("name", "code", "rule", "description"));
+        OPERATORMAP.put("contains", Arrays.asList("name", "code", "object", "rule", "description"));
         OPERATORMAP.put("intervals", Arrays.asList("createAt", "updateAt"));
     }
 
