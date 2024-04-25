@@ -20,6 +20,8 @@ public class LoginResult {
     private Date registrationDate;
     private String orgId;
     private String orgName;
+    private String companyId;
+    private String companyName;
     private String nationCode;
     private String provinceCode;
     private String cityCode;
@@ -209,6 +211,22 @@ public class LoginResult {
         this.enableStatus = enableStatus;
     }
 
+    public String getCompanyId() {
+        return companyId;
+    }
+
+    public void setCompanyId(String companyId) {
+        this.companyId = companyId;
+    }
+
+    public String getCompanyName() {
+        return companyName;
+    }
+
+    public void setCompanyName(String companyName) {
+        this.companyName = companyName;
+    }
+
     /**
      * 对象转换
      *
@@ -236,6 +254,7 @@ public class LoginResult {
         loginResult.setTenantCode(user.getTenantCode());
         loginResult.setCooperatingOrgId(user.getCooperatingOrgId());
         loginResult.setEnableStatus(user.getEnableStatus());
+        loginResult.setCompanyId(user.getBuId());
 
         return loginResult;
     }

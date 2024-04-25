@@ -3,17 +3,18 @@ package org.geelato.web.platform.m.security.service;
 import com.alibaba.fastjson2.JSON;
 import jakarta.annotation.Resource;
 import org.apache.logging.log4j.util.Strings;
+import org.geelato.core.Ctx;
 import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.enums.EnableStatusEnum;
 import org.geelato.core.util.UUIDUtils;
 import org.geelato.web.platform.enums.EncodingItemTypeEnum;
 import org.geelato.web.platform.enums.EncodingSerialTypeEnum;
+import org.geelato.web.platform.m.base.entity.App;
 import org.geelato.web.platform.m.base.service.BaseService;
-import org.geelato.web.platform.m.security.entity.Encoding;
-import org.geelato.web.platform.m.security.entity.EncodingItem;
-import org.geelato.web.platform.m.security.entity.EncodingLog;
+import org.geelato.web.platform.m.security.entity.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Component;
@@ -35,7 +36,30 @@ public class EncodingService extends BaseService {
     private final Logger logger = LoggerFactory.getLogger(EncodingService.class);
     @Resource
     private RedisTemplate<String, Object> redisTemplate;
+    @Autowired
+    private OrgService orgService;
 
+    /**
+     * 移除缓存
+     *
+     * @param encoding
+     */
+    public void redisTemplateEncodingDelete(Encoding encoding) {
+        encoding.afterSet();
+        String redisItemKey = ENCODING_ITEM_PREFIX + encoding.getId();
+        List<Object> redisItemKeys = redisTemplate.opsForList().range(ENCODING_LIST_PREFIX, 0, -1);
+        // 清理
+        if (redisItemKeys.contains(redisItemKey)) {
+            redisTemplate.delete(redisItemKey);
+            redisTemplate.opsForList().remove(ENCODING_LIST_PREFIX, 1, redisItemKey);
+        }
+    }
+
+    /**
+     * 更新缓存
+     *
+     * @param encoding
+     */
     public void redisTemplateEncodingUpdate(Encoding encoding) {
         encoding.afterSet();
         String redisItemKey = ENCODING_ITEM_PREFIX + encoding.getId();
@@ -53,6 +77,11 @@ public class EncodingService extends BaseService {
         redisTemplateEncodingItem(encoding);
     }
 
+    /**
+     * 设置缓存
+     *
+     * @param encoding
+     */
     private void redisTemplateEncodingItem(Encoding encoding) {
         String redisItemKey = ENCODING_ITEM_PREFIX + encoding.getId();
         List<Object> serials = querySerialsByEncodingLog(encoding);
@@ -118,7 +147,7 @@ public class EncodingService extends BaseService {
      * @param form
      * @return
      */
-    public String generate(Encoding form) {
+    public String generate(Encoding form, Map<String, Object> argument) {
         redisTemplateEncoding();
         if (Strings.isBlank(form.getTemplate())) {
             return null;
@@ -134,6 +163,8 @@ public class EncodingService extends BaseService {
         encodingLog.setEncodingId(form.getId());
         encodingLog.setEnableStatus(EnableStatusEnum.ENABLED.getCode());
         encodingLog.setTemplate(form.getFormatExample());
+        // 系统变量
+        Map<String, Object> variableParams = getVariable(itemList, argument.get("appId") == null ? null : String.valueOf(argument.get("appId")));
         // 编码实例
         List<String> examples = new ArrayList<>();
         for (EncodingItem item : itemList) {
@@ -141,6 +172,20 @@ public class EncodingService extends BaseService {
                 // 常量
                 if (Strings.isNotBlank(item.getConstantValue())) {
                     examples.add(item.getConstantValue());
+                }
+            } else if (EncodingItemTypeEnum.ARGUMENT.getValue().equals(item.getItemType())) {
+                if (Strings.isNotBlank(item.getConstantValue()) && argument != null) {
+                    Object value = argument.get(item.getConstantValue());
+                    if (value != null) {
+                        examples.add(String.valueOf(value));
+                    }
+                }
+            } else if (EncodingItemTypeEnum.VARIABLE.getValue().equals(item.getItemType())) {
+                if (Strings.isNotBlank(item.getConstantValue()) && variableParams != null) {
+                    Object value = variableParams.get(item.getConstantValue());
+                    if (value != null && Strings.isNotBlank(String.valueOf(value))) {
+                        examples.add(String.valueOf(value));
+                    }
                 }
             } else if (EncodingItemTypeEnum.SERIAL.getValue().equals(item.getItemType())) {
                 // 序列号
@@ -193,12 +238,7 @@ public class EncodingService extends BaseService {
             }
             // 在极端情况下仍然会误删除锁
             // 因此使用lua脚本的方式来防止误删除
-            String script = "if redis.call(\"get\",KEYS[1]) == ARGV[1]\n" +
-                    "then\n" +
-                    "    return redis.call(\"del\",KEYS[1])\n" +
-                    "else\n" +
-                    "    return 0\n" +
-                    "end";
+            String script = "if redis.call(\"get\",KEYS[1]) == ARGV[1]\n" + "then\n" + "    return redis.call(\"del\",KEYS[1])\n" + "else\n" + "    return 0\n" + "end";
             DefaultRedisScript defaultRedisScript = new DefaultRedisScript();
             defaultRedisScript.setScriptText(script);
             defaultRedisScript.setResultType(Long.class);
@@ -343,5 +383,70 @@ public class EncodingService extends BaseService {
         }
 
         return list;
+    }
+
+    private Map<String, Object> getVariable(List<EncodingItem> itemList, String appId) {
+        Map<String, Object> resultMap = new HashMap<>();
+        List<String> variableKeys = new ArrayList<>();
+        List<String> variableValues = new ArrayList<>();
+        for (EncodingItem item : itemList) {
+            if (EncodingItemTypeEnum.VARIABLE.getValue().equals(item.getItemType())) {
+                if (Strings.isNotBlank(item.getConstantValue())) {
+                    String[] keys = item.getConstantValue().split("\\.");
+                    if (keys != null && keys.length == 2 && Strings.isNotBlank(keys[0]) && Strings.isNotBlank(keys[1])) {
+                        variableKeys.add(keys[0]);
+                        variableValues.add(keys[1]);
+                    }
+                }
+            }
+        }
+        if (variableKeys.size() > 0 && variableValues.size() > 0) {
+            if (variableKeys.contains("tenant")) {
+                String tenantCode = Ctx.getCurrentTenantCode();
+                if (Strings.isNotBlank(tenantCode)) {
+                    List<Map<String, Object>> mapList = dao.getJdbcTemplate().queryForList("SELECT * FROM platform_tenant WHERE 1=1 AND del_status = 0 AND code = ?", new Object[]{tenantCode});
+                    if (mapList != null && mapList.size() > 0) {
+                        resultMap.put("tenant.id", mapList.get(0).get("id"));
+                        resultMap.put("tenant.code", mapList.get(0).get("code"));
+                        resultMap.put("tenant.name", mapList.get(0).get("company_name"));
+                        resultMap.put("tenant.domain", mapList.get(0).get("company_domain"));
+                        resultMap.put("tenant.corpId", mapList.get(0).get("corp_id"));
+                        resultMap.put("tenant.corpToken", mapList.get(0).get("corp_token"));
+                        resultMap.put("tenant.email", mapList.get(0).get("main_email"));
+                    }
+                }
+            }
+            if (variableKeys.contains("app") && Strings.isNotBlank(appId)) {
+                Map<String, Object> model = dao.queryForMap(App.class, "id", appId);
+                if (model != null) {
+                    for (Map.Entry<String, Object> entry : model.entrySet()) {
+                        resultMap.put(String.format("app.%s", entry.getKey()), entry.getValue());
+                    }
+                }
+            }
+            if (variableKeys.contains("user")) {
+                org.geelato.core.env.entity.User user = Ctx.getCurrentUser();
+                if (user != null && Strings.isNotBlank(user.getUserId())) {
+                    Map<String, Object> model = dao.queryForMap(User.class, "id", user.getUserId());
+                    if (model != null) {
+                        for (Map.Entry<String, Object> entry : model.entrySet()) {
+                            resultMap.put(String.format("user.%s", entry.getKey()), entry.getValue());
+                        }
+                        if (variableValues.contains("companyId") || variableValues.contains("companyName")) {
+                            Object orgId = model.get("orgId");
+                            if (orgId != null && Strings.isNotBlank(String.valueOf(orgId))) {
+                                Org org = orgService.getCompany(String.valueOf(orgId));
+                                if (org != null) {
+                                    resultMap.put("user.companyId", org.getId());
+                                    resultMap.put("user.companyName", org.getName());
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return resultMap;
     }
 }

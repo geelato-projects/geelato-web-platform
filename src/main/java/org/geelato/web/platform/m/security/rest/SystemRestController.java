@@ -2,29 +2,24 @@ package org.geelato.web.platform.m.security.rest;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.meta.annotation.IgnoreJWTVerify;
-import org.geelato.core.orm.Dao;
 import org.geelato.web.platform.m.base.rest.BaseController;
-import org.geelato.web.platform.m.security.entity.DataItems;
-import org.geelato.web.platform.m.security.entity.LoginResult;
-import org.geelato.web.platform.m.security.entity.Role;
-import org.geelato.web.platform.m.security.entity.User;
+import org.geelato.web.platform.m.security.entity.*;
 import org.geelato.web.platform.m.security.service.AccountService;
+import org.geelato.web.platform.m.security.service.OrgService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by hongxq on 2022/10/1
@@ -32,18 +27,18 @@ import java.util.Map;
 @Controller
 @RequestMapping(value = {"/api/sys"})
 public class SystemRestController extends BaseController {
-
     @Autowired
     protected AccountService accountService;
-
-    private Logger logger = LoggerFactory.getLogger(SystemRestController.class);
+    @Autowired
+    protected OrgService orgService;
+    private final Logger logger = LoggerFactory.getLogger(SystemRestController.class);
 
 
     @IgnoreJWTVerify
     @RequestMapping(value = "/getRoleListByPage", method = RequestMethod.GET, produces = {"application/json;charset=UTF-8"})
     @ResponseBody
     public ApiPagedResult getAccountList(HttpServletRequest req) {
-        //初始化返回值
+        // 初始化返回值
         ApiPagedResult apiPageResult = new ApiPagedResult<DataItems>();
         List mapList = dao.queryForMapList(Role.class);
         apiPageResult.setData(new DataItems(mapList, mapList.size()));
@@ -61,6 +56,8 @@ public class SystemRestController extends BaseController {
             loginResult.setToken(this.getToken(req));
             loginResult.setHomePath("");
             loginResult.setRoles(null);
+            // 用户所属公司
+            setCompany(loginResult);
 
             return new ApiResult().success().setData(loginResult);
         } catch (Exception e) {
@@ -125,7 +122,7 @@ public class SystemRestController extends BaseController {
      */
     private User getUserByToken(HttpServletRequest req) throws Exception {
 //        String token = this.getToken(req);
-        //验证令牌  如果令牌不正确会出现异常 被全局异常处理
+        // 验证令牌  如果令牌不正确会出现异常 被全局异常处理
 //        DecodedJWT verify = JWTUtil.verify(token);
 //        String loginName = verify.getClaim("loginName").asString();
 
@@ -136,4 +133,21 @@ public class SystemRestController extends BaseController {
         return req.getHeader("authorization");
     }
 
+    /**
+     * 用户所属公司
+     *
+     * @param loginResult
+     */
+    private void setCompany(LoginResult loginResult) {
+        if (Strings.isNotBlank(loginResult.getCompanyId())) {
+            Org org = orgService.getModel(Org.class, loginResult.getCompanyId());
+            loginResult.setCompanyName(org.getName());
+        } else if (Strings.isNotBlank(loginResult.getOrgId())) {
+            Org org = orgService.getCompany(loginResult.getOrgId());
+            if (org != null) {
+                loginResult.setCompanyId(org.getId());
+                loginResult.setCompanyName(org.getName());
+            }
+        }
+    }
 }
