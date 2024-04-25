@@ -191,7 +191,7 @@ public class PackageController extends BaseController {
                     backupCurrentVersion(appVersion.getAppId());
                     deleteCurrentVersion(appVersion.getAppId());
                     deployAppPackageData(appPackage);
-                    refreshApp(appVersion.getAppId());
+                    // refreshApp(appVersion.getAppId());
                 } catch (Exception ex) {
                     apiResult.setMsg(ex.getMessage());
                     apiResult.setCode(ApiResultCode.ERROR);
