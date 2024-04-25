@@ -18,10 +18,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author diabl
@@ -128,11 +125,28 @@ public class EncodingController extends BaseController {
         return result;
     }
 
+    /**
+     * 获取一个新的编码，如需要使用系统编码app，需在参数中传入appId
+     *
+     * @param id                   编码ID
+     * @param argumentParam        params参数
+     * @param argumentBodyOptional body参数，优先级高于params参数
+     * @return
+     */
     @RequestMapping(value = "/generate/{id}", method = RequestMethod.POST)
     @ResponseBody
-    public ApiResult generate(@PathVariable(required = true) String id, @RequestBody Map<String, Object> argument) {
+    public ApiResult generate(@PathVariable(required = true) String id, @RequestParam Map<String, Object> argumentParam, @RequestBody Optional<Map<String, Object>> argumentBodyOptional) {
         ApiResult result = new ApiResult();
         try {
+            Map<String, Object> argument = new HashMap<>();
+            if (argumentParam != null && argumentParam.size() > 0) {
+                argument.putAll(argumentParam);
+            }
+            if (!argumentBodyOptional.isEmpty()) {
+                argumentBodyOptional.ifPresent(map -> {
+                    map.forEach((key, value) -> argument.put(key, value));
+                });
+            }
             Encoding encoding = encodingService.getModel(CLAZZ, id);
             Assert.notNull(encoding, ApiErrorMsg.IS_NULL);
             result.setData(encodingService.generate(encoding, argument));
