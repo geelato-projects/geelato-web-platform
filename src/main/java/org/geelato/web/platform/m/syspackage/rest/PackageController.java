@@ -191,6 +191,7 @@ public class PackageController extends BaseController {
                     backupCurrentVersion(appVersion.getAppId());
                     deleteCurrentVersion(appVersion.getAppId());
                     deployAppPackageData(appPackage);
+                    refreshApp(appVersion.getAppId());
                 } catch (Exception ex) {
                     apiResult.setMsg(ex.getMessage());
                     apiResult.setCode(ApiResultCode.ERROR);
@@ -207,6 +208,16 @@ public class PackageController extends BaseController {
         }
         apiResult.setMsg("应用部署成功！");
         return apiResult;
+    }
+
+    private void refreshApp(String  appId) {
+        Collection<EntityMeta> allEntityMeta= MetaManager.singleInstance().getAll();
+        for (EntityMeta entityMeta:allEntityMeta){
+            if(entityMeta.getTableMeta().getAppId().equals(appId)){
+                MetaManager.singleInstance().refreshDBMeta(entityMeta.getEntityName());
+            }
+        }
+
     }
 
     private void backupCurrentVersion(String appId) {
