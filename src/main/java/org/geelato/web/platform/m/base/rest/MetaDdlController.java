@@ -7,21 +7,18 @@ import org.geelato.core.api.ApiMetaResult;
 import org.geelato.core.constants.MediaTypes;
 import org.geelato.core.enums.EnableStatusEnum;
 import org.geelato.core.gql.parser.FilterGroup;
+import org.geelato.core.meta.MetaManager;
 import org.geelato.core.meta.model.entity.TableMeta;
 import org.geelato.core.orm.DbGenerateDao;
 import org.geelato.web.platform.m.model.service.DevTableService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.sql.SQLException;
-import java.util.Comparator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author itechgee@126.com
@@ -118,5 +115,25 @@ public class MetaDdlController extends BaseController {
         }
         return result;
     }
+
+    @RequestMapping(value = {"redis/refresh"}, method = {RequestMethod.POST}, produces = MediaTypes.JSON_UTF_8)
+    @ResponseBody
+    public ApiMetaResult refreshRedis(@RequestBody Map<String, String> params) {
+        ApiMetaResult result = new ApiMetaResult();
+        try {
+            Map<String, String> table = new HashMap<>();
+            table.put("id", params.get("tableId"));
+            table.put("entity_name", params.get("entityName"));
+            table.put("connect_id", params.get("connectId"));
+            table.put("app_id", params.get("appId"));
+            table.put("tenant_code", Strings.isNotBlank(params.get("tenantCode")) ? params.get("tenantCode") : Ctx.getCurrentTenantCode());
+            MetaManager.singleInstance().parseDBMeta(dao, table);
+        } catch (Exception ex) {
+            logger.error(ex.getMessage());
+            result.error().setMsg(ex.getCause().getMessage());
+        }
+        return result;
+    }
+
 
 }
