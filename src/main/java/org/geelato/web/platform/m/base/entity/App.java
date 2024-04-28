@@ -17,6 +17,7 @@ public class App extends BaseSortableEntity {
 
     private String name;// 应用名称
     private String code;// 应用编码
+    private String type;// 应用分类
     private String icon;// 图标
     private String appKey;
     private String token;
@@ -33,6 +34,7 @@ public class App extends BaseSortableEntity {
     private int designStatus = 1;
     private String roles;
     private String connects;
+    private String appStorage;
 
     @Col(name = "name", nullable = false)
     @Title(title = "应用名称")
@@ -52,6 +54,16 @@ public class App extends BaseSortableEntity {
 
     public void setCode(String code) {
         this.code = code;
+    }
+
+    @Col(name = "type")
+    @Title(title = "应用分类")
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 
     @Col(name = "icon")
@@ -211,5 +223,15 @@ public class App extends BaseSortableEntity {
 
     public void setConnects(String connects) {
         this.connects = connects;
+    }
+
+    @Col(name = "app_storage")
+    @Title(title = "应用仓库地址")
+    public String getAppStorage() {
+        return appStorage;
+    }
+
+    public void setAppStorage(String appStorage) {
+        this.appStorage = appStorage;
     }
 }
