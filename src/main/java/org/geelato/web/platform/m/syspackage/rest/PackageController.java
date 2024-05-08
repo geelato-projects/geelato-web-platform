@@ -177,9 +177,9 @@ public class PackageController extends BaseController {
         String appPackageData;
         if (appVersion != null && !StringUtils.isEmpty(appVersion.getPackagePath())) {
             if (appVersion.getPackagePath().contains(".zgdp")) {
-               // appPackageData = ZipUtils.readPackageData(appVersion.getPackagePath(), ".gdp");
+                appPackageData = ZipUtils.readPackageData(appVersion.getPackagePath(), ".gdp");
                 // 测试用
-                 appPackageData = ZipUtils.readPackageData("D:\\geelato-project\\app_package_temp\\upload_temp\\ob.zgdp", ".gdp");
+                 //appPackageData = ZipUtils.readPackageData("D:\\geelato-project\\app_package_temp\\upload_temp\\ob.zgdp", ".gdp");
             } else {
                 Attach attach = attachService.getModel(Attach.class, appVersion.getPackagePath());
                 File file = downloadService.downloadFile(attach.getName(), attach.getPath());
