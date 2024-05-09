@@ -27,8 +27,10 @@ import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 /**
  * @author diabl
@@ -37,11 +39,15 @@ import java.util.concurrent.TimeUnit;
  */
 @Component
 public class ExcelCommonUtils {
+    public static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
+    public static final SimpleDateFormat DATE_TIME_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    public static final Pattern CELL_META_PATTERN = Pattern.compile("\\$\\{[\\\u4e00-\\\u9fa5,\\w,\\.]+\\}");
+    public static final Pattern ROW_META_PATTERN = Pattern.compile("\\$\\{rowMeta\\.[\\w,\\.,\\=]+\\}");
     private static final int REDIS_TIME_OUT = 60;
     private static final int GGL_QUERY_TOTAL = 10000;
     private static final String REDIS_UNIQUE_KEY = "uniques";
+    private static final Logger logger = LoggerFactory.getLogger(ExcelCommonUtils.class);
     private final FilterGroup filterGroup = new FilterGroup().addFilter(ColumnDefault.DEL_STATUS_FIELD, String.valueOf(DeleteStatusEnum.NO.getCode()));
-    private final Logger logger = LoggerFactory.getLogger(ExcelCommonUtils.class);
     private final MetaManager metaManager = MetaManager.singleInstance();
     @Autowired
     @Qualifier("primaryDao")
@@ -87,6 +93,201 @@ public class ExcelCommonUtils {
     }
 
     /**
+     * 合并唯一约束的交集
+     *
+     * @param cellMetaList
+     * @param valueMap
+     * @param valueList
+     * @return
+     */
+    public static Set<Integer> getMergeUniqueScope(List<CellMeta> cellMetaList, Map valueMap, List<Map> valueList) {
+        List<Set<Integer>> limitSetMap = new ArrayList<>();
+        int uniqueNum = 0; // 唯一约束的数据量
+        for (CellMeta cellMeta : cellMetaList) {
+            if (cellMeta.getPlaceholderMeta().isIsMerge() && cellMeta.getPlaceholderMeta().isIsUnique()) {
+                uniqueNum += 1;
+                // 获取数据相同的行
+                Set<Integer> integerSet = getIntegerSet(cellMeta, valueMap, valueList);
+                if (integerSet != null && integerSet.size() > 0) {
+                    limitSetMap.add(integerSet);
+                }
+            }
+        }
+        // 有约束为空，无约束为null
+        if (uniqueNum > 0) {
+            if (uniqueNum == limitSetMap.size()) {
+                // 取约束字段的交集
+                Set<Integer> intersection = new HashSet<>(limitSetMap.get(0));
+                for (int i = 0; i < limitSetMap.size(); i++) {
+                    intersection.retainAll(limitSetMap.get(i));
+                }
+                return intersection;
+            }
+            return new HashSet<>();
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * 获取数据相同的行
+     *
+     * @param cellMeta
+     * @param valueMap
+     * @param valueList
+     * @return
+     */
+    public static Set<Integer> getIntegerSet(CellMeta cellMeta, Map valueMap, List<Map> valueList) {
+        Set<Integer> integerSet = new HashSet<>();
+        if (valueList != null) {
+            // 列表数据
+            Object[] rowValues = new Object[valueList.size()];
+            for (int i = 0; i < valueList.size(); i++) {
+                rowValues[i] = getCellValue(cellMeta.getPlaceholderMeta(), valueMap, valueList.get(i));
+            }
+            // 比对
+            int startIndex = 0;
+            for (int i = 1; i <= rowValues.length; i++) {
+                // 检查是否到达了数组的末尾，或者当前元素与下一个元素不同
+                if (i == rowValues.length || !rowValues[i].equals(rowValues[i - 1])) {
+                    // 结束列大于开始列（注意结束索引是i-1，因为当元素不同时，我们实际上在检查前一个元素）
+                    if (i - 1 > startIndex) {
+                        for (int j = startIndex; j <= i - 1; j++) {
+                            integerSet.add(j);
+                        }
+                    }
+                    startIndex = i; // 更新起始索引为当前索引（如果未到达末尾）
+                }
+            }
+        }
+        logger.info(cellMeta.getPlaceholderMeta().getPlaceholder() + ": " + JSON.toJSONString(integerSet));
+        return integerSet;
+    }
+
+    /**
+     * 获取单元格值
+     *
+     * @param meta
+     * @param valueMap
+     * @param listValueMap
+     * @return
+     */
+    public static Object getCellValue(PlaceholderMeta meta, Map valueMap, Map listValueMap) {
+        Object value = "";
+        // 不是列表，且是变更
+        if (meta.isValueComputeModeVar()) {
+            if (meta.isIsList()) {
+                Object v = listValueMap.get(meta.getVar());
+                value = getCellValueByValueType(meta, v);
+            } else {
+                if (meta.getVar() != null && meta.getVar().trim().length() > 0) {
+                    Object v = valueMap.get(meta.getVar());
+                    value = getCellValueByValueType(meta, v);
+                }
+            }
+        } else if (meta.isValueComputeModeConst()) {
+            value = getCellValueByValueType(meta, meta.getConstValue());
+        } else if (meta.isValueComputeModeExpression()) {
+            Object v = JsProvider.executeExpression(meta.getExpression(), meta.isIsList() ? listValueMap : valueMap);
+            value = getCellValueByValueType(meta, v);
+        }
+        return value;
+    }
+
+    /**
+     * 根据类型获取具体值
+     *
+     * @param meta
+     * @param value
+     * @return
+     */
+    private static Object getCellValueByValueType(PlaceholderMeta meta, Object value) {
+        if (value != null) {
+            if (meta.isValueTypeNumber()) {
+                if (value.toString().indexOf(".") == -1) {
+                    return Long.parseLong(value.toString());
+                } else {
+                    return new BigDecimal(value.toString()).doubleValue();
+                }
+            } else if (meta.isValueTypeDate()) {
+                // value 应为时间戳
+                return DATE_FORMAT.format(value);
+            } else if (meta.isValueTypeDateTime()) {
+                // value 应为时间戳
+                return DATE_TIME_FORMAT.format(value);
+            } else {
+                return value.toString();
+            }
+        } else {
+            if (meta.isValueTypeNumber()) {
+                return 0;
+            } else {
+                return "";
+            }
+        }
+    }
+
+    /**
+     * 将连续的整数构建一个集合,这个集合的起止节点
+     *
+     * @param numbers
+     * @return
+     */
+    public static List<Integer[]> findScopes(Set<Integer> numbers) {
+        List<Integer[]> list = new ArrayList<>();
+        if (numbers != null && numbers.size() > 0) {
+            List<List<Integer>> ranges = findRanges(new ArrayList<>(numbers));
+            // 取范围
+            for (List<Integer> range : ranges) {
+                if (range.get(1) > range.get(0)) {
+                    list.add(new Integer[]{range.get(0), range.get(range.size() - 1)});
+                }
+            }
+        }
+
+        return list;
+    }
+
+    /**
+     * 将连续的整数构建一个集合
+     *
+     * @param numbers
+     * @return
+     */
+    public static List<List<Integer>> findRanges(List<Integer> numbers) {
+        // 先对数字进行排序
+        Collections.sort(numbers);
+
+        List<List<Integer>> ranges = new ArrayList<>();
+        List<Integer> currentRange = new ArrayList<>();
+        currentRange.add(numbers.get(0)); // 添加第一个数字到当前范围
+        for (int i = 1; i < numbers.size(); i++) {
+            int currentNumber = numbers.get(i);
+            int lastNumberInRange = currentRange.get(currentRange.size() - 1);
+
+            // 如果当前数字与前一个数字相差为1，则属于同一范围
+            if (currentNumber - lastNumberInRange == 1) {
+                currentRange.add(currentNumber); // 添加当前数字到当前范围
+            } else {
+                // 否则，当前范围结束，将当前范围添加到结果集，并开始新的范围
+                ranges.add(currentRange);
+                currentRange = new ArrayList<>(); // 创建一个新的范围
+                currentRange.add(currentNumber); // 添加当前数字到新的范围
+            }
+        }
+        // 不要忘记添加最后一个范围
+        ranges.add(currentRange);
+        // 如果每个范围只有一个数字，则转换为[num, num]的形式
+        for (List<Integer> range : ranges) {
+            if (range.size() == 1) {
+                range.add(range.get(0)); // 添加相同的数字作为范围的结束
+            }
+        }
+
+        return ranges;
+    }
+
+    /**
      * 获取表格默认字段
      *
      * @return
@@ -104,7 +305,6 @@ public class ExcelCommonUtils {
 
         return columnNames;
     }
-
 
     /**
      * 解析业务数据类型，规则
@@ -875,7 +1075,6 @@ public class ExcelCommonUtils {
         return redisValue;
     }
 
-
     /**
      * 数据处理
      *
@@ -908,7 +1107,6 @@ public class ExcelCommonUtils {
         }
         return newMapList;
     }
-
 
     private List<Map<String, BusinessData>> handleTypeRules(String currentUUID, List<Map<String, BusinessData>> businessDataMapList, Set<Map<Integer, BusinessTypeRuleData>> businessTypeRuleDataSet, int startIndex) {
         if (businessDataMapList == null || businessDataMapList.size() == 0) {

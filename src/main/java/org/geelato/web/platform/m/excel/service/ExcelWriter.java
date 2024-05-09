@@ -1,5 +1,6 @@
 package org.geelato.web.platform.m.excel.service;
 
+import com.alibaba.fastjson2.JSON;
 import org.apache.poi.hssf.usermodel.HSSFCell;
 import org.apache.poi.hssf.usermodel.HSSFRow;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
@@ -15,19 +16,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
-import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.regex.Pattern;
 
 @Component
 public class ExcelWriter {
-
-    // 示例：${xxx}
-    private static final Pattern cellMetaPattern = Pattern.compile("\\$\\{[\\\u4e00-\\\u9fa5,\\w,\\.]+\\}");
-    private static final Pattern rowMetaPattern = Pattern.compile("\\$\\{rowMeta\\.[\\w,\\.,\\=]+\\}");
     private final Logger logger = LoggerFactory.getLogger(ExcelWriter.class);
-    private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-    private final SimpleDateFormat dateTimeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     /**
      * 按多组值写入一个sheet
@@ -123,9 +116,9 @@ public class ExcelWriter {
             if (cell != null && cell.getCellType().equals(CellType.STRING)) {
                 String cellValue = cell.getStringCellValue();
                 // 找到占位符
-                if (cellMetaPattern.matcher(cellValue).find()) {
+                if (ExcelCommonUtils.CELL_META_PATTERN.matcher(cellValue).find()) {
                     // 如果是一个行属性标识，如cellValue为${rowMeta.xxx}
-                    if (rowMetaPattern.matcher(cellValue).find()) {
+                    if (ExcelCommonUtils.ROW_META_PATTERN.matcher(cellValue).find()) {
                         if ("${rowMeta.isMultiGroupRow}".equalsIgnoreCase(cellValue)) {
                             rowMeta.setMultiGroupRow(true);
                         } else if ("${rowMeta.deleteOnFinished}".equalsIgnoreCase(cellValue)) {
@@ -229,18 +222,51 @@ public class ExcelWriter {
         // 创建了新行，才需要进行单元格合并
         if (newRowCount > 0) {
             for (String key : rowMeta.getListCellMetaMap().keySet()) {
+                List<Map> valueList = (List) valueMap.get(key);
                 List<CellMeta> cellMetaList = rowMeta.getListCellMetaMap().get(key);
-                for (CellMeta cellMeta : cellMetaList) {
-                    if (cellMeta.getPlaceholderMeta().isIsMerge()) {
-                        CellRangeAddress region = new CellRangeAddress(rowIndex, rowIndex + newRowCount, cellMeta.getIndex(), cellMeta.getIndex());
-                        // CellRangeAddress region  = new CellRangeAddress("A1:E10");
-                        sheet.addMergedRegion(region);
-                    }
-                }
+                // 合并唯一约束 - 行范围
+                Set<Integer> mergeScope = ExcelCommonUtils.getMergeUniqueScope(cellMetaList, valueMap, valueList);
+                logger.info("合并唯一约束 - 行范围：" + JSON.toJSONString(mergeScope));
+                setMergeScope(sheet, rowIndex, cellMetaList, valueMap, valueList, mergeScope);
             }
         }
 
         return newRowCount;
+    }
+
+    /**
+     * 合并相同数据的行
+     *
+     * @param sheet
+     * @param rowIndex
+     * @param cellMetaList
+     * @param valueMap
+     * @param valueList
+     * @param mergeScope
+     */
+    public void setMergeScope(HSSFSheet sheet, int rowIndex, List<CellMeta> cellMetaList, Map valueMap, List<Map> valueList, Set<Integer> mergeScope) {
+        for (CellMeta cellMeta : cellMetaList) {
+            if (cellMeta.getPlaceholderMeta().isIsMerge()) {
+                // 获取数据相同的行
+                Set<Integer> integerSet = ExcelCommonUtils.getIntegerSet(cellMeta, valueMap, valueList);
+                if (integerSet.size() > 0) {
+                    // 集合交集
+                    if (mergeScope != null) {
+                        integerSet.retainAll(mergeScope);
+                    }
+                    // 起止范围集合
+                    List<Integer[]> ranges = ExcelCommonUtils.findScopes(integerSet);
+                    logger.info(cellMeta.getPlaceholderMeta().getPlaceholder() + " - 行范围: " + JSON.toJSONString(ranges));
+                    // 合并单元格
+                    if (ranges != null && ranges.size() > 0) {
+                        for (Integer[] range : ranges) {
+                            CellRangeAddress region = new CellRangeAddress(rowIndex + range[0], rowIndex + range[1], cellMeta.getIndex(), cellMeta.getIndex());
+                            sheet.addMergedRegion(region);
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private PlaceholderMeta getPlaceholderMeta(HSSFCell cell, Map<String, PlaceholderMeta> placeholderMetaMap) {
@@ -283,10 +309,10 @@ public class ExcelWriter {
                 }
             } else if (meta.isValueTypeDate()) {
                 // value 应为时间戳
-                cell.setCellValue(dateFormat.format(value));
+                cell.setCellValue(ExcelCommonUtils.DATE_FORMAT.format(value));
             } else if (meta.isValueTypeDateTime()) {
                 // value 应为时间戳
-                cell.setCellValue(dateTimeFormat.format(value));
+                cell.setCellValue(ExcelCommonUtils.DATE_TIME_FORMAT.format(value));
             } else {
                 cell.setCellValue(value.toString());
             }
@@ -356,10 +382,11 @@ public class ExcelWriter {
             placeholderMeta.setValueComputeMode(row.getCell(6).getStringCellValue());
             placeholderMeta.setIsList(getBoolean(row.getCell(7)));
             placeholderMeta.setIsMerge(getBoolean(row.getCell(8)));
-            placeholderMeta.setIsImage(getBoolean(row.getCell(9)));
-            placeholderMeta.setImageWidth(row.getCell(10).getNumericCellValue());
-            placeholderMeta.setImageHeight(row.getCell(11).getNumericCellValue());
-            placeholderMeta.setDescription(row.getCell(12).getStringCellValue());
+            placeholderMeta.setIsUnique(getBoolean(row.getCell(9)));
+            placeholderMeta.setIsImage(getBoolean(row.getCell(10)));
+            placeholderMeta.setImageWidth(row.getCell(11).getNumericCellValue());
+            placeholderMeta.setImageHeight(row.getCell(12).getNumericCellValue());
+            placeholderMeta.setDescription(row.getCell(13).getStringCellValue());
             if (validatePlaceholderMeta(placeholderMeta)) {
                 map.put(placeholderMeta.getPlaceholder(), placeholderMeta);
             }

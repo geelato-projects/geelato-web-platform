@@ -24,6 +24,8 @@ public class PlaceholderMeta {
     private boolean isList;
     // 是否需要从上往下同名合并
     private boolean isMerge;
+    // 唯一约束，合并时
+    private boolean isUnique;
     // 是否是插入图片
     private boolean isImage;
     // 图片宽度，cm
@@ -88,6 +90,14 @@ public class PlaceholderMeta {
 
     public void setIsMerge(boolean isMerge) {
         this.isMerge = isMerge;
+    }
+
+    public boolean isIsUnique() {
+        return isUnique;
+    }
+
+    public void setIsUnique(boolean isUnique) {
+        this.isUnique = isUnique;
     }
 
     public boolean isIsImage() {

@@ -35,13 +35,12 @@ import java.util.*;
  */
 @Component
 public class ExportTemplateService extends BaseService {
-    private static final String ROOT_DIRECTORY = "upload";
-    private final Logger logger = LoggerFactory.getLogger(ExportTemplateService.class);
-    private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
-    public static final String[] EXPORT_META_HEADER = {"占位符", "变量", "列表变量", "常量值", "表达式", "值类型", "取值计算方式", "是否列表", "是否合并", "是否图片", "图片宽度cm", "图片高度cm", "备注"};
+    public static final String[] EXPORT_META_HEADER = {"占位符", "变量", "列表变量", "常量值", "表达式", "值类型", "取值计算方式", "是否列表", "是否合并", "合并唯一约束", "是否图片", "图片宽度cm", "图片高度cm", "备注"};
     public static final String[] IMPORT_META_TYPE_HEADER = {"列名", "类型", "格式", "多值分隔符", "多值场景", "清洗规则", "备注"};
     public static final String[] IMPORT_META_META_HEADER = {"表格", "字段名称", "取值计算方式", "常量取值", "变量取值", "表达式取值", "数据字典取值", "模型取值", "备注"};
-
+    private static final String ROOT_DIRECTORY = "upload";
+    private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
+    private final Logger logger = LoggerFactory.getLogger(ExportTemplateService.class);
     @Autowired
     private UploadService uploadService;
     @Autowired
@@ -391,10 +390,11 @@ public class ExportTemplateService extends BaseService {
             setCell(dRow, 6, cellStyle, metas.get(i).getValueComputeMode());
             setCell(dRow, 7, cellStyle, metas.get(i).isIsList());
             setCell(dRow, 8, cellStyle, metas.get(i).isIsMerge());
-            setCell(dRow, 9, cellStyle, metas.get(i).isIsImage());
-            setCell(dRow, 10, cellStyle, metas.get(i).getImageWidth());
-            setCell(dRow, 11, cellStyle, metas.get(i).getImageHeight());
-            setCell(dRow, 12, cellStyle, metas.get(i).getDescription());
+            setCell(dRow, 9, cellStyle, metas.get(i).isIsUnique());
+            setCell(dRow, 10, cellStyle, metas.get(i).isIsImage());
+            setCell(dRow, 11, cellStyle, metas.get(i).getImageWidth());
+            setCell(dRow, 12, cellStyle, metas.get(i).getImageHeight());
+            setCell(dRow, 13, cellStyle, metas.get(i).getDescription());
         }
         // 设置列宽
         setColumnWidth(sheet, 0, EXPORT_META_HEADER.length);
