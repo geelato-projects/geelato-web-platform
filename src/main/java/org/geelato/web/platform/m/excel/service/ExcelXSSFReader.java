@@ -1,7 +1,9 @@
 package org.geelato.web.platform.m.excel.service;
 
+import com.alibaba.fastjson2.JSON;
 import org.apache.logging.log4j.util.Strings;
 import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.CellValue;
 import org.apache.poi.ss.usermodel.ClientAnchor;
 import org.apache.poi.ss.usermodel.Drawing;
 import org.apache.poi.ss.util.CellRangeAddress;
@@ -185,7 +187,7 @@ public class ExcelXSSFReader {
      * @param businessTypeDataMap 数据类型
      * @return
      */
-    public List<Map<String, BusinessData>> readBusinessData(XSSFSheet sheet, Map<String, BusinessTypeData> businessTypeDataMap) {
+    public List<Map<String, BusinessData>> readBusinessData(XSSFSheet sheet, XSSFFormulaEvaluator evaluator, Map<String, BusinessTypeData> businessTypeDataMap) {
         int lastRowIndex = sheet.getLastRowNum();
         int lastCellNum = 0;
         logger.info("BusinessData Rows = " + lastRowIndex);
@@ -244,6 +246,14 @@ public class ExcelXSSFReader {
                                 cellValue = ExcelCommonUtils.stringToNumber(value);
                             } else if (CellType.STRING.equals(cell.getCellType())) {
                                 cellValue = ExcelCommonUtils.stringToNumber(cell.getStringCellValue());
+                            } else if (CellType.FORMULA.equals(cell.getCellType())) {
+                                CellValue cellV = evaluator.evaluate(cell);
+                                if (CellType.NUMERIC.equals(cellV.getCellType())) {
+                                    String value = String.valueOf(BigDecimal.valueOf(cellV.getNumberValue()));
+                                    cellValue = ExcelCommonUtils.stringToNumber(value);
+                                } else if (CellType.STRING.equals(cellV.getCellType())) {
+                                    cellValue = ExcelCommonUtils.stringToNumber(cellV.getStringValue());
+                                }
                             }
                         } else if (data.isColumnTypeBoolean()) {
                             if (CellType.BOOLEAN.equals(cell.getCellType())) {
@@ -278,6 +288,7 @@ public class ExcelXSSFReader {
             }
         }
 
+        System.out.println(JSON.toJSONString(businessDataMapList));
         return businessDataMapList;
     }
 

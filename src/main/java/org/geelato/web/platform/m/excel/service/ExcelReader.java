@@ -3,6 +3,7 @@ package org.geelato.web.platform.m.excel.service;
 import org.apache.logging.log4j.util.Strings;
 import org.apache.poi.hssf.usermodel.*;
 import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.CellValue;
 import org.apache.poi.ss.usermodel.ClientAnchor;
 import org.apache.poi.ss.usermodel.Drawing;
 import org.apache.poi.ss.util.CellRangeAddress;
@@ -187,7 +188,7 @@ public class ExcelReader {
      * @param businessTypeDataMap 数据类型
      * @return
      */
-    public List<Map<String, BusinessData>> readBusinessData(@NotNull HSSFSheet sheet, Map<String, BusinessTypeData> businessTypeDataMap) {
+    public List<Map<String, BusinessData>> readBusinessData(@NotNull HSSFSheet sheet, HSSFFormulaEvaluator evaluator, Map<String, BusinessTypeData> businessTypeDataMap) {
         int lastRowIndex = sheet.getLastRowNum();
         int lastCellNum = 0;
         logger.info("BusinessData = " + lastRowIndex);
@@ -246,6 +247,14 @@ public class ExcelReader {
                                 cellValue = ExcelCommonUtils.stringToNumber(value);
                             } else if (CellType.STRING.equals(cell.getCellType())) {
                                 cellValue = ExcelCommonUtils.stringToNumber(cell.getStringCellValue());
+                            } else if (CellType.FORMULA.equals(cell.getCellType())) {
+                                CellValue cellV = evaluator.evaluate(cell);
+                                if (CellType.NUMERIC.equals(cellV.getCellType())) {
+                                    String value = String.valueOf(BigDecimal.valueOf(cellV.getNumberValue()));
+                                    cellValue = ExcelCommonUtils.stringToNumber(value);
+                                } else if (CellType.STRING.equals(cellV.getCellType())) {
+                                    cellValue = ExcelCommonUtils.stringToNumber(cellV.getStringValue());
+                                }
                             }
                         } else if (data.isColumnTypeBoolean()) {
                             if (CellType.BOOLEAN.equals(cell.getCellType())) {

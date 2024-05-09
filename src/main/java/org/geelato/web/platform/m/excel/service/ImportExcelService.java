@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.Part;
 import org.apache.logging.log4j.util.Strings;
 import org.apache.poi.hssf.usermodel.HSSFCellStyle;
+import org.apache.poi.hssf.usermodel.HSSFFormulaEvaluator;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.poifs.filesystem.POIFSFileSystem;
@@ -15,6 +16,7 @@ import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.apache.poi.xssf.usermodel.XSSFCellStyle;
+import org.apache.poi.xssf.usermodel.XSSFFormulaEvaluator;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.geelato.core.api.ApiResult;
@@ -660,17 +662,17 @@ public class ImportExcelService {
             if (EXCEL_XLS_CONTENT_TYPE.equals(contentType)) {
                 POIFSFileSystem fileSystem = new POIFSFileSystem(bufferedInputStream);
                 workbook = new HSSFWorkbook(fileSystem);
-                // 例如，在Apache POI中，你可以通过Workbook的setForceFormulaRecalculation(true)来强制重新计算
-                workbook.setForceFormulaRecalculation(true);
                 HSSFSheet sheet = (HSSFSheet) workbook.getSheetAt(sheetIndex);
-                businessDataMapList = excelReader.readBusinessData(sheet, businessTypeDataMap);
+                sheet.setForceFormulaRecalculation(true);
+                HSSFFormulaEvaluator evaluator = (HSSFFormulaEvaluator) workbook.getCreationHelper().createFormulaEvaluator();
+                businessDataMapList = excelReader.readBusinessData(sheet, evaluator, businessTypeDataMap);
                 workbook.close();
             } else if (EXCEL_XLSX_CONTENT_TYPE.equals(contentType)) {
                 workbook = new XSSFWorkbook(bufferedInputStream);
-                // 例如，在Apache POI中，你可以通过Workbook的setForceFormulaRecalculation(true)来强制重新计算
-                workbook.setForceFormulaRecalculation(true);
                 XSSFSheet sheet = (XSSFSheet) workbook.getSheetAt(sheetIndex);
-                businessDataMapList = excelXSSFReader.readBusinessData(sheet, businessTypeDataMap);
+                sheet.setForceFormulaRecalculation(true);
+                XSSFFormulaEvaluator evaluator = (XSSFFormulaEvaluator) workbook.getCreationHelper().createFormulaEvaluator();
+                businessDataMapList = excelXSSFReader.readBusinessData(sheet, evaluator, businessTypeDataMap);
                 workbook.close();
             } else {
                 throw new FileTypeNotSupportedException("Business Data, Excel Type: " + contentType);
