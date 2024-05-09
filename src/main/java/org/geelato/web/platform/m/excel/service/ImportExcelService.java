@@ -660,11 +660,15 @@ public class ImportExcelService {
             if (EXCEL_XLS_CONTENT_TYPE.equals(contentType)) {
                 POIFSFileSystem fileSystem = new POIFSFileSystem(bufferedInputStream);
                 workbook = new HSSFWorkbook(fileSystem);
+                // 例如，在Apache POI中，你可以通过Workbook的setForceFormulaRecalculation(true)来强制重新计算
+                workbook.setForceFormulaRecalculation(true);
                 HSSFSheet sheet = (HSSFSheet) workbook.getSheetAt(sheetIndex);
                 businessDataMapList = excelReader.readBusinessData(sheet, businessTypeDataMap);
                 workbook.close();
             } else if (EXCEL_XLSX_CONTENT_TYPE.equals(contentType)) {
                 workbook = new XSSFWorkbook(bufferedInputStream);
+                // 例如，在Apache POI中，你可以通过Workbook的setForceFormulaRecalculation(true)来强制重新计算
+                workbook.setForceFormulaRecalculation(true);
                 XSSFSheet sheet = (XSSFSheet) workbook.getSheetAt(sheetIndex);
                 businessDataMapList = excelXSSFReader.readBusinessData(sheet, businessTypeDataMap);
                 workbook.close();
