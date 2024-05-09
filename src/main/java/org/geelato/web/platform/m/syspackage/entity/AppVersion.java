@@ -1,5 +1,6 @@
 package org.geelato.web.platform.m.syspackage.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import org.geelato.core.meta.annotation.Col;
 import org.geelato.core.meta.annotation.Entity;
 import org.geelato.core.meta.annotation.Title;
@@ -15,6 +16,7 @@ public class AppVersion extends BaseEntity {
     private String version;
     private String packageSource;
     private String appId;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date packetTime;
     private String status;
     private String description;
@@ -45,6 +47,7 @@ public class AppVersion extends BaseEntity {
     public void setVersion(String version) {
         this.version = version;
     }
+
     @Col(name = "package_source")
     @Title(title = "package_source")
     public String getPackageSource() {
@@ -54,6 +57,7 @@ public class AppVersion extends BaseEntity {
     public void setPackageSource(String packageSource) {
         this.packageSource = packageSource;
     }
+
     @Col(name = "app_id")
     @Title(title = "app_id")
     public String getAppId() {
@@ -63,6 +67,7 @@ public class AppVersion extends BaseEntity {
     public void setAppId(String appId) {
         this.appId = appId;
     }
+
     @Col(name = "packet_time")
     @Title(title = "packet_time")
     public Date getPacketTime() {
