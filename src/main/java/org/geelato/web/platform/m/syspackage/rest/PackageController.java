@@ -179,7 +179,7 @@ public class PackageController extends BaseController {
             if (appVersion.getPackagePath().contains(".zgdp")) {
                 appPackageData = ZipUtils.readPackageData(appVersion.getPackagePath(), ".gdp");
                 // 测试用
-                // appPackageData = ZipUtils.readPackageData("D:\\geelato-project\\app_package_temp\\upload_temp\\ob.zgdp", ".gdp");
+                 //appPackageData = ZipUtils.readPackageData("D:\\geelato-project\\app_package_temp\\upload_temp\\ob.zgdp", ".gdp");
             } else {
                 Attach attach = attachService.getModel(Attach.class, appVersion.getPackagePath());
                 File file = downloadService.downloadFile(attach.getName(), attach.getPath());
@@ -191,7 +191,7 @@ public class PackageController extends BaseController {
                     backupCurrentVersion(appVersion.getAppId());
                     deleteCurrentVersion(appVersion.getAppId());
                     deployAppPackageData(appPackage);
-                    // refreshApp(appVersion.getAppId());
+                    refreshApp(appVersion.getAppId());
                 } catch (Exception ex) {
                     apiResult.setMsg(ex.getMessage());
                     apiResult.setCode(ApiResultCode.ERROR);
@@ -211,9 +211,9 @@ public class PackageController extends BaseController {
     }
 
     private void refreshApp(String  appId) {
-        Collection<EntityMeta> allEntityMeta= MetaManager.singleInstance().getAll();
+        List<EntityMeta> allEntityMeta= MetaManager.singleInstance().getAll().stream().toList();
         for (EntityMeta entityMeta:allEntityMeta){
-            if(entityMeta.getTableMeta().getAppId().equals(appId)){
+            if(entityMeta.getTableMeta().getAppId()!=null&&entityMeta.getTableMeta().getAppId().equals(appId)){
                 MetaManager.singleInstance().refreshDBMeta(entityMeta.getEntityName());
             }
         }
