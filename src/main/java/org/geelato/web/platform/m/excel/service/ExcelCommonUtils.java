@@ -31,6 +31,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * @author diabl
@@ -100,14 +101,14 @@ public class ExcelCommonUtils {
      * @param valueList
      * @return
      */
-    public static Set<Integer> getMergeUniqueScope(List<CellMeta> cellMetaList, Map valueMap, List<Map> valueList) {
-        List<Set<Integer>> limitSetMap = new ArrayList<>();
+    public static List<List<Integer>> getMergeUniqueScope(List<CellMeta> cellMetaList, Map valueMap, List<Map> valueList) {
+        List<List<List<Integer>>> limitSetMap = new LinkedList<>();
         int uniqueNum = 0; // 唯一约束的数据量
         for (CellMeta cellMeta : cellMetaList) {
             if (cellMeta.getPlaceholderMeta().isIsMerge() && cellMeta.getPlaceholderMeta().isIsUnique()) {
                 uniqueNum += 1;
                 // 获取数据相同的行
-                Set<Integer> integerSet = getIntegerSet(cellMeta, valueMap, valueList);
+                List<List<Integer>> integerSet = getIntegerSet(cellMeta, valueMap, valueList);
                 if (integerSet != null && integerSet.size() > 0) {
                     limitSetMap.add(integerSet);
                 }
@@ -115,18 +116,31 @@ public class ExcelCommonUtils {
         }
         // 有约束为空，无约束为null
         if (uniqueNum > 0) {
+            List<List<Integer>> result = new LinkedList<>();
             if (uniqueNum == limitSetMap.size()) {
-                // 取约束字段的交集
-                Set<Integer> intersection = new HashSet<>(limitSetMap.get(0));
-                for (int i = 0; i < limitSetMap.size(); i++) {
-                    intersection.retainAll(limitSetMap.get(i));
+                result = limitSetMap.get(0);
+                for (int i = 1; i < limitSetMap.size(); i++) {
+                    result = listRetain(result, limitSetMap.get(i));
                 }
-                return intersection;
             }
-            return new HashSet<>();
+            return result;
         } else {
             return null;
         }
+    }
+
+    public static List<List<Integer>> listRetain(List<List<Integer>> integerSet0, List<List<Integer>> integerSet1) {
+        List<List<Integer>> result = new LinkedList<>();
+        for (List<Integer> list0 : integerSet0) {
+            for (List<Integer> list1 : integerSet1) {
+                List<Integer> intersection = list0.stream().filter(list1::contains).collect(Collectors.toList());
+                if (intersection != null && intersection.size() > 0) {
+                    result.add(intersection);
+                }
+            }
+        }
+
+        return result;
     }
 
     /**
@@ -137,8 +151,8 @@ public class ExcelCommonUtils {
      * @param valueList
      * @return
      */
-    public static Set<Integer> getIntegerSet(CellMeta cellMeta, Map valueMap, List<Map> valueList) {
-        Set<Integer> integerSet = new HashSet<>();
+    public static List<List<Integer>> getIntegerSet(CellMeta cellMeta, Map valueMap, List<Map> valueList) {
+        List<List<Integer>> integerSet = new LinkedList<>();
         if (valueList != null) {
             // 列表数据
             Object[] rowValues = new Object[valueList.size()];
@@ -152,9 +166,11 @@ public class ExcelCommonUtils {
                 if (i == rowValues.length || !rowValues[i].equals(rowValues[i - 1])) {
                     // 结束列大于开始列（注意结束索引是i-1，因为当元素不同时，我们实际上在检查前一个元素）
                     if (i - 1 > startIndex) {
+                        List<Integer> integerList = new LinkedList<>();
                         for (int j = startIndex; j <= i - 1; j++) {
-                            integerSet.add(j);
+                            integerList.add(j);
                         }
+                        integerSet.add(integerList);
                     }
                     startIndex = i; // 更新起始索引为当前索引（如果未到达末尾）
                 }
@@ -236,7 +252,7 @@ public class ExcelCommonUtils {
     public static List<Integer[]> findScopes(Set<Integer> numbers) {
         List<Integer[]> list = new ArrayList<>();
         if (numbers != null && numbers.size() > 0) {
-            List<List<Integer>> ranges = findRanges(new ArrayList<>(numbers));
+            List<List<Integer>> ranges = findRanges(new LinkedList<>(numbers));
             // 取范围
             for (List<Integer> range : ranges) {
                 if (range.get(1) > range.get(0)) {
@@ -256,10 +272,10 @@ public class ExcelCommonUtils {
      */
     public static List<List<Integer>> findRanges(List<Integer> numbers) {
         // 先对数字进行排序
-        Collections.sort(numbers);
+        // Collections.sort(numbers);
 
-        List<List<Integer>> ranges = new ArrayList<>();
-        List<Integer> currentRange = new ArrayList<>();
+        List<List<Integer>> ranges = new LinkedList<>();
+        List<Integer> currentRange = new LinkedList<>();
         currentRange.add(numbers.get(0)); // 添加第一个数字到当前范围
         for (int i = 1; i < numbers.size(); i++) {
             int currentNumber = numbers.get(i);
@@ -271,7 +287,7 @@ public class ExcelCommonUtils {
             } else {
                 // 否则，当前范围结束，将当前范围添加到结果集，并开始新的范围
                 ranges.add(currentRange);
-                currentRange = new ArrayList<>(); // 创建一个新的范围
+                currentRange = new LinkedList<>(); // 创建一个新的范围
                 currentRange.add(currentNumber); // 添加当前数字到新的范围
             }
         }

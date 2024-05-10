@@ -225,7 +225,7 @@ public class ExcelWriter {
                 List<Map> valueList = (List) valueMap.get(key);
                 List<CellMeta> cellMetaList = rowMeta.getListCellMetaMap().get(key);
                 // 合并唯一约束 - 行范围
-                Set<Integer> mergeScope = ExcelCommonUtils.getMergeUniqueScope(cellMetaList, valueMap, valueList);
+                List<List<Integer>> mergeScope = ExcelCommonUtils.getMergeUniqueScope(cellMetaList, valueMap, valueList);
                 logger.info("合并唯一约束 - 行范围：" + JSON.toJSONString(mergeScope));
                 setMergeScope(sheet, rowIndex, cellMetaList, valueMap, valueList, mergeScope);
             }
@@ -244,23 +244,23 @@ public class ExcelWriter {
      * @param valueList
      * @param mergeScope
      */
-    public void setMergeScope(HSSFSheet sheet, int rowIndex, List<CellMeta> cellMetaList, Map valueMap, List<Map> valueList, Set<Integer> mergeScope) {
+    public void setMergeScope(HSSFSheet sheet, int rowIndex, List<CellMeta> cellMetaList, Map valueMap, List<Map> valueList, List<List<Integer>> mergeScope) {
         for (CellMeta cellMeta : cellMetaList) {
             if (cellMeta.getPlaceholderMeta().isIsMerge()) {
                 // 获取数据相同的行
-                Set<Integer> integerSet = ExcelCommonUtils.getIntegerSet(cellMeta, valueMap, valueList);
+                List<List<Integer>> integerSet = ExcelCommonUtils.getIntegerSet(cellMeta, valueMap, valueList);
                 if (integerSet.size() > 0) {
                     // 集合交集
+                    List<List<Integer>> ranges = integerSet;
                     if (mergeScope != null) {
-                        integerSet.retainAll(mergeScope);
+                        ranges = ExcelCommonUtils.listRetain(integerSet, mergeScope);
                     }
-                    // 起止范围集合
-                    List<Integer[]> ranges = ExcelCommonUtils.findScopes(integerSet);
                     logger.info(cellMeta.getPlaceholderMeta().getPlaceholder() + " - 行范围: " + JSON.toJSONString(ranges));
                     // 合并单元格
                     if (ranges != null && ranges.size() > 0) {
-                        for (Integer[] range : ranges) {
-                            CellRangeAddress region = new CellRangeAddress(rowIndex + range[0], rowIndex + range[1], cellMeta.getIndex(), cellMeta.getIndex());
+                        for (List<Integer> range : ranges) {
+                            Collections.sort(range);
+                            CellRangeAddress region = new CellRangeAddress(rowIndex + range.get(0), rowIndex + range.get(range.size() - 1), cellMeta.getIndex(), cellMeta.getIndex());
                             sheet.addMergedRegion(region);
                         }
                     }
