@@ -44,8 +44,8 @@ public class DownloadController extends BaseController {
 
     @RequestMapping(value = "/file", method = RequestMethod.GET)
     @ResponseBody
-    public void downloadFile(String id, String name, String path, boolean isPdf, HttpServletRequest request, HttpServletResponse response) throws Exception {
-        //抽取出来
+    public void downloadFile(String id, String name, String path, boolean isPdf, boolean isPreview, HttpServletRequest request, HttpServletResponse response) throws Exception {
+        // 抽取出来
         OutputStream out = null;
         FileInputStream in = null;
         try {
@@ -72,7 +72,11 @@ public class DownloadController extends BaseController {
                 name = URLEncoder.encode(name, "UTF-8");
                 String mineType = request.getServletContext().getMimeType(name);
                 response.setContentType(mineType);
-                response.setHeader("Content-Disposition", "attachment; filename=" + name);
+                if (isPreview && Strings.isNotBlank(mineType) &&
+                        (mineType.startsWith("image/") || mineType.equalsIgnoreCase("application/pdf"))) {
+                } else {
+                    response.setHeader("Content-Disposition", "attachment; filename=" + name);
+                }
                 int len = 0;
                 byte[] buffer = new byte[1024];
                 while ((len = in.read(buffer)) > 0) {
