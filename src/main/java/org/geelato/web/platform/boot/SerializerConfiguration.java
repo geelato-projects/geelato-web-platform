@@ -34,8 +34,7 @@ public class SerializerConfiguration {
        /**
      * 防止json时出现错误FAIL_ON_EMPTY_BEANS
      *
-     * @return
-     */
+        */
     @Bean
     public ObjectMapper objectMapper() {
         SimpleModule simpleModule = new SimpleModule();

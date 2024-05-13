@@ -1,4 +1,4 @@
-package org.geelato.web.platform.m.base.interceptor;
+package org.geelato.web.platform.interceptor;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
 import jakarta.servlet.http.HttpServletRequest;
