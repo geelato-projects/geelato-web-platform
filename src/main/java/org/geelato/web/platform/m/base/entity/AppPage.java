@@ -22,6 +22,8 @@ public class AppPage extends BaseSortableEntity {
     private String releaseContent;
     private String description;
 
+    private int version;
+
     @Col(name = "app_id", nullable = true)
     @Title(title = "应用Id", description = "所属应用ID")
     public String getAppId() {
@@ -91,6 +93,17 @@ public class AppPage extends BaseSortableEntity {
 
     public void setReleaseContent(String releaseContent) {
         this.releaseContent = releaseContent;
+    }
+
+
+    @Col(name="version")
+    @Title(title = "版本")
+    public int getVersion() {
+        return version;
+    }
+
+    public void setVersion(int version) {
+        this.version = version;
     }
 
     @Title(title = "描述")
