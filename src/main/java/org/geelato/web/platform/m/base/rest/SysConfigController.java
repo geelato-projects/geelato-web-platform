@@ -182,9 +182,9 @@ public class SysConfigController extends BaseController {
             }
         }
         if (fileIds.size() > 0) {
-            FilterGroup filter = new FilterGroup();
-            filter.addFilter("id", FilterGroup.Operator.in, String.join(",", fileIds));
-            List<Attach> attachList = dao.queryList(Attach.class, filter, null);
+            Map<String, Object> filter = new HashMap<>();
+            filter.put("ids", String.join(",", fileIds));
+            List<Attach> attachList = attachService.list(filter);
             if (attachList != null && attachList.size() > 0) {
                 for (SysConfig model : sysConfigs) {
                     if (CONFIG_TYPE_UPLOAD.equalsIgnoreCase(model.getValueType()) && Strings.isNotBlank(model.getConfigValue())) {

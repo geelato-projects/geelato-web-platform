@@ -179,9 +179,9 @@ public class PackageController extends BaseController {
             if (appVersion.getPackagePath().contains(".zgdp")) {
                 appPackageData = ZipUtils.readPackageData(appVersion.getPackagePath(), ".gdp");
                 // 测试用
-                 //appPackageData = ZipUtils.readPackageData("D:\\geelato-project\\app_package_temp\\upload_temp\\ob.zgdp", ".gdp");
+                // appPackageData = ZipUtils.readPackageData("D:\\geelato-project\\app_package_temp\\upload_temp\\ob.zgdp", ".gdp");
             } else {
-                Attach attach = attachService.getModel(Attach.class, appVersion.getPackagePath());
+                Attach attach = attachService.getModel(appVersion.getPackagePath());
                 File file = downloadService.downloadFile(attach.getName(), attach.getPath());
                 appPackageData = ZipUtils.readPackageData(file, ".gdp");
             }
@@ -210,10 +210,10 @@ public class PackageController extends BaseController {
         return apiResult;
     }
 
-    private void refreshApp(String  appId) {
-        List<EntityMeta> allEntityMeta= MetaManager.singleInstance().getAll().stream().toList();
-        for (EntityMeta entityMeta:allEntityMeta){
-            if(entityMeta.getTableMeta().getAppId()!=null&&entityMeta.getTableMeta().getAppId().equals(appId)){
+    private void refreshApp(String appId) {
+        List<EntityMeta> allEntityMeta = MetaManager.singleInstance().getAll().stream().toList();
+        for (EntityMeta entityMeta : allEntityMeta) {
+            if (entityMeta.getTableMeta().getAppId() != null && entityMeta.getTableMeta().getAppId().equals(appId)) {
                 MetaManager.singleInstance().refreshDBMeta(entityMeta.getEntityName());
             }
         }
@@ -310,6 +310,9 @@ public class PackageController extends BaseController {
         map.put("platform_role_r_tree_node", String.format("%s  platform_role_r_tree_node where app_id='%s'", preOperateSql, appId));
         map.put("platform_role_r_app", String.format("%s  platform_role_r_app where app_id='%s'", preOperateSql, appId));
         map.put("platform_sys_config", String.format("%s  platform_sys_config where app_id='%s'", preOperateSql, appId));
+        map.put("platform_export_template", String.format("%s  platform_export_template where app_id='%s'", preOperateSql, appId));
+        map.put("platform_encoding", String.format("%s  platform_encoding where app_id='%s'", preOperateSql, appId));
+        map.put("platform_resources", String.format("%s  platform_resources where app_id='%s'", preOperateSql, appId));
 
         return map;
     }

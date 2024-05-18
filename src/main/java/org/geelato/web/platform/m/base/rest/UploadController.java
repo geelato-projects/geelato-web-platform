@@ -6,8 +6,11 @@ import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.meta.model.field.ColumnMeta;
+import org.geelato.web.platform.enums.AttachmentSourceEnum;
 import org.geelato.web.platform.m.base.entity.Attach;
+import org.geelato.web.platform.m.base.entity.Resources;
 import org.geelato.web.platform.m.base.service.AttachService;
+import org.geelato.web.platform.m.base.service.ResourcesService;
 import org.geelato.web.platform.m.base.service.UploadService;
 import org.geelato.web.platform.m.model.service.DevTableColumnService;
 import org.slf4j.Logger;
@@ -35,32 +38,39 @@ public class UploadController extends BaseController {
     private static final String ROOT_CONFIG_SUFFIX = ".config";
     private final Logger logger = LoggerFactory.getLogger(UploadController.class);
     @Autowired
-    private UploadService uploadService;
-    @Autowired
     private AttachService attachService;
+    @Autowired
+    private ResourcesService resourcesService;
     @Autowired
     private DevTableColumnService devTableColumnService;
 
     @RequestMapping(value = "/file", method = RequestMethod.POST)
     @ResponseBody
-    public ApiResult uploadFile(@RequestParam("file") MultipartFile file, Boolean isRename, HttpServletRequest request,
-                                String objectId, String genre, String root) {
+    public ApiResult uploadFile(@RequestParam("file") MultipartFile file, HttpServletRequest request, Boolean isRename, String tableType, String objectId, String genre, String root, String appId, String tenantCode) {
         ApiResult result = new ApiResult();
         if (file == null || file.isEmpty()) {
             return result.error().setMsg(ApiErrorMsg.OPERATE_FAIL);
         }
+
         try {
             Attach attach = new Attach(file);
             attach.setObjectId(objectId);
             attach.setGenre(genre);
+            attach.setAppId(appId);
             if (Strings.isNotBlank(root)) {
-                attach.setPath(uploadService.getSaveRootPath(root, attach.getName(), true));
+                attach.setPath(UploadService.getSaveRootPath(root, attach.getName(), true));
             } else {
-                attach.setPath(uploadService.getSavePath(ROOT_DIRECTORY, attach.getName(), true));
+                attach.setPath(UploadService.getSavePath(ROOT_DIRECTORY, tenantCode, appId, attach.getName(), true));
             }
             byte[] bytes = file.getBytes();
             Files.write(Paths.get(attach.getPath()), bytes);
-            result.success().setData(attachService.createModel(attach));
+            // 资源存资源表
+            if (AttachmentSourceEnum.PLATFORM_RESOURCES.getValue().equalsIgnoreCase(tableType)) {
+                Resources target = UploadService.copyProperties(attach, Resources.class);
+                result.setData(resourcesService.createModel(target));
+            } else {
+                result.setData(attachService.createModel(attach));
+            }
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.OPERATE_FAIL);
@@ -80,7 +90,7 @@ public class UploadController extends BaseController {
         ObjectOutputStream oops = null;
         try {
             // 文件名称
-            String ext = uploadService.getFileExtension(fileName);
+            String ext = UploadService.getFileExtension(fileName);
             if (Strings.isBlank(ext) || !ext.equalsIgnoreCase(ROOT_CONFIG_SUFFIX)) {
                 fileName += ROOT_CONFIG_SUFFIX;
             }
@@ -89,10 +99,10 @@ public class UploadController extends BaseController {
             if (Strings.isNotBlank(catalog)) {
                 rootDir = String.format(catalog.startsWith("/") ? "%s%s" : "%s/%s", rootDir, catalog);
             }
-            uploadService.fileMkdirs(rootDir);
+            UploadService.fileMkdirs(rootDir);
             // 文件
             File file = new File(String.format("%s/%s", rootDir, fileName));
-            if (file.exists() && !uploadService.fileResetName(file)) {
+            if (file.exists() && !UploadService.fileResetName(file)) {
                 file.delete();
             }
             fops = new FileOutputStream(file);
@@ -125,7 +135,7 @@ public class UploadController extends BaseController {
         BufferedWriter bufferedWriter = null;
         try {
             // 文件名称
-            String ext = uploadService.getFileExtension(fileName);
+            String ext = UploadService.getFileExtension(fileName);
             if (Strings.isBlank(ext) || !ext.equalsIgnoreCase(ROOT_CONFIG_SUFFIX)) {
                 fileName += ROOT_CONFIG_SUFFIX;
             }
@@ -134,10 +144,10 @@ public class UploadController extends BaseController {
             if (Strings.isNotBlank(catalog)) {
                 rootDir = String.format(catalog.startsWith("/") ? "%s%s" : "%s/%s", rootDir, catalog);
             }
-            uploadService.fileMkdirs(rootDir);
+            UploadService.fileMkdirs(rootDir);
             // 文件
             File file = new File(String.format("%s/%s", rootDir, fileName));
-            if (file.exists() && !uploadService.fileResetName(file)) {
+            if (file.exists() && !UploadService.fileResetName(file)) {
                 file.delete();
             }
             fileWriter = new FileWriter(file);

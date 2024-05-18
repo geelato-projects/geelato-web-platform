@@ -1,19 +1,16 @@
 package org.geelato.web.platform.m.base.rest;
 
-import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiErrorMsg;
-import org.geelato.core.gql.parser.FilterGroup;
 import org.geelato.web.platform.m.base.entity.Attach;
 import org.geelato.web.platform.m.base.service.AttachService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -34,7 +31,7 @@ public class AttachController extends BaseController {
     public ApiResult get(@PathVariable(required = true) String id) {
         ApiResult result = new ApiResult();
         try {
-            return result.setData(attachService.getModel(Attach.class, id));
+            return result.setData(attachService.getModel(id));
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
@@ -48,14 +45,9 @@ public class AttachController extends BaseController {
     public ApiResult list(@RequestBody Map<String, Object> requestMap) {
         ApiResult result = new ApiResult();
         try {
-            List<Attach> attachList = new ArrayList<>();
-            String ids = (String) requestMap.get("ids");
-            if (Strings.isNotBlank(ids)) {
-                FilterGroup filter = new FilterGroup();
-                filter.addFilter("id", FilterGroup.Operator.in, String.join(",", ids));
-                attachList = dao.queryList(Attach.class, filter, "");
+            if (requestMap != null && requestMap.size() > 0) {
+                return result.setData(requestMap);
             }
-            return result.setData(attachList);
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
@@ -69,21 +61,14 @@ public class AttachController extends BaseController {
     public ApiResult remove(@PathVariable(required = true) String id, Boolean isRemoved) {
         ApiResult result = new ApiResult<>();
         try {
-            Attach model = attachService.getModel(Attach.class, id);
-            if (model != null) {
-                attachService.isDeleteModel(model);
-                if (isRemoved) {
-                    boolean delFile = attachService.deleteFile(model);
-                    if (delFile) {
-                        result.success();
-                    } else {
-                        result.error().setMsg(ApiErrorMsg.DELETE_FAIL);
-                    }
-                } else {
-                    result.success();
+            Attach model = attachService.getModel(id);
+            Assert.notNull(model, ApiErrorMsg.IS_NULL);
+            attachService.isDeleteModel(model);
+            if (isRemoved) {
+                boolean delFile = attachService.deleteFile(model);
+                if (!delFile) {
+                    result.error().setMsg(ApiErrorMsg.DELETE_FAIL);
                 }
-            } else {
-                result.error().setMsg(ApiErrorMsg.IS_NULL);
             }
         } catch (Exception e) {
             logger.error(e.getMessage());

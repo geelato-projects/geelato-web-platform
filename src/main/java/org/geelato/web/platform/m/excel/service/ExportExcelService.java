@@ -111,13 +111,15 @@ public class ExportExcelService {
                 fileName = String.format("%s_%s%s", templateName, sdf.format(new Date()), templateExt);
             }
             // 实体文件
-            String directory = uploadService.getSavePath(ROOT_DIRECTORY, fileName, true);
+            String directory = UploadService.getSavePath(ROOT_DIRECTORY, exportTemplate.getTenantCode(), exportTemplate.getAppId(), fileName, true);
             File exportFile = new File(directory);
             // 生成实体文件
             generateEntityFile(templateAttach.getFile(), exportFile, metaMap, valueMapList, valueMap, markMeta, readonly);
             // 保存文件信息
             BasicFileAttributes attributes = Files.readAttributes(exportFile.toPath(), BasicFileAttributes.class);
             Attach attach = new Attach();
+            attach.setObjectId(templateId);
+            attach.setAppId(exportTemplate.getAppId());
             attach.setGenre("exportFile");
             attach.setName(fileName);
             attach.setType(Files.probeContentType(exportFile.toPath()));
@@ -385,7 +387,7 @@ public class ExportExcelService {
      */
     private Attach getFile(String attachId) {
         if (Strings.isNotBlank(attachId)) {
-            Attach attach = attachService.getModel(Attach.class, attachId);
+            Attach attach = attachService.getModel(attachId);
             File file = new File(attach.getPath());
             if (file.exists()) {
                 return attach;

@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.api.ApiResult;
+import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.web.platform.m.base.entity.Attach;
 import org.geelato.web.platform.m.base.service.AttachService;
 import org.geelato.web.platform.m.base.service.DownloadService;
@@ -14,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -38,8 +40,6 @@ public class DownloadController extends BaseController {
     @Autowired
     private DownloadService downloadService;
     @Autowired
-    private UploadService uploadService;
-    @Autowired
     private AttachService attachService;
 
     @RequestMapping(value = "/file", method = RequestMethod.GET)
@@ -50,8 +50,13 @@ public class DownloadController extends BaseController {
         FileInputStream in = null;
         try {
             File file = null;
+            String appId = null;
+            String tenantCode = null;
             if (Strings.isNotBlank(id)) {
-                Attach attach = attachService.getModel(Attach.class, id);
+                Attach attach = attachService.getModel(id);
+                Assert.notNull(attach, ApiErrorMsg.IS_NULL);
+                appId = attach.getAppId();
+                tenantCode = attach.getTenantCode();
                 file = downloadService.downloadFile(attach.getName(), attach.getPath());
                 name = attach.getName();
             } else if (Strings.isNotBlank(path)) {
@@ -61,22 +66,25 @@ public class DownloadController extends BaseController {
             if (isPdf) {
                 String ext = name.substring(name.lastIndexOf("."));
                 name = Strings.isNotBlank(name) ? name.replace(ext, ".pdf") : null;
-                String outputPath = uploadService.getSavePath(ROOT_DIRECTORY, "word-to-pdf.pdf", true);
+                String outputPath = UploadService.getSavePath(ROOT_DIRECTORY, tenantCode, appId, "word-to-pdf.pdf", true);
                 OfficeUtils.toPdf(file.getAbsolutePath(), outputPath, ext);
                 File pFile = new File(outputPath);
                 file = pFile.exists() ? pFile : null;
             }
             if (file != null && Strings.isNotBlank(name)) {
                 out = response.getOutputStream();
-                in = new FileInputStream(file);
-                name = URLEncoder.encode(name, "UTF-8");
-                String mineType = request.getServletContext().getMimeType(name);
+                // 编码
+                String encodeName = URLEncoder.encode(name, StandardCharsets.UTF_8);
+                String mineType = request.getServletContext().getMimeType(encodeName);
                 response.setContentType(mineType);
-                if (isPreview && Strings.isNotBlank(mineType) &&
-                        (mineType.startsWith("image/") || mineType.equalsIgnoreCase("application/pdf"))) {
+                // 在线查看图片、pdf
+                if (isPreview && Strings.isNotBlank(mineType) && (mineType.startsWith("image/") || mineType.equalsIgnoreCase("application/pdf"))) {
+                    //  file = downloadService.copyToFile(file, name);
                 } else {
-                    response.setHeader("Content-Disposition", "attachment; filename=" + name);
+                    response.setHeader("Content-Disposition", "attachment; filename=" + encodeName);
                 }
+                // 读取文件
+                in = new FileInputStream(file);
                 int len = 0;
                 byte[] buffer = new byte[1024];
                 while ((len = in.read(buffer)) > 0) {
@@ -107,7 +115,7 @@ public class DownloadController extends BaseController {
         }
         BufferedReader bufferedReader = null;
         try {
-            String ext = uploadService.getFileExtension(fileName);
+            String ext = UploadService.getFileExtension(fileName);
             if (Strings.isBlank(ext) || !ext.equalsIgnoreCase(".config")) {
                 fileName += ".config";
             }
@@ -119,7 +127,7 @@ public class DownloadController extends BaseController {
             bufferedReader = Files.newBufferedReader(Paths.get(file.getAbsolutePath()), StandardCharsets.UTF_8);
             String line;
             while ((line = bufferedReader.readLine()) != null) {
-                contentBuilder.append(line).append("");
+                contentBuilder.append(line);
             }
             result.setData(contentBuilder.toString());
         } catch (Exception e) {

@@ -4,8 +4,7 @@ import org.geelato.core.enums.DeleteStatusEnum;
 import org.geelato.core.meta.annotation.Col;
 import org.geelato.core.meta.annotation.Entity;
 import org.geelato.core.meta.annotation.Title;
-import org.geelato.core.meta.annotation.Transient;
-import org.geelato.core.meta.model.entity.BaseEntity;
+import org.geelato.core.meta.model.entity.BaseSortableEntity;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
@@ -13,13 +12,13 @@ import java.io.IOException;
 import java.nio.file.Files;
 
 /**
- * @author diabl
- * @description: TODO
- * @date 2023/7/5 10:57
+ * @author geelato
+ * @date 2018/12/19
  */
-@Entity(name = "platform_attach")
-@Title(title = "附件")
-public class Attach extends BaseEntity {
+@Entity(name = "platform_resources", table = "platform_resources")
+@Title(title = "资源信息", description = "对应各类资源文件，如mvel规则文件，sql语句等")
+public class Resources extends BaseSortableEntity {
+
     private String appId;
     private String name;
     private String type;
@@ -28,19 +27,18 @@ public class Attach extends BaseEntity {
     private String path;
     private String url;
     private String objectId;
-    private String source;
 
-    public Attach() {
+    public Resources() {
     }
 
-    public Attach(MultipartFile file) {
+    public Resources(MultipartFile file) {
         setDelStatus(DeleteStatusEnum.NO.getCode());
         this.name = file.getOriginalFilename();
         this.type = file.getContentType();
         this.size = file.getSize();
     }
 
-    public Attach(File file) throws IOException {
+    public Resources(File file) throws IOException {
         setDelStatus(DeleteStatusEnum.NO.getCode());
         this.name = file.getName();
         this.type = Files.probeContentType(file.toPath());
@@ -125,14 +123,5 @@ public class Attach extends BaseEntity {
 
     public void setObjectId(String objectId) {
         this.objectId = objectId;
-    }
-
-    @Transient
-    public String getSource() {
-        return source;
-    }
-
-    public void setSource(String source) {
-        this.source = source;
     }
 }

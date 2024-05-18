@@ -221,7 +221,7 @@ public class ImportExcelService {
             logger.info(String.format("Redis Template [DELETE] [%s]", sdf.format(new Date())));
             // 业务数据校验
             if (!validBusinessData(businessDataMapList) || repeatedData.size() > 0) {
-                Attach errorAttach = writeBusinessData(businessFile, request, response, businessDataMapList, repeatedData, 0);
+                Attach errorAttach = writeBusinessData(exportTemplate, businessFile, request, response, businessDataMapList, repeatedData, 0);
                 logger.info(String.format("业务数据校验-错误 [%s]", sdf.format(new Date())));
                 return result.error(new FileContentValidFailedException("For more information, see the error file.")).setData(errorAttach);
             }
@@ -731,7 +731,7 @@ public class ImportExcelService {
      * @return
      * @throws IOException
      */
-    private Attach writeBusinessData(Attach businessFile, HttpServletRequest request, HttpServletResponse response, List<Map<String, BusinessData>> businessDataMapList, Map<ColumnMeta, Map<Object, Long>> repeatedData, int sheetIndex) throws IOException {
+    private Attach writeBusinessData(ExportTemplate exportTemplate, Attach businessFile, HttpServletRequest request, HttpServletResponse response, List<Map<String, BusinessData>> businessDataMapList, Map<ColumnMeta, Map<Object, Long>> repeatedData, int sheetIndex) throws IOException {
         Attach attachMap = new Attach();
 
         InputStream inputStream = null;
@@ -765,7 +765,7 @@ public class ImportExcelService {
             String templateName = fileName.substring(0, fileName.lastIndexOf("."));
             // 错误文件
             String errorFileName = String.format("%s：%s%s%s", templateName, "错误提示 ", dateTimeFormat.format(new Date()), templateExt);
-            String directory = uploadService.getSavePath(ROOT_DIRECTORY, errorFileName, true);
+            String directory = UploadService.getSavePath(ROOT_DIRECTORY, exportTemplate.getTenantCode(), exportTemplate.getAppId(), errorFileName, true);
             File errorFile = new File(directory);
             // 文件处理
             if (EXCEL_XLS_CONTENT_TYPE.equals(contentType)) {
@@ -911,7 +911,7 @@ public class ImportExcelService {
     private Attach getFile(String attachId) {
         try {
             if (Strings.isNotBlank(attachId)) {
-                Attach attach = attachService.getModel(Attach.class, attachId);
+                Attach attach = attachService.getModel(attachId);
                 File file = new File(attach.getPath());
                 if (file.exists()) {
                     return attach;

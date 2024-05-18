@@ -115,7 +115,7 @@ public class AppVersionController extends BaseController {
                 if (appVersion.getPackagePath().contains(".zgdp")) {
                     appPackageData = ZipUtils.readPackageData(appVersion.getPackagePath(), ".gdp");
                 } else {
-                    Attach attach = attachService.getModel(Attach.class, appVersion.getPackagePath());
+                    Attach attach = attachService.getModel(appVersion.getPackagePath());
                     File file = downloadService.downloadFile(attach.getName(), attach.getPath());
                     appPackageData = ZipUtils.readPackageData(file, ".gdp");
                 }

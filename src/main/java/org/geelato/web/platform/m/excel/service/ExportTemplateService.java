@@ -10,9 +10,9 @@ import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.enums.DeleteStatusEnum;
 import org.geelato.core.enums.EnableStatusEnum;
-import org.geelato.web.platform.m.base.entity.Attach;
-import org.geelato.web.platform.m.base.service.AttachService;
+import org.geelato.web.platform.m.base.entity.Resources;
 import org.geelato.web.platform.m.base.service.BaseService;
+import org.geelato.web.platform.m.base.service.ResourcesService;
 import org.geelato.web.platform.m.base.service.UploadService;
 import org.geelato.web.platform.m.excel.entity.*;
 import org.slf4j.Logger;
@@ -44,7 +44,7 @@ public class ExportTemplateService extends BaseService {
     @Autowired
     private UploadService uploadService;
     @Autowired
-    private AttachService attachService;
+    private ResourcesService resourcesService;
 
     public ApiResult generateFile(String id, String fileType) throws IOException {
         ApiResult result = new ApiResult();
@@ -79,7 +79,7 @@ public class ExportTemplateService extends BaseService {
                 return result.error().setMsg("Excel模板字段定义不存在，无法生成文件！");
             }
             // 创建文件，
-            String excelPath = uploadService.getSavePath(ROOT_DIRECTORY, "import-template.xlsx", true);
+            String excelPath = getSavePath(meta, "import-template.xlsx", true);
             // 读取文件，
             workbook = new XSSFWorkbook();
             importTemplateSheet(workbook, "IMPORT TEMPLATE", businessTypeData);
@@ -90,7 +90,7 @@ public class ExportTemplateService extends BaseService {
             workbook.close();
             // 保存附件
             String excelFileName = String.format("%s：导入模板 %s.xlsx", meta.getTitle(), sdf.format(new Date()));
-            Attach attach = saveAttach(meta, excelPath, excelFileName);
+            Resources attach = saveAttach(meta, excelPath, excelFileName);
             // 转base64
             fileInputStream = new FileInputStream(new File(excelPath));
             Map<String, Object> templateMap = fileToBase64(fileInputStream, attach);
@@ -134,7 +134,7 @@ public class ExportTemplateService extends BaseService {
                 return result.error().setMsg("数据保存配置不存在，无法生成文件！");
             }
             // 创建文件，
-            String excelPath = uploadService.getSavePath(ROOT_DIRECTORY, "import-meta.xlsx", true);
+            String excelPath = getSavePath(meta, "import-meta.xlsx", true);
             // 读取文件，
             workbook = new XSSFWorkbook();
             importMetaTypeSheet(workbook, "Excel模板字段定义", businessTypeData);
@@ -147,7 +147,7 @@ public class ExportTemplateService extends BaseService {
             workbook.close();
             // 保存附件
             String excelFileName = String.format("%s：元数据 %s.xlsx", meta.getTitle(), sdf.format(new Date()));
-            Attach attach = saveAttach(meta, excelPath, excelFileName);
+            Resources attach = saveAttach(meta, excelPath, excelFileName);
             // 转base64
             fileInputStream = new FileInputStream(new File(excelPath));
             Map<String, Object> templateMap = fileToBase64(fileInputStream, attach);
@@ -183,7 +183,7 @@ public class ExportTemplateService extends BaseService {
                 return result.error().setMsg("数据保存配置不存在，无法生成文件！");
             }
             // 创建文件，
-            String excelPath = uploadService.getSavePath(ROOT_DIRECTORY, "export-meta.xlsx", true);
+            String excelPath = getSavePath(meta, "export-meta.xlsx", true);
             // 读取文件，
             workbook = new XSSFWorkbook();
             exportMetaSheet(workbook, "EXPORT META", placeholderMetas);
@@ -194,7 +194,7 @@ public class ExportTemplateService extends BaseService {
             workbook.close();
             // 保存附件
             String excelFileName = String.format("%s：元数据 %s.xlsx", meta.getTitle(), sdf.format(new Date()));
-            Attach attach = saveAttach(meta, excelPath, excelFileName);
+            Resources attach = saveAttach(meta, excelPath, excelFileName);
             // 转base64
             fileInputStream = new FileInputStream(new File(excelPath));
             Map<String, Object> templateMap = fileToBase64(fileInputStream, attach);
@@ -401,6 +401,17 @@ public class ExportTemplateService extends BaseService {
     }
 
     /**
+     * 获取文件路径
+     *
+     * @param meta
+     * @param fileName
+     * @return
+     */
+    private String getSavePath(ExportTemplate meta, String fileName, boolean isRename) {
+        return UploadService.getSavePath(ROOT_DIRECTORY, meta.getTenantCode(), meta.getAppId(), fileName, isRename);
+    }
+
+    /**
      * 保存文件至附件表中
      *
      * @param meta
@@ -409,16 +420,19 @@ public class ExportTemplateService extends BaseService {
      * @return
      * @throws IOException
      */
-    public Attach saveAttach(ExportTemplate meta, String excelPath, String fileName) throws IOException {
+    public Resources saveAttach(ExportTemplate meta, String excelPath, String fileName) throws IOException {
         File excelFile = new File(excelPath);
         BasicFileAttributes attributes = Files.readAttributes(excelFile.toPath(), BasicFileAttributes.class);
-        Attach attach = new Attach();
+        Resources attach = new Resources();
         attach.setName(fileName);
         attach.setType(Files.probeContentType(excelFile.toPath()));
         attach.setSize(attributes.size());
         attach.setPath(excelPath);
+        attach.setGenre("fileTemplate");
+        attach.setObjectId(meta.getId());
+        attach.setAppId(meta.getAppId());
 
-        return attachService.createModel(attach);
+        return resourcesService.createModel(attach);
     }
 
     /**
@@ -429,7 +443,7 @@ public class ExportTemplateService extends BaseService {
      * @return
      * @throws IOException
      */
-    private Map<String, Object> fileToBase64(FileInputStream fileInputStream, Attach attach) throws IOException {
+    private Map<String, Object> fileToBase64(FileInputStream fileInputStream, Resources attach) throws IOException {
         Map<String, Object> templateMap = new HashMap<>();
         byte[] excelBytes = fileInputStream.readAllBytes();
         String base64Content = Base64.getEncoder().encodeToString(excelBytes);
