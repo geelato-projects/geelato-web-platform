@@ -1,12 +1,10 @@
 package org.geelato.web.platform.m.base.rest;
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
 import jakarta.validation.ConstraintViolationException;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiResultStatus;
 import org.geelato.core.constants.MediaTypes;
-import org.geelato.core.exception.TestException;
 import org.geelato.core.orm.DaoException;
 import org.geelato.utils.BeanValidators;
 import org.geelato.utils.UIDGenerator;
@@ -18,7 +16,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
-import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 

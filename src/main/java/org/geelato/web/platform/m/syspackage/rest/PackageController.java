@@ -5,6 +5,7 @@ import com.alibaba.fastjson2.JSONObject;
 import jakarta.annotation.Resource;
 import jakarta.validation.constraints.NotNull;
 import org.geelato.core.Ctx;
+import org.geelato.core.aop.MethodAOPConfig;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiResultCode;
 import org.geelato.core.constants.MediaTypes;
@@ -70,12 +71,17 @@ public class PackageController extends BaseController {
     @ResponseBody
     public ApiResult packetApp(@NotNull @PathVariable("appId") String appId, String version, String description) throws IOException {
         ApiResult apiResult = new ApiResult();
-        Map<String, String> appMetaMap = appMetaMap(appId, "package");
+        Map<String, String> appDataMap=new HashMap<>();
+        Map<String, String> appMetaDataMap = appMetaMap(appId, "package");
+        Map<String, String> appBizDataMap = appBizDataMap(appId, "package");
+        appDataMap.putAll(appMetaDataMap);
+        appDataMap.putAll(appBizDataMap);
+
         AppPackage appPackage = new AppPackage();
 
         List<AppMeta> appMetaList = new ArrayList<>();
-        for (String key : appMetaMap.keySet()) {
-            String value = appMetaMap.get(key);
+        for (String key : appDataMap.keySet()) {
+            String value = appDataMap.get(key);
             List<Map<String, Object>> metaData = dao.getJdbcTemplate().queryForList(value);
             if (key.equals("platform_app") && !metaData.isEmpty()) {
                 appPackage.setAppCode(metaData.get(0).get("code").toString());
@@ -174,17 +180,24 @@ public class PackageController extends BaseController {
             return apiResult;
         }
         AppVersion appVersion = appVersionService.getModel(AppVersion.class, versionId);
-        String appPackageData;
+        String appPackageData=null;
         if (appVersion != null && !StringUtils.isEmpty(appVersion.getPackagePath())) {
-            if (appVersion.getPackagePath().contains(".zgdp")) {
-                appPackageData = ZipUtils.readPackageData(appVersion.getPackagePath(), ".gdp");
-                // 测试用
-                 //appPackageData = ZipUtils.readPackageData("D:\\geelato-project\\app_package_temp\\upload_temp\\ob.zgdp", ".gdp");
-            } else {
-                Attach attach = attachService.getModel(Attach.class, appVersion.getPackagePath());
-                File file = downloadService.downloadFile(attach.getName(), attach.getPath());
-                appPackageData = ZipUtils.readPackageData(file, ".gdp");
+            try{
+                if (appVersion.getPackagePath().contains(".zgdp")) {
+//                appPackageData = ZipUtils.readPackageData(appVersion.getPackagePath(), ".gdp");
+                    // 测试用
+                    appPackageData = ZipUtils.readPackageData("D:\\geelato-project\\app_package_temp\\upload_temp\\ob.zgdp", ".gdp");
+                } else {
+                    Attach attach = attachService.getModel(Attach.class, appVersion.getPackagePath());
+                    File file = downloadService.downloadFile(attach.getName(), attach.getPath());
+                    appPackageData = ZipUtils.readPackageData(file, ".gdp");
+                }
+            }catch (IOException ex){
+                apiResult.setMsg(ex.toString());
+                apiResult.setCode(ApiResultCode.ERROR);
+                return apiResult;
             }
+
             AppPackage appPackage = resolveAppPackageData(appPackageData);
             if (appPackage != null && !appPackage.getAppMetaList().isEmpty()) {
                 try {
@@ -204,6 +217,7 @@ public class PackageController extends BaseController {
                 apiResult.setMsg("无法读取到应用包数据，请检查应用");
                 apiResult.setCode(ApiResultCode.ERROR);
                 logger.info("deploy error：无法读取到应用包数据，请检查应用包");
+                return apiResult;
             }
         }
         apiResult.setMsg("应用部署成功！");
@@ -233,9 +247,13 @@ public class PackageController extends BaseController {
 
     private void deleteCurrentVersion(String appId) {
         logger.info("----------------------delete version start--------------------");
-        Map<String, String> appMetaMap = appMetaMap(appId, "remove");
-        for (String key : appMetaMap.keySet()) {
-            String value = appMetaMap.get(key);
+        Map<String, String> appDataMap=new HashMap<>();
+        Map<String, String> appMetaDataMap = appMetaMap(appId, "remove");
+        Map<String, String> appBizDataMap = appBizDataMap(appId, "remove");
+        appDataMap.putAll(appMetaDataMap);
+        appDataMap.putAll(appBizDataMap);
+        for (String key : appDataMap.keySet()) {
+            String value = appDataMap.get(key);
             logger.info(String.format("remove sql：%s ", value));
             dao.getJdbcTemplate().execute(value);
         }
@@ -281,6 +299,7 @@ public class PackageController extends BaseController {
     }
 
 
+
     private Map<String, String> appMetaMap(String appId, String type) {
         Map<String, String> map = new HashMap<>();
         String preOperateSql = "";
@@ -313,7 +332,28 @@ public class PackageController extends BaseController {
 
         return map;
     }
-
+    private Map<String, String> appBizDataMap(String appId, String type) {
+        String sql= "select table_name from platform_dev_table where pack_bus_data =1  and enable_status =1";
+        List<Map<String, Object>> metaData = dao.getJdbcTemplate().queryForList(sql);
+        Map<String,String> bizDataSqlMap=new HashMap<>();
+        for (Map map:metaData){
+            String preOperateSql = "";
+            switch (type) {
+                case "package":
+                    preOperateSql = "select * from ";
+                    break;
+                case "remove":
+                    preOperateSql = "delete from  ";
+                    break;
+                default:
+                    break;
+            }
+            String tableName=map.get("table_name").toString();
+            String bizSql=String.format("%s %s where app_id ='%s'",preOperateSql,tableName,appId);
+            bizDataSqlMap.put(tableName,bizSql);
+        }
+        return bizDataSqlMap;
+    }
 
     private Map<String, String> appResourceMetaMap(String appId) {
         Map<String, String> map = new HashMap<>();
@@ -387,6 +427,7 @@ public class PackageController extends BaseController {
                 JSONObject jo = jsonArray.getJSONObject(i);
                 Map<String, Object> columnMap = new HashMap<>();
                 for (String key : jo.keySet()) {
+                    logger.info("entityMeta="+entityMeta.getEntityName()+",column="+key);
                     FieldMeta fieldMeta = entityMeta.getFieldMetaByColumn(key);
                     if ("id".equals(key)) {
                         columnMap.put("forceId", jo.get(key));
