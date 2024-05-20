@@ -31,8 +31,7 @@ public class ConfigController extends BaseController {
         ApiResult result = new ApiResult();
         String tenantCode=request.getParameter("tenantCode");
         String appId=request.getParameter("appId");
-        String purpose=request.getParameter("purpose");
-        Map<String, SysConfig> configMap=EnvManager.singleInstance().getConfigMap();
+        Map<String, SysConfig> configMap=EnvManager.singleInstance().getConfigMap("webapp");
         Map<String,Object> rtnConfigMap=new HashMap<>();
         Map<String,String> globalConfigMap=new HashMap<>();
         Map<String,String> tenantConfigMap=new HashMap<>();

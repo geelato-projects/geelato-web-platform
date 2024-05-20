@@ -10,17 +10,11 @@ import org.geelato.core.api.ApiMultiPagedResult;
 import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.MediaTypes;
-import org.geelato.core.exception.TestException;
 import org.geelato.core.meta.MetaManager;
-import org.geelato.core.orm.Dao;
 import org.geelato.core.orm.DaoException;
-import org.geelato.core.script.js.graaljstest;
-import org.geelato.web.platform.m.base.service.RuleService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
