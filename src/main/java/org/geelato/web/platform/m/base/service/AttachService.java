@@ -37,7 +37,9 @@ public class AttachService extends BaseService {
     public Attach getModel(String id) {
         Map<String, Object> params = new HashMap<>();
         params.put("id", id);
-        return dao.queryForObject("platform_attachment_by_more", params, Attach.class);
+        Map<String, Object> map = dao.queryForMap("platform_attachment_by_more", params);
+        Attach attach = JSON.parseObject(JSON.toJSONString(map), Attach.class);
+        return attach;
     }
 
     /**

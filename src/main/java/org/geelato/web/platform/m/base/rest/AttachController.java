@@ -46,7 +46,7 @@ public class AttachController extends BaseController {
         ApiResult result = new ApiResult();
         try {
             if (requestMap != null && requestMap.size() > 0) {
-                return result.setData(requestMap);
+                return result.setData(attachService.list(requestMap));
             }
         } catch (Exception e) {
             logger.error(e.getMessage());

@@ -4,7 +4,7 @@ import org.geelato.core.enums.DeleteStatusEnum;
 import org.geelato.core.meta.annotation.Col;
 import org.geelato.core.meta.annotation.Entity;
 import org.geelato.core.meta.annotation.Title;
-import org.geelato.core.meta.model.entity.BaseSortableEntity;
+import org.geelato.core.meta.model.entity.BaseEntity;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
@@ -17,7 +17,7 @@ import java.nio.file.Files;
  */
 @Entity(name = "platform_resources", table = "platform_resources")
 @Title(title = "资源信息", description = "对应各类资源文件，如mvel规则文件，sql语句等")
-public class Resources extends BaseSortableEntity {
+public class Resources extends BaseEntity {
 
     private String appId;
     private String name;
