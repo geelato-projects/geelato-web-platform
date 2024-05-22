@@ -218,7 +218,7 @@ public class DevTableService extends BaseSortableService {
         if (Strings.isNotBlank(tenantCode)){form.setTenantCode(tenantCode);}
         form.setSynced(ColumnSyncedEnum.FALSE.getValue());
         form.setSourceType(TableSourceTypeEnum.CREATION.getValue());
-        form.setPackBusData(false);
+        form.setPackBusData(0);
         TableMeta formMap = this.createModel(form);
         form.setId(formMap.getId());
         // 源模型字段
