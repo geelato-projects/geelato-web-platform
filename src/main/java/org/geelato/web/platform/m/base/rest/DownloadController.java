@@ -34,8 +34,6 @@ import java.nio.file.Paths;
 @Controller
 @RequestMapping(value = "/api/resources")
 public class DownloadController extends BaseController {
-    private static final String ROOT_DIRECTORY = "upload";
-    private static final String ROOT_CONFIG_DIRECTORY = "/upload/config";
     private final Logger logger = LoggerFactory.getLogger(DownloadController.class);
     @Autowired
     private DownloadService downloadService;
@@ -66,7 +64,7 @@ public class DownloadController extends BaseController {
             if (isPdf) {
                 String ext = name.substring(name.lastIndexOf("."));
                 name = Strings.isNotBlank(name) ? name.replace(ext, ".pdf") : null;
-                String outputPath = UploadService.getSavePath(ROOT_DIRECTORY, tenantCode, appId, "word-to-pdf.pdf", true);
+                String outputPath = UploadService.getSavePath(UploadService.ROOT_CONVERT_DIRECTORY, tenantCode, appId, "word-to-pdf.pdf", true);
                 OfficeUtils.toPdf(file.getAbsolutePath(), outputPath, ext);
                 File pFile = new File(outputPath);
                 file = pFile.exists() ? pFile : null;
@@ -119,7 +117,7 @@ public class DownloadController extends BaseController {
             if (Strings.isBlank(ext) || !ext.equalsIgnoreCase(".config")) {
                 fileName += ".config";
             }
-            File file = new File(String.format("%s/%s", ROOT_CONFIG_DIRECTORY, fileName));
+            File file = new File(String.format("%s/%s", UploadService.ROOT_CONFIG_DIRECTORY, fileName));
             if (!file.exists()) {
                 return result.success().setMsg("File (.config) does not exist");
             }

@@ -10,6 +10,7 @@ import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.enums.DeleteStatusEnum;
 import org.geelato.core.enums.EnableStatusEnum;
+import org.geelato.web.platform.enums.AttachmentSourceEnum;
 import org.geelato.web.platform.m.base.entity.Resources;
 import org.geelato.web.platform.m.base.service.BaseService;
 import org.geelato.web.platform.m.base.service.ResourcesService;
@@ -401,14 +402,14 @@ public class ExportTemplateService extends BaseService {
     }
 
     /**
-     * 获取文件路径
+     * 获取文件路径 upload/存放表/租户编码/应用Id
      *
      * @param meta
      * @param fileName
      * @return
      */
     private String getSavePath(ExportTemplate meta, String fileName, boolean isRename) {
-        return UploadService.getSavePath(ROOT_DIRECTORY, meta.getTenantCode(), meta.getAppId(), fileName, isRename);
+        return UploadService.getSavePath(ROOT_DIRECTORY, AttachmentSourceEnum.PLATFORM_RESOURCES.getValue(), meta.getTenantCode(), meta.getAppId(), fileName, isRename);
     }
 
     /**

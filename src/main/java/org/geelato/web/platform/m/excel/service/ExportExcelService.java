@@ -12,6 +12,7 @@ import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.geelato.core.api.ApiResult;
+import org.geelato.web.platform.enums.AttachmentSourceEnum;
 import org.geelato.web.platform.m.base.entity.Attach;
 import org.geelato.web.platform.m.base.entity.Base64Info;
 import org.geelato.web.platform.m.base.entity.SysConfig;
@@ -110,8 +111,8 @@ public class ExportExcelService {
             } else {
                 fileName = String.format("%s_%s%s", templateName, sdf.format(new Date()), templateExt);
             }
-            // 实体文件
-            String directory = UploadService.getSavePath(ROOT_DIRECTORY, exportTemplate.getTenantCode(), exportTemplate.getAppId(), fileName, true);
+            // 实体文件 upload/存放表/租户编码/应用Id
+            String directory = UploadService.getSavePath(ROOT_DIRECTORY, AttachmentSourceEnum.PLATFORM_ATTACH.getValue(), exportTemplate.getTenantCode(), exportTemplate.getAppId(), fileName, true);
             File exportFile = new File(directory);
             // 生成实体文件
             generateEntityFile(templateAttach.getFile(), exportFile, metaMap, valueMapList, valueMap, markMeta, readonly);

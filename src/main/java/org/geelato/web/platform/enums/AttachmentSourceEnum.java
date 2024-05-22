@@ -36,4 +36,21 @@ public enum AttachmentSourceEnum {
         }
         return null;
     }
+
+    /**
+     * 获取枚举类
+     *
+     * @param value
+     * @return
+     */
+    public static AttachmentSourceEnum getEnum(String value) {
+        if (Strings.isNotBlank(value)) {
+            for (AttachmentSourceEnum enums : AttachmentSourceEnum.values()) {
+                if (enums.getValue().equals(value)) {
+                    return enums;
+                }
+            }
+        }
+        return null;
+    }
 }

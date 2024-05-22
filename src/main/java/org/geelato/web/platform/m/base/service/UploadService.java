@@ -3,6 +3,7 @@ package org.geelato.web.platform.m.base.service;
 import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.Ctx;
 import org.geelato.utils.UIDGenerator;
+import org.geelato.web.platform.enums.AttachmentSourceEnum;
 import org.geelato.web.platform.m.base.entity.Attach;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Component;
@@ -21,6 +22,10 @@ import java.util.Date;
 @Component
 public class UploadService {
     private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
+    public static final String ROOT_DIRECTORY = "upload";
+    public static final String ROOT_CONFIG_DIRECTORY = "/upload/config";
+    public static final String ROOT_CONVERT_DIRECTORY = "/upload/convert";
+    public static final String ROOT_CONFIG_SUFFIX = ".config";
 
     /**
      * 返回文件上传绝对路径
@@ -76,6 +81,28 @@ public class UploadService {
         }
 
         return getSavePath(rootPath, fileName, isRename);
+    }
+
+    /**
+     * 根目录添加，存放表 默认为attach
+     *
+     * @param subPath
+     * @param tableType
+     * @param tenantCode
+     * @param appId
+     * @param fileName
+     * @param isRename
+     * @return
+     */
+    public static String getSavePath(String subPath, String tableType, String tenantCode, String appId, String fileName, boolean isRename) {
+        String rootPath = subPath;
+        AttachmentSourceEnum sourceEnum = AttachmentSourceEnum.getEnum(tableType);
+        if (sourceEnum == null) {
+            sourceEnum = AttachmentSourceEnum.PLATFORM_ATTACH;
+        }
+        rootPath = String.format("%s/%s", subPath, sourceEnum.getValue());
+
+        return getSavePath(rootPath, tenantCode, appId, fileName, isRename);
     }
 
     public static String getSaveRootPath(String subPath, String fileName, boolean isRename) {

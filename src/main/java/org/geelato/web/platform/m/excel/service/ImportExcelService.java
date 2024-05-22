@@ -27,6 +27,7 @@ import org.geelato.core.meta.model.field.ColumnMeta;
 import org.geelato.core.meta.model.field.FieldMeta;
 import org.geelato.core.script.js.JsProvider;
 import org.geelato.utils.UIDGenerator;
+import org.geelato.web.platform.enums.AttachmentSourceEnum;
 import org.geelato.web.platform.exception.file.FileNotFoundException;
 import org.geelato.web.platform.exception.file.*;
 import org.geelato.web.platform.m.base.entity.Attach;
@@ -763,9 +764,9 @@ public class ImportExcelService {
             }
             String templateExt = fileName.substring(fileName.lastIndexOf("."));
             String templateName = fileName.substring(0, fileName.lastIndexOf("."));
-            // 错误文件
+            // 错误文件 upload/存放表/租户编码/应用Id
             String errorFileName = String.format("%s：%s%s%s", templateName, "错误提示 ", dateTimeFormat.format(new Date()), templateExt);
-            String directory = UploadService.getSavePath(ROOT_DIRECTORY, exportTemplate.getTenantCode(), exportTemplate.getAppId(), errorFileName, true);
+            String directory = UploadService.getSavePath(ROOT_DIRECTORY, AttachmentSourceEnum.PLATFORM_ATTACH.getValue(), exportTemplate.getTenantCode(), exportTemplate.getAppId(), errorFileName, true);
             File errorFile = new File(directory);
             // 文件处理
             if (EXCEL_XLS_CONTENT_TYPE.equals(contentType)) {

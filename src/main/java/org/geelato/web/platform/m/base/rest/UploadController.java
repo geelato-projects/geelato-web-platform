@@ -33,9 +33,6 @@ import java.util.*;
 @Controller
 @RequestMapping(value = "/api/upload")
 public class UploadController extends BaseController {
-    private static final String ROOT_DIRECTORY = "upload";
-    private static final String ROOT_CONFIG_DIRECTORY = "/upload/config";
-    private static final String ROOT_CONFIG_SUFFIX = ".config";
     private final Logger logger = LoggerFactory.getLogger(UploadController.class);
     @Autowired
     private AttachService attachService;
@@ -60,7 +57,8 @@ public class UploadController extends BaseController {
             if (Strings.isNotBlank(root)) {
                 attach.setPath(UploadService.getSaveRootPath(root, attach.getName(), true));
             } else {
-                attach.setPath(UploadService.getSavePath(ROOT_DIRECTORY, tenantCode, appId, attach.getName(), true));
+                // upload/存放表/租户编码/应用Id
+                attach.setPath(UploadService.getSavePath(UploadService.ROOT_DIRECTORY, tableType, tenantCode, appId, attach.getName(), true));
             }
             byte[] bytes = file.getBytes();
             Files.write(Paths.get(attach.getPath()), bytes);
@@ -91,11 +89,11 @@ public class UploadController extends BaseController {
         try {
             // 文件名称
             String ext = UploadService.getFileExtension(fileName);
-            if (Strings.isBlank(ext) || !ext.equalsIgnoreCase(ROOT_CONFIG_SUFFIX)) {
-                fileName += ROOT_CONFIG_SUFFIX;
+            if (Strings.isBlank(ext) || !ext.equalsIgnoreCase(UploadService.ROOT_CONFIG_SUFFIX)) {
+                fileName += UploadService.ROOT_CONFIG_SUFFIX;
             }
             // 路径
-            String rootDir = ROOT_CONFIG_DIRECTORY;
+            String rootDir = UploadService.ROOT_CONFIG_DIRECTORY;
             if (Strings.isNotBlank(catalog)) {
                 rootDir = String.format(catalog.startsWith("/") ? "%s%s" : "%s/%s", rootDir, catalog);
             }
@@ -136,11 +134,11 @@ public class UploadController extends BaseController {
         try {
             // 文件名称
             String ext = UploadService.getFileExtension(fileName);
-            if (Strings.isBlank(ext) || !ext.equalsIgnoreCase(ROOT_CONFIG_SUFFIX)) {
-                fileName += ROOT_CONFIG_SUFFIX;
+            if (Strings.isBlank(ext) || !ext.equalsIgnoreCase(UploadService.ROOT_CONFIG_SUFFIX)) {
+                fileName += UploadService.ROOT_CONFIG_SUFFIX;
             }
             // 路径
-            String rootDir = ROOT_CONFIG_DIRECTORY;
+            String rootDir = UploadService.ROOT_CONFIG_DIRECTORY;
             if (Strings.isNotBlank(catalog)) {
                 rootDir = String.format(catalog.startsWith("/") ? "%s%s" : "%s/%s", rootDir, catalog);
             }
