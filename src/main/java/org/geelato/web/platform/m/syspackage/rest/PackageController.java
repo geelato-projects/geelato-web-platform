@@ -312,24 +312,24 @@ public class PackageController extends BaseController {
             default:
                 break;
         }
-        map.put("platform_app_page", String.format("%s  platform_app_page where app_id='%s'", preOperateSql, appId));
-        map.put("platform_tree_node", String.format("%s  platform_tree_node where tree_id='%s'", preOperateSql, appId));
-        map.put("platform_dev_db_connect", String.format("%s platform_dev_db_connect where app_id='%s'", preOperateSql, appId));
-        map.put("platform_dev_table", String.format("%s  platform_dev_table where app_id='%s' ", preOperateSql, appId));
-        map.put("platform_dev_column", String.format("%s  platform_dev_column where app_id='%s'", preOperateSql, appId));
-        map.put("platform_dev_table_foreign", String.format("%s  platform_dev_table_foreign where app_id='%s'", preOperateSql, appId));
-        map.put("platform_dev_view", String.format("%s  platform_dev_view where app_id='%s'", preOperateSql, appId));
-        map.put("platform_dict", String.format("%s  platform_dict where app_id='%s'", preOperateSql, appId));
-        map.put("platform_dict_item", String.format("%s  platform_dict_item where app_id='%s'", preOperateSql, appId));
-        map.put("platform_permission", String.format("%s platform_permission where app_id='%s'", preOperateSql, appId));
-        map.put("platform_role", String.format("%s  platform_role where app_id='%s'", preOperateSql, appId));
-        map.put("platform_role_r_permission", String.format("%s  platform_role_r_permission where app_id='%s'", preOperateSql, appId));
-        map.put("platform_role_r_tree_node", String.format("%s  platform_role_r_tree_node where app_id='%s'", preOperateSql, appId));
-        map.put("platform_role_r_app", String.format("%s  platform_role_r_app where app_id='%s'", preOperateSql, appId));
-        map.put("platform_sys_config", String.format("%s  platform_sys_config where app_id='%s'", preOperateSql, appId));
-        map.put("platform_export_template", String.format("%s  platform_export_template where app_id='%s'", preOperateSql, appId));
-        map.put("platform_encoding", String.format("%s  platform_encoding where app_id='%s'", preOperateSql, appId));
-        map.put("platform_resources", String.format("%s  platform_resources where app_id='%s'", preOperateSql, appId));
+        map.put("platform_app_page", String.format("%s  platform_app_page where app_id='%s' and del_status=0", preOperateSql, appId));
+        map.put("platform_tree_node", String.format("%s  platform_tree_node where tree_id='%s' and del_status=0", preOperateSql, appId));
+        map.put("platform_dev_db_connect", String.format("%s platform_dev_db_connect where app_id='%s' and del_status=0", preOperateSql, appId));
+        map.put("platform_dev_table", String.format("%s  platform_dev_table where app_id='%s' and del_status=0", preOperateSql, appId));
+        map.put("platform_dev_column", String.format("%s  platform_dev_column where app_id='%s' and del_status=0", preOperateSql, appId));
+        map.put("platform_dev_table_foreign", String.format("%s  platform_dev_table_foreign where app_id='%s' and del_status=0", preOperateSql, appId));
+        map.put("platform_dev_view", String.format("%s  platform_dev_view where app_id='%s' and del_status=0", preOperateSql, appId));
+        map.put("platform_dict", String.format("%s  platform_dict where app_id='%s' and del_status=0", preOperateSql, appId));
+        map.put("platform_dict_item", String.format("%s  platform_dict_item where app_id='%s' and del_status=0", preOperateSql, appId));
+        map.put("platform_permission", String.format("%s platform_permission where app_id='%s' and del_status=0", preOperateSql, appId));
+        map.put("platform_role", String.format("%s  platform_role where app_id='%s' and del_status=0", preOperateSql, appId));
+        map.put("platform_role_r_permission", String.format("%s  platform_role_r_permission where app_id='%s' and del_status=0", preOperateSql, appId));
+        map.put("platform_role_r_tree_node", String.format("%s  platform_role_r_tree_node where app_id='%s' and del_status=0", preOperateSql, appId));
+        map.put("platform_role_r_app", String.format("%s  platform_role_r_app where app_id='%s' and del_status=0", preOperateSql, appId));
+        map.put("platform_sys_config", String.format("%s  platform_sys_config where app_id='%s' and del_status=0", preOperateSql, appId));
+        map.put("platform_export_template", String.format("%s  platform_export_template where app_id='%s' and del_status=0", preOperateSql, appId));
+        map.put("platform_encoding", String.format("%s  platform_encoding where app_id='%s' and del_status=0", preOperateSql, appId));
+        map.put("platform_resources", String.format("%s  platform_resources where app_id='%s' and del_status=0", preOperateSql, appId));
 
         return map;
     }
