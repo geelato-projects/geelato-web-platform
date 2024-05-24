@@ -19,10 +19,12 @@ import org.geelato.core.orm.TransactionHelper;
 import org.geelato.core.sql.SqlManager;
 import org.geelato.core.util.StringUtils;
 import org.geelato.utils.ZipUtils;
+import org.geelato.web.platform.enums.AttachmentSourceEnum;
 import org.geelato.web.platform.m.base.entity.Attach;
 import org.geelato.web.platform.m.base.rest.BaseController;
 import org.geelato.web.platform.m.base.service.AttachService;
 import org.geelato.web.platform.m.base.service.DownloadService;
+import org.geelato.web.platform.m.base.service.UploadService;
 import org.geelato.web.platform.m.syspackage.PackageConfigurationProperties;
 import org.geelato.web.platform.m.syspackage.entity.AppMeta;
 import org.geelato.web.platform.m.syspackage.entity.AppPackage;
@@ -366,8 +368,7 @@ public class PackageController extends BaseController {
     private String writePackageData(AppPackage appPackage) throws IOException {
         String jsonStr = JSONObject.toJSONString(appPackage);
         String packageSuffix = ".gdp";
-        String dataFileName = StringUtils.isEmpty(appPackage.getAppCode()) ?
-                defaultPackageName : appPackage.getAppCode();
+        String dataFileName = StringUtils.isEmpty(appPackage.getAppCode()) ? defaultPackageName : appPackage.getAppCode();
         String fileName = dataFileName + packageSuffix;
         String tempFolderPath = dataFileName + "/";
         File file = new File(packageConfigurationProperties.getPath() + tempFolderPath + fileName);
@@ -391,16 +392,17 @@ public class PackageController extends BaseController {
 
     private String compressAppPackage(String sourcePackageFolder, AppPackage appPackage) throws IOException {
         String packageSuffix = ".zgdp";
-        String appPackageName = StringUtils.isEmpty(appPackage.getAppCode()) ?
-                defaultPackageName : appPackage.getAppCode();
+        String appPackageName = StringUtils.isEmpty(appPackage.getAppCode()) ? defaultPackageName : appPackage.getAppCode();
         String appPackageFullName = appPackageName + packageSuffix;
         String targetZipPath = packageConfigurationProperties.getPath() + appPackageFullName;
+        targetZipPath = UploadService.getSavePath(UploadService.ROOT_DIRECTORY, AttachmentSourceEnum.PLATFORM_ATTACH.getValue(), Ctx.getCurrentTenantCode(), appPackage.getSourceAppId(), appPackageFullName, true);
         ZipUtils.compressDirectory(sourcePackageFolder, targetZipPath);
         File file = new File(targetZipPath);
         Attach attach = new Attach(file);
+        attach.setName(appPackageFullName);
         attach.setPath(targetZipPath);
-        attach.setUrl(targetZipPath);
         attach.setGenre("package");
+        attach.setAppId(appPackage.getSourceAppId());
         Attach attachRst = attachService.createModel(attach);
         return attachRst.getId();
     }
