@@ -13,6 +13,8 @@ import org.geelato.core.gql.parser.PageQueryRequest;
 import org.geelato.web.platform.m.base.entity.Attach;
 import org.geelato.web.platform.m.base.rest.BaseController;
 import org.geelato.web.platform.m.base.service.AttachService;
+import org.geelato.web.platform.m.excel.entity.ExportColumn;
+import org.geelato.web.platform.m.excel.entity.PlaceholderMeta;
 import org.geelato.web.platform.m.excel.service.ExportExcelService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -93,6 +95,41 @@ public class ExportExcelController extends BaseController {
             }
 
             result = exportExcelService.exportWps(templateId, fileName, valueMapList, valueMap, markText, markKey, readonly);
+        } catch (Exception e) {
+            logger.error("表单信息导出Excel出错。", e);
+            result.error().setMsg(e.getMessage());
+        }
+
+        return result;
+    }
+
+    @RequestMapping(value = "/column/meta/list", method = {RequestMethod.POST, RequestMethod.GET})
+    @ResponseBody
+    public ApiResult exportWps(HttpServletRequest request, HttpServletResponse response,
+                               String appId, String fileName, String markText, String markKey, boolean readonly) {
+        ApiResult result = new ApiResult();
+        try {
+            List<Map> valueMapList = new ArrayList<>();
+            Map valueMap = new HashMap();
+            List<ExportColumn> columns = new LinkedList<>();
+            List<PlaceholderMeta> metas = new LinkedList<>();
+
+            String jsonText = exportExcelService.getGql(request);
+
+            if (Strings.isNotBlank(jsonText)) {
+                JSONObject jo = JSON.parseObject(jsonText);
+                valueMapList = (List<Map>) jo.get("valueMapList");
+                valueMap = (Map) jo.get("valueMap");
+                columns = jo.getList("column", ExportColumn.class);
+                metas = jo.getList("meta", PlaceholderMeta.class);
+            }
+            if (columns == null && columns.size() == 0) {
+                return result.error().setMsg("导出模板的表头数据不能为空");
+            }
+            if (metas == null && metas.size() == 0) {
+                return result.error().setMsg("数据定义信息不能为空");
+            }
+            result = exportExcelService.exportExcelByColumnMeta(appId, fileName, valueMapList, valueMap, columns, metas, markText, markKey, readonly);
         } catch (Exception e) {
             logger.error("表单信息导出Excel出错。", e);
             result.error().setMsg(e.getMessage());

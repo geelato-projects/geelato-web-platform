@@ -11,6 +11,7 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
+import org.geelato.core.Ctx;
 import org.geelato.core.api.ApiResult;
 import org.geelato.web.platform.enums.AttachmentSourceEnum;
 import org.geelato.web.platform.m.base.entity.Attach;
@@ -19,6 +20,7 @@ import org.geelato.web.platform.m.base.entity.SysConfig;
 import org.geelato.web.platform.m.base.service.AttachService;
 import org.geelato.web.platform.m.base.service.SysConfigService;
 import org.geelato.web.platform.m.base.service.UploadService;
+import org.geelato.web.platform.m.excel.entity.ExportColumn;
 import org.geelato.web.platform.m.excel.entity.ExportTemplate;
 import org.geelato.web.platform.m.excel.entity.PlaceholderMeta;
 import org.geelato.web.platform.m.excel.entity.WordWaterMarkMeta;
@@ -42,7 +44,6 @@ import java.util.regex.Pattern;
  */
 @Component
 public class ExportExcelService {
-    private static final String ROOT_DIRECTORY = "upload";
     private static final String WORD_DOC_CONTENT_TYPE = "application/msword";
     private static final String EXCEL_XLS_CONTENT_TYPE = "application/vnd.ms-excel";
     private static final String EXCEL_XLSX_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
@@ -58,8 +59,6 @@ public class ExportExcelService {
     private ExcelXSSFWriter excelXSSFWriter;
     @Autowired
     private WordXWPFWriter wordXWPFWriter;
-    @Autowired
-    private UploadService uploadService;
     @Autowired
     private SysConfigService sysConfigService;
     @Autowired
@@ -112,7 +111,7 @@ public class ExportExcelService {
                 fileName = String.format("%s_%s%s", templateName, sdf.format(new Date()), templateExt);
             }
             // 实体文件 upload/存放表/租户编码/应用Id
-            String directory = UploadService.getSavePath(ROOT_DIRECTORY, AttachmentSourceEnum.PLATFORM_ATTACH.getValue(), exportTemplate.getTenantCode(), exportTemplate.getAppId(), fileName, true);
+            String directory = UploadService.getSavePath(UploadService.ROOT_DIRECTORY, AttachmentSourceEnum.PLATFORM_ATTACH.getValue(), exportTemplate.getTenantCode(), exportTemplate.getAppId(), fileName, true);
             File exportFile = new File(directory);
             // 生成实体文件
             generateEntityFile(templateAttach.getFile(), exportFile, metaMap, valueMapList, valueMap, markMeta, readonly);
@@ -123,6 +122,52 @@ public class ExportExcelService {
             attach.setAppId(exportTemplate.getAppId());
             attach.setGenre("exportFile");
             attach.setName(fileName);
+            attach.setType(Files.probeContentType(exportFile.toPath()));
+            attach.setSize(attributes.size());
+            attach.setPath(directory);
+            Attach attachMap = attachService.createModel(attach);
+            result.setData(attachMap);
+        } catch (Exception e) {
+            logger.error("表单信息导出Excel出错。", e);
+            result.error().setMsg(e.getMessage());
+        }
+
+        return result;
+    }
+
+
+    public ApiResult exportExcelByColumnMeta(String appId, String fileName, List<Map> valueMapList, Map valueMap, List<ExportColumn> exportColumns, List<PlaceholderMeta> placeholderMetas, String markText, String markKey, boolean readonly) {
+        ApiResult result = new ApiResult();
+        try {
+            String tenantCode = Ctx.getCurrentTenantCode();
+            // 水印
+            WordWaterMarkMeta markMeta = setWaterMark(markText, markKey);
+            // 实体文件名称
+            String templateExt = ".xlsx";
+            if (Strings.isNotBlank(fileName)) {
+                if (pattern.matcher(fileName).matches()) {
+                    fileName = fileName.substring(0, fileName.lastIndexOf("."));
+                }
+            } else {
+                fileName = "exportExcelByColumnMeta";
+            }
+            // 模板源数据
+            Map<String, PlaceholderMeta> metaMap = getPlaceholderMeta(placeholderMetas);
+            // 生成导出模板
+            String templateName = String.format("%s_%s%s", fileName, "导出模板", templateExt);
+            Base64Info templateAttach = getTemplate(tenantCode, appId, templateName, exportColumns);
+            // 实体文件 upload/存放表/租户编码/应用Id
+            String exportFileName = String.format("%s_%s%s", fileName, sdf.format(new Date()), templateExt);
+            String directory = UploadService.getSavePath(UploadService.ROOT_DIRECTORY, AttachmentSourceEnum.PLATFORM_ATTACH.getValue(), tenantCode, appId, exportFileName, true);
+            File exportFile = new File(directory);
+            // 生成实体文件
+            generateEntityFile(templateAttach.getFile(), exportFile, metaMap, valueMapList, valueMap, markMeta, readonly);
+            // 保存文件信息
+            BasicFileAttributes attributes = Files.readAttributes(exportFile.toPath(), BasicFileAttributes.class);
+            Attach attach = new Attach();
+            attach.setAppId(appId);
+            attach.setGenre("exportFile");
+            attach.setName(exportFileName);
             attach.setType(Files.probeContentType(exportFile.toPath()));
             attach.setSize(attributes.size());
             attach.setPath(directory);
@@ -227,15 +272,22 @@ public class ExportExcelService {
         Map<String, PlaceholderMeta> metaMap = new HashMap<>();
         try {
             List<PlaceholderMeta> metas = JSON.parseArray(jsonText, PlaceholderMeta.class);
-            if (metas != null && !metas.isEmpty()) {
-                for (PlaceholderMeta meta : metas) {
-                    if (excelXSSFWriter.validatePlaceholderMeta(meta)) {
-                        metaMap.put(meta.getPlaceholder(), meta);
-                    }
-                }
-            }
+            metaMap = getPlaceholderMeta(metas);
         } catch (Exception e) {
             metaMap = null;
+        }
+
+        return metaMap;
+    }
+
+    private Map<String, PlaceholderMeta> getPlaceholderMeta(List<PlaceholderMeta> metas) {
+        Map<String, PlaceholderMeta> metaMap = new HashMap<>();
+        if (metas != null && !metas.isEmpty()) {
+            for (PlaceholderMeta meta : metas) {
+                if (excelXSSFWriter.validatePlaceholderMeta(meta)) {
+                    metaMap.put(meta.getPlaceholder(), meta);
+                }
+            }
         }
 
         return metaMap;
@@ -335,6 +387,49 @@ public class ExportExcelService {
                 workbook.close();
             }
         }
+    }
+
+
+    private Base64Info getTemplate(String tenantCode, String appId, String fileName, List<ExportColumn> exportColumns) throws IOException {
+        Base64Info info = null;
+        OutputStream outputStream = null;
+        XSSFWorkbook workbook = null;
+        FileInputStream fileInputStream = null;
+        try {
+            // 创建文件
+            String exportPath = UploadService.getSavePath(UploadService.ROOT_DIRECTORY, AttachmentSourceEnum.PLATFORM_ATTACH.getValue(), tenantCode, appId, fileName, true);
+            // 读取文件，
+            workbook = new XSSFWorkbook();
+            excelXSSFWriter.generateTemplateFile(workbook, "list", exportColumns);
+            // 输出数据到文件
+            outputStream = new BufferedOutputStream(new FileOutputStream(new File(exportPath)));
+            workbook.write(outputStream);
+            outputStream.flush();
+            workbook.close();
+            // 保存附件
+            Attach attach = new Attach(new File(exportPath));
+            attach.setName(fileName);
+            attach.setPath(exportPath);
+            attach.setGenre("exportTemplate");
+            attach.setAppId(appId);
+            attach = attachService.createModel(attach);
+            // 数据转换
+            info = Base64Info.getBase64InfoByAttach(attach);
+        } catch (Exception ex) {
+            throw new RuntimeException(ex.getMessage());
+        } finally {
+            if (fileInputStream != null) {
+                fileInputStream.close();
+            }
+            if (outputStream != null) {
+                outputStream.close();
+            }
+            if (workbook != null) {
+                workbook.close();
+            }
+        }
+
+        return info;
     }
 
     /**

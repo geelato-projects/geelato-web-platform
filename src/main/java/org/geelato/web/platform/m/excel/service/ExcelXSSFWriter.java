@@ -3,12 +3,12 @@ package org.geelato.web.platform.m.excel.service;
 import com.alibaba.fastjson2.JSON;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.util.CellRangeAddress;
-import org.apache.poi.xssf.usermodel.XSSFCell;
-import org.apache.poi.xssf.usermodel.XSSFRow;
-import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.*;
 import org.geelato.core.script.js.JsProvider;
 import org.geelato.core.util.StringUtils;
+import org.geelato.web.platform.enums.ExcelAlignmentEnum;
 import org.geelato.web.platform.m.excel.entity.CellMeta;
+import org.geelato.web.platform.m.excel.entity.ExportColumn;
 import org.geelato.web.platform.m.excel.entity.PlaceholderMeta;
 import org.geelato.web.platform.m.excel.entity.RowMeta;
 import org.slf4j.Logger;
@@ -359,6 +359,81 @@ public class ExcelXSSFWriter {
     }
 
     /**
+     * 生成导出模板文件
+     *
+     * @param workbook
+     * @param sheetName
+     * @param exportColumns
+     */
+    public void generateTemplateFile(XSSFWorkbook workbook, String sheetName, List<ExportColumn> exportColumns) {
+        XSSFSheet sheet = workbook.createSheet(sheetName);
+        int profundity = 1;// 计算最大深度
+        List<ExportColumn> bottomExportColumns = new LinkedList<>();// 最底层数据
+        List<ExportColumn> headerExportColumns = new LinkedList<>();// 所有表头数据，平铺
+        // 计算，树节点的层级、子节点
+        List<Integer> profundityList = new ArrayList<>();
+        for (ExportColumn exportColumn : exportColumns) {
+            // 层级、宽度（多少列）
+            exportColumn.calculateLevelAndBreadth(0);
+            profundityList.add(exportColumn.findMaxValueInTree());
+        }
+        // 计算最大深度
+        Collections.sort(profundityList);
+        profundity = profundityList.get(profundityList.size() - 1) + 1;
+        // 计算最底层数据
+        ExcelCommonUtils.bottomLayerOfTree(exportColumns, bottomExportColumns);
+        // 计算每行宽度
+        for (ExportColumn exportColumn : exportColumns) {
+            exportColumn.calculateDepth(profundity);
+        }
+        // 计算合并数据
+        ExcelCommonUtils.cellRangeAddress(0, 0, exportColumns, headerExportColumns);
+        for (int i = 0; i < profundity; i++) {
+            XSSFRow row = sheet.createRow(i);
+            // 初始化单元格
+            for (int j = 0; j < bottomExportColumns.size(); j++) {
+                ExcelXSSFUtils.getCell(row, j);
+            }
+            // 插入表头
+            for (ExportColumn column : headerExportColumns) {
+                if (column.getLevel() == i) {
+                    // align
+                    XSSFCellStyle style = ExcelXSSFUtils.getHeaderCellStyle(workbook);
+                    style.setAlignment(ExcelAlignmentEnum.getLabel(column.getAlign()));
+                    // title
+                    XSSFCell cell = ExcelXSSFUtils.setCell(row, column.getFirstCol(), style, column.getTitle());
+                    // description
+                    ExcelXSSFUtils.setCellComment(sheet, cell, column.getDescription());
+                    // 合并单元格
+                    if (column.getLastCol() > column.getFirstCol() || column.getLastRow() > column.getFirstRow()) {
+                        CellRangeAddress mergedRegion = new CellRangeAddress(column.getFirstRow(), column.getLastRow(), column.getFirstCol(), column.getLastCol());
+                        sheet.addMergedRegion(mergedRegion);
+                    }
+                }
+            }
+        }
+        // 插入替换行
+        XSSFRow row = sheet.createRow(profundity);
+        for (int i = 0; i <= bottomExportColumns.size(); i++) {
+            XSSFCellStyle style = ExcelXSSFUtils.getCellStyle(workbook);
+            // 特殊标记，行开始
+            if (i == bottomExportColumns.size()) {
+                ExcelXSSFUtils.setCell(row, i, style, "${rowMeta.isMultiGroupRow}");
+                break;
+            }
+            // 插入替换树 ${}
+            ExportColumn column = bottomExportColumns.get(i);
+            // align
+            style.setAlignment(ExcelAlignmentEnum.getLabel(column.getAlign()));
+            // title
+            String cellValue = String.format("${%s}", column.getTitle());
+            XSSFCell cell = ExcelXSSFUtils.setCell(row, column.getFirstCol(), style, cellValue);
+            // width
+            ExcelXSSFUtils.setColumnWidth(sheet, i, column.getWidth());
+        }
+    }
+
+    /**
      * 从excel中读取占位符、变量定义
      *
      * @param sheet
@@ -413,4 +488,6 @@ public class ExcelXSSFWriter {
             return "是".equalsIgnoreCase(cell.getStringCellValue()) || "TRUE".equalsIgnoreCase(cell.getStringCellValue()) || "1".equalsIgnoreCase(cell.getStringCellValue());
         }
     }
+
+
 }

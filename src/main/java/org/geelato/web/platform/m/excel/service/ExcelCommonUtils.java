@@ -1409,4 +1409,28 @@ public class ExcelCommonUtils {
         return cacheList;
     }
 
+    public static void bottomLayerOfTree(List<ExportColumn> columns, List<ExportColumn> target) {
+        for (ExportColumn exportColumn : columns) {
+            if (exportColumn.getChildren() != null && exportColumn.getChildren().size() > 0) {
+                bottomLayerOfTree(exportColumn.getChildren(), target);
+            } else {
+                target.add(exportColumn);
+            }
+        }
+    }
+
+    public static void cellRangeAddress(int startCol, int startRow, List<ExportColumn> columns, List<ExportColumn> target) {
+        for (int i = 0; i < columns.size(); i++) {
+            ExportColumn column = columns.get(i);
+            column.setFirstRow(startRow);
+            column.setLastRow(column.getFirstRow() + column.getDepth() - 1);
+            column.setFirstCol(i > 0 ? (columns.get(i - 1).getLastCol() + 1) : startCol);
+            column.setLastCol(column.getFirstCol() + column.getBreadth() - 1);
+            if (column.getChildren() != null && column.getChildren().size() > 0) {
+                cellRangeAddress(column.getFirstCol(), column.getLastRow() + 1, column.getChildren(), target);
+            }
+            target.add(column);
+        }
+    }
+
 }

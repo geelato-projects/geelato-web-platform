@@ -60,7 +60,6 @@ import java.util.stream.Collectors;
 public class ImportExcelService {
     private static final String EXCEL_XLS_CONTENT_TYPE = "application/vnd.ms-excel";
     private static final String EXCEL_XLSX_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-    private static final String ROOT_DIRECTORY = "upload";
     private static final String REQUEST_FILE_PART = "file";
     private static final String IMPORT_ERROR_FILE_GENRE = "importErrorFile";
     private static final String REDIS_UNIQUE_KEY = "uniques";
@@ -766,7 +765,7 @@ public class ImportExcelService {
             String templateName = fileName.substring(0, fileName.lastIndexOf("."));
             // 错误文件 upload/存放表/租户编码/应用Id
             String errorFileName = String.format("%s：%s%s%s", templateName, "错误提示 ", dateTimeFormat.format(new Date()), templateExt);
-            String directory = UploadService.getSavePath(ROOT_DIRECTORY, AttachmentSourceEnum.PLATFORM_ATTACH.getValue(), exportTemplate.getTenantCode(), exportTemplate.getAppId(), errorFileName, true);
+            String directory = UploadService.getSavePath(UploadService.ROOT_DIRECTORY, AttachmentSourceEnum.PLATFORM_ATTACH.getValue(), exportTemplate.getTenantCode(), exportTemplate.getAppId(), errorFileName, true);
             File errorFile = new File(directory);
             // 文件处理
             if (EXCEL_XLS_CONTENT_TYPE.equals(contentType)) {
