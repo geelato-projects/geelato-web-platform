@@ -10,6 +10,9 @@ import org.apache.poi.xssf.usermodel.*;
  * @date 2024/1/4 20:05
  */
 public class ExcelXSSFUtils {
+    public static final String FONT_NAME_SONGTI = "宋体";
+    public static final String FONT_NAME_FANGSONG = "仿宋";
+    public static final String FONT_NAME_FANGSONG_GB2312 = "仿宋_GB2312";
 
     public static XSSFWorkbook copySheet(XSSFSheet sourceSheet) {
         XSSFWorkbook targetWorkbook = new XSSFWorkbook();
@@ -51,54 +54,53 @@ public class ExcelXSSFUtils {
     }
 
     /**
-     * 表头样式
+     * 单元格样式，表头通用
+     * 边框，上下左右
+     * 方向，水平居中，垂直居中
      *
-     * @param workbook
-     * @return
+     * @param style
      */
-    public static XSSFCellStyle getHeaderCellStyle(XSSFWorkbook workbook) {
-        // 创建字体样式
-        XSSFFont font = workbook.createFont();
-        font.setFontHeightInPoints((short) 14); // 设置字体大小为14磅
-        font.setBold(true); // 设置字体加粗
-        // 创建单元格样式，并将字体样式应用到单元格样式中
-        XSSFCellStyle style = workbook.createCellStyle();
-        style.setFont(font);
-        style.setBorderTop(BorderStyle.THIN); // 设置上边框
-        style.setBorderBottom(BorderStyle.THIN); // 设置下边框
-        style.setBorderLeft(BorderStyle.THIN); // 设置左边框
-        style.setBorderRight(BorderStyle.THIN); // 设置右边框
+    public static void setTableHeaderGeneralStyle(XSSFCellStyle style) {
         // 创建一个单元格样式，并设置背景色为浅灰色
         byte[] rgb = new byte[]{(byte) 242, (byte) 243, (byte) 245}; // RGB for #C0C0C0 242, 243, 245;
         XSSFColor myColor = new XSSFColor(rgb, null);
         style.setFillForegroundColor(myColor);
         style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-        // 数值剧中
-        style.setAlignment(HorizontalAlignment.CENTER);
-        style.setVerticalAlignment(VerticalAlignment.CENTER);
-
-        return style;
+        // 表格通用样式
+        ExcelXSSFUtils.setTableGeneralStyle(style);
     }
 
     /**
-     * 普通单元格样式
+     * 单元格样式，表格通用
+     * 边框，上下左右
+     * 方向，水平居中，垂直居中
      *
-     * @param workbook
-     * @return
+     * @param style
      */
-    public static XSSFCellStyle getCellStyle(XSSFWorkbook workbook) {
-        // 创建字体样式
-        XSSFFont font = workbook.createFont();
-        font.setFontHeightInPoints((short) 11); // 设置字体大小为11磅
-        // 创建单元格样式，并将字体样式应用到单元格样式中
-        XSSFCellStyle style = workbook.createCellStyle();
-        style.setFont(font);
+    public static void setTableGeneralStyle(XSSFCellStyle style) {
+        // 设置边框
         style.setBorderTop(BorderStyle.THIN); // 设置上边框
         style.setBorderBottom(BorderStyle.THIN); // 设置下边框
         style.setBorderLeft(BorderStyle.THIN); // 设置左边框
         style.setBorderRight(BorderStyle.THIN); // 设置右边框
+        // 数值剧中
+        style.setAlignment(HorizontalAlignment.CENTER);
+        style.setVerticalAlignment(VerticalAlignment.CENTER);
+    }
 
-        return style;
+    /**
+     * 创建字体样式
+     *
+     * @param workbook
+     * @param fontName
+     * @param fontHeight
+     * @return
+     */
+    public static XSSFFont getCellFont(XSSFWorkbook workbook, String fontName, short fontHeight) {
+        XSSFFont font = workbook.createFont();
+        font.setFontHeightInPoints(fontHeight);
+        font.setFontName(fontName);
+        return font;
     }
 
     /**

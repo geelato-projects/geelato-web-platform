@@ -153,9 +153,12 @@ public class ExportExcelService {
             }
             // 模板源数据
             Map<String, PlaceholderMeta> metaMap = getPlaceholderMeta(placeholderMetas);
+            logger.info("数据定义读取成功");
             // 生成导出模板
             String templateName = String.format("%s_%s%s", fileName, "导出模板", templateExt);
             Base64Info templateAttach = getTemplate(tenantCode, appId, templateName, exportColumns);
+            Assert.notNull(templateAttach, "导出模板创建失败！");
+            logger.info("导出模板生成成功！" + templateAttach.getFile().getAbsolutePath());
             // 实体文件 upload/存放表/租户编码/应用Id
             String exportFileName = String.format("%s_%s%s", fileName, sdf.format(new Date()), templateExt);
             String directory = UploadService.getSavePath(UploadService.ROOT_DIRECTORY, AttachmentSourceEnum.PLATFORM_ATTACH.getValue(), tenantCode, appId, exportFileName, true);

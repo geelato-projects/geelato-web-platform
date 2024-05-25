@@ -44,7 +44,7 @@ public class ExcelXSSFWriter {
             }
 
             RowMeta rowMeta = parseTemplateRow(row, placeholderMetaMap);
-            logger.info("完成第" + rowIndex + "行的元数据解析。");
+            logger.info(String.format("完成第%s行的元数据解析。List:%s", rowIndex, rowMeta.isMultiGroupRow()));
 
             int newRowCount = 0;
             if (rowMeta.isMultiGroupRow()) {
@@ -388,6 +388,7 @@ public class ExcelXSSFWriter {
         }
         // 计算合并数据
         ExcelCommonUtils.cellRangeAddress(0, 0, exportColumns, headerExportColumns);
+        XSSFCellStyle headerStyle = getHeaderCellStyle(workbook);
         for (int i = 0; i < profundity; i++) {
             XSSFRow row = sheet.createRow(i);
             // 初始化单元格
@@ -398,10 +399,9 @@ public class ExcelXSSFWriter {
             for (ExportColumn column : headerExportColumns) {
                 if (column.getLevel() == i) {
                     // align
-                    XSSFCellStyle style = ExcelXSSFUtils.getHeaderCellStyle(workbook);
-                    style.setAlignment(ExcelAlignmentEnum.getLabel(column.getAlign()));
+                    headerStyle.setAlignment(ExcelAlignmentEnum.getLabel(column.getAlign()));
                     // title
-                    XSSFCell cell = ExcelXSSFUtils.setCell(row, column.getFirstCol(), style, column.getTitle());
+                    XSSFCell cell = ExcelXSSFUtils.setCell(row, column.getFirstCol(), headerStyle, column.getTitle());
                     // description
                     ExcelXSSFUtils.setCellComment(sheet, cell, column.getDescription());
                     // 合并单元格
@@ -414,11 +414,11 @@ public class ExcelXSSFWriter {
         }
         // 插入替换行
         XSSFRow row = sheet.createRow(profundity);
+        XSSFCellStyle style = getCellStyle(workbook);
         for (int i = 0; i <= bottomExportColumns.size(); i++) {
-            XSSFCellStyle style = ExcelXSSFUtils.getCellStyle(workbook);
             // 特殊标记，行开始
             if (i == bottomExportColumns.size()) {
-                ExcelXSSFUtils.setCell(row, i, style, "${rowMeta.isMultiGroupRow}");
+                ExcelXSSFUtils.setCell(row, i, null, "${rowMeta.isMultiGroupRow}");
                 break;
             }
             // 插入替换树 ${}
@@ -427,10 +427,55 @@ public class ExcelXSSFWriter {
             style.setAlignment(ExcelAlignmentEnum.getLabel(column.getAlign()));
             // title
             String cellValue = String.format("${%s}", column.getTitle());
-            XSSFCell cell = ExcelXSSFUtils.setCell(row, column.getFirstCol(), style, cellValue);
+            ExcelXSSFUtils.setCell(row, column.getFirstCol(), style, cellValue);
             // width
             ExcelXSSFUtils.setColumnWidth(sheet, i, column.getWidth());
         }
+    }
+
+    /**
+     * 表头样式
+     * 字体：仿宋、12、加粗
+     * 背景色：浅灰色
+     * 边框：上下左右
+     * 方向：水平居中、垂直居中
+     *
+     * @param workbook
+     * @return
+     */
+    private XSSFCellStyle getHeaderCellStyle(XSSFWorkbook workbook) {
+        // 创建单元格样式，并将字体样式应用到单元格样式中
+        XSSFCellStyle style = workbook.createCellStyle();
+        // 创建字体样式
+        XSSFFont font = ExcelXSSFUtils.getCellFont(workbook, ExcelXSSFUtils.FONT_NAME_FANGSONG_GB2312, (short) 12);
+        // 设置字体加粗
+        font.setBold(true);
+        style.setFont(font);
+        // 其他样式
+        ExcelXSSFUtils.setTableHeaderGeneralStyle(style);
+
+        return style;
+    }
+
+    /**
+     * 表头样式
+     * 字体：仿宋、11
+     * 边框：上下左右
+     * 方向：水平居中、垂直居中
+     *
+     * @param workbook
+     * @return
+     */
+    private XSSFCellStyle getCellStyle(XSSFWorkbook workbook) {
+        // 创建单元格样式，并将字体样式应用到单元格样式中
+        XSSFCellStyle style = workbook.createCellStyle();
+        // 创建字体样式
+        XSSFFont font = ExcelXSSFUtils.getCellFont(workbook, ExcelXSSFUtils.FONT_NAME_FANGSONG_GB2312, (short) 11);
+        style.setFont(font);
+        // 其他样式
+        ExcelXSSFUtils.setTableGeneralStyle(style);
+
+        return style;
     }
 
     /**

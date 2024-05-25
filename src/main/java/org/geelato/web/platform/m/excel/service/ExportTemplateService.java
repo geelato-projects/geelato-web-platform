@@ -228,7 +228,7 @@ public class ExportTemplateService extends BaseService {
     private void importTemplateSheet(XSSFWorkbook workbook, String sheetName, List<BusinessTypeData> metas) {
         XSSFSheet sheet = workbook.createSheet(sheetName);
         // 创建字体样式
-        XSSFCellStyle headerCellStyle = ExcelXSSFUtils.getHeaderCellStyle(workbook);
+        XSSFCellStyle headerCellStyle = getHeaderCellStyle(workbook);
         // 写入信息，
         XSSFRow row = sheet.createRow(0);
         for (int i = 0; i < metas.size(); i++) {
@@ -259,14 +259,14 @@ public class ExportTemplateService extends BaseService {
         XSSFSheet sheet = workbook.createSheet(sheetName);
         // 写入表头
         XSSFRow row = sheet.createRow(0);
-        XSSFCellStyle headerCellStyle = ExcelXSSFUtils.getHeaderCellStyle(workbook);
+        XSSFCellStyle headerCellStyle = getHeaderCellStyle(workbook);
         for (int i = 0; i < IMPORT_META_TYPE_HEADER.length; i++) {
             XSSFCell cell = row.createCell(i);
             cell.setCellStyle(headerCellStyle);
             cell.setCellValue(IMPORT_META_TYPE_HEADER[i]);
         }
         // 写入数据
-        XSSFCellStyle cellStyle = ExcelXSSFUtils.getCellStyle(workbook);
+        XSSFCellStyle cellStyle = getCellStyle(workbook);
         for (int i = 0; i < metas.size(); i++) {
             XSSFRow dRow = sheet.createRow(i + 1);
             ExcelXSSFUtils.setCell(dRow, 0, cellStyle, metas.get(i).getName());
@@ -297,7 +297,7 @@ public class ExportTemplateService extends BaseService {
         sheet.addMergedRegion(mergedRegion2);
         CellRangeAddress mergedRegion3 = new CellRangeAddress(0, 1, 6, 6);
         sheet.addMergedRegion(mergedRegion3);
-        XSSFCellStyle headerCellStyle = ExcelXSSFUtils.getHeaderCellStyle(workbook);
+        XSSFCellStyle headerCellStyle = getHeaderCellStyle(workbook);
         XSSFRow row1 = sheet.createRow(0);
         ExcelXSSFUtils.setCell(row1, 0, headerCellStyle, "处理列名");
         ExcelXSSFUtils.setCell(row1, 1, headerCellStyle, "清洗规则");
@@ -309,7 +309,7 @@ public class ExportTemplateService extends BaseService {
         ExcelXSSFUtils.setCell(row2, 4, headerCellStyle, "保留原值");
         ExcelXSSFUtils.setCell(row2, 5, headerCellStyle, "次序");
         // 写入数据
-        XSSFCellStyle cellStyle = ExcelXSSFUtils.getCellStyle(workbook);
+        XSSFCellStyle cellStyle = getCellStyle(workbook);
         for (int i = 0; i < metas.size(); i++) {
             XSSFRow dRow = sheet.createRow(i + 2);
             ExcelXSSFUtils.setCell(dRow, 0, cellStyle, metas.get(i).getColumnName());
@@ -335,14 +335,14 @@ public class ExportTemplateService extends BaseService {
         XSSFSheet sheet = workbook.createSheet(sheetName);
         // 写入表头
         XSSFRow row = sheet.createRow(0);
-        XSSFCellStyle headerCellStyle = ExcelXSSFUtils.getHeaderCellStyle(workbook);
+        XSSFCellStyle headerCellStyle = getHeaderCellStyle(workbook);
         for (int i = 0; i < IMPORT_META_META_HEADER.length; i++) {
             XSSFCell cell = row.createCell(i);
             cell.setCellStyle(headerCellStyle);
             cell.setCellValue(IMPORT_META_META_HEADER[i]);
         }
         // 写入数据
-        XSSFCellStyle cellStyle = ExcelXSSFUtils.getCellStyle(workbook);
+        XSSFCellStyle cellStyle = getCellStyle(workbook);
         for (int i = 0; i < metas.size(); i++) {
             XSSFRow dRow = sheet.createRow(i + 1);
             ExcelXSSFUtils.setCell(dRow, 0, cellStyle, metas.get(i).getTableName());
@@ -370,14 +370,14 @@ public class ExportTemplateService extends BaseService {
         XSSFSheet sheet = workbook.createSheet(sheetName);
         // 写入表头
         XSSFRow row = sheet.createRow(0);
-        XSSFCellStyle headerCellStyle = ExcelXSSFUtils.getHeaderCellStyle(workbook);
+        XSSFCellStyle headerCellStyle = getHeaderCellStyle(workbook);
         for (int i = 0; i < EXPORT_META_HEADER.length; i++) {
             XSSFCell cell = row.createCell(i);
             cell.setCellStyle(headerCellStyle);
             cell.setCellValue(EXPORT_META_HEADER[i]);
         }
         // 写入数据
-        XSSFCellStyle cellStyle = ExcelXSSFUtils.getCellStyle(workbook);
+        XSSFCellStyle cellStyle = getCellStyle(workbook);
         for (int i = 0; i < metas.size(); i++) {
             XSSFRow dRow = sheet.createRow(i + 1);
             ExcelXSSFUtils.setCell(dRow, 0, cellStyle, metas.get(i).getPlaceholder());
@@ -483,4 +483,51 @@ public class ExportTemplateService extends BaseService {
         }
         this.updateModel(meta);
     }
+
+    /**
+     * 表头样式
+     * 字体：仿宋、12、加粗
+     * 背景色：浅灰色
+     * 边框：上下左右
+     * 方向：水平居中、垂直居中
+     *
+     * @param workbook
+     * @return
+     */
+    private XSSFCellStyle getHeaderCellStyle(XSSFWorkbook workbook) {
+        // 创建单元格样式，并将字体样式应用到单元格样式中
+        XSSFCellStyle style = workbook.createCellStyle();
+        // 创建字体样式
+        XSSFFont font = ExcelXSSFUtils.getCellFont(workbook, ExcelXSSFUtils.FONT_NAME_SONGTI, (short) 12);
+        // 设置字体加粗
+        font.setBold(true);
+        style.setFont(font);
+        // 其他样式
+        ExcelXSSFUtils.setTableHeaderGeneralStyle(style);
+
+        return style;
+    }
+
+    /**
+     * 表头样式
+     * 字体：仿宋、11
+     * 边框：上下左右
+     * 方向：水平居中、垂直居中
+     *
+     * @param workbook
+     * @return
+     */
+    private XSSFCellStyle getCellStyle(XSSFWorkbook workbook) {
+        // 创建单元格样式，并将字体样式应用到单元格样式中
+        XSSFCellStyle style = workbook.createCellStyle();
+        // 创建字体样式
+        XSSFFont font = ExcelXSSFUtils.getCellFont(workbook, ExcelXSSFUtils.FONT_NAME_SONGTI, (short) 11);
+        style.setFont(font);
+        // 其他样式
+        ExcelXSSFUtils.setTableGeneralStyle(style);
+
+        return style;
+    }
+
+
 }
