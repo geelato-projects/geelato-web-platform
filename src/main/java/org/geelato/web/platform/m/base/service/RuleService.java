@@ -23,6 +23,7 @@ import org.geelato.core.Ctx;
 import org.geelato.core.orm.Dao;
 import org.geelato.core.script.rule.BizMvelRuleManager;
 import org.geelato.core.sql.SqlManager;
+import org.geelato.web.platform.m.security.service.SecurityHelper;
 import org.jeasy.rules.api.Facts;
 import org.jeasy.rules.api.Rules;
 import org.jeasy.rules.api.RulesEngine;
@@ -208,8 +209,15 @@ public class RuleService {
             DataSourceTransactionManager dataSourceTransactionManager=new DataSourceTransactionManager(dao.getJdbcTemplate().getDataSource());
             TransactionStatus transactionStatus= TransactionHelper.beginTransaction(dataSourceTransactionManager);
             for (SaveCommand saveCommand : commandList){
-                BoundSql boundSql = sqlManager.generateSaveSql(saveCommand);
-                String pkValue = dao.save(boundSql);
+//                BoundSql boundSql = sqlManager.generateSaveSql(saveCommand);
+//                String pkValue = dao.save(boundSql);
+//                if(pkValue.equals("saveFail")){
+//                    TransactionHelper.rollbackTransaction(dataSourceTransactionManager,transactionStatus);
+//                    break;
+//                }else{
+//                    returnPks.add(pkValue);
+//                }
+                String pkValue =recursiveBatchSave(saveCommand,dataSourceTransactionManager,transactionStatus);
                 if(pkValue.equals("saveFail")){
                     TransactionHelper.rollbackTransaction(dataSourceTransactionManager,transactionStatus);
                     break;
@@ -231,7 +239,6 @@ public class RuleService {
         }
         return  returnPks;
     }
-
 
 
 
@@ -287,6 +294,52 @@ public class RuleService {
         }
 
         return rtnValue;
+    }
+    private String recursiveBatchSave(SaveCommand command, DataSourceTransactionManager dataSourceTransactionManager, TransactionStatus transactionStatus) {
+        BoundSql boundSql = sqlManager.generateSaveSql(command);
+        String rtnValue = null;
+        try{
+            rtnValue = dao.save(boundSql);
+        }catch (DaoException e) {
+            TransactionHelper.rollbackTransaction(dataSourceTransactionManager, transactionStatus);
+            throw e;
+        }
+        command.setExecution(!rtnValue.equals("saveFail"));
+        if (command.hasCommands()) {
+            command.getCommands().forEach(subCommand -> {
+                subCommand.getValueMap().forEach((key, value) -> {
+                    if (value != null) {
+                        subCommand.getValueMap().put(key, parseValueExp(subCommand, value.toString(), 0));
+                    }
+                });
+                try {
+                    recursiveBatchSave(subCommand, dataSourceTransactionManager, transactionStatus);
+                } catch (DaoException e) {
+                    if(!transactionStatus.isCompleted()){
+                        TransactionHelper.rollbackTransaction(dataSourceTransactionManager, transactionStatus);
+                    }
+                    throw e;
+                }
+            });
+        }
+        return rtnValue;
+    }
+
+    public String recursiveSave(SaveCommand command) {
+        BoundSql boundSql = sqlManager.generateSaveSql(command);
+        String pkValue = dao.save(boundSql);
+        if (command.hasCommands()) {
+            command.getCommands().forEach(subCommand -> {
+                // 保存之前需先替换subCommand中的变量值，如依赖于父command执行的返回id：$parent.id
+                subCommand.getValueMap().forEach((key, value) -> {
+                    if (value != null) {
+                        subCommand.getValueMap().put(key, parseValueExp(subCommand, value.toString(), 0));
+                    }
+                });
+                recursiveSave(subCommand);
+            });
+        }
+        return pkValue;
     }
 
     /**
