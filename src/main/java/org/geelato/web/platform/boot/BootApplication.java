@@ -2,6 +2,7 @@ package org.geelato.web.platform.boot;
 
 import org.geelato.core.biz.rules.BizManagerFactory;
 import org.geelato.core.env.EnvManager;
+import org.geelato.core.graal.GraalManager;
 import org.geelato.core.meta.MetaManager;
 import org.geelato.core.meta.MetaRelf;
 import org.geelato.core.orm.Dao;
@@ -74,10 +75,20 @@ public class BootApplication implements CommandLineRunner, InitializingBean {
         parseStartArgs(args);
         initDataSource();
         initMeta();
-        resolveScript(args);
+        resolveSqlScript(args);
+        resolveGraalService();
         initEnv();
         logger.info("[start application]...finish");
     }
+
+    private void resolveGraalService() {
+        String[] packageNames = getProperty("geelato.graal.scan-package-names", "org.geelato").split(",");
+        for (String packageName : packageNames) {
+            GraalManager.singleInstance().initGraalService(packageName);
+        }
+
+    }
+
 
     private void initDataSource() {
 
@@ -122,7 +133,7 @@ public class BootApplication implements CommandLineRunner, InitializingBean {
     private void initDataBaseMeta() {
         MetaManager.singleInstance().parseDBMeta(dao);
     }
-    private void resolveScript(String... args) throws IOException {
+    private void resolveSqlScript(String... args) throws IOException {
         if (this.getClass().getClassLoader() == null || this.getClass().getClassLoader().getResource("//") == null) {
             initFromFatJar();
         } else {

@@ -1,9 +1,9 @@
 package org.geelato.web.platform.script;
 
 
-import org.geelato.web.platform.ScriptService;
+import org.geelato.core.graal.GraalService;
 
-@ScriptService(name = "dao")
+@GraalService(name = "dao2",type="simple")
 public class DataBaseService {
 
 }
