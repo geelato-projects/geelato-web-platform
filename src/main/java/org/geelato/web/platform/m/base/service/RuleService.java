@@ -4,6 +4,7 @@ import net.oschina.j2cache.CacheChannel;
 import net.oschina.j2cache.J2Cache;
 import org.apache.commons.collections.map.HashedMap;
 import org.geelato.core.Fn;
+import org.geelato.core.graal.GraalService;
 import org.geelato.core.orm.DaoException;
 import org.geelato.core.orm.TransactionHelper;
 import org.geelato.core.api.*;
