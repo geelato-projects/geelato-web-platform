@@ -81,6 +81,7 @@ public class RoleTreeNodeMapService extends BaseService {
                     map.setRoleName(role.getName());
                     map.setTreeNodeId(treeNode.getId());
                     map.setTreeNodeText(treeNode.getText());
+                    map.setTitle(treeNode.getText());
                     map.setTenantCode(role.getTenantCode());
                     map.setAppId(treeNode.getTreeId());
                     map.setTreeId(treeNode.getTreeId());
@@ -91,5 +92,16 @@ public class RoleTreeNodeMapService extends BaseService {
         }
 
         return list;
+    }
+
+    public void cancelModels(RoleTreeNodeMap model) {
+        // 角色用户信息，
+        List<RoleTreeNodeMap> maps = this.queryModelByIds(model.getRoleId(), model.getTreeNodeId());
+        // 对比插入
+        if (maps != null && maps.size() > 0) {
+            for (RoleTreeNodeMap map : maps) {
+                this.isDeleteModel(map);
+            }
+        }
     }
 }
