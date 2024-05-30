@@ -34,6 +34,7 @@ public class AuthCodeService {
     private static final String NUMBERS = "0123456789";
     private static final int LENGTH = 6;
     private static final int CODE_EXPIRATION_TIME = 5;
+    private static final String CONFIG_KEY_TEMPLATE_CODE = "mobileTemplateAutoCode";
     private final Logger logger = LoggerFactory.getLogger(AuthCodeService.class);
     @Autowired
     @Qualifier("primaryDao")
@@ -131,11 +132,10 @@ public class AuthCodeService {
         if (Strings.isNotBlank(mobilePrefix) && !"+86".equals(mobilePrefix)) {
             phoneNumbers = mobilePrefix + phoneNumbers;
         }
-        String text = String.format("验证码：%s，%d 分钟内有效。如非本人操作，请忽略。", authCode, CODE_EXPIRATION_TIME);
         try {
             Map<String, Object> params = new HashedMap<>();
             params.put("code", authCode);
-            return aliMobileService.sendMobile(phoneNumbers, params);
+            return aliMobileService.sendMobile(CONFIG_KEY_TEMPLATE_CODE, phoneNumbers, params);
         } catch (Exception e) {
             logger.error("发送短信时发生异常", e);
         }

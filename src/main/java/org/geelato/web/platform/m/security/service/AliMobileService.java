@@ -32,6 +32,10 @@ public class AliMobileService {
     // private static final String TEMPLATE_CODE = "SMS_465430460";// SMS_154950909
     private static final int SEND_SMS_RESPONSE_STATUS_CODE = 200;
     private static final String SEND_SMS_RESPONSE_BODY_CODE = "OK";
+    private static final String CONFIG_KEY_SIGN_NAME = "mobileSignName";
+    private static final String CONFIG_KEY_ACCESS_KEY_ID = "mobileAccessKeyId";
+    private static final String CONFIG_KEY_ACCESS_KEY_SECRET = "mobileAccessKeySecret";
+    private static final String CONFIG_KEY_SECURITY_TOKEN = "mobileSecurityToken";
 
     @Autowired
     @Qualifier("primaryDao")
@@ -81,9 +85,9 @@ public class AliMobileService {
      * @return
      * @throws Exception
      */
-    public boolean sendMobile(String phoneNumbers, Map<String, Object> templateParam) throws Exception {
+    public boolean sendMobile(String templateCode, String phoneNumbers, Map<String, Object> templateParam) throws Exception {
         // 查询参数值
-        AliMobile aliMobile = getAliMobileBySysConfig();
+        AliMobile aliMobile = getAliMobileBySysConfig(CONFIG_KEY_SIGN_NAME, templateCode, CONFIG_KEY_ACCESS_KEY_ID, CONFIG_KEY_ACCESS_KEY_SECRET, CONFIG_KEY_SECURITY_TOKEN);
         // 请确保代码运行环境设置了环境变量 ALIBABA_CLOUD_ACCESS_KEY_ID 和 ALIBABA_CLOUD_ACCESS_KEY_SECRET。
         // 工程代码泄露可能会导致 AccessKey 泄露，并威胁账号下所有资源的安全性。以下代码示例仅供参考，建议使用更安全的 STS 方式，更多鉴权访问方式请参见：https://help.aliyun.com/document_detail/378657.html
         // com.aliyun.dysmsapi20170525.Client client = AliMobileUtils.createClient(System.getenv("ALIBABA_CLOUD_ACCESS_KEY_ID"), System.getenv("ALIBABA_CLOUD_ACCESS_KEY_SECRET"));
@@ -110,15 +114,15 @@ public class AliMobileService {
      *
      * @return
      */
-    private AliMobile getAliMobileBySysConfig() {
+    private AliMobile getAliMobileBySysConfig(String signName, String templateCode, String accessKeyId, String accessKeySecret, String securityToken) {
         AliMobile aliMobile = new AliMobile();
         // 配置键
         List<String> configKeys = new ArrayList<>();
-        configKeys.add("mobileSignName");
-        configKeys.add("mobileTemplateCode");
-        configKeys.add("mobileAccessKeyId");
-        configKeys.add("mobileAccessKeySecret");
-        configKeys.add("mobileSecurityToken");
+        configKeys.add(signName);
+        configKeys.add(templateCode);
+        configKeys.add(accessKeyId);
+        configKeys.add(accessKeySecret);
+        configKeys.add(securityToken);
         // 查询配置值
         FilterGroup filterGroup = new FilterGroup();
         filterGroup.addFilter(ColumnDefault.ENABLE_STATUS_FIELD, String.valueOf(EnableStatusEnum.ENABLED.getCode()));
@@ -128,25 +132,21 @@ public class AliMobileService {
         // 填充
         if (sysConfigs != null && sysConfigs.size() > 0) {
             for (SysConfig config : sysConfigs) {
+                if (config == null || Strings.isBlank(config.getConfigKey())) {
+                    continue;
+                }
                 String value = config.isEncrypted() ? null : config.getConfigValue();
-                switch (config.getConfigKey()) {
-                    case "mobileSignName":
-                        aliMobile.setSignName(value);
-                        break;
-                    case "mobileTemplateCode":
-                        aliMobile.setTemplateCode(value);
-                        break;
-                    case "mobileAccessKeyId":
-                        aliMobile.setAccessKeyId(value);
-                        break;
-                    case "mobileAccessKeySecret":
-                        aliMobile.setAccessKeySecret(value);
-                        break;
-                    case "mobileSecurityToken":
-                        aliMobile.setSecurityToken(value);
-                        break;
-                    default:
-                        break;
+
+                if (config.getConfigKey().equals(signName)) {
+                    aliMobile.setSignName(value);
+                } else if (config.getConfigKey().equals(templateCode)) {
+                    aliMobile.setTemplateCode(value);
+                } else if (config.getConfigKey().equals(accessKeyId)) {
+                    aliMobile.setAccessKeyId(value);
+                } else if (config.getConfigKey().equals(accessKeySecret)) {
+                    aliMobile.setAccessKeySecret(value);
+                } else if (config.getConfigKey().equals(securityToken)) {
+                    aliMobile.setSecurityToken(value);
                 }
             }
         }
