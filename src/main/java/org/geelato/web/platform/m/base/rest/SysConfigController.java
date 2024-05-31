@@ -160,7 +160,7 @@ public class SysConfigController extends BaseController {
                 params.put("configKey", key);
                 List<SysConfig> list = sysConfigService.queryModel(CLAZZ, params);
                 if (list != null && list.size() > 0) {
-                    result.setData(list.get(0).getConfigValue());
+                    return result.setData(list.get(0).getConfigValue());
                 }
             }
             result.setData("");
