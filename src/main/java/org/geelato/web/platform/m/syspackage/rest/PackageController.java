@@ -51,6 +51,10 @@ public class PackageController extends BaseController {
     private TransactionStatus transactionStatus;
     private static final Logger logger = LoggerFactory.getLogger(PackageController.class);
     private final String defaultPackageName = "geelatoApp";
+
+    private final String[] incrementMetas={"platform_dict","platform_dict_item","platform_sys_config"};
+
+    private final Map<String,List<String>> incrementMetaIds=new HashMap<>();
     @Resource
     private PackageConfigurationProperties packageConfigurationProperties;
     @Resource
@@ -185,9 +189,9 @@ public class PackageController extends BaseController {
         if (appVersion != null && !StringUtils.isEmpty(appVersion.getPackagePath())) {
             try {
                 if (appVersion.getPackagePath().contains(".zgdp")) {
-                appPackageData = ZipUtils.readPackageData(appVersion.getPackagePath(), ".gdp");
+//                appPackageData = ZipUtils.readPackageData(appVersion.getPackagePath(), ".gdp");
                     // 测试用
-//                    appPackageData = ZipUtils.readPackageData("D:\\geelato-project\\app_package_temp\\upload_temp\\ob.zgdp", ".gdp");
+                    appPackageData = ZipUtils.readPackageData("D:\\geelato-project\\app_package_temp\\upload_temp\\ob.zgdp", ".gdp");
                 } else {
                     Attach attach = attachService.getModel(appVersion.getPackagePath());
                     File file = downloadService.downloadFile(attach.getName(), attach.getPath());
@@ -255,11 +259,20 @@ public class PackageController extends BaseController {
         appDataMap.putAll(appBizDataMap);
         for (String key : appDataMap.keySet()) {
             String value = appDataMap.get(key);
+            if(Arrays.asList(incrementMetas).contains(key)) {
+                //如果增量更新，不执行清空数据操作
+                String sql = String.format("select id from " + key + " where app_id='%s'", appId);
+                List<String> ids = dao.getJdbcTemplate().queryForList(sql, String.class);
+                incrementMetaIds.put(key, ids);
+                continue;
+            }
+
             logger.info(String.format("remove sql：%s ", value));
             dao.getJdbcTemplate().execute(value);
         }
         logger.info("----------------------delete version end--------------------");
     }
+
 
 
     /*
@@ -421,25 +434,39 @@ public class PackageController extends BaseController {
         transactionStatus = TransactionHelper.beginTransaction(dataSourceTransactionManager);
         for (AppMeta appMeta : appPackage.getAppMetaList()) {
             logger.info(String.format("开始处理元数据：%s", appMeta.getMetaName()));
+
             Map<String, Object> metaData = new HashMap<>();
             ArrayList<Map<String, Object>> metaDataArray = new ArrayList<>();
             String appMetaName = appMeta.getMetaName();
             Object appMetaData = appMeta.getMetaData();
             EntityMeta entityMeta = metaManager.getByEntityName(appMetaName);
+            String tableName=entityMeta.getTableName();
+            Boolean increment=Arrays.asList(incrementMetas).contains(tableName);
+            List<String> ids=null;
+            if(increment){
+                ids= incrementMetaIds.get(tableName);
+            }
             JSONArray jsonArray = JSONArray.parseArray(JSONObject.toJSONString(appMetaData));
             for (int i = 0; i < jsonArray.size(); i++) {
                 JSONObject jo = jsonArray.getJSONObject(i);
                 Map<String, Object> columnMap = new HashMap<>();
+                Boolean upgradeToTarget=true;
                 for (String key : jo.keySet()) {
-                    logger.info("entityMeta=" + entityMeta.getEntityName() + ",column=" + key);
                     FieldMeta fieldMeta = entityMeta.getFieldMetaByColumn(key);
                     if ("id".equals(key)) {
+                        if(increment) {
+                            if (ids.contains(jo.get(key).toString())) {
+                                upgradeToTarget = false;
+                            }
+                        }
                         columnMap.put("forceId", jo.get(key));
                     } else {
                         columnMap.put(fieldMeta.getFieldName(), jo.get(key));
                     }
                 }
-                metaDataArray.add(columnMap);
+                if(upgradeToTarget){
+                    metaDataArray.add(columnMap);
+                }
             }
             metaData.put(appMeta.getMetaName(), metaDataArray);
             List<SaveCommand> saveCommandList = jsonTextSaveParser.parseBatch(JSONObject.toJSONString(metaData), new Ctx());
