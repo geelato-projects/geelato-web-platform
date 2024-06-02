@@ -4,6 +4,7 @@ import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import jakarta.annotation.Resource;
 import jakarta.validation.constraints.NotNull;
+import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.Ctx;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiResultCode;
@@ -102,7 +103,6 @@ public class PackageController extends BaseController {
             return apiResult;
         }
         appPackage.setAppMetaList(appMetaList);
-        String filePath = writePackageData(appPackage);
         AppVersion av = new AppVersion();
         av.setAppId(appId);
         if (StringUtils.isEmpty(version)) {
@@ -119,6 +119,7 @@ public class PackageController extends BaseController {
         av.setPackageSource("current environment packet");
         av.setStatus("release");
         av.setPacketTime(new Date());
+        String filePath = writePackageData(av, appPackage);
         av.setPackagePath(filePath);
 
         apiResult.setData(appVersionService.createModel(av));
@@ -189,9 +190,9 @@ public class PackageController extends BaseController {
         if (appVersion != null && !StringUtils.isEmpty(appVersion.getPackagePath())) {
             try {
                 if (appVersion.getPackagePath().contains(".zgdp")) {
-//                appPackageData = ZipUtils.readPackageData(appVersion.getPackagePath(), ".gdp");
+                    appPackageData = ZipUtils.readPackageData(appVersion.getPackagePath(), ".gdp");
                     // 测试用
-                    appPackageData = ZipUtils.readPackageData("D:\\geelato-project\\app_package_temp\\upload_temp\\ob.zgdp", ".gdp");
+//                    appPackageData = ZipUtils.readPackageData("D:\\geelato-project\\app_package_temp\\upload_temp\\ob.zgdp", ".gdp");
                 } else {
                     Attach attach = attachService.getModel(appVersion.getPackagePath());
                     File file = downloadService.downloadFile(attach.getName(), attach.getPath());
@@ -403,10 +404,10 @@ public class PackageController extends BaseController {
         // todo 处理打包资源文件
     }
 
-    private String compressAppPackage(String sourcePackageFolder, AppPackage appPackage) throws IOException {
+    private String compressAppPackage(String sourcePackageFolder, AppVersion appVersion, AppPackage appPackage) throws IOException {
         String packageSuffix = ".zgdp";
         String appPackageName = StringUtils.isEmpty(appPackage.getAppCode()) ? defaultPackageName : appPackage.getAppCode();
-        String appPackageFullName = appPackageName + packageSuffix;
+        String appPackageFullName = (Strings.isNotBlank(appVersion.getVersion()) ? appVersion.getVersion() : appPackageName) + packageSuffix;
         String targetZipPath = packageConfigurationProperties.getPath() + appPackageFullName;
         targetZipPath = UploadService.getSavePath(UploadService.ROOT_DIRECTORY, AttachmentSourceEnum.PLATFORM_ATTACH.getValue(), Ctx.getCurrentTenantCode(), appPackage.getSourceAppId(), appPackageFullName, true);
         ZipUtils.compressDirectory(sourcePackageFolder, targetZipPath);
@@ -434,7 +435,6 @@ public class PackageController extends BaseController {
         transactionStatus = TransactionHelper.beginTransaction(dataSourceTransactionManager);
         for (AppMeta appMeta : appPackage.getAppMetaList()) {
             logger.info(String.format("开始处理元数据：%s", appMeta.getMetaName()));
-
             Map<String, Object> metaData = new HashMap<>();
             ArrayList<Map<String, Object>> metaDataArray = new ArrayList<>();
             String appMetaName = appMeta.getMetaName();
