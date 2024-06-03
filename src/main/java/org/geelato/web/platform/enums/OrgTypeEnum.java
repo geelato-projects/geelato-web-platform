@@ -8,7 +8,7 @@ import org.apache.logging.log4j.util.Strings;
  * @date 2024/4/15 15:40
  */
 public enum OrgTypeEnum {
-    DEPT("部门", "department"), COMPANY("公司", "company");
+    DEPT("部门", "department"), COMPANY("公司", "company"), ROOT("根组织", "root");
 
     private final String label;// 选项内容
     private final String value;// 选项值

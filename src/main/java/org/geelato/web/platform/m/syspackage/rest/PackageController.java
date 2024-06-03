@@ -60,7 +60,7 @@ public class PackageController extends BaseController {
     private final ArrayList<String> incrementBizMetas=new ArrayList<>();
 
 
-    private final Map<String,List<String>> incrementMetaIds=new HashMap<>();
+    private final Map<String, List<String>> incrementMetaIds = new HashMap<>();
     @Resource
     private PackageConfigurationProperties packageConfigurationProperties;
     @Resource
@@ -407,7 +407,7 @@ public class PackageController extends BaseController {
             e.printStackTrace();
         }
         writePackageResourceData(appPackage);
-        return compressAppPackage(packageConfigurationProperties.getPath() + tempFolderPath,appVersion, appPackage);
+        return compressAppPackage(packageConfigurationProperties.getPath() + tempFolderPath, appPackage);
     }
 
     private void writePackageResourceData(AppPackage appPackage) {
@@ -451,7 +451,7 @@ public class PackageController extends BaseController {
             Object appMetaData = appMeta.getMetaData();
             EntityMeta entityMeta = metaManager.getByEntityName(appMetaName);
             String tableName=entityMeta.getTableName();
-            Boolean increment=Arrays.asList(incrementMetas).contains(tableName);
+            Boolean increment=incrementMetas.contains(tableName);
             List<String> ids=null;
             if(increment){
                 ids= incrementMetaIds.get(tableName);
@@ -460,11 +460,11 @@ public class PackageController extends BaseController {
             for (int i = 0; i < jsonArray.size(); i++) {
                 JSONObject jo = jsonArray.getJSONObject(i);
                 Map<String, Object> columnMap = new HashMap<>();
-                Boolean upgradeToTarget=true;
+                Boolean upgradeToTarget = true;
                 for (String key : jo.keySet()) {
                     FieldMeta fieldMeta = entityMeta.getFieldMetaByColumn(key);
                     if ("id".equals(key)) {
-                        if(increment) {
+                        if (increment) {
                             if (ids.contains(jo.get(key).toString())) {
                                 upgradeToTarget = false;
                             }
@@ -474,7 +474,7 @@ public class PackageController extends BaseController {
                         columnMap.put(fieldMeta.getFieldName(), jo.get(key));
                     }
                 }
-                if(upgradeToTarget){
+                if (upgradeToTarget) {
                     metaDataArray.add(columnMap);
                 }
             }
