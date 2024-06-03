@@ -53,9 +53,9 @@ public class PackageController extends BaseController {
     private static final Logger logger = LoggerFactory.getLogger(PackageController.class);
     private final String defaultPackageName = "geelatoApp";
 
-    private final String[] incrementMetas={"platform_dict","platform_dict_item","platform_sys_config"};
+    private final String[] incrementMetas = {"platform_dict", "platform_dict_item", "platform_sys_config"};
 
-    private final Map<String,List<String>> incrementMetaIds=new HashMap<>();
+    private final Map<String, List<String>> incrementMetaIds = new HashMap<>();
     @Resource
     private PackageConfigurationProperties packageConfigurationProperties;
     @Resource
@@ -260,8 +260,8 @@ public class PackageController extends BaseController {
         appDataMap.putAll(appBizDataMap);
         for (String key : appDataMap.keySet()) {
             String value = appDataMap.get(key);
-            if(Arrays.asList(incrementMetas).contains(key)) {
-                //如果增量更新，不执行清空数据操作
+            if (Arrays.asList(incrementMetas).contains(key)) {
+                // 如果增量更新，不执行清空数据操作
                 String sql = String.format("select id from " + key + " where app_id='%s'", appId);
                 List<String> ids = dao.getJdbcTemplate().queryForList(sql, String.class);
                 incrementMetaIds.put(key, ids);
@@ -273,7 +273,6 @@ public class PackageController extends BaseController {
         }
         logger.info("----------------------delete version end--------------------");
     }
-
 
 
     /*
@@ -379,7 +378,7 @@ public class PackageController extends BaseController {
         return map;
     }
 
-    private String writePackageData(AppPackage appPackage) throws IOException {
+    private String writePackageData(AppVersion appVersion, AppPackage appPackage) throws IOException {
         String jsonStr = JSONObject.toJSONString(appPackage);
         String packageSuffix = ".gdp";
         String dataFileName = StringUtils.isEmpty(appPackage.getAppCode()) ? defaultPackageName : appPackage.getAppCode();
@@ -397,7 +396,7 @@ public class PackageController extends BaseController {
             e.printStackTrace();
         }
         writePackageResourceData(appPackage);
-        return compressAppPackage(packageConfigurationProperties.getPath() + tempFolderPath, appPackage);
+        return compressAppPackage(packageConfigurationProperties.getPath() + tempFolderPath, appVersion, appPackage);
     }
 
     private void writePackageResourceData(AppPackage appPackage) {
@@ -440,21 +439,21 @@ public class PackageController extends BaseController {
             String appMetaName = appMeta.getMetaName();
             Object appMetaData = appMeta.getMetaData();
             EntityMeta entityMeta = metaManager.getByEntityName(appMetaName);
-            String tableName=entityMeta.getTableName();
-            Boolean increment=Arrays.asList(incrementMetas).contains(tableName);
-            List<String> ids=null;
-            if(increment){
-                ids= incrementMetaIds.get(tableName);
+            String tableName = entityMeta.getTableName();
+            Boolean increment = Arrays.asList(incrementMetas).contains(tableName);
+            List<String> ids = null;
+            if (increment) {
+                ids = incrementMetaIds.get(tableName);
             }
             JSONArray jsonArray = JSONArray.parseArray(JSONObject.toJSONString(appMetaData));
             for (int i = 0; i < jsonArray.size(); i++) {
                 JSONObject jo = jsonArray.getJSONObject(i);
                 Map<String, Object> columnMap = new HashMap<>();
-                Boolean upgradeToTarget=true;
+                Boolean upgradeToTarget = true;
                 for (String key : jo.keySet()) {
                     FieldMeta fieldMeta = entityMeta.getFieldMetaByColumn(key);
                     if ("id".equals(key)) {
-                        if(increment) {
+                        if (increment) {
                             if (ids.contains(jo.get(key).toString())) {
                                 upgradeToTarget = false;
                             }
@@ -464,7 +463,7 @@ public class PackageController extends BaseController {
                         columnMap.put(fieldMeta.getFieldName(), jo.get(key));
                     }
                 }
-                if(upgradeToTarget){
+                if (upgradeToTarget) {
                     metaDataArray.add(columnMap);
                 }
             }
