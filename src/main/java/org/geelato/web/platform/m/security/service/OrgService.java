@@ -73,8 +73,14 @@ public class OrgService extends BaseSortableService {
         if (Strings.isNotBlank(id)) {
             Org model = this.getModel(Org.class, id);
             if (model != null) {
-                if (OrgTypeEnum.COMPANY.getValue().equals(model.getType())) {
+                if (OrgTypeEnum.ROOT.getValue().equals(model.getType())) {
                     return model;
+                } else if (OrgTypeEnum.COMPANY.getValue().equals(model.getType())) {
+                    if (Strings.isNotBlank(model.getPid())) {
+                        return getCompany(model.getPid());
+                    } else {
+                        return model;
+                    }
                 } else if (Strings.isNotBlank(model.getPid()) && OrgTypeEnum.DEPT.getValue().equals(model.getType())) {
                     return getCompany(model.getPid());
                 }
