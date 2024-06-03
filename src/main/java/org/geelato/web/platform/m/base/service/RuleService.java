@@ -1,10 +1,7 @@
 package org.geelato.web.platform.m.base.service;
 
-import net.oschina.j2cache.CacheChannel;
-import net.oschina.j2cache.J2Cache;
 import org.apache.commons.collections.map.HashedMap;
 import org.geelato.core.Fn;
-import org.geelato.core.graal.GraalService;
 import org.geelato.core.orm.DaoException;
 import org.geelato.core.orm.TransactionHelper;
 import org.geelato.core.api.*;
@@ -24,7 +21,6 @@ import org.geelato.core.Ctx;
 import org.geelato.core.orm.Dao;
 import org.geelato.core.script.rule.BizMvelRuleManager;
 import org.geelato.core.sql.SqlManager;
-import org.geelato.web.platform.m.security.service.SecurityHelper;
 import org.jeasy.rules.api.Facts;
 import org.jeasy.rules.api.Rules;
 import org.jeasy.rules.api.RulesEngine;
@@ -59,7 +55,6 @@ public class RuleService {
     // $fn.now.
     private final static String VARS_FN = "$fn";
 
-    private final CacheChannel cache = J2Cache.getChannel();
     private static final Logger logger = LoggerFactory.getLogger(RuleService.class);
     /**
      * <p>注意: 在使用之前，需先设置dao
@@ -298,7 +293,7 @@ public class RuleService {
     }
     private String recursiveBatchSave(SaveCommand command, DataSourceTransactionManager dataSourceTransactionManager, TransactionStatus transactionStatus) {
         BoundSql boundSql = sqlManager.generateSaveSql(command);
-        String rtnValue = null;
+        String rtnValue;
         try{
             rtnValue = dao.save(boundSql);
         }catch (DaoException e) {
@@ -326,7 +321,7 @@ public class RuleService {
         return rtnValue;
     }
 
-    public String recursiveSave(SaveCommand command) {
+    public void recursiveSave(SaveCommand command) {
         BoundSql boundSql = sqlManager.generateSaveSql(command);
         String pkValue = dao.save(boundSql);
         if (command.hasCommands()) {
@@ -340,7 +335,6 @@ public class RuleService {
                 recursiveSave(subCommand);
             });
         }
-        return pkValue;
     }
 
     /**
@@ -376,12 +370,6 @@ public class RuleService {
                 //如果是第一次且无VARS_PARENT关键字，则直接返回值
                 return valueExp;
             } else {
-//                if(currentCommand.getParentCommand()!=null){
-//                    SaveCommand parentSaveCommand= (SaveCommand) currentCommand.getParentCommand();
-//                    return parentSaveCommand.getValueMap().get(valueExpTrim);
-//                }else{
-//                    return currentCommand.getValueMap().get(valueExpTrim);
-//                }
                 return currentCommand.getValueMap().get(valueExpTrim);
             }
         }

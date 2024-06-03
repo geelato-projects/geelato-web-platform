@@ -19,7 +19,7 @@ import java.io.IOException;
 import java.util.Map;
 
 @Controller
-@RequestMapping(value = "/api/script")
+@RequestMapping(value = "/api")
 public class ScriptController extends BaseController {
     @Autowired
     InstanceProxy instanceProxy;
@@ -29,22 +29,44 @@ public class ScriptController extends BaseController {
     @ResponseBody
     public ApiPagedResult exec(@PathVariable("scriptId") String scriptId, HttpServletRequest request){
         String gql=getGql(request);
-
-        RuleService ruleService= instanceProxy.getRuleService();
-        String scriptContent="(function(gql){" +
-                "var result=dao.list(gql);" +
-                "return result;" +
-                "});";
+        String scriptContent=getScriptContent(scriptId);
         Context context = Context.newBuilder("js")
                 .allowHostAccess(HostAccess.ALL)
                 .allowHostClassLookup(className -> true).build();
         Map<String,Object> graalServiceMap= graalManager.getGraalServiceMap();
+        Map<String,Object> graalVariableMap= graalManager.getGraalVariableMap();
         for(Map.Entry entry : graalServiceMap.entrySet()){
             context.getBindings("js").putMember(entry.getKey().toString(),entry.getValue());
+        }
+        for(Map.Entry entry : graalVariableMap.entrySet()) {
+            context.getBindings("js").putMember(entry.getKey().toString(), entry.getValue());
         }
         ApiPagedResult result = context.eval("js",scriptContent).execute(gql).as(ApiPagedResult.class);
         return result;
     }
+
+    private String getScriptContent(String scriptId) {
+        StringBuilder sb=new StringBuilder();
+        sb.append("(function(gql){");
+        sb.append(defaultContent());
+        sb.append(scriptContent());
+        sb.append("})");
+        return sb.toString();
+    }
+
+    private String scriptContent() {
+        return "var result=$gl.dao.queryForMapList(gql,false);" +
+                "return result;";
+    }
+
+    private String defaultContent() {
+        String content="var $gl={};" +
+                "$gl.dao=GqlService;" +
+                "$gl.tenant=tenant;" +
+                "$gl.user=user;";
+        return content;
+    }
+
     private String getGql(HttpServletRequest request) {
         StringBuilder stringBuilder = new StringBuilder();
         BufferedReader br = null;

@@ -53,7 +53,12 @@ public class PackageController extends BaseController {
     private static final Logger logger = LoggerFactory.getLogger(PackageController.class);
     private final String defaultPackageName = "geelatoApp";
 
-    private final String[] incrementMetas={"platform_dict","platform_dict_item","platform_sys_config"};
+    private final ArrayList<String> incrementMetas=new ArrayList<>();
+
+    private final String[] incrementPlatformMetas={"platform_dict","platform_dict_item","platform_sys_config",
+            "platform_export_template","platform_encoding","platform_resources"};
+    private final ArrayList<String> incrementBizMetas=new ArrayList<>();
+
 
     private final Map<String,List<String>> incrementMetaIds=new HashMap<>();
     @Resource
@@ -260,7 +265,7 @@ public class PackageController extends BaseController {
         appDataMap.putAll(appBizDataMap);
         for (String key : appDataMap.keySet()) {
             String value = appDataMap.get(key);
-            if(Arrays.asList(incrementMetas).contains(key)) {
+            if(incrementMetas.contains(key)) {
                 //如果增量更新，不执行清空数据操作
                 String sql = String.format("select id from " + key + " where app_id='%s'", appId);
                 List<String> ids = dao.getJdbcTemplate().queryForList(sql, String.class);
@@ -346,12 +351,12 @@ public class PackageController extends BaseController {
         map.put("platform_export_template", String.format("%s  platform_export_template where app_id='%s' ", preOperateSql, appId));
         map.put("platform_encoding", String.format("%s  platform_encoding where app_id='%s' ", preOperateSql, appId));
         map.put("platform_resources", String.format("%s  platform_resources where app_id='%s' ", preOperateSql, appId));
-
+        incrementMetas.addAll(Arrays.asList(incrementPlatformMetas));
         return map;
     }
 
     private Map<String, String> appBizDataMap(String appId, String type) {
-        String sql = "select table_name from platform_dev_table where pack_bus_data =1  and enable_status =1";
+        String sql = "select table_name,pack_bus_data from platform_dev_table where pack_bus_data > 0  and enable_status =1";
         List<Map<String, Object>> metaData = dao.getJdbcTemplate().queryForList(sql);
         Map<String, String> bizDataSqlMap = new HashMap<>();
         for (Map map : metaData) {
@@ -367,9 +372,14 @@ public class PackageController extends BaseController {
                     break;
             }
             String tableName = map.get("table_name").toString();
+            String packBusData=map.get("pack_bus_data").toString();
             String bizSql = String.format("%s %s where app_id ='%s'", preOperateSql, tableName, appId);
             bizDataSqlMap.put(tableName, bizSql);
+            if(packBusData.equals("1")){
+                incrementBizMetas.add(tableName);
+            }
         }
+        incrementMetas.addAll(incrementBizMetas);
         return bizDataSqlMap;
     }
 
@@ -379,7 +389,7 @@ public class PackageController extends BaseController {
         return map;
     }
 
-    private String writePackageData(AppPackage appPackage) throws IOException {
+    private String writePackageData(AppVersion appVersion, AppPackage appPackage) throws IOException {
         String jsonStr = JSONObject.toJSONString(appPackage);
         String packageSuffix = ".gdp";
         String dataFileName = StringUtils.isEmpty(appPackage.getAppCode()) ? defaultPackageName : appPackage.getAppCode();
@@ -397,7 +407,7 @@ public class PackageController extends BaseController {
             e.printStackTrace();
         }
         writePackageResourceData(appPackage);
-        return compressAppPackage(packageConfigurationProperties.getPath() + tempFolderPath, appPackage);
+        return compressAppPackage(packageConfigurationProperties.getPath() + tempFolderPath,appVersion, appPackage);
     }
 
     private void writePackageResourceData(AppPackage appPackage) {

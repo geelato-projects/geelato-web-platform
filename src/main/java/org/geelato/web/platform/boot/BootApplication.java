@@ -76,18 +76,19 @@ public class BootApplication implements CommandLineRunner, InitializingBean {
         initDataSource();
         initMeta();
         resolveSqlScript(args);
-        resolveGraalService();
+        resolveGraalContext();
         initEnv();
         logger.info("[start application]...finish");
     }
 
-    private void resolveGraalService() {
+    private void resolveGraalContext() {
         String[] packageNames = getProperty("geelato.graal.scan-package-names", "org.geelato").split(",");
         for (String packageName : packageNames) {
             GraalManager.singleInstance().initGraalService(packageName);
+            GraalManager.singleInstance().initGraalVariable(packageName);
         }
-
     }
+
 
 
     private void initDataSource() {
