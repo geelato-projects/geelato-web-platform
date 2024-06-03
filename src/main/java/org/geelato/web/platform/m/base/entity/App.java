@@ -36,6 +36,8 @@ public class App extends BaseSortableEntity {
     private String connects;
     private String appStorage;
 
+    private String purpose;// 使用范围
+
     @Col(name = "name", nullable = false)
     @Title(title = "应用名称")
     public String getName() {
@@ -233,5 +235,15 @@ public class App extends BaseSortableEntity {
 
     public void setAppStorage(String appStorage) {
         this.appStorage = appStorage;
+    }
+
+    @Col(name = "purpose")
+    @Title(title = "应用范围")
+    public String getPurpose() {
+        return purpose;
+    }
+
+    public void setPurpose(String purpose) {
+        this.purpose = purpose;
     }
 }
