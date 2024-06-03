@@ -2,7 +2,6 @@ package org.geelato.web.platform.m.security.rest;
 
 import com.alibaba.fastjson2.JSON;
 import jakarta.servlet.http.HttpServletRequest;
-import org.apache.commons.collections4.map.HashedMap;
 import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
@@ -16,7 +15,9 @@ import org.geelato.web.platform.m.base.rest.BaseController;
 import org.geelato.web.platform.m.security.entity.DataItems;
 import org.geelato.web.platform.m.security.entity.Org;
 import org.geelato.web.platform.m.security.entity.User;
-import org.geelato.web.platform.m.security.service.*;
+import org.geelato.web.platform.m.security.service.AccountService;
+import org.geelato.web.platform.m.security.service.OrgService;
+import org.geelato.web.platform.m.security.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +26,6 @@ import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
-import java.util.regex.Pattern;
 
 /**
  * @author diabl
@@ -35,8 +35,6 @@ import java.util.regex.Pattern;
 public class UserRestController extends BaseController {
     private static final String DEFAULT_PASSWORD = "12345678";
     private static final int DEFAULT_PASSWORD_DIGIT = 8;
-    private static final String CONFIG_KEY_TEMPLATE_CODE = "mobileTemplateResetPwd";
-    private static final Pattern CHINESE_PATTERN = Pattern.compile("^[\\u4e00-\\u9fa5]+$");
     private static final Map<String, List<String>> OPERATORMAP = new LinkedHashMap<>();
     private static final Class<User> CLAZZ = User.class;
 
@@ -53,10 +51,7 @@ public class UserRestController extends BaseController {
     private UserService userService;
     @Autowired
     private OrgService orgService;
-    @Autowired
-    private EmailService emailService;
-    @Autowired
-    private AliMobileService aliMobileService;
+
 
     @RequestMapping(value = "/pageQuery", method = RequestMethod.GET)
     @ResponseBody
@@ -203,14 +198,6 @@ public class UserRestController extends BaseController {
             // 组织ID为空方可插入
             form.setPlainPassword(UUIDUtils.generatePassword(DEFAULT_PASSWORD_DIGIT));
             accountService.entryptPassword(form);
-            // 发送短信
-            boolean pushSuccess = false;
-            if (Strings.isNotBlank(form.getMobilePhone())) {
-                pushSuccess = sendMobile(form.getMobilePrefix(), form.getMobilePhone(), form.getName(), form.getPlainPassword());
-                if (!pushSuccess) {
-                    return result.error().setMsg("短信发送失败，用户未创建，请重试！");
-                }
-            }
             // 创建用户
             uMap = userService.createModel(form);
             uMap.setPlainPassword(form.getPlainPassword());
@@ -281,16 +268,9 @@ public class UserRestController extends BaseController {
                 Assert.notNull(user, ApiErrorMsg.IS_NULL);
                 user.setPlainPassword(UUIDUtils.generatePassword(DEFAULT_PASSWORD_DIGIT));
                 accountService.entryptPassword(user);
-                boolean pushSuccess = false;
-                if (Strings.isNotBlank(user.getMobilePhone()) && (Strings.isBlank(type) || "phone".equalsIgnoreCase(type))) {
-                    pushSuccess = sendMobile(user.getMobilePrefix(), user.getMobilePhone(), user.getName(), user.getPlainPassword());
-                    if (!pushSuccess) {
-                        return result.error().setMsg("短信发送失败，密码未重置，请重试！");
-                    }
-                }
-                if (Strings.isNotBlank(user.getEmail()) && (Strings.isBlank(type) || "email".equalsIgnoreCase(type))) {
-                    String text = String.format("尊敬的 %s 用户，您的密码已经设置为 %s ，请及时登录并修改密码。", user.getName(), user.getPlainPassword());
-                    //  pushSuccess =   emailService.sendHtmlMail(user.getEmail(), "Reset User Password", text);
+                result = userService.sendMessage(user, type);
+                if (result.isError()) {
+                    return result;
                 }
                 userService.updateModel(user);
                 result.setData(user.getPlainPassword());
@@ -305,25 +285,26 @@ public class UserRestController extends BaseController {
         return result;
     }
 
-    public boolean sendMobile(String mobilePrefix, String mobilePhone, String name, String password) {
-        String phoneNumbers = mobilePhone;
-        if (Strings.isNotBlank(mobilePrefix) && !"+86".equals(mobilePrefix)) {
-            phoneNumbers = mobilePrefix + phoneNumbers;
-        }
-        if (!CHINESE_PATTERN.matcher(name).matches()) {
-            logger.error("短信${name}仅支持中文。" + name);
-            return false;
-        }
+    @RequestMapping(value = "/sendMessage/{id}", method = RequestMethod.POST)
+    @ResponseBody
+    public ApiResult sendMessage(@PathVariable(required = true) String id, String type, String message) {
+        ApiResult result = new ApiResult();
         try {
-            Map<String, Object> params = new HashedMap<>();
-            params.put("name", name);
-            params.put("password", password);
-            return aliMobileService.sendMobile(CONFIG_KEY_TEMPLATE_CODE, phoneNumbers, params);
+            if (Strings.isNotBlank(id)) {
+                User user = userService.getModel(CLAZZ, id);
+                Assert.notNull(user, ApiErrorMsg.IS_NULL);
+                result = userService.sendMessage(user, type, message);
+            } else {
+                result.error().setMsg(ApiErrorMsg.ID_IS_NULL);
+            }
         } catch (Exception e) {
-            logger.error("发送短信时发生异常", e);
+            logger.error(e.getMessage());
+            result.error().setMsg(ApiErrorMsg.OPERATE_FAIL);
         }
-        return false;
+
+        return result;
     }
+
 
     @RequestMapping(value = "/isDelete/{id}", method = RequestMethod.DELETE)
     @ResponseBody
