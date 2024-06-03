@@ -407,7 +407,7 @@ public class PackageController extends BaseController {
             e.printStackTrace();
         }
         writePackageResourceData(appPackage);
-        return compressAppPackage(packageConfigurationProperties.getPath() + tempFolderPath, appPackage);
+        return compressAppPackage(packageConfigurationProperties.getPath() + tempFolderPath,appVersion, appPackage);
     }
 
     private void writePackageResourceData(AppPackage appPackage) {
