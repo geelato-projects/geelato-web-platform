@@ -1,10 +1,11 @@
 package org.geelato.web.platform.m.base.service;
 
 import org.apache.commons.collections.map.HashedMap;
+import org.geelato.core.Ctx;
 import org.geelato.core.Fn;
-import org.geelato.core.orm.DaoException;
-import org.geelato.core.orm.TransactionHelper;
-import org.geelato.core.api.*;
+import org.geelato.core.api.ApiMultiPagedResult;
+import org.geelato.core.api.ApiPagedResult;
+import org.geelato.core.api.ApiResult;
 import org.geelato.core.biz.rules.BizManagerFactory;
 import org.geelato.core.biz.rules.common.EntityValidateRule;
 import org.geelato.core.constants.ApiResultCode;
@@ -17,8 +18,9 @@ import org.geelato.core.gql.parser.QueryCommand;
 import org.geelato.core.gql.parser.SaveCommand;
 import org.geelato.core.meta.MetaManager;
 import org.geelato.core.meta.model.entity.EntityMeta;
-import org.geelato.core.Ctx;
 import org.geelato.core.orm.Dao;
+import org.geelato.core.orm.DaoException;
+import org.geelato.core.orm.TransactionHelper;
 import org.geelato.core.script.rule.BizMvelRuleManager;
 import org.geelato.core.sql.SqlManager;
 import org.jeasy.rules.api.Facts;
@@ -56,6 +58,7 @@ public class RuleService {
     private final static String VARS_FN = "$fn";
 
     private static final Logger logger = LoggerFactory.getLogger(RuleService.class);
+
     /**
      * <p>注意: 在使用之前，需先设置dao
      *
@@ -193,18 +196,18 @@ public class RuleService {
         rules.register(new EntityValidateRule());
         rulesEngine.fire(rules, facts);
         // 存在子命令
-        DataSourceTransactionManager dataSourceTransactionManager=new DataSourceTransactionManager(dao.getJdbcTemplate().getDataSource());
-        TransactionStatus transactionStatus= TransactionHelper.beginTransaction(dataSourceTransactionManager);
-        return recursiveSave(command,dataSourceTransactionManager,transactionStatus);
+        DataSourceTransactionManager dataSourceTransactionManager = new DataSourceTransactionManager(dao.getJdbcTemplate().getDataSource());
+        TransactionStatus transactionStatus = TransactionHelper.beginTransaction(dataSourceTransactionManager);
+        return recursiveSave(command, dataSourceTransactionManager, transactionStatus);
     }
 
-    public Object batchSave(String gql,Boolean transaction) throws DaoException {
-        List<String> returnPks=new ArrayList<>();
+    public Object batchSave(String gql, Boolean transaction) throws DaoException {
+        List<String> returnPks = new ArrayList<>();
         List<SaveCommand> commandList = gqlManager.generateBatchSaveSql(gql, getSessionCtx());
-        if(transaction){
-            DataSourceTransactionManager dataSourceTransactionManager=new DataSourceTransactionManager(dao.getJdbcTemplate().getDataSource());
-            TransactionStatus transactionStatus= TransactionHelper.beginTransaction(dataSourceTransactionManager);
-            for (SaveCommand saveCommand : commandList){
+        if (transaction) {
+            DataSourceTransactionManager dataSourceTransactionManager = new DataSourceTransactionManager(dao.getJdbcTemplate().getDataSource());
+            TransactionStatus transactionStatus = TransactionHelper.beginTransaction(dataSourceTransactionManager);
+            for (SaveCommand saveCommand : commandList) {
 //                BoundSql boundSql = sqlManager.generateSaveSql(saveCommand);
 //                String pkValue = dao.save(boundSql);
 //                if(pkValue.equals("saveFail")){
@@ -213,36 +216,36 @@ public class RuleService {
 //                }else{
 //                    returnPks.add(pkValue);
 //                }
-                String pkValue =recursiveBatchSave(saveCommand,dataSourceTransactionManager,transactionStatus);
-                if(pkValue.equals("saveFail")){
-                    TransactionHelper.rollbackTransaction(dataSourceTransactionManager,transactionStatus);
+                String pkValue = recursiveBatchSave(saveCommand, dataSourceTransactionManager, transactionStatus);
+                if (pkValue.equals("saveFail")) {
+                    TransactionHelper.rollbackTransaction(dataSourceTransactionManager, transactionStatus);
                     break;
-                }else{
+                } else {
                     returnPks.add(pkValue);
                 }
             }
-            TransactionHelper.commitTransaction(dataSourceTransactionManager,transactionStatus);
-        }else {
-            for (SaveCommand saveCommand : commandList){
+            TransactionHelper.commitTransaction(dataSourceTransactionManager, transactionStatus);
+        } else {
+            for (SaveCommand saveCommand : commandList) {
                 BoundSql boundSql = sqlManager.generateSaveSql(saveCommand);
                 String pkValue = dao.save(boundSql);
-                if(pkValue.equals("saveFail")){
+                if (pkValue.equals("saveFail")) {
                     continue;
-                }else{
+                } else {
                     returnPks.add(pkValue);
                 }
             }
         }
-        return  returnPks;
+        return returnPks;
     }
-
 
 
     public Object multiSave(String gql) {
         List<SaveCommand> commandList = gqlManager.generateMultiSaveSql(gql, getSessionCtx());
         List<BoundSql> boundSqlList = sqlManager.generateBatchSaveSql(commandList);
-        return  dao.multiSave(boundSqlList);
+        return dao.multiSave(boundSqlList);
     }
+
     /**
      * 递归执行，存在需解析依赖变更的情况
      * 不执行业务规则检查
@@ -255,30 +258,30 @@ public class RuleService {
     public String recursiveSave(SaveCommand command, DataSourceTransactionManager dataSourceTransactionManager, TransactionStatus transactionStatus) throws DaoException {
         BoundSql boundSql = sqlManager.generateSaveSql(command);
         String rtnValue = null;
-            try{
-                rtnValue = dao.save(boundSql);
-            }catch (DaoException e) {
-                TransactionHelper.rollbackTransaction(dataSourceTransactionManager, transactionStatus);
-                throw e;
-            }
-            command.setExecution(!rtnValue.equals("saveFail"));
-            if (command.hasCommands()) {
-                command.getCommands().forEach(subCommand -> {
-                    subCommand.getValueMap().forEach((key, value) -> {
-                        if (value != null) {
-                            subCommand.getValueMap().put(key, parseValueExp(subCommand, value.toString(), 0));
-                        }
-                    });
-                    try {
-                        recursiveSave(subCommand, dataSourceTransactionManager, transactionStatus);
-                    } catch (DaoException e) {
-                        if(!transactionStatus.isCompleted()){
-                            TransactionHelper.rollbackTransaction(dataSourceTransactionManager, transactionStatus);
-                        }
-                        throw e;
+        try {
+            rtnValue = dao.save(boundSql);
+        } catch (DaoException e) {
+            TransactionHelper.rollbackTransaction(dataSourceTransactionManager, transactionStatus);
+            throw e;
+        }
+        command.setExecution(!rtnValue.equals("saveFail"));
+        if (command.hasCommands()) {
+            command.getCommands().forEach(subCommand -> {
+                subCommand.getValueMap().forEach((key, value) -> {
+                    if (value != null) {
+                        subCommand.getValueMap().put(key, parseValueExp(subCommand, value.toString(), 0));
                     }
                 });
-            }
+                try {
+                    recursiveSave(subCommand, dataSourceTransactionManager, transactionStatus);
+                } catch (DaoException e) {
+                    if (!transactionStatus.isCompleted()) {
+                        TransactionHelper.rollbackTransaction(dataSourceTransactionManager, transactionStatus);
+                    }
+                    throw e;
+                }
+            });
+        }
 
         if (command.getParentCommand() == null && command.getExecution()) {
             TransactionHelper.commitTransaction(dataSourceTransactionManager, transactionStatus);
@@ -291,12 +294,13 @@ public class RuleService {
 
         return rtnValue;
     }
+
     private String recursiveBatchSave(SaveCommand command, DataSourceTransactionManager dataSourceTransactionManager, TransactionStatus transactionStatus) {
         BoundSql boundSql = sqlManager.generateSaveSql(command);
         String rtnValue;
-        try{
+        try {
             rtnValue = dao.save(boundSql);
-        }catch (DaoException e) {
+        } catch (DaoException e) {
             TransactionHelper.rollbackTransaction(dataSourceTransactionManager, transactionStatus);
             throw e;
         }
@@ -311,7 +315,7 @@ public class RuleService {
                 try {
                     recursiveBatchSave(subCommand, dataSourceTransactionManager, transactionStatus);
                 } catch (DaoException e) {
-                    if(!transactionStatus.isCompleted()){
+                    if (!transactionStatus.isCompleted()) {
                         TransactionHelper.rollbackTransaction(dataSourceTransactionManager, transactionStatus);
                     }
                     throw e;
@@ -347,13 +351,13 @@ public class RuleService {
      */
     private Object parseValueExp(SaveCommand currentCommand, String valueExp, int times) {
         String valueExpTrim = valueExp.trim();
-        if(valueExpTrim.startsWith(VARS_CTX)){
+        if (valueExpTrim.startsWith(VARS_CTX)) {
             // 检查是否存在变更$ctx.userId等
-           return getSessionCtx().get(valueExpTrim.substring(VARS_CTX.length() + 1));
-        }else if(valueExpTrim.startsWith(VARS_FN)){
+            return getSessionCtx().get(valueExpTrim.substring(VARS_CTX.length() + 1));
+        } else if (valueExpTrim.startsWith(VARS_FN)) {
             String fnName = valueExpTrim.substring(VARS_FN.length() + 1);
             // 检查是否存在变更$fn.now等
-            switch (fnName){
+            switch (fnName) {
                 case "now":
                 case "nowDateTime":
                     return Fn.nowDateTime();
@@ -362,7 +366,7 @@ public class RuleService {
                 default:
                     return null;
             }
-        }else if (valueExpTrim.startsWith(VARS_PARENT)) {
+        } else if (valueExpTrim.startsWith(VARS_PARENT)) {
             // 检查是否存在变量$parent
             return parseValueExp((SaveCommand) currentCommand.getParentCommand(), valueExpTrim.substring(VARS_PARENT.length() + 1), times + 1);
         } else {
@@ -370,12 +374,16 @@ public class RuleService {
                 //如果是第一次且无VARS_PARENT关键字，则直接返回值
                 return valueExp;
             } else {
-                if(valueExp.equals("id")){
-                    return currentCommand.getWhere().getParams().get("id");
-                }else{
+                // 如果是updateCommand，id值不在valueMap中，可从PK值中获取
+                // 如果是insertCommand，由于在执行子command时，父command已执行，此时已创建了新的id，存在valueMap中
+                if (currentCommand.getValueMap().containsKey(valueExpTrim)) {
                     return currentCommand.getValueMap().get(valueExpTrim);
+                } else if ("id".equals(valueExpTrim)) {
+                    return currentCommand.getPK();
                 }
-
+                logger.error("dao exception:通过表达式变量：" + valueExp + "获取不到值。");
+                // throw new DaoException("dao exception:通过表达式变量：" + valueExp + "获取不到值。");
+                return null;
             }
         }
     }
@@ -390,13 +398,13 @@ public class RuleService {
     public int delete(String biz, String id) {
         FilterGroup filterGroup;
 
-        if(id.contains(",")){
-            filterGroup = new FilterGroup().addFilter("id", FilterGroup.Operator.in,id);
-        }else{
-            filterGroup = new FilterGroup().addFilter("id",id);
+        if (id.contains(",")) {
+            filterGroup = new FilterGroup().addFilter("id", FilterGroup.Operator.in, id);
+        } else {
+            filterGroup = new FilterGroup().addFilter("id", id);
         }
 
-        BoundSql boundSql = sqlManager.generateDeleteSql(biz,filterGroup);
+        BoundSql boundSql = sqlManager.generateDeleteSql(biz, filterGroup);
         return dao.delete(boundSql);
     }
 
