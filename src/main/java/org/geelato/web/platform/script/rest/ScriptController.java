@@ -1,10 +1,13 @@
-package org.geelato.web.platform.script;
+package org.geelato.web.platform.script.rest;
 
+import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.graal.GraalManager;
 import org.geelato.web.platform.m.base.rest.BaseController;
-import org.geelato.web.platform.m.base.service.RuleService;
+import org.geelato.web.platform.graal.InstanceProxy;
+import org.geelato.web.platform.script.entty.Api;
+import org.geelato.web.platform.script.service.ApiService;
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.HostAccess;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +27,10 @@ public class ScriptController extends BaseController {
     @Autowired
     InstanceProxy instanceProxy;
 
-    public GraalManager graalManager= GraalManager.singleInstance();
+    private GraalManager graalManager= GraalManager.singleInstance();
+
+    @Resource
+    private ApiService apiService;
     @RequestMapping(value = "/exec/{scriptId}", method = RequestMethod.POST)
     @ResponseBody
     public ApiPagedResult exec(@PathVariable("scriptId") String scriptId, HttpServletRequest request){
@@ -49,14 +55,16 @@ public class ScriptController extends BaseController {
         StringBuilder sb=new StringBuilder();
         sb.append("(function(gql){");
         sb.append(defaultContent());
-        sb.append(scriptContent());
+        sb.append(scriptContent(scriptId));
         sb.append("})");
         return sb.toString();
     }
 
-    private String scriptContent() {
-        return "var result=$gl.dao.queryForMapList(gql,false);" +
-                "return result;";
+    private String scriptContent(String id) {
+        Api api= apiService.getModel(Api.class,id);
+        return api.getRelease_content();
+//        return "var result=$gl.dao.queryForMapList(gql,false);" +
+//                "return result;";
     }
 
     private String defaultContent() {

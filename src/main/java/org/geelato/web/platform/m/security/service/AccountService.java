@@ -12,9 +12,6 @@ import org.geelato.utils.Digests;
 import org.geelato.utils.Encodes;
 import org.geelato.web.platform.m.base.service.RuleService;
 import org.geelato.web.platform.m.security.entity.User;
-import org.geelato.web.platform.m.settings.entity.CommonConfig;
-import org.geelato.web.platform.m.settings.entity.Module;
-import org.geelato.web.platform.m.settings.entity.UserConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -38,8 +35,6 @@ public class AccountService {
     protected RuleService ruleService;
 //    private static AccountService ref;
 
-    private Function commonConfigLoader = (p) -> dao.queryForMapList(CommonConfig.class);
-    private Function userConfigLoader = (userId) -> dao.queryForMapList(UserConfig.class, "creator", userId);
     private CacheChannel cache = J2Cache.getChannel();
 
 
@@ -88,7 +83,7 @@ public class AccountService {
     public Map wrapUser(User user) {
         HashMap map = new HashMap(3);
         map.put("user", user);
-        CacheObject userConfigCacheObject = cache.get("config", user.getId().toString(), userConfigLoader);
+        CacheObject userConfigCacheObject = cache.get("config", user.getId().toString(), null);
         HashMap userConfig = new HashMap();
         if (userConfigCacheObject.getValue() != null) {
             List<Map<String, Object>> list = (List<Map<String, Object>>) userConfigCacheObject.getValue();
@@ -98,7 +93,7 @@ public class AccountService {
         }
         map.put("userConfig", userConfig);
 
-        CacheObject commonConfigCacheObject = cache.get("config", user.getId().toString(), userConfigLoader);
+        CacheObject commonConfigCacheObject = cache.get("config", user.getId().toString(), null);
         HashMap commonConfig = new HashMap();
         if (userConfigCacheObject.getValue() != null) {
             List<Map<String, Object>> list = (List<Map<String, Object>>) commonConfigCacheObject.getValue();
@@ -108,7 +103,6 @@ public class AccountService {
         }
         map.put("commonConfig", commonConfig);
 
-//        map.put("commonConfig", cache.get("config", "commonConfig", commonConfigLoader));
         List<Map<String, Object>> moduleList = dao.queryForMapList(Module.class);
         for (Map module : moduleList) {
             long id = Long.parseLong(module.get("id").toString());
@@ -121,9 +115,4 @@ public class AccountService {
         return map;
     }
 
-//    @PostConstruct
-//    public void init() {
-//        ref = this;
-//        ref.dao = this.dao;
-//    }
 }

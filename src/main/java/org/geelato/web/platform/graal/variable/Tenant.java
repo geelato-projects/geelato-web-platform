@@ -1,4 +1,4 @@
-package org.geelato.web.platform.script;
+package org.geelato.web.platform.graal.variable;
 
 import org.geelato.core.graal.GraalVariable;
 

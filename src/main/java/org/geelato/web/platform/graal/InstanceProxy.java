@@ -1,4 +1,4 @@
-package org.geelato.web.platform.script;
+package org.geelato.web.platform.graal;
 
 import org.geelato.web.platform.m.base.service.RuleService;
 import org.springframework.beans.factory.annotation.Autowired;

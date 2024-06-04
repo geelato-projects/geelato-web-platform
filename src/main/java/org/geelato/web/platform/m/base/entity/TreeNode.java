@@ -11,7 +11,7 @@ import org.geelato.core.meta.model.entity.BaseSortableEntity;
  * @date 2017/9/8.
  */
 @Entity(name = "platform_tree_node", table = "platform_tree_node")
-@Title(title = "树节点")
+@Title(title = "菜单")
 public class TreeNode extends BaseSortableEntity {
 
     private String treeEntity;

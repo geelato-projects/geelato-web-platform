@@ -10,7 +10,7 @@ import org.geelato.core.meta.model.entity.BaseSortableEntity;
  * @date 2017/5/27.
  */
 @Entity(name = "platform_app_page", table = "platform_app_page")
-@Title(title = "页面配置")
+@Title(title = "页面")
 public class AppPage extends BaseSortableEntity {
 
     private String extendId;

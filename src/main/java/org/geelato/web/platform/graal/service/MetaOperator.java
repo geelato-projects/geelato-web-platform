@@ -1,4 +1,4 @@
-package org.geelato.web.platform.script;
+package org.geelato.web.platform.graal.service;
 
 import org.geelato.core.ds.DataSourceManager;
 import org.geelato.core.graal.GraalService;
