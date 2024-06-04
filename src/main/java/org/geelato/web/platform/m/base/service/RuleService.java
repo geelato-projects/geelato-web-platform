@@ -370,7 +370,12 @@ public class RuleService {
                 //如果是第一次且无VARS_PARENT关键字，则直接返回值
                 return valueExp;
             } else {
-                return currentCommand.getValueMap().get(valueExpTrim);
+                if(valueExp.equals("id")){
+                    return currentCommand.getWhere().getParams().get("id");
+                }else{
+                    return currentCommand.getValueMap().get(valueExpTrim);
+                }
+
             }
         }
     }
