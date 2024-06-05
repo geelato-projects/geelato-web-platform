@@ -29,7 +29,6 @@ import java.util.*;
 
 /**
  * @author diabl
- * @description: TODO
  * @date 2023/9/2 15:23
  */
 @Controller
@@ -83,9 +82,7 @@ public class ExportExcelController extends BaseController {
             String jsonText = exportExcelService.getGql(request);
             List<Map> valueMapList = new ArrayList<>();
             Map valueMap = new HashMap();
-            // List<BatchGetFormDataByIdListResponseBody.BatchGetFormDataByIdListResponseBodyResult> resultList = null;
             if ("mql".equals(dataType)) {
-                // todo 查询接口
             } else if ("data".equals(dataType) && Strings.isNotBlank(jsonText)) {
                 JSONObject jo = JSON.parseObject(jsonText);
                 valueMapList = (List<Map>) jo.get("valueMapList");

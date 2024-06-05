@@ -4,7 +4,6 @@ import org.apache.logging.log4j.util.Strings;
 
 /**
  * @author diabl
- * @description: TODO
  * @date 2023/7/13 15:04
  */
 public enum ValidTypeEnum {

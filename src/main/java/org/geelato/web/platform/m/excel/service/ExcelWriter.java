@@ -395,7 +395,6 @@ public class ExcelWriter {
     }
 
     public boolean validatePlaceholderMeta(PlaceholderMeta placeholderMeta) {
-        // TODO
         return true;
     }
 

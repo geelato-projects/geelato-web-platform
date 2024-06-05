@@ -64,12 +64,13 @@ public class MetaDdlController extends BaseController {
     public ApiMetaResult recreates(@PathVariable("appId") String appId) {
         ApiMetaResult result = new ApiMetaResult();
         Map<String, Object> tableResult = new LinkedHashMap<>();
+        String tenantCode = Ctx.getCurrentTenantCode();
         String errorModel = "";
         try {
             if (Strings.isNotBlank(appId)) {
                 FilterGroup filterGroup = new FilterGroup();
                 filterGroup.addFilter("appId", appId);
-                filterGroup.addFilter("tenantCode", Ctx.getCurrentTenantCode());
+                filterGroup.addFilter("tenantCode", tenantCode);
                 filterGroup.addFilter("enableStatus", String.valueOf(EnableStatusEnum.ENABLED.getCode()));
                 List<TableMeta> tableMetas = devTableService.queryModel(TableMeta.class, filterGroup);
                 if (tableMetas != null) {
@@ -94,6 +95,14 @@ public class MetaDdlController extends BaseController {
         } catch (Exception ex) {
             logger.error(ex.getMessage(), ex);
             result.error().setMsg(String.format("%s, %s", errorModel, ex.getCause().getMessage())).setData(tableResult);
+        } finally {
+            // 刷新缓存
+            if (Strings.isNotBlank(appId) && Strings.isNotBlank(tenantCode)) {
+                Map<String, String> table = new HashMap<>();
+                table.put("app_id", appId);
+                table.put("tenant_code", tenantCode);
+                MetaManager.singleInstance().parseDBMeta(dao, table);
+            }
         }
         return result;
     }
@@ -103,11 +112,12 @@ public class MetaDdlController extends BaseController {
     public ApiMetaResult reViewCreates(@PathVariable("appId") String appId) {
         ApiMetaResult result = new ApiMetaResult();
         Map<String, Object> tableResult = new LinkedHashMap<>();
+        String tenantCode = Ctx.getCurrentTenantCode();
         String errorModel = "";
         try {
             if (Strings.isNotBlank(appId)) {
                 FilterGroup filterGroup = new FilterGroup();
-                filterGroup.addFilter("tenantCode", Ctx.getCurrentTenantCode());
+                filterGroup.addFilter("tenantCode", tenantCode);
                 List<TableMeta> tableMetas = devTableService.queryModel(TableMeta.class, filterGroup);
                 filterGroup.addFilter("enableStatus", String.valueOf(EnableStatusEnum.ENABLED.getCode()));
                 filterGroup.addFilter("appId", appId);
@@ -163,7 +173,16 @@ public class MetaDdlController extends BaseController {
         } catch (Exception ex) {
             logger.error(ex.getMessage(), ex);
             result.error().setMsg(String.format("%s, %s", errorModel, ex.getMessage())).setData(tableResult);
+        } finally {
+            // 刷新缓存
+            if (Strings.isNotBlank(appId) && Strings.isNotBlank(tenantCode)) {
+                Map<String, String> table = new HashMap<>();
+                table.put("app_id", appId);
+                table.put("tenant_code", tenantCode);
+                MetaManager.singleInstance().parseDBMeta(dao, table);
+            }
         }
+
         return result;
     }
 
@@ -171,6 +190,7 @@ public class MetaDdlController extends BaseController {
     @ResponseBody
     public ApiMetaResult reViewCreate(@PathVariable("id") String id) {
         ApiMetaResult result = new ApiMetaResult();
+        String entityName = null;
         try {
             if (Strings.isNotBlank(id)) {
                 TableView viewMeta = viewService.getModel(TableView.class, id);
@@ -201,12 +221,18 @@ public class MetaDdlController extends BaseController {
                     logger.warn(String.format("%s（%s），视图语句验证失败。", viewMeta.getTitle(), viewMeta.getViewName()));
                     throw new RuntimeException("视图语句验证失败");
                 }
+                entityName = viewMeta.getEntityName();
                 dbGenerateDao.createOrUpdateView(viewMeta.getViewName(), viewMeta.getViewConstruct());
             }
         } catch (Exception ex) {
             logger.error(ex.getMessage(), ex);
             result.error().setMsg(ex.getMessage());
+        } finally {
+            if (Strings.isNotBlank(entityName)) {
+                MetaManager.singleInstance().refreshDBMeta(entityName);
+            }
         }
+
         return result;
     }
 
