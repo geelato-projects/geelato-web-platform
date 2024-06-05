@@ -4,7 +4,6 @@ import org.apache.logging.log4j.util.Strings;
 
 /**
  * @author diabl
- * @description: TODO
  * @date 2023/9/27 10:58
  */
 public enum RoleTypeEnum {

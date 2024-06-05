@@ -8,7 +8,6 @@ import java.util.Map;
 
 /**
  * @author diabl
- * @description: TODO
  * @date 2024/1/9 18:01
  */
 public class WordTableMeta {

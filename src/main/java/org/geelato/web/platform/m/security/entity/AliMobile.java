@@ -2,7 +2,6 @@ package org.geelato.web.platform.m.security.entity;
 
 /**
  * @author diabl
- * @description: TODO
  * @date 2024/3/20 14:29
  */
 public class AliMobile {

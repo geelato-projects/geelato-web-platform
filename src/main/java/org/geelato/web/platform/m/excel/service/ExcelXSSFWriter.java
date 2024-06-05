@@ -517,7 +517,6 @@ public class ExcelXSSFWriter {
     }
 
     public boolean validatePlaceholderMeta(PlaceholderMeta placeholderMeta) {
-        // TODO
         return true;
     }
 

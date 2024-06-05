@@ -4,7 +4,6 @@ import org.geelato.core.exception.CoreException;
 
 /**
  * @author diabl
- * @description: TODO
  * @date 2023/10/25 11:28
  */
 public class FileException extends CoreException {

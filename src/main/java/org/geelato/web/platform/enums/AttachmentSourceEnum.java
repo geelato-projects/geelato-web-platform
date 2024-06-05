@@ -4,7 +4,6 @@ import org.apache.logging.log4j.util.Strings;
 
 /**
  * @author diabl
- * @description: TODO
  * @date 2024/5/17 18:01
  */
 public enum AttachmentSourceEnum {

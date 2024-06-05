@@ -26,7 +26,6 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * @author diabl
- * @description: TODO
  * @date 2023/7/17 9:10
  */
 @Component

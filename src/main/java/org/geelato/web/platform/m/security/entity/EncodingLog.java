@@ -8,7 +8,6 @@ import org.geelato.core.meta.model.entity.BaseEntity;
 
 /**
  * @author diabl
- * @description: TODO
  * @date 2023/8/3 9:55
  */
 @Entity(name = "platform_encoding_log")

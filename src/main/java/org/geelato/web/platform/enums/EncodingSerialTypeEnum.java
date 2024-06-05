@@ -4,7 +4,6 @@ import org.apache.logging.log4j.util.Strings;
 
 /**
  * @author diabl
- * @description: TODO
  * @date 2023/8/2 11:00
  */
 public enum EncodingSerialTypeEnum {
