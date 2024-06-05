@@ -86,10 +86,22 @@ public class RuleService {
         return dao.queryForObject(boundSql, requiredType);
     }
 
-    public ApiPagedResult queryForMapList(String gql, boolean withMeta) {
+
+    public ApiPagedResult<List<Map<String, Object>>> queryForMapList(String gql, boolean withMeta) {
+        ApiPagedResult<List<Map<String, Object>>> result = new ApiPagedResult<>();
         QueryCommand command = gqlManager.generateQuerySql(gql, getSessionCtx());
         BoundPageSql boundPageSql = sqlManager.generatePageQuerySql(command);
-        return dao.queryForMapList(boundPageSql, withMeta);
+        List<Map<String, Object>> list=dao.queryForMapList(boundPageSql);
+        Long total=dao.queryTotal(boundPageSql);
+        result.setData(list);
+        result.setTotal(total);
+        result.setPage(command.getPageNum());
+        result.setSize(command.getPageSize());
+        result.setDataSize(list.size());
+        if (withMeta) {
+            result.setMeta(metaManager.getByEntityName(command.getEntityName()).getSimpleFieldMetas(command.getFields()));
+        }
+        return result;
     }
 
     /**
@@ -154,10 +166,21 @@ public class RuleService {
     }
 
     public ApiPagedResult queryTreeForMapList(String gql, boolean withMeta, String treeId) {
+        ApiPagedResult result = new ApiPagedResult();
         QueryCommand command = gqlManager.generateQuerySql(gql, getSessionCtx());
         command.getWhere().addFilter("tn.tree_id", treeId);
         BoundPageSql boundPageSql = sqlManager.generatePageQuerySql(command);
-        return dao.queryForMapList(boundPageSql, withMeta);
+        List<Map<String, Object>> list=dao.queryForMapList(boundPageSql);
+        Long total=dao.queryTotal(boundPageSql);
+        result.setData(list);
+        result.setTotal(total);
+        result.setPage(command.getPageNum());
+        result.setSize(command.getPageSize());
+        result.setDataSize(list.size());
+        if (withMeta) {
+            result.setMeta(metaManager.getByEntityName(command.getEntityName()).getSimpleFieldMetas(command.getFields()));
+        }
+        return result;
     }
 
     public ApiMultiPagedResult queryForMultiMapList(String gql, boolean withMeta) {

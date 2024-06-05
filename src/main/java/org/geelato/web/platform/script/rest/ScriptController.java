@@ -1,9 +1,13 @@
 package org.geelato.web.platform.script.rest;
 
+import com.alibaba.fastjson2.JSON;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import org.geelato.core.api.ApiPagedResult;
+import org.geelato.core.api.ApiResult;
 import org.geelato.core.graal.GraalManager;
+import org.geelato.core.graal.GraaljsTestObj;
+import org.geelato.web.platform.graal.GraalContext;
 import org.geelato.web.platform.m.base.rest.BaseController;
 import org.geelato.web.platform.graal.InstanceProxy;
 import org.geelato.web.platform.script.entty.Api;
@@ -33,8 +37,8 @@ public class ScriptController extends BaseController {
     private ApiService apiService;
     @RequestMapping(value = "/exec/{scriptId}", method = RequestMethod.POST)
     @ResponseBody
-    public ApiPagedResult exec(@PathVariable("scriptId") String scriptId, HttpServletRequest request){
-        String gql=getGql(request);
+    public ApiResult<GraalContext> exec(@PathVariable("scriptId") String scriptId, HttpServletRequest request){
+        String parameter=getBody(request);
         String scriptContent=getScriptContent(scriptId);
         Context context = Context.newBuilder("js")
                 .allowHostAccess(HostAccess.ALL)
@@ -47,35 +51,38 @@ public class ScriptController extends BaseController {
         for(Map.Entry entry : graalVariableMap.entrySet()) {
             context.getBindings("js").putMember(entry.getKey().toString(), entry.getValue());
         }
-        ApiPagedResult result = context.eval("js",scriptContent).execute(gql).as(ApiPagedResult.class);
-        return result;
+        Map result = context.eval("js",scriptContent).execute(parameter).as(Map.class);
+        return new ApiResult<>(new GraalContext(result.get("parameter"),result.get("result"))).success();
     }
 
     private String getScriptContent(String scriptId) {
-        StringBuilder sb=new StringBuilder();
-        sb.append("(function(gql){");
-        sb.append(defaultContent());
-        sb.append(scriptContent(scriptId));
-        sb.append("})");
-        return sb.toString();
+        String scriptTemplate=scriptTemplate();
+        return scriptTemplate.replace("#scriptContent#",customContent(scriptId));
     }
 
-    private String scriptContent(String id) {
+    private String customContent(String id) {
         Api api= apiService.getModel(Api.class,id);
         return api.getRelease_content();
-//        return "var result=$gl.dao.queryForMapList(gql,false);" +
+//        return "var result=$gl.dao.queryForMapList(gql,false);context.result=result;" +
 //                "return result;";
     }
 
-    private String defaultContent() {
-        String content="var $gl={};" +
-                "$gl.dao=GqlService;" +
-                "$gl.tenant=tenant;" +
-                "$gl.user=user;";
-        return content;
+    private String scriptTemplate() {
+        return "(function(parameter){\n" +
+                "\t var context={};\n" +
+                "\t context.parameter=parameter;\n" +
+                "\t context.result=null;\n" +
+                "\t var $gl={};\n" +
+                "\t $gl.dao=GqlService;\n" +
+                "\t $gl.json=JsonService;\n" +
+                "\t $gl.user=userVariable;\n" +
+                "\t $gl.tenant=tenantVariable;\n" +
+                "\t #scriptContent# \n" +
+                "\t return context;\t\n" +
+                "})";
     }
 
-    private String getGql(HttpServletRequest request) {
+    private String getBody(HttpServletRequest request) {
         StringBuilder stringBuilder = new StringBuilder();
         BufferedReader br = null;
         try {
