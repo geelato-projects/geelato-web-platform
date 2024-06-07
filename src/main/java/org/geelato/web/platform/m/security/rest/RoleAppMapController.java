@@ -116,4 +116,23 @@ public class RoleAppMapController extends BaseController {
 
         return result;
     }
+
+    @RequestMapping(value = "/isDelete/{appId}/{roleId}", method = RequestMethod.DELETE)
+    @ResponseBody
+    public ApiResult isDeletes(@PathVariable(required = true) String appId, @PathVariable(required = true) String roleId) {
+        ApiResult result = new ApiResult();
+        try {
+            List<RoleAppMap> maps = roleAppMapService.queryModelByIds(roleId, appId);
+            if (maps != null && maps.size() > 0) {
+                for (RoleAppMap map : maps) {
+                    roleAppMapService.isDeleteModel(map);
+                }
+            }
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            result.error().setMsg(ApiErrorMsg.DELETE_FAIL);
+        }
+
+        return result;
+    }
 }

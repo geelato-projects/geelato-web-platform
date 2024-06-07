@@ -54,6 +54,22 @@ public class RoleRestController extends BaseController {
         return result;
     }
 
+    @RequestMapping(value = "/pageQueryOf", method = RequestMethod.GET)
+    @ResponseBody
+    public ApiPagedResult pageQueryOf(HttpServletRequest req) {
+        ApiPagedResult result = new ApiPagedResult();
+        try {
+            PageQueryRequest pageQueryRequest = this.getPageQueryParameters(req);
+            Map<String, Object> params = this.getQueryParameters(req);
+            result = roleService.pageQueryModel("page_query_platform_role_app", params, pageQueryRequest);
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
+        }
+
+        return result;
+    }
+
     @RequestMapping(value = "/query", method = RequestMethod.GET)
     @ResponseBody
     public ApiResult query(HttpServletRequest req) {
