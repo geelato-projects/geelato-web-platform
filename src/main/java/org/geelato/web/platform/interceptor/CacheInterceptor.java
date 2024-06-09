@@ -1,14 +1,9 @@
 package org.geelato.web.platform.interceptor;
 
-import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONObject;
-import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.geelato.core.api.ApiPagedResult;
 import org.geelato.web.platform.cache.CacheService;
 import org.geelato.web.platform.cache.CacheServiceImpl;
-import org.geelato.web.platform.filter.CustomHttpServletResponse;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;

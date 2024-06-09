@@ -1,7 +1,5 @@
 package org.geelato.web.platform.m.syspackage.entity;
 
-import java.util.List;
-
 public class AppMeta {
 
     public AppMeta(String metaName,Object metaData){

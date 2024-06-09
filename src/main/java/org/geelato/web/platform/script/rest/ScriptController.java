@@ -1,12 +1,9 @@
 package org.geelato.web.platform.script.rest;
 
-import com.alibaba.fastjson2.JSON;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
-import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.graal.GraalManager;
-import org.geelato.core.graal.GraaljsTestObj;
 import org.geelato.web.platform.graal.GraalContext;
 import org.geelato.web.platform.m.base.rest.BaseController;
 import org.geelato.web.platform.graal.InstanceProxy;

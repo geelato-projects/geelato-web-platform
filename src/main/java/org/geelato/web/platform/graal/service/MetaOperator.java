@@ -4,7 +4,6 @@ import org.geelato.core.ds.DataSourceManager;
 import org.geelato.core.graal.GraalService;
 import org.geelato.core.orm.Dao;
 import org.geelato.web.platform.m.base.service.RuleService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.sql.DataSource;

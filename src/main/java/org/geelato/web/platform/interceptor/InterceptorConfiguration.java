@@ -1,7 +1,5 @@
 package org.geelato.web.platform.interceptor;
 
-import org.geelato.web.platform.interceptor.DataSourceInterceptor;
-import org.geelato.web.platform.interceptor.JWTInterceptor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;

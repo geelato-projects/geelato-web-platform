@@ -1,6 +1,5 @@
 package org.geelato.web.platform.boot;
 
-import com.zaxxer.hikari.HikariDataSource;
 import org.geelato.core.ds.DataSourceManager;
 import org.geelato.core.orm.Dao;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -8,12 +7,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.sql.DataSource;
-import javax.xml.crypto.Data;
-import java.util.HashMap;
 import java.util.Map;
 
 

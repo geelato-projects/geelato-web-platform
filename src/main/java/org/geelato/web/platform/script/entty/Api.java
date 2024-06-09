@@ -5,7 +5,6 @@ import org.geelato.core.meta.annotation.Col;
 import org.geelato.core.meta.annotation.Entity;
 import org.geelato.core.meta.annotation.Title;
 import org.geelato.core.meta.model.entity.BaseEntity;
-import org.geelato.core.meta.model.entity.BaseSortableEntity;
 
 @Entity(name = "platform_api", table = "platform_api")
 @Title(title = "服务接口")

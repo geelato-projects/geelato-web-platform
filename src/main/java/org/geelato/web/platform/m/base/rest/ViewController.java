@@ -1,7 +1,6 @@
 package org.geelato.web.platform.m.base.rest;
 
 import com.alibaba.fastjson2.JSONArray;
-import com.alibaba.fastjson2.JSONObject;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.api.ApiMetaResult;
@@ -12,7 +11,6 @@ import org.geelato.core.meta.MetaManager;
 import org.geelato.core.meta.ViewManager;
 import org.geelato.core.meta.model.entity.EntityMeta;
 import org.geelato.core.meta.model.view.ViewMeta;
-import org.geelato.web.platform.m.base.entity.DictItem;
 import org.geelato.web.platform.m.base.service.ViewService;
 import org.geelato.web.platform.m.security.entity.DataItems;
 import org.slf4j.Logger;
