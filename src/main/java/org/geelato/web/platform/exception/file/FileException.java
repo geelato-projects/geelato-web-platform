@@ -1,24 +1,26 @@
 package org.geelato.web.platform.exception.file;
 
 import org.geelato.core.exception.CoreException;
+import org.geelato.web.platform.PlatformRuntimeException;
+import org.springframework.data.redis.connection.ReactiveStringCommands;
 
 /**
  * @author diabl
  * @date 2023/10/25 11:28
  */
-public class FileException extends CoreException {
+public class FileException extends PlatformRuntimeException {
     private static final String MESSAGE = "12 File Exception";
     private static final int CODE = 1200;
 
     public FileException() {
-        super(MESSAGE, CODE);
+        super(CODE,MESSAGE);
     }
 
     public FileException(String msg, int code) {
-        super(msg, code);
+        super( code, msg);
     }
 
     public FileException(String detailMessage) {
-        super(String.format("%s：%s", MESSAGE, detailMessage), CODE);
+        super(CODE,String.format("%s：%s", MESSAGE, detailMessage));
     }
 }
