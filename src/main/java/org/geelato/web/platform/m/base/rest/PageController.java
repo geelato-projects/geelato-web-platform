@@ -5,6 +5,7 @@ import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.MediaTypes;
 import org.geelato.core.env.entity.User;
+import org.geelato.core.gql.parser.FilterGroup;
 import org.geelato.web.platform.m.base.entity.AppPage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +32,7 @@ public class PageController extends BaseController {
 
     /**
      * 基于页面id或页面的扩展id（树节点id）获取页面定义及页面自定义信息
-     *
+     * 排除已删除的记录
      * @param idType “pageId”或“extendId”
      * @param id     id值
      * @return {id,type,appId,code,releaseContent,pageCustom}，其中pageCustom为不同用户对该页面的自定义信息
@@ -43,9 +44,9 @@ public class PageController extends BaseController {
         try {
             AppPage page = null;
             if ("pageId".equals(idType)) {
-                page = dao.queryForObject(AppPage.class, "id", id);
+                page = dao.queryForObject(AppPage.class, "id", id,"delStatus","0");
             } else if ("extendId".equals(idType)) {
-                page = dao.queryForObject(AppPage.class, "extendId", id);
+                page = dao.queryForObject(AppPage.class, "extendId", id,"delStatus","0");
             } else {
                 // 不支持的id类型
                 apiResult.error();
