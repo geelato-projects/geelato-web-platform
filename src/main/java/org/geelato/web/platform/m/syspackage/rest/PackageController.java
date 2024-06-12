@@ -4,6 +4,7 @@ import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import jakarta.annotation.Resource;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Null;
 import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.Ctx;
 import org.geelato.core.api.ApiResult;
@@ -78,16 +79,16 @@ public class PackageController extends BaseController {
     /*
     打包应用
      */
-    @RequestMapping(value = {"/packet/{appId}"}, method = RequestMethod.GET, produces = MediaTypes.JSON_UTF_8)
+    @RequestMapping(value = {"/packet/{appId}"},method = {RequestMethod.GET,RequestMethod.POST}, produces = MediaTypes.JSON_UTF_8)
     @ResponseBody
-    public ApiResult packetApp(@NotNull @PathVariable("appId") String appId, String version, String description) throws IOException {
+    public ApiResult packetApp(@NotNull @PathVariable("appId") String appId, String version, String description,
+                               @RequestBody(required = false) Map<String,String> appointMetas) throws IOException {
         ApiResult apiResult = new ApiResult();
         Map<String, String> appDataMap = new HashMap<>();
         Map<String, String> appMetaDataMap = appMetaMap(appId, "package");
         Map<String, String> appBizDataMap = appBizDataMap(appId, "package");
         appDataMap.putAll(appMetaDataMap);
         appDataMap.putAll(appBizDataMap);
-
         AppPackage appPackage = new AppPackage();
 
         List<AppMeta> appMetaList = new ArrayList<>();
@@ -98,8 +99,17 @@ public class PackageController extends BaseController {
                 appPackage.setAppCode(metaData.get(0).get("code").toString());
                 appPackage.setSourceAppId(appId);
             } else {
-                AppMeta appMeta = new AppMeta(key, metaData);
-                appMetaList.add(appMeta);
+                if(appointMetas!=null){
+                    if(appointMetas.containsKey(key)){
+                        List<Map<String, Object>> appointMetaData=pickMetaData(metaData,appointMetas.get(key));
+                        AppMeta appMeta = new AppMeta(key, appointMetaData);
+                        appMetaList.add(appMeta);
+                    }
+                }else{
+                    AppMeta appMeta = new AppMeta(key, metaData);
+                    appMetaList.add(appMeta);
+                }
+
             }
         }
         if (StringUtils.isEmpty(appPackage.getAppCode())) {
@@ -129,6 +139,18 @@ public class PackageController extends BaseController {
 
         apiResult.setData(appVersionService.createModel(av));
         return apiResult;
+    }
+
+    private List<Map<String, Object>> pickMetaData(List<Map<String, Object>> metaData, String appointMetas) {
+        String[] appointIds=appointMetas.split(",");
+        List<Map<String,Object>> pickMetaData=new ArrayList<>();
+        for (Map<String,Object> singleMetaData:metaData){
+            String metaId=singleMetaData.get("id").toString();
+            if(Arrays.asList(appointIds).contains(metaId)){
+                pickMetaData.add(singleMetaData);
+            }
+        }
+        return pickMetaData;
     }
 
     private String generateVersionCode(String appCode) {

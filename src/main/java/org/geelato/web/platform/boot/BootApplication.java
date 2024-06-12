@@ -92,7 +92,7 @@ public class BootApplication implements CommandLineRunner, InitializingBean {
 
 
     private void initDataSource() {
-
+        //todo 初始化数据源用于后续动态切换
     }
 
 
