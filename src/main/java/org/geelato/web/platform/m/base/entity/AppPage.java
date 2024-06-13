@@ -16,6 +16,8 @@ public class AppPage extends BaseSortableEntity {
     private String extendId;
     private String appId;
     private String type;
+
+    private String title;
     private String code;
     private String sourceContent;
     private String previewContent;
@@ -53,6 +55,17 @@ public class AppPage extends BaseSortableEntity {
 
     public void setType(String type) {
         this.type = type;
+    }
+
+
+    @Col(name = "title", nullable = true)
+    @Title(title = "标题")
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
     }
 
     @Col(name = "code", nullable = true)
