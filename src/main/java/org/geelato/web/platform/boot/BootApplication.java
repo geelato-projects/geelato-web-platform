@@ -77,7 +77,7 @@ public class BootApplication implements CommandLineRunner, InitializingBean {
         initMeta();
         resolveSqlScript(args);
         resolveGraalContext();
-        initEnv();
+        initEnvironment();
         logger.info("[start application]...finish");
     }
 
@@ -142,7 +142,7 @@ public class BootApplication implements CommandLineRunner, InitializingBean {
         }
     }
 
-    public void initEnv(){
+    public void initEnvironment(){
         EnvManager.singleInstance().SetDao(dao);
         EnvManager.singleInstance().EnvInit();
     }

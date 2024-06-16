@@ -7,7 +7,10 @@ import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.subject.Subject;
 import org.geelato.core.env.EnvManager;
+import org.geelato.core.env.entity.User;
 import org.geelato.core.meta.annotation.IgnoreJWTVerify;
+import org.geelato.web.platform.PlatformContext;
+import org.geelato.web.platform.Tenant;
 import org.geelato.web.platform.m.security.service.JWTUtil;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -49,7 +52,10 @@ public class JWTInterceptor implements HandlerInterceptor {
         String id = verify.getClaim("id").asString();
         String passWord = verify.getClaim("passWord").asString();
         //初始化Core中的当前用户
-        EnvManager.singleInstance().InitCurrentUser(loginName);
+        User currentUser= EnvManager.singleInstance().InitCurrentUser(loginName);
+
+        PlatformContext.setCurrentUser(currentUser);
+        PlatformContext.setCurrentTenant(new Tenant("geelato"));
 
         UsernamePasswordToken userToken = new UsernamePasswordToken(loginName, passWord);
         Subject subject = SecurityUtils.getSubject();

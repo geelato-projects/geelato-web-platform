@@ -12,8 +12,8 @@ public class PlatformContext {
     public static void setCurrentUser(User user){
         threadLocalUser.set(user);
     }
-    public static void setCurrentTenant(String tenantCode){
-        threadLocalTenant.set(null);
+    public static void setCurrentTenant(Tenant tenant){
+        threadLocalTenant.set(tenant);
     }
 
     public static User getCurrentUser(){
