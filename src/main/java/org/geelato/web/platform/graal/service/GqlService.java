@@ -8,7 +8,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.sql.DataSource;
 
-@GraalService(name="GqlService")
+@GraalService(name="dao",built = "true")
 public class GqlService extends RuleService {
     public GqlService(){
         setDao(initDefaultDao());

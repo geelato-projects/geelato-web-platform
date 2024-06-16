@@ -2,21 +2,21 @@ package org.geelato.web.platform.graal;
 
 public class GraalContext {
 
-    public GraalContext(Object parameter,Object result){
-        this.parameter=parameter;
+    public GraalContext(Object result){
+//        this.parameter=parameter;
         this.result=result;
     }
-    private Object parameter;
+//    private Object parameter;
 
     private Object result;
 
-    public Object getParameter() {
-        return parameter;
-    }
+//    public Object getParameter() {
+//        return parameter;
+//    }
 
-    public void setParameter(Object parameter) {
-        this.parameter = parameter;
-    }
+//    public void setParameter(Object parameter) {
+//        this.parameter = parameter;
+//    }
 
     public Object getResult() {
         return result;

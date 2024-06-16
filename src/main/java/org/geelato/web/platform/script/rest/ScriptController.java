@@ -4,6 +4,7 @@ import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.graal.GraalManager;
+import org.geelato.core.graal.GraalService;
 import org.geelato.web.platform.graal.GraalContext;
 import org.geelato.web.platform.m.base.rest.BaseController;
 import org.geelato.web.platform.graal.InstanceProxy;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 
 @Controller
@@ -42,14 +44,16 @@ public class ScriptController extends BaseController {
                 .allowHostClassLookup(className -> true).build();
         Map<String,Object> graalServiceMap= graalManager.getGraalServiceMap();
         Map<String,Object> graalVariableMap= graalManager.getGraalVariableMap();
+        Map<String,Object> globalGraalVariableMap= graalManager.getGlobalGraalVariableMap();
+        context.getBindings("js").putMember("$gl", globalGraalVariableMap);
         for(Map.Entry entry : graalServiceMap.entrySet()){
-            context.getBindings("js").putMember(entry.getKey().toString(),entry.getValue());
+            context.getBindings("js").putMember(entry.getKey().toString(), entry.getValue());
         }
         for(Map.Entry entry : graalVariableMap.entrySet()) {
             context.getBindings("js").putMember(entry.getKey().toString(), entry.getValue());
         }
         Map result = context.eval("js",scriptContent).execute(parameter).as(Map.class);
-        return new ApiResult<>(new GraalContext(result.get("parameter"),result.get("result"))).success();
+        return new ApiResult<>(new GraalContext(result.get("result"))).success();
     }
 
     private String getScriptContent(String scriptId) {
@@ -67,13 +71,13 @@ public class ScriptController extends BaseController {
     private String scriptTemplate() {
         return "(function(parameter){\n" +
                 "\t var context={};\n" +
-                "\t context.parameter=parameter;\n" +
+//                "\t context.parameter=parameter;\n" +
                 "\t context.result=null;\n" +
-                "\t var $gl={};\n" +
-                "\t $gl.dao=GqlService;\n" +
-                "\t $gl.json=JsonService;\n" +
-                "\t $gl.user=userVariable;\n" +
-                "\t $gl.tenant=tenantVariable;\n" +
+//                "\t var $gl={};\n" +
+//                "\t $gl.dao=GqlService;\n" +
+//                "\t $gl.json=JsonService;\n" +
+//                "\t $gl.user=userVariable;\n" +
+//                "\t $gl.tenant=tenantVariable;\n" +
                 "\t #scriptContent# \n" +
                 "\t return context;\t\n" +
                 "})";

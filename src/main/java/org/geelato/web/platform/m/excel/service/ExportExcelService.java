@@ -55,7 +55,7 @@ public class ExportExcelService {
     @Autowired
     private ExcelWriter excelWriter;
     @Autowired
-    private ExcelXSSFWriter excelXSSFWriter;
+    private ExcelXSSFWriter excelXSSFWriter;    
     @Autowired
     private WordXWPFWriter wordXWPFWriter;
     @Autowired
