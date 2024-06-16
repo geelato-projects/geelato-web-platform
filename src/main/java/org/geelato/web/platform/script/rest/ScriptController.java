@@ -71,7 +71,7 @@ public class ScriptController extends BaseController {
     private String scriptTemplate() {
         return "(function(parameter){\n" +
                 "\t var context={};\n" +
-//                "\t context.parameter=parameter;\n" +
+                "\t context.parameter=parameter;\n" +
                 "\t context.result=null;\n" +
 //                "\t var $gl={};\n" +
 //                "\t $gl.dao=GqlService;\n" +
