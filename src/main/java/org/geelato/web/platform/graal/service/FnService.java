@@ -4,6 +4,7 @@ import com.ibm.icu.impl.duration.impl.Utils;
 import org.geelato.core.graal.GraalService;
 import org.geelato.core.util.StringUtils;
 import org.geelato.utils.NumbChineseUtils;
+import org.geelato.web.platform.m.security.entity.User;
 import org.geelato.web.platform.m.security.service.UserService;
 
 import java.text.ParseException;
@@ -15,8 +16,9 @@ import java.util.Date;
 @GraalService(name="fn",built = "true")
 public class FnService {
 
-    public String getUser(){
-        return null;
+    public User getUser(String userId){
+        UserService userService=new UserService();
+        return userService.getModel(User.class,userId);
     }
 
     public String toChineseCurrency(String digit){
@@ -29,11 +31,10 @@ public class FnService {
         SimpleDateFormat targetDateFormat=new SimpleDateFormat(targetFormat);
         if(StringUtils.isEmpty(dateStr)){
             date=new Date();
-            formatDate=targetDateFormat.format(date);
         }else{
             date = targetDateFormat.parse(dateStr);
-            formatDate=targetDateFormat.format(date);
         }
+        formatDate=targetDateFormat.format(date);
         return formatDate;
     }
 }
