@@ -7,6 +7,7 @@ import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiErrorMsg;
+import org.geelato.core.enums.DeleteStatusEnum;
 import org.geelato.core.gql.parser.FilterGroup;
 import org.geelato.core.gql.parser.PageQueryRequest;
 import org.geelato.core.util.StringUtils;
@@ -27,10 +28,7 @@ import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.File;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author diabl
@@ -146,6 +144,25 @@ public class AppVersionController extends BaseController {
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.OPERATE_FAIL);
+        }
+
+        return result;
+    }
+
+    @RequestMapping(value = "/validate", method = RequestMethod.POST)
+    @ResponseBody
+    public ApiResult validate(@RequestBody AppVersion form) {
+        ApiResult result = new ApiResult();
+        try {
+            Map<String, String> params = new HashMap<>();
+            params.put("version", form.getVersion());
+            params.put("del_status", String.valueOf(DeleteStatusEnum.NO.getCode()));
+            params.put("app_id", form.getAppId());
+            params.put("tenant_code", form.getTenantCode());
+            result.setData(appVersionService.validate("platform_app_version", form.getId(), params));
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            result.error().setMsg(ApiErrorMsg.VALIDATE_FAIL);
         }
 
         return result;
