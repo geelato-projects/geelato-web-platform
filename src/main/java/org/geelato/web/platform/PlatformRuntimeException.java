@@ -1,33 +1,49 @@
 package org.geelato.web.platform;
 
-import org.geelato.core.constants.ApiResultCode;
+import org.geelato.core.exception.CoreException;
 
-public  class PlatformRuntimeException extends RuntimeException {
+public class PlatformRuntimeException {
 
-    private int code;
+    private CoreException coreException;
+    private String logTag;
+    private final int errorCode;
+    private final String errorMsg;
 
-    private String msg;
-    public PlatformRuntimeException() {
-        super();
-    }
-
-    public PlatformRuntimeException(String msg) {
-        super(msg);
-        this.msg = msg;
-        this.code = ApiResultCode.ERROR;
+    public PlatformRuntimeException(CoreException coreException) {
+        this.coreException=coreException;
+        this.errorCode=coreException.getErrorCode();
+        this.errorMsg =  coreException.getErrorMsg();
     }
 
     public PlatformRuntimeException(int code,String msg){
         super();
-        this.code=code;
-        this.msg=msg;
+        this.errorCode=code;
+        this.errorMsg=msg;
     }
 
-    public int getCode() {
-        return code;
+    public int getErrorCode() {
+        return errorCode;
     }
 
-    public String getMsg() {
-        return msg;
+    public String getErrorMsg() {
+        return errorMsg;
     }
+
+    public String getLogTag() {
+        return logTag;
+    }
+
+    public void setLogTag(String logTag) {
+        this.logTag = logTag;
+    }
+    public String getStackTraceDetail(){
+        StringBuilder sb=new StringBuilder();
+        for(StackTraceElement element:coreException.getStackTrace()){
+            sb.append("[").append(element.toString()).append("]").append("\n");
+        }
+        return sb.toString();
+    }
+
+
+
 }
