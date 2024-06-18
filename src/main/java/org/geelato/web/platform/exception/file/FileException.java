@@ -1,12 +1,13 @@
 package org.geelato.web.platform.exception.file;
 
+import org.geelato.core.exception.CoreException;
 import org.geelato.web.platform.PlatformRuntimeException;
 
 /**
  * @author diabl
  * @date 2023/10/25 11:28
  */
-public class FileException extends PlatformRuntimeException {
+public class FileException extends CoreException {
     private static final String MESSAGE = "12 File Exception";
     private static final int CODE = 1200;
 
