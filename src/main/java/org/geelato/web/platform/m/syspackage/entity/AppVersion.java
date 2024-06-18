@@ -11,7 +11,6 @@ import java.util.Date;
 @Entity(name = "platform_app_version", table = "platform_app_version")
 @Title(title = "应用版本")
 public class AppVersion extends BaseEntity {
-    private String id;
     private String packagePath;
     private String version;
     private String packageSource;
@@ -20,15 +19,6 @@ public class AppVersion extends BaseEntity {
     private Date packetTime;
     private String status;
     private String description;
-
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
 
     @Col(name = "package_path")
     @Title(title = "package_path")

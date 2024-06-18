@@ -4,7 +4,6 @@ import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import jakarta.annotation.Resource;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Null;
 import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.Ctx;
 import org.geelato.core.api.ApiResult;
@@ -22,6 +21,8 @@ import org.geelato.core.sql.SqlManager;
 import org.geelato.core.util.StringUtils;
 import org.geelato.utils.ZipUtils;
 import org.geelato.web.platform.enums.AttachmentSourceEnum;
+import org.geelato.web.platform.enums.PackageSourceEnum;
+import org.geelato.web.platform.enums.PackageStatusEnum;
 import org.geelato.web.platform.m.base.entity.Attach;
 import org.geelato.web.platform.m.base.rest.BaseController;
 import org.geelato.web.platform.m.base.service.AttachService;
@@ -54,11 +55,11 @@ public class PackageController extends BaseController {
     private static final Logger logger = LoggerFactory.getLogger(PackageController.class);
     private final String defaultPackageName = "geelatoApp";
 
-    private final ArrayList<String> incrementMetas=new ArrayList<>();
+    private final ArrayList<String> incrementMetas = new ArrayList<>();
 
-    private final String[] incrementPlatformMetas={"platform_dict","platform_dict_item","platform_sys_config",
-            "platform_export_template","platform_encoding","platform_resources"};
-    private final ArrayList<String> incrementBizMetas=new ArrayList<>();
+    private final String[] incrementPlatformMetas = {"platform_dict", "platform_dict_item", "platform_sys_config",
+            "platform_export_template", "platform_encoding", "platform_resources"};
+    private final ArrayList<String> incrementBizMetas = new ArrayList<>();
 
 
     private final Map<String, List<String>> incrementMetaIds = new HashMap<>();
@@ -79,10 +80,10 @@ public class PackageController extends BaseController {
     /*
     打包应用
      */
-    @RequestMapping(value = {"/packet/{appId}"},method = {RequestMethod.GET,RequestMethod.POST}, produces = MediaTypes.JSON_UTF_8)
+    @RequestMapping(value = {"/packet/{appId}"}, method = {RequestMethod.GET, RequestMethod.POST}, produces = MediaTypes.JSON_UTF_8)
     @ResponseBody
     public ApiResult packetApp(@NotNull @PathVariable("appId") String appId, String version, String description,
-                               @RequestBody(required = false) Map<String,String> appointMetas) throws IOException {
+                               @RequestBody(required = false) Map<String, String> appointMetas) throws IOException {
         ApiResult apiResult = new ApiResult();
         Map<String, String> appDataMap = new HashMap<>();
         Map<String, String> appMetaDataMap = appMetaMap(appId, "package");
@@ -99,13 +100,13 @@ public class PackageController extends BaseController {
                 appPackage.setAppCode(metaData.get(0).get("code").toString());
                 appPackage.setSourceAppId(appId);
             } else {
-                if(appointMetas!=null){
-                    if(appointMetas.containsKey(key)){
-                        List<Map<String, Object>> appointMetaData=pickMetaData(metaData,appointMetas.get(key));
+                if (appointMetas != null) {
+                    if (appointMetas.containsKey(key)) {
+                        List<Map<String, Object>> appointMetaData = pickMetaData(metaData, appointMetas.get(key));
                         AppMeta appMeta = new AppMeta(key, appointMetaData);
                         appMetaList.add(appMeta);
                     }
-                }else{
+                } else {
                     AppMeta appMeta = new AppMeta(key, metaData);
                     appMetaList.add(appMeta);
                 }
@@ -131,8 +132,8 @@ public class PackageController extends BaseController {
             av.setDescription(description);
         }
 
-        av.setPackageSource("current environment packet");
-        av.setStatus("release");
+        av.setPackageSource(PackageSourceEnum.PACKET.getValue());
+        av.setStatus(PackageStatusEnum.DRAFT.getValue());
         av.setPacketTime(new Date());
         String filePath = writePackageData(av, appPackage);
         av.setPackagePath(filePath);
@@ -142,11 +143,11 @@ public class PackageController extends BaseController {
     }
 
     private List<Map<String, Object>> pickMetaData(List<Map<String, Object>> metaData, String appointMetas) {
-        String[] appointIds=appointMetas.split(",");
-        List<Map<String,Object>> pickMetaData=new ArrayList<>();
-        for (Map<String,Object> singleMetaData:metaData){
-            String metaId=singleMetaData.get("id").toString();
-            if(Arrays.asList(appointIds).contains(metaId)){
+        String[] appointIds = appointMetas.split(",");
+        List<Map<String, Object>> pickMetaData = new ArrayList<>();
+        for (Map<String, Object> singleMetaData : metaData) {
+            String metaId = singleMetaData.get("id").toString();
+            if (Arrays.asList(appointIds).contains(metaId)) {
                 pickMetaData.add(singleMetaData);
             }
         }
@@ -287,8 +288,8 @@ public class PackageController extends BaseController {
         appDataMap.putAll(appBizDataMap);
         for (String key : appDataMap.keySet()) {
             String value = appDataMap.get(key);
-            if(incrementMetas.contains(key)) {
-                //如果增量更新，不执行清空数据操作
+            if (incrementMetas.contains(key)) {
+                // 如果增量更新，不执行清空数据操作
                 String sql = String.format("select id from " + key + " where app_id='%s'", appId);
                 List<String> ids = dao.getJdbcTemplate().queryForList(sql, String.class);
                 incrementMetaIds.put(key, ids);
@@ -300,7 +301,6 @@ public class PackageController extends BaseController {
         }
         logger.info("----------------------delete version end--------------------");
     }
-
 
 
     /*
@@ -394,10 +394,10 @@ public class PackageController extends BaseController {
                     break;
             }
             String tableName = map.get("table_name").toString();
-            String packBusData=map.get("pack_bus_data").toString();
+            String packBusData = map.get("pack_bus_data").toString();
             String bizSql = String.format("%s %s where app_id ='%s'", preOperateSql, tableName, appId);
             bizDataSqlMap.put(tableName, bizSql);
-            if(packBusData.equals("1")){
+            if (packBusData.equals("1")) {
                 incrementBizMetas.add(tableName);
             }
         }
@@ -429,7 +429,7 @@ public class PackageController extends BaseController {
             e.printStackTrace();
         }
         writePackageResourceData(appPackage);
-        return compressAppPackage(packageConfigurationProperties.getPath() + tempFolderPath,appVersion, appPackage);
+        return compressAppPackage(packageConfigurationProperties.getPath() + tempFolderPath, appVersion, appPackage);
     }
 
     private void writePackageResourceData(AppPackage appPackage) {
@@ -472,11 +472,11 @@ public class PackageController extends BaseController {
             String appMetaName = appMeta.getMetaName();
             Object appMetaData = appMeta.getMetaData();
             EntityMeta entityMeta = metaManager.getByEntityName(appMetaName);
-            String tableName=entityMeta.getTableName();
-            Boolean increment=incrementMetas.contains(tableName);
-            List<String> ids=null;
-            if(increment){
-                ids= incrementMetaIds.get(tableName);
+            String tableName = entityMeta.getTableName();
+            Boolean increment = incrementMetas.contains(tableName);
+            List<String> ids = null;
+            if (increment) {
+                ids = incrementMetaIds.get(tableName);
             }
             JSONArray jsonArray = JSONArray.parseArray(JSONObject.toJSONString(appMetaData));
             for (int i = 0; i < jsonArray.size(); i++) {
