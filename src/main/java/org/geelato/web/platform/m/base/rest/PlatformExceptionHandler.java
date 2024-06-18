@@ -77,8 +77,8 @@ public class PlatformExceptionHandler extends ResponseEntityExceptionHandler {
     @org.springframework.web.bind.annotation.ExceptionHandler(value = {CoreException.class})
     public final ResponseEntity<?> handleException(CoreException ex, WebRequest request) {
         ApiResult<PlatformRuntimeException> apiResult=new ApiResult<>();
-        apiResult.setCode(ApiResultCode.ERROR);
-        apiResult.setMsg("Platform Runtime Exception !");
+        apiResult.setCode(ex.getErrorCode());
+        apiResult.setMsg(ex.getErrorMsg());
         apiResult.setStatus(ApiResultStatus.FAIL);
         apiResult.setData(coreException2PlatformException(ex));
         HttpHeaders headers = new HttpHeaders();
