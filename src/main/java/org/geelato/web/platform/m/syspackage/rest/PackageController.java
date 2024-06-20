@@ -91,7 +91,6 @@ public class PackageController extends BaseController {
         appDataMap.putAll(appMetaDataMap);
         appDataMap.putAll(appBizDataMap);
         AppPackage appPackage = new AppPackage();
-
         List<AppMeta> appMetaList = new ArrayList<>();
         for (String key : appDataMap.keySet()) {
             String value = appDataMap.get(key);
@@ -121,13 +120,46 @@ public class PackageController extends BaseController {
         appPackage.setAppMetaList(appMetaList);
         AppVersion av = new AppVersion();
         av.setAppId(appId);
+        String packageVersion=null;
+        if (StringUtils.isEmpty(version)) {
+            packageVersion=generateVersionCode(appPackage.getAppCode());
+        } else {
+            packageVersion=version;
+        }
+        av.setVersion(packageVersion);
+        appPackage.setVersion(packageVersion);
+        if (StringUtils.isEmpty(description)) {
+            av.setDescription("当前环境打包形成的应用包");
+        } else {
+            av.setDescription(description);
+        }
+        av.setPackageSource(PackageSourceEnum.PACKET.getValue());
+        av.setStatus(PackageStatusEnum.DRAFT.getValue());
+        av.setPacketTime(new Date());
+        String filePath = writePackageData(av, appPackage);
+        av.setPackagePath(filePath);
+
+        apiResult.setData(appVersionService.createModel(av));
+        return apiResult;
+    }
+    @RequestMapping(value = {"/packet/merge"}, method = {RequestMethod.GET, RequestMethod.POST}, produces = MediaTypes.JSON_UTF_8)
+    @ResponseBody
+    public ApiResult packetMergeApp(String appId, String version, String description,
+                               @RequestBody(required = false) Map<String,Map<String, String>> appointMetas) throws IOException {
+        ApiResult apiResult = new ApiResult();
+        String[] versionIds=appointMetas.keySet().toArray(new String[0]);
+        List<AppPackage> appPackages=getAppointAppPackage(versionIds);
+        AppPackage appPackage= mergePackage(appPackages,appointMetas);
+
+        AppVersion av = new AppVersion();
+        av.setAppId(appId);
         if (StringUtils.isEmpty(version)) {
             av.setVersion(generateVersionCode(appPackage.getAppCode()));
         } else {
             av.setVersion(version);
         }
         if (StringUtils.isEmpty(description)) {
-            av.setDescription("当前环境打包形成的应用包");
+            av.setDescription("对比合并产生的包");
         } else {
             av.setDescription(description);
         }
@@ -137,9 +169,72 @@ public class PackageController extends BaseController {
         av.setPacketTime(new Date());
         String filePath = writePackageData(av, appPackage);
         av.setPackagePath(filePath);
-
         apiResult.setData(appVersionService.createModel(av));
         return apiResult;
+    }
+
+    private AppPackage mergePackage(List<AppPackage> sourceAppPackageList, Map<String, Map<String, String>> appointMetas) {
+        AppPackage appPackage=new AppPackage();
+
+        List<AppMeta> mergeAppMetaList=new ArrayList<>();
+        for (AppPackage pkg:sourceAppPackageList){
+            String pkgVersion=pkg.getVersion();
+            appPackage.setAppCode(pkg.getAppCode());
+            Map<String,String> pkgAppoints= appointMetas.get(pkgVersion);
+            for (AppMeta appMeta :pkg.getAppMetaList()) {
+                List<Map<String, Object>> metaData = (List<Map<String, Object>>) appMeta.getMetaData();
+                String metaName=appMeta.getMetaName();
+                if (pkgAppoints.containsKey(metaName)) {
+                    List<Map<String, Object>> appointMetaData = pickMetaData(metaData, pkgAppoints.get(metaName));
+                    AppMeta pkgAppMeta = new AppMeta(metaName, appointMetaData);
+                    mergeAppMetaList.add(pkgAppMeta);
+                }
+            }
+        }
+        appPackage.setAppMetaList(distinctMergrAppMetaList(mergeAppMetaList));
+        return appPackage;
+    }
+
+    private List<AppMeta> distinctMergrAppMetaList(List<AppMeta> waitMergeAppMetaList) {
+        List<AppMeta> distinctAppMetaList=new ArrayList<>();
+        for (AppMeta appMeta:waitMergeAppMetaList){
+           AppMeta mergeAppMeta= distinctAppMetaList.stream().filter(x->x.getMetaName().equals(appMeta.getMetaName())).findFirst().orElse(null);
+           if(mergeAppMeta==null){
+               distinctAppMetaList.add(appMeta);
+           }else {
+               List<Map<String, Object>> metaData=(List<Map<String, Object>>)mergeAppMeta.getMetaData();
+               for (Map<String,Object> map: (List<Map<String, Object>>)appMeta.getMetaData()){
+                   String id=map.get("id").toString();
+                   if(metaData.stream().noneMatch(x->x.get("id").toString().equals(id))){
+                       metaData.add(map);
+                   }
+               }
+           }
+        }
+        return distinctAppMetaList;
+    }
+
+    private List<AppPackage> getAppointAppPackage (String[] versions) {
+        List<AppPackage> appPackageList=new ArrayList<>();
+        for (String version:versions){
+            AppVersion appVersion = appVersionService.getAppVersionByVersion(version);
+            String appPackageData = null;
+            if (appVersion != null && !StringUtils.isEmpty(appVersion.getPackagePath())) {
+                try {
+                    if (appVersion.getPackagePath().contains(".zgdp")) {
+                        appPackageData = ZipUtils.readPackageData(appVersion.getPackagePath(), ".gdp");
+                    } else {
+                        Attach attach = attachService.getModel(appVersion.getPackagePath());
+                        File file = downloadService.downloadFile(attach.getName(), attach.getPath());
+                        appPackageData = ZipUtils.readPackageData(file, ".gdp");
+                    }
+                } catch (IOException ex) {
+                }
+                AppPackage appPackage = resolveAppPackageData(appPackageData);
+                appPackageList.add(appPackage);
+            }
+        }
+        return appPackageList;
     }
 
     private List<Map<String, Object>> pickMetaData(List<Map<String, Object>> metaData, String appointMetas) {
@@ -153,6 +248,7 @@ public class PackageController extends BaseController {
         }
         return pickMetaData;
     }
+
 
     private String generateVersionCode(String appCode) {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");

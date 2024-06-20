@@ -7,6 +7,8 @@ public class AppPackage {
     private String sourceAppId;
     private String targetAppId;
 
+    private String version;
+
     private String appCode;
 
     private List<AppMeta> appMetaList;
@@ -51,5 +53,13 @@ public class AppPackage {
 
     public void setAppResourceList(List<AppResource> appResourceList) {
         this.appResourceList = appResourceList;
+    }
+
+    public String getVersion() {
+        return version;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
     }
 }
