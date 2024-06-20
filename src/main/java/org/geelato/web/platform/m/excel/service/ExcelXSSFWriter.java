@@ -431,6 +431,8 @@ public class ExcelXSSFWriter {
             // width
             ExcelXSSFUtils.setColumnWidth(sheet, i, column.getWidth());
         }
+        // 表头锁定
+        sheet.createFreezePane(0, profundity);
     }
 
     /**
