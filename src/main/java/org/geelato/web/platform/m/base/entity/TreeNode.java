@@ -27,6 +27,8 @@ public class TreeNode extends BaseSortableEntity {
     private String extendId;
     private String meta;
     private String flag;
+
+    private String url;
     private String description;
 
     private long seqNo;
@@ -134,6 +136,16 @@ public class TreeNode extends BaseSortableEntity {
 
     public void setFlag(String flag) {
         this.flag = flag;
+    }
+
+    @Col(name = "url", nullable = true)
+    @Title(title = "链接", description = "通过菜单项打开第三方链接")
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
     }
 
     @Col(name = "meta", nullable = true)
