@@ -29,7 +29,7 @@ import java.util.Properties;
 
 // 在繼承的类中编写该注解
 //@SpringBootApplication
-@ComponentScan(basePackages = {"org.geelato"})
+@ComponentScan(basePackages = {"org.geelato","cn.geelato"})
 public class BootApplication implements CommandLineRunner, InitializingBean {
     private static final Logger logger = LoggerFactory.getLogger(BootApplication.class);
     @Autowired
@@ -82,7 +82,7 @@ public class BootApplication implements CommandLineRunner, InitializingBean {
     }
 
     private void resolveGraalContext() {
-        String[] packageNames = getProperty("geelato.graal.scan-package-names", "org.geelato").split(",");
+        String[] packageNames = getProperty("geelato.graal.scan-package-names", "cn.geelato").split(",");
         for (String packageName : packageNames) {
             GraalManager.singleInstance().initGraalService(packageName);
             GraalManager.singleInstance().initGraalVariable(packageName);
@@ -126,7 +126,7 @@ public class BootApplication implements CommandLineRunner, InitializingBean {
 
 
     private void initClassPackageMeta() {
-        String[] packageNames = getProperty("geelato.meta.scan-package-names", "org.geelato").split(",");
+        String[] packageNames = getProperty("geelato.meta.scan-package-names", "cn.geelato").split(",");
         for (String packageName : packageNames) {
             MetaManager.singleInstance().scanAndParse(packageName, false);
         }
