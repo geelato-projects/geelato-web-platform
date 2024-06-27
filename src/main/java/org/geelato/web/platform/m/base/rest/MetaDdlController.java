@@ -6,6 +6,7 @@ import org.geelato.core.Ctx;
 import org.geelato.core.api.ApiMetaResult;
 import org.geelato.core.constants.MediaTypes;
 import org.geelato.core.enums.EnableStatusEnum;
+import org.geelato.core.enums.TableSourceTypeEnum;
 import org.geelato.core.gql.parser.FilterGroup;
 import org.geelato.core.meta.MetaManager;
 import org.geelato.core.meta.model.entity.TableMeta;
@@ -84,10 +85,14 @@ public class MetaDdlController extends BaseController {
                         tableResult.put(meta.getEntityName(), false);
                     }
                     for (int i = 0; i < tableMetas.size(); i++) {
-                        errorModel = String.format("Error Model: %s（%s）", tableMetas.get(i).getTitle(), tableMetas.get(i).getEntityName());
-                        dbGenerateDao.createOrUpdateOneTable(tableMetas.get(i).getEntityName(), false);
-                        logger.info(String.format("成功插入第 %s 个。表名：%s", (i + 1), tableMetas.get(i).getEntityName()));
-                        tableResult.put(tableMetas.get(i).getEntityName(), true);
+                        if (TableSourceTypeEnum.CREATION.getValue().equalsIgnoreCase(tableMetas.get(i).getSourceType())) {
+                            errorModel = String.format("Error Model: %s（%s）", tableMetas.get(i).getTitle(), tableMetas.get(i).getEntityName());
+                            dbGenerateDao.createOrUpdateOneTable(tableMetas.get(i).getEntityName(), false);
+                            logger.info(String.format("成功插入第 %s 个。表名：%s", (i + 1), tableMetas.get(i).getEntityName()));
+                            tableResult.put(tableMetas.get(i).getEntityName(), true);
+                        } else {
+                            tableResult.put(tableMetas.get(i).getEntityName(), "ignore");
+                        }
                     }
                 }
             }
