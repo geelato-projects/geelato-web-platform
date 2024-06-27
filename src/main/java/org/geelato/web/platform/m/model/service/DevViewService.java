@@ -30,6 +30,16 @@ import java.util.Map;
 @Component
 public class DevViewService extends BaseSortableService {
 
+    public List<TableView> getTableView(String connectId, String entityName) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("connectId", connectId);
+        params.put("entityName", entityName);
+        params.put("viewType", ViewTypeEnum.DEFAULT.getCode());
+        params.put("enableStatus", ColumnDefault.ENABLE_STATUS_VALUE);
+        List<TableView> tableViewList = queryModel(TableView.class, params);
+        return tableViewList;
+    }
+
     /**
      * 仅创建、更新默认视图
      */
@@ -40,12 +50,7 @@ public class DevViewService extends BaseSortableService {
         if (Strings.isBlank(viewColumns) || Strings.isBlank(viewConstruct)) {
             return;
         }
-        Map<String, Object> params = new HashMap<>();
-        params.put("connectId", tableMeta.getConnectId());
-        params.put("entityName", tableMeta.getEntityName());
-        params.put("viewType", ViewTypeEnum.DEFAULT.getCode());
-        params.put("enableStatus", ColumnDefault.ENABLE_STATUS_VALUE);
-        List<TableView> tableViewList = queryModel(TableView.class, params);
+        List<TableView> tableViewList = getTableView(tableMeta.getConnectId(), tableMeta.getEntityName());
         if (tableViewList != null && !tableViewList.isEmpty()) {
             TableView meta = tableViewList.get(0);
             if (tableViewList.size() > 1) {

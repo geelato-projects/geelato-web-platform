@@ -14,6 +14,7 @@ import org.geelato.core.gql.parser.FilterGroup;
 import org.geelato.core.gql.parser.PageQueryRequest;
 import org.geelato.core.meta.MetaManager;
 import org.geelato.core.meta.model.entity.TableMeta;
+import org.geelato.core.meta.model.view.TableView;
 import org.geelato.web.platform.enums.PermissionTypeEnum;
 import org.geelato.web.platform.m.base.rest.BaseController;
 import org.geelato.web.platform.m.model.service.DevTableColumnService;
@@ -40,7 +41,7 @@ public class DevTableController extends BaseController {
 
     static {
         OPERATORMAP.put("contains", Arrays.asList("title", "tableName", "entityName", "description"));
-        OPERATORMAP.put("consists", Arrays.asList("connectId"));
+        OPERATORMAP.put("consists", List.of("connectId"));
         OPERATORMAP.put("intervals", Arrays.asList("createAt", "updateAt"));
     }
 
@@ -119,6 +120,11 @@ public class DevTableController extends BaseController {
                         // 添加默认权限
                         permissionService.resetTableDefaultPermission(PermissionTypeEnum.getTablePermissions(), form.getEntityName(), form.getAppId());
                     }
+                    // 刷新默认视图
+                    List<TableView> tableViewList = devViewService.getTableView(form.getConnectId(), form.getEntityName());
+                    if (tableViewList != null && tableViewList.size() > 0) {
+                        devViewService.createOrUpdateDefaultTableView(form, devTableColumnService.getDefaultViewSql(form.getEntityName()));
+                    }
                     result.setData(resultMap);
                 } else {
                     result.error().setMsg(ApiErrorMsg.IS_NULL);
@@ -135,8 +141,6 @@ public class DevTableController extends BaseController {
             if (result.isSuccess() && Strings.isNotEmpty(form.getEntityName())) {
                 // 刷新实体缓存
                 metaManager.refreshDBMeta(form.getEntityName());
-                // 刷新默认视图
-                devViewService.createOrUpdateDefaultTableView(form, devTableColumnService.getDefaultViewSql(form.getEntityName()));
             }
         } catch (Exception e) {
             logger.error(e.getMessage());
@@ -166,10 +170,10 @@ public class DevTableController extends BaseController {
             // 添加默认权限
             permissionService.resetDefaultPermission(PermissionTypeEnum.getTablePermissions(), form.getEntityName(), form.getAppId());
             if (result.isSuccess() && Strings.isNotEmpty(form.getEntityName())) {
+                // 刷新默认视图
+                // devViewService.createOrUpdateDefaultTableView(form, devTableColumnService.getDefaultViewSql(form.getEntityName()));
                 // 刷新实体缓存
                 metaManager.refreshDBMeta(form.getEntityName());
-                // 刷新默认视图
-                devViewService.createOrUpdateDefaultTableView(form, devTableColumnService.getDefaultViewSql(form.getEntityName()));
             }
         } catch (Exception e) {
             logger.error(e.getMessage());
