@@ -427,7 +427,7 @@ public class ExportTemplateService extends BaseService {
         attach.setSize(attributes.size());
         attach.setPath(excelPath);
         attach.setGenre("fileTemplate");
-        attach.setObjectId(meta.getId());
+        // attach.setObjectId(meta.getId());
         attach.setAppId(meta.getAppId());
 
         return resourcesService.createModel(attach);
