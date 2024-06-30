@@ -1,6 +1,7 @@
 package org.geelato.web.platform.boot;
 
 import org.geelato.core.biz.rules.BizManagerFactory;
+import org.geelato.core.ds.DataSourceManager;
 import org.geelato.core.env.EnvManager;
 import org.geelato.core.graal.GraalManager;
 import org.geelato.core.meta.MetaManager;
@@ -92,7 +93,7 @@ public class BootApplication implements CommandLineRunner, InitializingBean {
 
 
     private void initDataSource() {
-        //todo 初始化数据源用于后续动态切换
+//        DataSourceManager.singleInstance().parseDataSourceMeta(this.dao);
     }
 
 

@@ -10,8 +10,11 @@ import org.geelato.core.api.ApiMultiPagedResult;
 import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.MediaTypes;
+import org.geelato.core.ds.DataSourceManager;
 import org.geelato.core.meta.MetaManager;
+import org.geelato.core.meta.model.entity.EntityMeta;
 import org.geelato.core.orm.DaoException;
+import org.geelato.web.platform.boot.DynamicDatasourceHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -34,12 +37,12 @@ public class MetaController extends BaseController implements InitializingBean {
     private final MetaManager metaManager = MetaManager.singleInstance();
 
     private static final Logger logger = LoggerFactory.getLogger(MetaController.class);
-
+    private String gql;
 
     @RequestMapping(value = {"list", "list/*"}, method = {RequestMethod.POST, RequestMethod.GET}, produces = MediaTypes.JSON_UTF_8)
     @ResponseBody
     public ApiPagedResult list(@RequestParam(value = "withMeta", defaultValue = "true") boolean withMeta, HttpServletRequest request) {
-        String gql = getGql(request);
+        gql = getGql(request);
         return ruleService.queryForMapList(gql, withMeta);
     }
 
@@ -50,7 +53,7 @@ public class MetaController extends BaseController implements InitializingBean {
     @RequestMapping(value = {"multiList", "multiList/*"}, method = RequestMethod.POST, produces = MediaTypes.JSON_UTF_8)
     @ResponseBody
     public ApiMultiPagedResult multiList(@RequestParam(value = "withMeta", defaultValue = "true") boolean withMeta, HttpServletRequest request) {
-        String gql = getGql(request);
+        gql = getGql(request);
         return ruleService.queryForMultiMapList(gql, withMeta);
     }
 
@@ -62,7 +65,7 @@ public class MetaController extends BaseController implements InitializingBean {
     @RequestMapping(value = {"save/{biz}"}, method = RequestMethod.POST, produces = MediaTypes.JSON_UTF_8)
     @ResponseBody
     public ApiMetaResult save(@PathVariable("biz") String biz, HttpServletRequest request) throws DaoException {
-        String gql = getGql(request);
+        gql = getGql(request);
         ApiMetaResult result = new ApiMetaResult();
         result.setData(ruleService.save(biz, gql));
         return result;
@@ -71,7 +74,7 @@ public class MetaController extends BaseController implements InitializingBean {
     @RequestMapping(value = {"batchSave"}, method = RequestMethod.POST, produces = MediaTypes.JSON_UTF_8)
     @ResponseBody
     public ApiMetaResult batchSave(HttpServletRequest request) throws DaoException {
-        String gql = getGql(request);
+        gql = getGql(request);
         ApiMetaResult result = new ApiMetaResult();
         result.setData(ruleService.batchSave( gql,true));
         return result;
@@ -79,7 +82,7 @@ public class MetaController extends BaseController implements InitializingBean {
     @RequestMapping(value = {"multiSave"}, method = RequestMethod.POST, produces = MediaTypes.JSON_UTF_8)
     @ResponseBody
     public ApiMetaResult multiSave(HttpServletRequest request) {
-        String gql = getGql(request);
+        gql = getGql(request);
         ApiMetaResult result = new ApiMetaResult();
         result.setData(ruleService.multiSave(gql));
         return result;
@@ -95,7 +98,7 @@ public class MetaController extends BaseController implements InitializingBean {
     @RequestMapping(value = {"delete2/{biz}"}, method = RequestMethod.POST, produces = MediaTypes.JSON_UTF_8)
     @ResponseBody
     public ApiMetaResult delete(@PathVariable("biz") String biz, HttpServletRequest request) {
-        String gql = getGql(request);
+        gql = getGql(request);
         ApiMetaResult result = new ApiMetaResult();
         result.setData(ruleService.deleteByGql(biz, gql));
         return result;
@@ -173,7 +176,10 @@ public class MetaController extends BaseController implements InitializingBean {
         } catch (IOException e) {
             logger.error("未能从httpServletRequest中获取gql的内容", e);
         }
-        return stringBuilder.toString();
+        String gql=stringBuilder.toString();
+        EntityMeta entityMeta=ruleService.resolveEntity(gql);
+        DynamicDatasourceHolder.setDataSource(entityMeta.getTableMeta().getConnectId());
+        return gql;
     }
     /**
      * 唯一性校验

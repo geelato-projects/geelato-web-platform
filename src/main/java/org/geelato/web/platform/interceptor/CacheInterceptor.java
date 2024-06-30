@@ -13,7 +13,7 @@ import java.io.IOException;
 
 public class CacheInterceptor implements HandlerInterceptor {
 
-    CacheService cacheService=new CacheServiceImpl<>();
+    CacheService<Object> cacheService=new CacheServiceImpl<>();
     @Override
     public boolean preHandle(@NotNull HttpServletRequest request, @NotNull HttpServletResponse response, @NotNull Object handler) throws Exception {
 //        boolean cacheOption= Boolean.parseBoolean(request.getHeader("cache"));

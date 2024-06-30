@@ -9,13 +9,11 @@ import org.geelato.core.api.ApiResult;
 import org.geelato.core.biz.rules.BizManagerFactory;
 import org.geelato.core.biz.rules.common.EntityValidateRule;
 import org.geelato.core.constants.ApiResultCode;
+import org.geelato.core.ds.DataSourceManager;
 import org.geelato.core.gql.GqlManager;
 import org.geelato.core.gql.execute.BoundPageSql;
 import org.geelato.core.gql.execute.BoundSql;
-import org.geelato.core.gql.parser.DeleteCommand;
-import org.geelato.core.gql.parser.FilterGroup;
-import org.geelato.core.gql.parser.QueryCommand;
-import org.geelato.core.gql.parser.SaveCommand;
+import org.geelato.core.gql.parser.*;
 import org.geelato.core.meta.MetaManager;
 import org.geelato.core.meta.model.entity.EntityMeta;
 import org.geelato.core.orm.Dao;
@@ -32,6 +30,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.DataAccessException;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.TransactionStatus;
@@ -74,6 +73,10 @@ public class RuleService {
         this.dao = dao;
     }
 
+    public EntityMeta resolveEntity(String gql) {
+        QueryCommand command = gqlManager.generateQuerySql(gql, getSessionCtx());
+        return metaManager.getByEntityName(command.getEntityName());
+    }
     public Map<String, Object> queryForMap(String gql) throws DataAccessException {
         QueryCommand command = gqlManager.generateQuerySql(gql, getSessionCtx());
         BoundSql boundSql = sqlManager.generateQuerySql(command);
@@ -273,10 +276,6 @@ public class RuleService {
      * 递归执行，存在需解析依赖变更的情况
      * 不执行业务规则检查
      *
-     * @param command
-     * @param dataSourceTransactionManager
-     * @param transactionStatus
-     * @return
      */
     public String recursiveSave(SaveCommand command, DataSourceTransactionManager dataSourceTransactionManager, TransactionStatus transactionStatus) throws DaoException {
         BoundSql boundSql = sqlManager.generateSaveSql(command);

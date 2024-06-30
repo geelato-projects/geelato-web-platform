@@ -15,7 +15,7 @@ public class GqlService extends RuleService {
     }
 
     private Dao initDefaultDao() {
-        DataSource ds= (DataSource) DataSourceManager.singleInstance().getDymanicDataSourceMap().get("primary");
+        DataSource ds= (DataSource) DataSourceManager.singleInstance().getDynamicDataSourceMap().get("primary");
         JdbcTemplate jdbcTemplate=new JdbcTemplate();
         jdbcTemplate.setDataSource(ds);
         return new org.geelato.core.orm.Dao(jdbcTemplate);

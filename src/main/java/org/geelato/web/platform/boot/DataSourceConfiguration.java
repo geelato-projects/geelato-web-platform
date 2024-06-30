@@ -53,7 +53,8 @@ public class DataSourceConfiguration extends BaseConfiguration {
     @Qualifier("dynamicDataSource")
     public DataSource dynamicDataSource() {
         DynamicDataSource dynamicDatasource=new DynamicDataSource();
-        Map<Object, Object> dymanicDataSourceMap=DataSourceManager.singleInstance().getDymanicDataSourceMap();
+        DataSourceManager.singleInstance().parseDataSourceMeta(primaryDao(primaryJdbcTemplate(primaryDataSource())));
+        Map<Object, Object> dymanicDataSourceMap=DataSourceManager.singleInstance().getDynamicDataSourceMap();
         dymanicDataSourceMap.put("primary",primaryDataSource());
         dynamicDatasource.setTargetDataSources(dymanicDataSourceMap);
         dynamicDatasource.setDefaultTargetDataSource(primaryDataSource());

@@ -5,8 +5,11 @@ import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.MediaTypes;
 import org.geelato.core.env.entity.User;
+import org.geelato.core.exception.CoreException;
 import org.geelato.core.gql.parser.FilterGroup;
+import org.geelato.core.orm.DaoException;
 import org.geelato.web.platform.m.base.entity.AppPage;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTRow;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
@@ -27,7 +30,6 @@ import java.util.Map;
 @RequestMapping(value = "/api/page/")
 public class PageController extends BaseController {
     private static final Logger logger = LoggerFactory.getLogger(PageController.class);
-
 
 
     /**
@@ -90,5 +92,9 @@ public class PageController extends BaseController {
         }
         return apiResult;
     }
-
+    @RequestMapping(value = {"loggertest"}, method = RequestMethod.GET, produces = MediaTypes.JSON_UTF_8)
+    @ResponseBody
+    public ApiResult loggertest() {
+        throw new DaoException("test");
+    }
 }

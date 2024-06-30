@@ -233,9 +233,7 @@ public class BaseController implements InitializingBean {
         return fieldsList;
     }
 
-
     @Override
     public void afterPropertiesSet() throws Exception {
-//        ruleService.setDao(dao);
     }
 }
