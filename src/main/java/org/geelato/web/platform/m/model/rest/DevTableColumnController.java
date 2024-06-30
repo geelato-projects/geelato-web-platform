@@ -13,6 +13,7 @@ import org.geelato.core.meta.MetaManager;
 import org.geelato.core.meta.model.entity.TableMeta;
 import org.geelato.core.meta.model.field.ColumnMeta;
 import org.geelato.core.meta.model.field.ColumnSelectType;
+import org.geelato.core.meta.model.view.TableView;
 import org.geelato.web.platform.enums.PermissionTypeEnum;
 import org.geelato.web.platform.m.base.rest.BaseController;
 import org.geelato.web.platform.m.model.service.DevTableColumnService;
@@ -127,9 +128,9 @@ public class DevTableColumnController extends BaseController {
             }
             // 刷新实体缓存
             if (result.isSuccess() && Strings.isNotEmpty(form.getTableName())) {
-                metaManager.refreshDBMeta(form.getTableName());
                 // 刷新默认视图
-                devViewService.createOrUpdateDefaultTableView(devTableColumnService.getModel(TableMeta.class, form.getTableId()), devTableColumnService.getDefaultViewSql(form.getTableName()));
+                updateDefaultTableView(form.getTableId());
+                metaManager.refreshDBMeta(form.getTableName());
             }
         } catch (Exception e) {
             logger.error(e.getMessage());
@@ -137,6 +138,16 @@ public class DevTableColumnController extends BaseController {
         }
 
         return result;
+    }
+
+    private void updateDefaultTableView(String tableId) {
+        TableMeta form = devTableColumnService.getModel(TableMeta.class, tableId);
+        if (form != null) {
+            List<TableView> tableViewList = devViewService.getTableView(form.getConnectId(), form.getEntityName());
+            if (tableViewList != null && tableViewList.size() > 0) {
+                devViewService.createOrUpdateDefaultTableView(form, devTableColumnService.getDefaultViewSql(form.getEntityName()));
+            }
+        }
     }
 
     @RequestMapping(value = "/insertCommon", method = RequestMethod.POST)
@@ -186,9 +197,9 @@ public class DevTableColumnController extends BaseController {
             }
             // 刷新实体缓存
             if (result.isSuccess() && Strings.isNotEmpty(tableMeta.getEntityName())) {
-                metaManager.refreshDBMeta(tableMeta.getEntityName());
                 // 刷新默认视图
-                devViewService.createOrUpdateDefaultTableView(devTableColumnService.getModel(TableMeta.class, tableMeta.getId()), devTableColumnService.getDefaultViewSql(tableMeta.getEntityName()));
+                updateDefaultTableView(tableMeta.getId());
+                metaManager.refreshDBMeta(tableMeta.getEntityName());
             }
         } catch (Exception e) {
             logger.error(e.getMessage());
@@ -208,9 +219,9 @@ public class DevTableColumnController extends BaseController {
             devTableColumnService.isDeleteModel(model);
             // 刷新实体缓存
             if (Strings.isNotEmpty(model.getTableName())) {
-                metaManager.refreshDBMeta(model.getTableName());
                 // 刷新默认视图
-                devViewService.createOrUpdateDefaultTableView(devTableColumnService.getModel(TableMeta.class, model.getTableId()), devTableColumnService.getDefaultViewSql(model.getTableName()));
+                updateDefaultTableView(model.getTableId());
+                metaManager.refreshDBMeta(model.getTableName());
             }
         } catch (Exception e) {
             logger.error(e.getMessage());

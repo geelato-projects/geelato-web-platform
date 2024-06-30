@@ -117,7 +117,7 @@ public class ExportExcelService {
             // 保存文件信息
             BasicFileAttributes attributes = Files.readAttributes(exportFile.toPath(), BasicFileAttributes.class);
             Attach attach = new Attach();
-            attach.setObjectId(templateId);
+            // attach.setObjectId(templateId);
             attach.setAppId(exportTemplate.getAppId());
             attach.setGenre("exportFile");
             attach.setName(fileName);
