@@ -94,6 +94,7 @@ public class OpLogAOPConfig {
                 opType = "c";
                 opRecord = "新增记录";
             }
+            //todo after <use entity to crud without class>
             String baseSql="insert into platform_oprecord (id,op_data_id,op_type,op_time,op_user,op_user_id,op_description,tenant_code) values (?,?,?,?,?,?,?,?)";
             dao.getJdbcTemplate().update(baseSql,
                     UIDGenerator.generate(),
