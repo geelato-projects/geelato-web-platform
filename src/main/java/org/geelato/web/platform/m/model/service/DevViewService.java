@@ -5,22 +5,21 @@ import com.alibaba.fastjson2.JSONArray;
 import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.constants.ColumnDefault;
-import org.geelato.core.enums.ColumnEncryptedEnum;
-import org.geelato.core.enums.ColumnSyncedEnum;
-import org.geelato.core.enums.ViewTypeEnum;
+import org.geelato.core.constants.MetaDaoSql;
+import org.geelato.core.enums.*;
 import org.geelato.core.meta.MetaManager;
 import org.geelato.core.meta.model.entity.TableMeta;
 import org.geelato.core.meta.model.field.ColumnMeta;
 import org.geelato.core.meta.model.view.TableView;
 import org.geelato.core.util.ClassUtils;
 import org.geelato.web.platform.m.base.service.BaseSortableService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 /**
  * @author diabl
@@ -29,6 +28,10 @@ import java.util.Map;
  */
 @Component
 public class DevViewService extends BaseSortableService {
+    private static final String DELETE_COMMENT_PREFIX = "已删除；";
+    private static final String UPDATE_COMMENT_PREFIX = "已变更；";
+    private static final Logger logger = LoggerFactory.getLogger(DevViewService.class);
+    private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     public List<TableView> getTableView(String connectId, String entityName) {
         Map<String, Object> params = new HashMap<>();
@@ -122,6 +125,47 @@ public class DevViewService extends BaseSortableService {
             });
             form.setViewColumn(JSON.toJSONString(list));
         }
+    }
+
+    public void isDeleteModel(TableView model) {
+        String newViewName = String.format("%s_d%s", model.getViewName(), System.currentTimeMillis());
+        String newTitle = DELETE_COMMENT_PREFIX + model.getTitle();
+        String newDescription = String.format("delete %s %s[%s]=>[%s]。\n", sdf.format(new Date()), model.getTitle(), model.getViewName(), newViewName) + model.getDescription();
+        Map<String, Object> sqlParams = new HashMap<>();
+        sqlParams.put("viewId", model.getId());
+        sqlParams.put("viewName", model.getViewName());
+        sqlParams.put("newViewName", newViewName);// 新
+        sqlParams.put("newDescription", newDescription);
+        sqlParams.put("delStatus", DeleteStatusEnum.IS.getCode());
+        sqlParams.put("deleteAt", sdf.format(new Date()));
+        sqlParams.put("enableStatus", EnableStatusEnum.DISABLED.getCode());
+        sqlParams.put("remark", "delete table. \n");
+        List<Map<String, Object>> tableList = queryInformationSchemaViews(model.getViewName());
+        if (tableList != null && !tableList.isEmpty()) {
+            sqlParams.put("isView", true);
+        }
+        // 修正字段、外键、视图
+        dao.execute("metaResetOrDeleteView", sqlParams);
+        // 删除，信息变更
+        model.setViewName(newViewName);
+        model.setDescription(newDescription);
+        model.setTitle(newTitle);
+        // 删除，标记变更
+        model.setEnableStatus(EnableStatusEnum.DISABLED.getCode());
+        model.setDelStatus(DeleteStatusEnum.IS.getCode());
+        model.setDeleteAt(new Date());
+        model.setSeqNo(ColumnDefault.SEQ_NO_DELETE);
+        dao.save(model);
+    }
+
+    private List<Map<String, Object>> queryInformationSchemaViews(String viewName) {
+        List<Map<String, Object>> tableList = new ArrayList<>();
+        if (Strings.isNotBlank(viewName)) {
+            String tableSql = String.format(MetaDaoSql.INFORMATION_SCHEMA_VIEWS, MetaDaoSql.TABLE_SCHEMA_METHOD, " AND TABLE_NAME='" + viewName + "'");
+            logger.info(tableSql);
+            tableList = dao.getJdbcTemplate().queryForList(tableSql);
+        }
+        return tableList;
     }
 
 }
