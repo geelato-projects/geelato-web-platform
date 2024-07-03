@@ -140,9 +140,18 @@ public class DevViewService extends BaseSortableService {
         sqlParams.put("deleteAt", sdf.format(new Date()));
         sqlParams.put("enableStatus", EnableStatusEnum.DISABLED.getCode());
         sqlParams.put("remark", "delete table. \n");
-        List<Map<String, Object>> tableList = queryInformationSchemaViews(model.getViewName());
-        if (tableList != null && !tableList.isEmpty()) {
-            sqlParams.put("isView", true);
+        // 数据库视图
+        try {
+            Map<String, Object> viewMap = dao.getJdbcTemplate().queryForMap(String.format(MetaDaoSql.SQL_SHOW_CREATE_VIEW, model.getViewName()));
+            if (viewMap != null && !viewMap.isEmpty()) {
+                String createView = viewMap.get("Create View") != null ? String.valueOf(viewMap.get("Create View")) : "";
+                sqlParams.put("isView", true);
+                // SQL SECURITY DEFINER VIEW `` AS
+                sqlParams.put("newSql", createView.replace(String.format("SQL SECURITY DEFINER VIEW `%s` AS", model.getViewName()),
+                        String.format("SQL SECURITY DEFINER VIEW `%s` AS", newViewName)));
+            }
+        } catch (Exception ex) {
+            logger.info(String.format("%s 视图不存在。", model.getViewName()));
         }
         // 修正字段、外键、视图
         dao.execute("metaResetOrDeleteView", sqlParams);
