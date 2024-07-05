@@ -26,6 +26,7 @@ public class SysConfig extends BaseSortableEntity implements EntityEnableAble {
     private String remark;
     private String purpose;
     private boolean encrypted = false;
+    private String sm2Key;
 
     @Col(name = "app_id")
     @Title(title = "应用ID")
@@ -130,5 +131,15 @@ public class SysConfig extends BaseSortableEntity implements EntityEnableAble {
     @Override
     public void setEnableStatus(int enableStatus) {
         this.enableStatus = enableStatus;
+    }
+
+    @Col(name = "sm2_key")
+    @Title(title = "公私钥")
+    public String getSm2Key() {
+        return sm2Key;
+    }
+
+    public void setSm2Key(String sm2Key) {
+        this.sm2Key = sm2Key;
     }
 }

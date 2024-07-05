@@ -10,6 +10,7 @@ import org.geelato.core.enums.EnableStatusEnum;
 import org.geelato.core.gql.parser.FilterGroup;
 import org.geelato.core.orm.Dao;
 import org.geelato.web.platform.m.base.entity.SysConfig;
+import org.geelato.web.platform.m.base.service.SysConfigService;
 import org.geelato.web.platform.m.security.entity.AliEmail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,7 +62,7 @@ public class EmailService {
             javaMailSender.send(message);
             logger.info("邮件发送成功！");
             return true;
-        } catch (MessagingException e) {
+        } catch (Exception e) {
             logger.error("发送邮件时发生异常！", e);
         }
         return false;
@@ -87,7 +88,7 @@ public class EmailService {
         return javaMailSender;
     }
 
-    private AliEmail getAliEmailBySysConfig(String host, String port, String userName, String password) {
+    private AliEmail getAliEmailBySysConfig(String host, String port, String userName, String password) throws Exception {
         AliEmail aliEmail = new AliEmail();
         // 配置键
         List<String> configKeys = new ArrayList<>();
@@ -107,7 +108,10 @@ public class EmailService {
                 if (config == null || Strings.isBlank(config.getConfigKey())) {
                     continue;
                 }
-                String value = config.isEncrypted() ? null : config.getConfigValue();
+                if (config.isEncrypted()) {
+                    SysConfigService.decrypt(config);
+                }
+                String value = config.getConfigValue();
                 if (config.getConfigKey().equals(host)) {
                     aliEmail.setHost(value);
                 } else if (config.getConfigKey().equals(port)) {
