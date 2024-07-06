@@ -16,34 +16,18 @@
     <packaging>jar</packaging>
     <name>geelato-web-platform</name>
 
-    <!--通过该方式，则不需继承spring-boot-starter-parent-->
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-dependencies</artifactId>
-                <version>${spring-boot.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
-
     <dependencies>
         <dependency>
             <groupId>org.geelato</groupId>
             <artifactId>geelato-utils</artifactId>
-            <version>${geelato.version}</version>
         </dependency>
         <dependency>
             <groupId>org.geelato</groupId>
             <artifactId>geelato-core</artifactId>
-            <version>${geelato.version}</version>
         </dependency>
         <dependency>
             <groupId>cn.geelato</groupId>
             <artifactId>logging-component</artifactId>
-            <version>${geelato-components.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
