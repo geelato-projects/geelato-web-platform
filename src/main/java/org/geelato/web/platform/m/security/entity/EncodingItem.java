@@ -17,6 +17,7 @@ public class EncodingItem {
     // 序列号 serial
     private Integer serialDigit;// 位数
     private String serialType;// 顺序、随机
+    private boolean coverPos = true;// 顺序补位 0
 
     public String getId() {
         return id;
@@ -72,5 +73,13 @@ public class EncodingItem {
 
     public void setSerialType(String serialType) {
         this.serialType = serialType;
+    }
+
+    public boolean isCoverPos() {
+        return coverPos;
+    }
+
+    public void setCoverPos(boolean coverPos) {
+        this.coverPos = coverPos;
     }
 }

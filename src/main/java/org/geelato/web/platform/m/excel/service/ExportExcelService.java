@@ -197,8 +197,12 @@ public class ExportExcelService {
             params.put("configKey", markKey);
             List<SysConfig> list = sysConfigService.queryModel(SysConfig.class, params);
             if (list != null && list.size() > 0 && list.get(0) != null) {
+                SysConfig config = list.get(0);
                 try {
-                    meta = JSON.parseObject(list.get(0).getConfigValue(), WordWaterMarkMeta.class);
+                    if (config.isEncrypted()) {
+                        SysConfigService.decrypt(config);
+                    }
+                    meta = JSON.parseObject(config.getConfigValue(), WordWaterMarkMeta.class);
                     Assert.notNull(meta, "水印功能，系统配置值解析为空。");
                     meta.setDefaultText(markText);
                 } catch (Exception e) {

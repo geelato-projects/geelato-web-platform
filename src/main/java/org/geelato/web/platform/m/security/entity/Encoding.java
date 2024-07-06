@@ -36,6 +36,7 @@ public class Encoding extends BaseEntity implements EntityEnableAble {
     private String dateType;// 日期格式
     private int serialDigit;// 位数
     private String serialType;// 顺序、随机
+    private boolean coverPos = true;// 顺序补位 0
 
     @Title(title = "标题")
     @Col(name = "title")
@@ -145,6 +146,15 @@ public class Encoding extends BaseEntity implements EntityEnableAble {
         this.serialType = serialType;
     }
 
+    @Transient
+    public boolean isCoverPos() {
+        return coverPos;
+    }
+
+    public void setCoverPos(boolean coverPos) {
+        this.coverPos = coverPos;
+    }
+
     @Override
     public void afterSet() {
         if (Strings.isNotBlank(getTemplate())) {
@@ -160,17 +170,21 @@ public class Encoding extends BaseEntity implements EntityEnableAble {
                     } else if (EncodingItemTypeEnum.VARIABLE.getValue().equals(item.getItemType())) {
                         // 常量
                         if (Strings.isNotBlank(item.getConstantValue())) {
-                            examples.add(String.format("{%s}",item.getConstantValue()));
+                            examples.add(String.format("{%s}", item.getConstantValue()));
                         }
                     } else if (EncodingItemTypeEnum.ARGUMENT.getValue().equals(item.getItemType())) {
                         // 常量
                         if (Strings.isNotBlank(item.getConstantValue())) {
-                            examples.add(String.format("[%s]",item.getConstantValue()));
+                            examples.add(String.format("[%s]", item.getConstantValue()));
                         }
                     } else if (EncodingItemTypeEnum.SERIAL.getValue().equals(item.getItemType())) {
                         // 序列号
                         if (EncodingSerialTypeEnum.ORDER.getValue().equals(item.getSerialType())) {
-                            examples.add(String.format("%0" + item.getSerialDigit() + "d", 1));
+                            if (item.isCoverPos()) {
+                                examples.add(String.format("%0" + item.getSerialDigit() + "d", 1));
+                            } else {
+                                examples.add("1");
+                            }
                         } else if (EncodingSerialTypeEnum.RANDOM.getValue().equals(item.getSerialType())) {
                             examples.add(UUIDUtils.generateFixation(item.getSerialDigit(), 8));
                         }

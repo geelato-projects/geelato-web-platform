@@ -8,6 +8,7 @@ import org.geelato.core.enums.EnableStatusEnum;
 import org.geelato.core.gql.parser.FilterGroup;
 import org.geelato.core.orm.Dao;
 import org.geelato.web.platform.m.base.entity.SysConfig;
+import org.geelato.web.platform.m.base.service.SysConfigService;
 import org.geelato.web.platform.m.security.entity.AliMobile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -113,7 +114,7 @@ public class AliMobileService {
      *
      * @return
      */
-    private AliMobile getAliMobileBySysConfig(String signName, String templateCode, String accessKeyId, String accessKeySecret, String securityToken) {
+    private AliMobile getAliMobileBySysConfig(String signName, String templateCode, String accessKeyId, String accessKeySecret, String securityToken) throws Exception {
         AliMobile aliMobile = new AliMobile();
         // 配置键
         List<String> configKeys = new ArrayList<>();
@@ -134,7 +135,10 @@ public class AliMobileService {
                 if (config == null || Strings.isBlank(config.getConfigKey())) {
                     continue;
                 }
-                String value = config.isEncrypted() ? null : config.getConfigValue();
+                if (config.isEncrypted()) {
+                    SysConfigService.decrypt(config);
+                }
+                String value = config.getConfigValue();
 
                 if (config.getConfigKey().equals(signName)) {
                     aliMobile.setSignName(value);

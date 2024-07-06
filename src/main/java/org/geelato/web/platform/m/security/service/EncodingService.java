@@ -230,7 +230,7 @@ public class EncodingService extends BaseService {
         if (lock) {
             if (EncodingSerialTypeEnum.ORDER.getValue().equals(item.getSerialType())) {
                 // 顺序
-                serial = getOrderSerial(redisItemKey, item.getSerialDigit());
+                serial = getOrderSerial(redisItemKey, item.getSerialDigit(), item.isCoverPos());
             } else if (EncodingSerialTypeEnum.RANDOM.getValue().equals(item.getSerialType())) {
                 // 随机
                 serial = getRandomSerial(redisItemKey, item.getSerialDigit());
@@ -262,15 +262,15 @@ public class EncodingService extends BaseService {
      * @param serialDigit
      * @return
      */
-    private String getOrderSerial(String redisItemKey, int serialDigit) {
+    private String getOrderSerial(String redisItemKey, int serialDigit, boolean coverPos) {
         List<Object> redisSerials = redisTemplate.opsForList().range(redisItemKey, 0, -1);
         if (redisSerials == null || redisSerials.isEmpty()) {
-            return String.format("%0" + serialDigit + "d", 1);
+            return coverPos ? String.format("%0" + serialDigit + "d", 1) : String.valueOf(1);
         }
         redisSerials = formatSerialList(redisSerials);
         long max = Long.parseLong(String.valueOf(redisSerials.get(redisSerials.size() - 1)));
         long radius = Long.parseLong(UUIDUtils.generateFixation(serialDigit, 9));
-        return radius > max ? String.format("%0" + serialDigit + "d", max + 1) : null;
+        return radius > max ? (coverPos ? String.format("%0" + serialDigit + "d", max + 1) : String.valueOf((max + 1))) : null;
     }
 
     /**

@@ -85,7 +85,9 @@ public class SysConfigController extends BaseController {
     public ApiResult get(@PathVariable(required = true) String id) {
         ApiResult result = new ApiResult();
         try {
-            result.setData(sysConfigService.getModel(CLAZZ, id));
+            SysConfig model = sysConfigService.getModel(CLAZZ, id);
+            model.setSm2Key(null);
+            result.setData(model);
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(ApiErrorMsg.QUERY_FAIL);
@@ -107,7 +109,7 @@ public class SysConfigController extends BaseController {
             }
         } catch (Exception e) {
             logger.error(e.getMessage());
-            result.error().setMsg(ApiErrorMsg.OPERATE_FAIL);
+            result.error().setMsg(e.getMessage());
         }
 
         return result;
