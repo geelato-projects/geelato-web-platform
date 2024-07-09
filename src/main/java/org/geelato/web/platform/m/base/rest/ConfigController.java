@@ -6,8 +6,12 @@ import org.geelato.core.constants.MediaTypes;
 import org.geelato.core.env.EnvManager;
 import org.geelato.core.env.entity.SysConfig;
 import org.geelato.core.util.StringUtils;
+import org.geelato.web.platform.enums.SysConfigPurposeEnum;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -21,26 +25,28 @@ public class ConfigController extends BaseController {
     @ResponseBody
     public ApiResult list(HttpServletRequest request) {
         ApiResult result = new ApiResult();
-        String tenantCode=request.getParameter("tenantCode");
-        String appId=request.getParameter("appId");
-        Map<String, SysConfig> configMap=EnvManager.singleInstance().getConfigMap("webapp");
-        Map<String,Object> rtnConfigMap=new HashMap<>();
-        Map<String,String> globalConfigMap=new HashMap<>();
-        Map<String,String> tenantConfigMap=new HashMap<>();
-        Map<String,String> appConfigMap=new HashMap<>();
-        for (Map.Entry<String,SysConfig> entry: configMap.entrySet()) {
+        String tenantCode = request.getParameter("tenantCode");
+        String appId = request.getParameter("appId");
+        Map<String, SysConfig> configMap = new HashMap<>();
+        configMap.putAll(EnvManager.singleInstance().getConfigMap(SysConfigPurposeEnum.WEBAPP.getValue()));
+        configMap.putAll(EnvManager.singleInstance().getConfigMap(SysConfigPurposeEnum.ALL.getValue()));
+        Map<String, Object> rtnConfigMap = new HashMap<>();
+        Map<String, String> globalConfigMap = new HashMap<>();
+        Map<String, String> tenantConfigMap = new HashMap<>();
+        Map<String, String> appConfigMap = new HashMap<>();
+        for (Map.Entry<String, SysConfig> entry : configMap.entrySet()) {
             SysConfig config = entry.getValue();
-            if(StringUtils.isEmpty(config.getTenantCode())){
-                globalConfigMap.put(config.getConfigKey(),config.getConfigValue());
-                rtnConfigMap.put("sys",globalConfigMap);
+            if (StringUtils.isEmpty(config.getTenantCode())) {
+                globalConfigMap.put(config.getConfigKey(), config.getConfigValue());
+                rtnConfigMap.put("sys", globalConfigMap);
             }
-            if(!StringUtils.isEmpty(tenantCode)&&config.getTenantCode().equals(tenantCode)){
-                tenantConfigMap.put(config.getConfigKey(),config.getConfigValue());
-                rtnConfigMap.put("tenant",tenantConfigMap);
+            if (!StringUtils.isEmpty(tenantCode) && config.getTenantCode().equals(tenantCode)) {
+                tenantConfigMap.put(config.getConfigKey(), config.getConfigValue());
+                rtnConfigMap.put("tenant", tenantConfigMap);
             }
-            if(!StringUtils.isEmpty(appId)&&config.getAppId().equals(appId)){
-                appConfigMap.put(config.getConfigKey(),config.getConfigValue());
-                rtnConfigMap.put("app",appConfigMap);
+            if (!StringUtils.isEmpty(appId) && config.getAppId().equals(appId)) {
+                appConfigMap.put(config.getConfigKey(), config.getConfigValue());
+                rtnConfigMap.put("app", appConfigMap);
             }
 
         }
@@ -50,7 +56,7 @@ public class ConfigController extends BaseController {
 
     @RequestMapping(value = {"/refresh/{configKey}"}, method = RequestMethod.GET, produces = MediaTypes.JSON_UTF_8)
     @ResponseBody
-    public ApiResult refresh(HttpServletRequest request,@PathVariable("configKey") String configKey) {
+    public ApiResult refresh(HttpServletRequest request, @PathVariable("configKey") String configKey) {
         ApiResult result = new ApiResult();
         EnvManager.singleInstance().refreshConfig(configKey);
         return result;

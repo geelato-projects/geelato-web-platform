@@ -7,6 +7,7 @@ import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.enums.DeleteStatusEnum;
 import org.geelato.core.enums.EnableStatusEnum;
+import org.geelato.core.env.EnvManager;
 import org.geelato.core.gql.parser.FilterGroup;
 import org.geelato.core.gql.parser.PageQueryRequest;
 import org.geelato.web.platform.m.base.entity.Attach;
@@ -112,6 +113,7 @@ public class SysConfigController extends BaseController {
             } else {
                 result.setData(sysConfigService.createModel(form));
             }
+            EnvManager.singleInstance().refreshConfig(form.getConfigKey());
         } catch (Exception e) {
             logger.error(e.getMessage());
             result.error().setMsg(e.getMessage());
