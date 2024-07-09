@@ -1,6 +1,5 @@
 package org.geelato.web.platform.m.security.service;
 
-import jakarta.mail.MessagingException;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
 import org.apache.logging.log4j.util.Strings;
@@ -108,6 +107,7 @@ public class EmailService {
                 if (config == null || Strings.isBlank(config.getConfigKey())) {
                     continue;
                 }
+                config.afterSet();
                 if (config.isEncrypted()) {
                     SysConfigService.decrypt(config);
                 }

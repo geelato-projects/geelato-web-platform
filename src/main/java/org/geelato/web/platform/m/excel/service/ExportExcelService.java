@@ -55,7 +55,7 @@ public class ExportExcelService {
     @Autowired
     private ExcelWriter excelWriter;
     @Autowired
-    private ExcelXSSFWriter excelXSSFWriter;    
+    private ExcelXSSFWriter excelXSSFWriter;
     @Autowired
     private WordXWPFWriter wordXWPFWriter;
     @Autowired
@@ -198,6 +198,7 @@ public class ExportExcelService {
             List<SysConfig> list = sysConfigService.queryModel(SysConfig.class, params);
             if (list != null && list.size() > 0 && list.get(0) != null) {
                 SysConfig config = list.get(0);
+                config.afterSet();
                 try {
                     if (config.isEncrypted()) {
                         SysConfigService.decrypt(config);
