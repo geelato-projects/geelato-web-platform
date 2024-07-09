@@ -7,9 +7,7 @@ import org.geelato.core.env.EnvManager;
 import org.geelato.core.env.entity.SysConfig;
 import org.geelato.core.util.StringUtils;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -19,7 +17,7 @@ import java.util.Map;
 public class ConfigController extends BaseController {
 
 
-    @RequestMapping(value = {"", ""}, method = RequestMethod.GET, produces = MediaTypes.JSON_UTF_8)
+    @RequestMapping(value = {""}, method = RequestMethod.GET, produces = MediaTypes.JSON_UTF_8)
     @ResponseBody
     public ApiResult list(HttpServletRequest request) {
         ApiResult result = new ApiResult();
@@ -49,5 +47,14 @@ public class ConfigController extends BaseController {
         result.setData(rtnConfigMap);
         return result;
     }
+
+    @RequestMapping(value = {"/refresh/{configKey}"}, method = RequestMethod.GET, produces = MediaTypes.JSON_UTF_8)
+    @ResponseBody
+    public ApiResult refresh(HttpServletRequest request,@PathVariable("configKey") String configKey) {
+        ApiResult result = new ApiResult();
+        EnvManager.singleInstance().refreshConfig(configKey);
+        return result;
+    }
+
 
 }
