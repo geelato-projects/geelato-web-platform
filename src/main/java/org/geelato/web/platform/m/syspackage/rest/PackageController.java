@@ -18,7 +18,7 @@ import org.geelato.core.meta.model.field.FieldMeta;
 import org.geelato.core.orm.DaoException;
 import org.geelato.core.orm.TransactionHelper;
 import org.geelato.core.sql.SqlManager;
-import org.geelato.core.util.StringUtils;
+import org.geelato.utils.StringUtils;
 import org.geelato.utils.ZipUtils;
 import org.geelato.web.platform.enums.AttachmentSourceEnum;
 import org.geelato.web.platform.enums.PackageSourceEnum;
@@ -120,11 +120,11 @@ public class PackageController extends BaseController {
         appPackage.setAppMetaList(appMetaList);
         AppVersion av = new AppVersion();
         av.setAppId(appId);
-        String packageVersion=null;
+        String packageVersion = null;
         if (StringUtils.isEmpty(version)) {
-            packageVersion=generateVersionCode(appPackage.getAppCode());
+            packageVersion = generateVersionCode(appPackage.getAppCode());
         } else {
-            packageVersion=version;
+            packageVersion = version;
         }
         av.setVersion(packageVersion);
         appPackage.setVersion(packageVersion);
@@ -142,14 +142,15 @@ public class PackageController extends BaseController {
         apiResult.setData(appVersionService.createModel(av));
         return apiResult;
     }
+
     @RequestMapping(value = {"/packet/merge"}, method = {RequestMethod.GET, RequestMethod.POST}, produces = MediaTypes.JSON_UTF_8)
     @ResponseBody
     public ApiResult packetMergeApp(String appId, String version, String description,
-                               @RequestBody(required = false) Map<String,Map<String, String>> appointMetas) throws IOException {
+                                    @RequestBody(required = false) Map<String, Map<String, String>> appointMetas) throws IOException {
         ApiResult apiResult = new ApiResult();
-        String[] versionIds=appointMetas.keySet().toArray(new String[0]);
-        List<AppPackage> appPackages=getAppointAppPackage(versionIds);
-        AppPackage appPackage= mergePackage(appPackages,appointMetas);
+        String[] versionIds = appointMetas.keySet().toArray(new String[0]);
+        List<AppPackage> appPackages = getAppointAppPackage(versionIds);
+        AppPackage appPackage = mergePackage(appPackages, appointMetas);
 
         AppVersion av = new AppVersion();
         av.setAppId(appId);
@@ -174,16 +175,16 @@ public class PackageController extends BaseController {
     }
 
     private AppPackage mergePackage(List<AppPackage> sourceAppPackageList, Map<String, Map<String, String>> appointMetas) {
-        AppPackage appPackage=new AppPackage();
+        AppPackage appPackage = new AppPackage();
 
-        List<AppMeta> mergeAppMetaList=new ArrayList<>();
-        for (AppPackage pkg:sourceAppPackageList){
-            String pkgVersion=pkg.getVersion();
+        List<AppMeta> mergeAppMetaList = new ArrayList<>();
+        for (AppPackage pkg : sourceAppPackageList) {
+            String pkgVersion = pkg.getVersion();
             appPackage.setAppCode(pkg.getAppCode());
-            Map<String,String> pkgAppoints= appointMetas.get(pkgVersion);
-            for (AppMeta appMeta :pkg.getAppMetaList()) {
+            Map<String, String> pkgAppoints = appointMetas.get(pkgVersion);
+            for (AppMeta appMeta : pkg.getAppMetaList()) {
                 List<Map<String, Object>> metaData = (List<Map<String, Object>>) appMeta.getMetaData();
-                String metaName=appMeta.getMetaName();
+                String metaName = appMeta.getMetaName();
                 if (pkgAppoints.containsKey(metaName)) {
                     List<Map<String, Object>> appointMetaData = pickMetaData(metaData, pkgAppoints.get(metaName));
                     AppMeta pkgAppMeta = new AppMeta(metaName, appointMetaData);
@@ -196,27 +197,27 @@ public class PackageController extends BaseController {
     }
 
     private List<AppMeta> distinctMergrAppMetaList(List<AppMeta> waitMergeAppMetaList) {
-        List<AppMeta> distinctAppMetaList=new ArrayList<>();
-        for (AppMeta appMeta:waitMergeAppMetaList){
-           AppMeta mergeAppMeta= distinctAppMetaList.stream().filter(x->x.getMetaName().equals(appMeta.getMetaName())).findFirst().orElse(null);
-           if(mergeAppMeta==null){
-               distinctAppMetaList.add(appMeta);
-           }else {
-               List<Map<String, Object>> metaData=(List<Map<String, Object>>)mergeAppMeta.getMetaData();
-               for (Map<String,Object> map: (List<Map<String, Object>>)appMeta.getMetaData()){
-                   String id=map.get("id").toString();
-                   if(metaData.stream().noneMatch(x->x.get("id").toString().equals(id))){
-                       metaData.add(map);
-                   }
-               }
-           }
+        List<AppMeta> distinctAppMetaList = new ArrayList<>();
+        for (AppMeta appMeta : waitMergeAppMetaList) {
+            AppMeta mergeAppMeta = distinctAppMetaList.stream().filter(x -> x.getMetaName().equals(appMeta.getMetaName())).findFirst().orElse(null);
+            if (mergeAppMeta == null) {
+                distinctAppMetaList.add(appMeta);
+            } else {
+                List<Map<String, Object>> metaData = (List<Map<String, Object>>) mergeAppMeta.getMetaData();
+                for (Map<String, Object> map : (List<Map<String, Object>>) appMeta.getMetaData()) {
+                    String id = map.get("id").toString();
+                    if (metaData.stream().noneMatch(x -> x.get("id").toString().equals(id))) {
+                        metaData.add(map);
+                    }
+                }
+            }
         }
         return distinctAppMetaList;
     }
 
-    private List<AppPackage> getAppointAppPackage (String[] versions) {
-        List<AppPackage> appPackageList=new ArrayList<>();
-        for (String version:versions){
+    private List<AppPackage> getAppointAppPackage(String[] versions) {
+        List<AppPackage> appPackageList = new ArrayList<>();
+        for (String version : versions) {
             AppVersion appVersion = appVersionService.getAppVersionByVersion(version);
             String appPackageData = null;
             if (appVersion != null && !StringUtils.isEmpty(appVersion.getPackagePath())) {
@@ -311,7 +312,7 @@ public class PackageController extends BaseController {
         }
         AppVersion appVersion = appVersionService.getModel(AppVersion.class, versionId);
         String appPackageData = null;
-        if (appVersion != null && !StringUtils.isEmpty(appVersion.getPackagePath())) {
+        if (appVersion != null && StringUtils.isNotEmpty(appVersion.getPackagePath())) {
             try {
                 if (appVersion.getPackagePath().contains(".zgdp")) {
                     appPackageData = ZipUtils.readPackageData(appVersion.getPackagePath(), ".gdp");
@@ -551,7 +552,7 @@ public class PackageController extends BaseController {
 
     private AppPackage resolveAppPackageData(String appPackageData) {
         AppPackage appPackage = null;
-        if (!StringUtils.isEmpty(appPackageData)) {
+        if (StringUtils.isNotEmpty(appPackageData)) {
             appPackage = JSONObject.parseObject(appPackageData, AppPackage.class);
         }
         return appPackage;

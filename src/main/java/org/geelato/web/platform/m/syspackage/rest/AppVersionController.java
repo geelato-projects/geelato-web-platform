@@ -10,7 +10,7 @@ import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.enums.DeleteStatusEnum;
 import org.geelato.core.gql.parser.FilterGroup;
 import org.geelato.core.gql.parser.PageQueryRequest;
-import org.geelato.core.util.StringUtils;
+import org.geelato.utils.StringUtils;
 import org.geelato.utils.ZipUtils;
 import org.geelato.web.platform.m.base.entity.App;
 import org.geelato.web.platform.m.base.entity.Attach;
@@ -108,7 +108,7 @@ public class AppVersionController extends BaseController {
         try {
             AppVersion appVersion = appVersionService.getModel(CLAZZ, id);
             String appPackageData = "";
-            if (appVersion != null && !StringUtils.isEmpty(appVersion.getPackagePath())) {
+            if (appVersion != null && StringUtils.isNotEmpty(appVersion.getPackagePath())) {
                 if (appVersion.getPackagePath().contains(".zgdp")) {
                     appPackageData = ZipUtils.readPackageData(appVersion.getPackagePath(), ".gdp");
                 } else {
@@ -118,7 +118,7 @@ public class AppVersionController extends BaseController {
                 }
             }
             AppPackage appPackage = null;
-            if (!StringUtils.isEmpty(appPackageData)) {
+            if (StringUtils.isNotEmpty(appPackageData)) {
                 appPackage = JSONObject.parseObject(appPackageData, AppPackage.class);
             }
             result.setData(appPackage);

@@ -1,7 +1,6 @@
 package org.geelato.web.platform.boot;
 
 import org.geelato.core.biz.rules.BizManagerFactory;
-import org.geelato.core.ds.DataSourceManager;
 import org.geelato.core.env.EnvManager;
 import org.geelato.core.graal.GraalManager;
 import org.geelato.core.meta.MetaManager;
@@ -10,7 +9,7 @@ import org.geelato.core.orm.Dao;
 import org.geelato.core.orm.DbGenerateDao;
 import org.geelato.core.orm.SqlFiles;
 import org.geelato.core.script.sql.SqlScriptManagerFactory;
-import org.geelato.core.util.StringUtils;
+import org.geelato.utils.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;

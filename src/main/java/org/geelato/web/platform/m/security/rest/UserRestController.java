@@ -10,7 +10,7 @@ import org.geelato.core.constants.ApiResultStatus;
 import org.geelato.core.enums.DeleteStatusEnum;
 import org.geelato.core.gql.parser.FilterGroup;
 import org.geelato.core.gql.parser.PageQueryRequest;
-import org.geelato.core.util.UUIDUtils;
+import org.geelato.utils.UUIDUtils;
 import org.geelato.web.platform.m.base.rest.BaseController;
 import org.geelato.web.platform.m.security.entity.DataItems;
 import org.geelato.web.platform.m.security.entity.Org;

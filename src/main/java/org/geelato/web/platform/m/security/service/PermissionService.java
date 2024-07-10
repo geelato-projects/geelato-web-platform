@@ -5,7 +5,7 @@ import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.constants.ResourcesFiles;
 import org.geelato.core.gql.parser.FilterGroup;
 import org.geelato.core.meta.model.field.ColumnMeta;
-import org.geelato.core.util.FastJsonUtils;
+import org.geelato.utils.FastJsonUtils;
 import org.geelato.web.platform.enums.PermissionTypeEnum;
 import org.geelato.web.platform.m.base.service.BaseService;
 import org.geelato.web.platform.m.security.entity.Permission;

@@ -5,7 +5,7 @@ import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.*;
 import org.geelato.core.script.js.JsProvider;
-import org.geelato.core.util.StringUtils;
+import org.geelato.utils.StringUtils;
 import org.geelato.web.platform.enums.ExcelAlignmentEnum;
 import org.geelato.web.platform.m.excel.entity.CellMeta;
 import org.geelato.web.platform.m.excel.entity.ExportColumn;
@@ -137,7 +137,7 @@ public class ExcelXSSFWriter {
                         continue;
                     }
                     if (meta.isIsList()) {
-                        if (!StringUtils.isEmpty(meta.getListVar())) {
+                        if (StringUtils.isNotEmpty(meta.getListVar())) {
                             List<CellMeta> cellMetaList = listCellMetaMap.get(meta.getListVar());
                             if (cellMetaList == null) {
                                 cellMetaList = new ArrayList<CellMeta>();
