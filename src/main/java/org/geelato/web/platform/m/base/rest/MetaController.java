@@ -42,7 +42,7 @@ public class MetaController extends BaseController implements InitializingBean {
     @RequestMapping(value = {"list", "list/*"}, method = {RequestMethod.POST, RequestMethod.GET}, produces = MediaTypes.JSON_UTF_8)
     @ResponseBody
     public ApiPagedResult list(@RequestParam(value = "withMeta", defaultValue = "true") boolean withMeta, HttpServletRequest request) {
-        gql = getGql(request);
+        gql = getGql(request,"query");
         return ruleService.queryForMapList(gql, withMeta);
     }
 
@@ -53,7 +53,7 @@ public class MetaController extends BaseController implements InitializingBean {
     @RequestMapping(value = {"multiList", "multiList/*"}, method = RequestMethod.POST, produces = MediaTypes.JSON_UTF_8)
     @ResponseBody
     public ApiMultiPagedResult multiList(@RequestParam(value = "withMeta", defaultValue = "true") boolean withMeta, HttpServletRequest request) {
-        gql = getGql(request);
+        gql = getGql(request,"query");
         return ruleService.queryForMultiMapList(gql, withMeta);
     }
 
@@ -65,7 +65,7 @@ public class MetaController extends BaseController implements InitializingBean {
     @RequestMapping(value = {"save/{biz}"}, method = RequestMethod.POST, produces = MediaTypes.JSON_UTF_8)
     @ResponseBody
     public ApiMetaResult save(@PathVariable("biz") String biz, HttpServletRequest request) throws DaoException {
-        gql = getGql(request);
+        gql = getGql(request,"save");
         ApiMetaResult result = new ApiMetaResult();
         result.setData(ruleService.save(biz, gql));
         return result;
@@ -74,7 +74,7 @@ public class MetaController extends BaseController implements InitializingBean {
     @RequestMapping(value = {"batchSave"}, method = RequestMethod.POST, produces = MediaTypes.JSON_UTF_8)
     @ResponseBody
     public ApiMetaResult batchSave(HttpServletRequest request) throws DaoException {
-        gql = getGql(request);
+        gql = getGql(request,"batchSave");
         ApiMetaResult result = new ApiMetaResult();
         result.setData(ruleService.batchSave( gql,true));
         return result;
@@ -82,7 +82,7 @@ public class MetaController extends BaseController implements InitializingBean {
     @RequestMapping(value = {"multiSave"}, method = RequestMethod.POST, produces = MediaTypes.JSON_UTF_8)
     @ResponseBody
     public ApiMetaResult multiSave(HttpServletRequest request) {
-        gql = getGql(request);
+        gql = getGql(request,"multiSave");
         ApiMetaResult result = new ApiMetaResult();
         result.setData(ruleService.multiSave(gql));
         return result;
@@ -98,7 +98,7 @@ public class MetaController extends BaseController implements InitializingBean {
     @RequestMapping(value = {"delete2/{biz}"}, method = RequestMethod.POST, produces = MediaTypes.JSON_UTF_8)
     @ResponseBody
     public ApiMetaResult delete(@PathVariable("biz") String biz, HttpServletRequest request) {
-        gql = getGql(request);
+        gql = getGql(request,"delete");
         ApiMetaResult result = new ApiMetaResult();
         result.setData(ruleService.deleteByGql(biz, gql));
         return result;
@@ -160,7 +160,7 @@ public class MetaController extends BaseController implements InitializingBean {
     }
 
 
-    private String getGql(HttpServletRequest request) {
+    private String getGql(HttpServletRequest request,String type) {
         StringBuilder stringBuilder = new StringBuilder();
         BufferedReader br = null;
         try {
@@ -177,8 +177,10 @@ public class MetaController extends BaseController implements InitializingBean {
             logger.error("未能从httpServletRequest中获取gql的内容", e);
         }
         String gql=stringBuilder.toString();
-        EntityMeta entityMeta=ruleService.resolveEntity(gql);
-        DynamicDatasourceHolder.setDataSource(entityMeta.getTableMeta().getConnectId());
+        if(type!=null){
+            EntityMeta entityMeta=ruleService.resolveEntity(gql,type);
+            DynamicDatasourceHolder.setDataSource(entityMeta.getTableMeta().getConnectId());
+        }
         return gql;
     }
     /**
@@ -189,7 +191,7 @@ public class MetaController extends BaseController implements InitializingBean {
     @ResponseBody
     public ApiResult uniqueness(HttpServletRequest request) {
         ApiResult result = new ApiResult();
-        String gql = getGql(request);
+        String gql = getGql(request,null);
         if (Strings.isNotBlank(gql)) {
             JSONObject jo = JSON.parseObject(gql);
             String key = jo.keySet().iterator().next();

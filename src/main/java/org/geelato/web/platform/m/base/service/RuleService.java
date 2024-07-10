@@ -73,8 +73,30 @@ public class RuleService {
         this.dao = dao;
     }
 
-    public EntityMeta resolveEntity(String gql) {
-        QueryCommand command = gqlManager.generateQuerySql(gql, getSessionCtx());
+    public EntityMeta resolveEntity(String gql,String type) {
+        BaseCommand command=null;
+        switch (type){
+            case "save":
+                command = gqlManager.generateSaveSql(gql, getSessionCtx());
+                break;
+            case"query":
+                command = gqlManager.generateQuerySql(gql, getSessionCtx());
+                break;
+//            case"multiSave":
+//                command = gqlManager.generateMultiSaveSql(gql, getSessionCtx());
+//                break;
+//            case"batchSave":
+//                command = gqlManager.generateBatchSaveSql(gql, getSessionCtx());
+//                break;
+            case"delete":
+                command = gqlManager.generateDeleteSql(gql, getSessionCtx());
+                break;
+            case"pageQuery":
+                command = gqlManager.generatePageQuerySql(gql, getSessionCtx());
+                break;
+            default:
+                break;
+        }
         return metaManager.getByEntityName(command.getEntityName());
     }
     public Map<String, Object> queryForMap(String gql) throws DataAccessException {
