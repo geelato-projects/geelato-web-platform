@@ -83,6 +83,7 @@ public class AppPage extends BaseSortableEntity {
     public String getSourceContent() {
         return sourceContent;
     }
+
     public void setSourceContent(String sourceContent) {
         this.sourceContent = sourceContent;
     }
@@ -108,7 +109,7 @@ public class AppPage extends BaseSortableEntity {
     }
 
 
-    @Col(name="version")
+    @Col(name = "version")
     @Title(title = "版本")
     public int getVersion() {
         return version;

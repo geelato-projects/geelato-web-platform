@@ -1,7 +1,6 @@
 package org.geelato.web.platform.m.base.rest;
 
 import jakarta.servlet.http.HttpServletRequest;
-import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.Ctx;
 import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
@@ -9,6 +8,7 @@ import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.enums.DeleteStatusEnum;
 import org.geelato.core.gql.parser.FilterGroup;
 import org.geelato.core.gql.parser.PageQueryRequest;
+import org.geelato.utils.StringUtils;
 import org.geelato.web.platform.m.base.entity.App;
 import org.geelato.web.platform.m.base.service.AppService;
 import org.slf4j.Logger;
@@ -76,11 +76,11 @@ public class AppController extends BaseController {
     public ApiResult queryByUser(String tenantCode, String userId) {
         ApiResult result = new ApiResult<>();
         try {
-            if (Strings.isBlank(userId)) {
+            if (StringUtils.isBlank(userId)) {
                 org.geelato.core.env.entity.User user = Ctx.getCurrentUser();
                 userId = user != null ? user.getUserId() : "";
             }
-            if (Strings.isBlank(tenantCode) || Strings.isBlank(userId)) {
+            if (StringUtils.isBlank(tenantCode) || StringUtils.isBlank(userId)) {
                 return result.error().setMsg(ApiErrorMsg.PARAMETER_MISSING);
             }
             Map<String, Object> map = new HashMap<>();
@@ -118,7 +118,7 @@ public class AppController extends BaseController {
         ApiResult result = new ApiResult();
         try {
             // ID为空方可插入
-            if (Strings.isNotBlank(form.getId())) {
+            if (StringUtils.isNotBlank(form.getId())) {
                 result.setData(appService.updateModel(form));
             } else {
                 result.setData(appService.createModel(form));

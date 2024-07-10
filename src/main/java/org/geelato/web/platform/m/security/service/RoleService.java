@@ -1,9 +1,9 @@
 package org.geelato.web.platform.m.security.service;
 
-import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.enums.EnableStatusEnum;
 import org.geelato.core.gql.parser.FilterGroup;
 import org.geelato.core.meta.model.entity.TableMeta;
+import org.geelato.utils.StringUtils;
 import org.geelato.web.platform.enums.PermissionTypeEnum;
 import org.geelato.web.platform.enums.RoleTypeEnum;
 import org.geelato.web.platform.m.base.entity.App;
@@ -14,7 +14,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author diabl
@@ -51,7 +54,7 @@ public class RoleService extends BaseSortableService {
         // 获取
         Role role = super.getModel(Role.class, id);
         // 处理
-        if (Strings.isNotBlank(role.getAppId())) {
+        if (StringUtils.isNotBlank(role.getAppId())) {
             App app = appService.getModel(App.class, role.getAppId());
             if (app != null) {
                 role.setAppName(app.getName());
@@ -119,7 +122,7 @@ public class RoleService extends BaseSortableService {
             }
         }
         // 关联表修改
-        if (Strings.isNotBlank(form.getName()) && !form.getName().equals(model.getName())) {
+        if (StringUtils.isNotBlank(form.getName()) && !form.getName().equals(model.getName())) {
             // 角色APP关系表
             Map<String, Object> params = new HashMap<>();
             params.put("roleId", model.getId());
@@ -165,10 +168,10 @@ public class RoleService extends BaseSortableService {
         // 关联平台级角色
         RoleAppMap map = new RoleAppMap();
         map.setRoleId(role.getId());
-        if (Strings.isNotBlank(model.getAppIds())) {
+        if (StringUtils.isNotBlank(model.getAppIds())) {
             map.setAppId(model.getAppIds());
             roleAppMapService.insertModels(map);
-        } else if (Strings.isNotBlank(model.getAppId())) {
+        } else if (StringUtils.isNotBlank(model.getAppId())) {
             map.setAppId(model.getAppId());
             roleAppMapService.insertModels(map);
         }
@@ -186,10 +189,10 @@ public class RoleService extends BaseSortableService {
         String orderBy = "weight DESC,update_at DESC";
         List<Role> roles = new ArrayList<>();
         String tenantCode = (String) params.get("tenantCode");
-        tenantCode = Strings.isNotBlank(tenantCode) ? tenantCode : getSessionTenantCode();
+        tenantCode = StringUtils.isNotBlank(tenantCode) ? tenantCode : getSessionTenantCode();
         params.put("tenantCode", tenantCode);
         String appId = (String) params.get("appId");
-        if (Strings.isNotBlank(appId)) {
+        if (StringUtils.isNotBlank(appId)) {
             // 应用与角色关联
             List<RoleAppMap> roleAppMapList = roleAppMapService.queryModel(RoleAppMap.class, params);
             List<String> roleIds = new ArrayList<>();
@@ -219,21 +222,21 @@ public class RoleService extends BaseSortableService {
         List<String> appIds = new ArrayList<>();
         if (roles != null && roles.size() > 0) {
             for (Role role : roles) {
-                if (Strings.isNotBlank(role.getAppId()) && !appIds.contains(role.getAppId())) {
+                if (StringUtils.isNotBlank(role.getAppId()) && !appIds.contains(role.getAppId())) {
                     appIds.add(role.getAppId());
                 }
             }
         }
         List<App> apps = new ArrayList<>();
         if (appIds != null && appIds.size() > 0) {
-            FilterGroup filter = new FilterGroup().addFilter("id", FilterGroup.Operator.in, Strings.join(appIds, ','));
+            FilterGroup filter = new FilterGroup().addFilter("id", FilterGroup.Operator.in, String.join(",", appIds));
             apps = queryModel(App.class, filter);
         }
         // 填充
         if (apps != null && apps.size() > 0) {
             for (Role role : roles) {
                 for (App app : apps) {
-                    if (Strings.isNotBlank(app.getId()) && app.getId().equals(role.getAppId())) {
+                    if (StringUtils.isNotBlank(app.getId()) && app.getId().equals(role.getAppId())) {
                         role.setAppName(app.getName());
                     }
                 }

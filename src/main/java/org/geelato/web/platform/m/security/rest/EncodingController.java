@@ -1,13 +1,13 @@
 package org.geelato.web.platform.m.security.rest;
 
 import jakarta.servlet.http.HttpServletRequest;
-import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.enums.EnableStatusEnum;
 import org.geelato.core.gql.parser.FilterGroup;
 import org.geelato.core.gql.parser.PageQueryRequest;
+import org.geelato.utils.StringUtils;
 import org.geelato.web.platform.m.base.rest.BaseController;
 import org.geelato.web.platform.m.security.entity.Encoding;
 import org.geelato.web.platform.m.security.service.EncodingService;
@@ -89,7 +89,7 @@ public class EncodingController extends BaseController {
     public ApiResult createOrUpdate(@RequestBody Encoding form) {
         ApiResult result = new ApiResult();
         try {
-            if (Strings.isNotBlank(form.getId())) {
+            if (StringUtils.isNotBlank(form.getId())) {
                 result.setData(encodingService.updateModel(form));
             } else {
                 result.setData(encodingService.createModel(form));

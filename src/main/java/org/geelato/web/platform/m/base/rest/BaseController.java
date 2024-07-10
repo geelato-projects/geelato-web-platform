@@ -3,10 +3,10 @@ package org.geelato.web.platform.m.base.rest;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.gql.parser.FilterGroup;
 import org.geelato.core.gql.parser.PageQueryRequest;
 import org.geelato.core.orm.Dao;
+import org.geelato.utils.StringUtils;
 import org.geelato.web.platform.m.base.service.RuleService;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,7 +61,7 @@ public class BaseController implements InitializingBean {
      */
     public PageQueryRequest getPageQueryParameters(HttpServletRequest request, String defaultOrder) {
         PageQueryRequest pageQueryRequest = getPageQueryParameters(request);
-        if (Strings.isNotBlank(pageQueryRequest.getOrderBy())) {
+        if (StringUtils.isNotBlank(pageQueryRequest.getOrderBy())) {
             pageQueryRequest.setOrderBy(defaultOrder);
         }
         return pageQueryRequest;
@@ -75,11 +75,11 @@ public class BaseController implements InitializingBean {
      */
     public PageQueryRequest getPageQueryParameters(HttpServletRequest request) {
         PageQueryRequest queryRequest = new PageQueryRequest();
-        int pageNum = Strings.isNotBlank(request.getParameter("current")) ? Integer.parseInt(request.getParameter("current")) : -1;
+        int pageNum = StringUtils.isNotBlank(request.getParameter("current")) ? Integer.parseInt(request.getParameter("current")) : -1;
         queryRequest.setPageNum(pageNum);
-        int pageSize = Strings.isNotBlank(request.getParameter("pageSize")) ? Integer.parseInt(request.getParameter("pageSize")) : -1;
+        int pageSize = StringUtils.isNotBlank(request.getParameter("pageSize")) ? Integer.parseInt(request.getParameter("pageSize")) : -1;
         queryRequest.setPageSize(pageSize);
-        String orderBy = Strings.isNotBlank(request.getParameter("order")) ? String.valueOf(request.getParameter("order")) : "";
+        String orderBy = StringUtils.isNotBlank(request.getParameter("order")) ? String.valueOf(request.getParameter("order")) : "";
         orderBy = orderBy.replaceAll("\\|", " ");
         queryRequest.setOrderBy(orderBy);
 
@@ -112,7 +112,7 @@ public class BaseController implements InitializingBean {
                 List<String> contains = operatorMap.get("contains");
                 if (contains != null && !contains.isEmpty()) {
                     for (String list : contains) {
-                        if (params.get(list) != null && Strings.isNotBlank(String.valueOf(params.get(list)))) {
+                        if (params.get(list) != null && StringUtils.isNotBlank(String.valueOf(params.get(list)))) {
                             filterGroup.addFilter(list, FilterGroup.Operator.contains, String.valueOf(params.get(list)));
                             params.remove(list);
                         }
@@ -122,7 +122,7 @@ public class BaseController implements InitializingBean {
                 List<String> consists = operatorMap.get("consists");
                 if (consists != null && !consists.isEmpty()) {
                     for (String list : consists) {
-                        if (params.get(list) != null && Strings.isNotBlank(String.valueOf(params.get(list)))) {
+                        if (params.get(list) != null && StringUtils.isNotBlank(String.valueOf(params.get(list)))) {
                             filterGroup.addFilter(list, FilterGroup.Operator.in, String.valueOf(params.get(list)));
                             params.remove(list);
                         }
@@ -133,11 +133,11 @@ public class BaseController implements InitializingBean {
                 if (intervals != null && !intervals.isEmpty()) {
                     for (String list : intervals) {
                         Object value = params.get(list);
-                        if (value instanceof String && Strings.isBlank(String.valueOf(value))) {
+                        if (value instanceof String && StringUtils.isBlank(String.valueOf(value))) {
                             continue;
                         }
                         String[] times = (String[]) params.get(list);
-                        if (times != null && Strings.isNotBlank(times[1]) && Strings.isNotBlank(times[1])) {
+                        if (times != null && StringUtils.isNotBlank(times[1]) && StringUtils.isNotBlank(times[1])) {
                             filterGroup.addFilter(list, FilterGroup.Operator.gte, new SimpleDateFormat("yyyy-MM-dd 00:00:00").format(new SimpleDateFormat("yyyy-MM-dd").parse(times[0])));
                             filterGroup.addFilter(list, FilterGroup.Operator.lte, new SimpleDateFormat("yyyy-MM-dd 23:59:59").format(new SimpleDateFormat("yyyy-MM-dd").parse(times[1])));
                             params.remove(list);
@@ -147,7 +147,7 @@ public class BaseController implements InitializingBean {
             }
             // 对等查询
             for (Map.Entry<String, Object> entry : params.entrySet()) {
-                if (entry.getValue() != null && Strings.isNotBlank(entry.getValue().toString())) {
+                if (entry.getValue() != null && StringUtils.isNotBlank(entry.getValue().toString())) {
                     filterGroup.addFilter(entry.getKey(), entry.getValue().toString());
                 }
             }

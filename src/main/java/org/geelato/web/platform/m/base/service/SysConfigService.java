@@ -1,9 +1,9 @@
 package org.geelato.web.platform.m.base.service;
 
 import com.alibaba.fastjson2.JSON;
-import org.apache.logging.log4j.util.Strings;
 import org.geelato.utils.KeyUtils;
 import org.geelato.utils.Sm2Util;
+import org.geelato.utils.StringUtils;
 import org.geelato.web.platform.m.base.entity.SysConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +26,7 @@ public class SysConfigService extends BaseService {
      */
     public static void encrypt(SysConfig model) throws Exception {
         Map<String, String> keys = null;
-        if (Strings.isNotBlank(model.getSm2Key())) {
+        if (StringUtils.isNotBlank(model.getSm2Key())) {
             try {
                 keys = JSON.parseObject(model.getSm2Key(), Map.class);
             } catch (Exception ex) {
@@ -48,7 +48,7 @@ public class SysConfigService extends BaseService {
      */
     public static void decrypt(SysConfig model) throws Exception {
         Map<String, String> keys = null;
-        if (Strings.isNotBlank(model.getSm2Key())) {
+        if (StringUtils.isNotBlank(model.getSm2Key())) {
             try {
                 keys = JSON.parseObject(model.getSm2Key(), Map.class);
                 String encodeValue = Sm2Util.decrypt(model.getConfigValue(), keys);
@@ -69,7 +69,7 @@ public class SysConfigService extends BaseService {
      */
     public SysConfig createModel(SysConfig model) throws Exception {
         model.setSm2Key(null);
-        if (model.isEncrypted() && Strings.isNotBlank(model.getConfigValue())) {
+        if (model.isEncrypted() && StringUtils.isNotBlank(model.getConfigValue())) {
             SysConfigService.encrypt(model);
         }
         return super.createModel(model);
@@ -84,7 +84,7 @@ public class SysConfigService extends BaseService {
     public SysConfig updateModel(SysConfig model) throws Exception {
         SysConfig oldModel = this.getModel(SysConfig.class, model.getId());
         oldModel.afterSet();
-        if (Strings.isNotBlank(model.getConfigValue())) {
+        if (StringUtils.isNotBlank(model.getConfigValue())) {
             if (model.isEncrypted() && oldModel.isEncrypted()) {// 重新加密
                 if (!model.getConfigValue().equals(oldModel.getConfigValue())) {
                     SysConfigService.encrypt(model);

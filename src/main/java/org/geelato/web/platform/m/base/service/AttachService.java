@@ -1,8 +1,8 @@
 package org.geelato.web.platform.m.base.service;
 
 import com.alibaba.fastjson2.JSON;
-import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.constants.ApiErrorMsg;
+import org.geelato.utils.StringUtils;
 import org.geelato.web.platform.enums.AttachmentSourceEnum;
 import org.geelato.web.platform.m.base.entity.Attach;
 import org.geelato.web.platform.m.base.entity.Resources;
@@ -74,7 +74,7 @@ public class AttachService extends BaseService {
      */
     public boolean deleteFile(Attach model) {
         Assert.notNull(model, ApiErrorMsg.IS_NULL);
-        if (Strings.isNotBlank(model.getPath())) {
+        if (StringUtils.isNotBlank(model.getPath())) {
             File file = new File(model.getPath());
             if (file.exists()) {
                 return file.delete();

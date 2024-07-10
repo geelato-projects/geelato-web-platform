@@ -7,8 +7,8 @@ import net.oschina.j2cache.CacheObject;
 import net.oschina.j2cache.J2Cache;
 import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
-import org.geelato.core.meta.MetaManager;
 import org.geelato.core.constants.MediaTypes;
+import org.geelato.core.meta.MetaManager;
 import org.geelato.web.platform.m.base.entity.CacheItemMeta;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,7 +17,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * :
@@ -28,12 +29,9 @@ import java.util.*;
 @RequestMapping(value = "/api/cache/")
 public class CacheController extends BaseController {
 
-    private CacheChannel cache = J2Cache.getChannel();
-
-    private MetaManager metaManager = MetaManager.singleInstance();
-
-
-    private static Logger logger = LoggerFactory.getLogger(CacheController.class);
+    private static final Logger logger = LoggerFactory.getLogger(CacheController.class);
+    private final CacheChannel cache = J2Cache.getChannel();
+    private final MetaManager metaManager = MetaManager.singleInstance();
 
     /**
      * e.g.:http://localhost:8080/api/cache/list/

@@ -53,17 +53,6 @@ public class BusinessData {
         return transitionValue;
     }
 
-    public Set<String> getTransitionValueString() {
-        Set<String> stringSet = new LinkedHashSet<>();
-        if (this.transitionValue != null && this.transitionValue.size() > 0) {
-            for (Object obj : this.transitionValue) {
-                stringSet.add(String.valueOf(obj));
-            }
-        }
-
-        return stringSet;
-    }
-
     public void setTransitionValue(Set<Object> transitionValue) {
         this.transitionValue = transitionValue;
     }
@@ -73,6 +62,17 @@ public class BusinessData {
             this.transitionValue = new LinkedHashSet<>();
         }
         this.transitionValue.add(transitionValue);
+    }
+
+    public Set<String> getTransitionValueString() {
+        Set<String> stringSet = new LinkedHashSet<>();
+        if (this.transitionValue != null && this.transitionValue.size() > 0) {
+            for (Object obj : this.transitionValue) {
+                stringSet.add(String.valueOf(obj));
+            }
+        }
+
+        return stringSet;
     }
 
     public void setTransitionValues(Set<Object> transitionValues) {

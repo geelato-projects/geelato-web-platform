@@ -6,5 +6,5 @@ package org.geelato.web.platform.enums;
 public enum WordTableLoopTypeEnum {
     ROW, // 行循环
     CELL, // 列循环
-    TABLE; // 表格循环
+    TABLE // 表格循环
 }

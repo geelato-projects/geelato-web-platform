@@ -2,7 +2,6 @@ package org.geelato.web.platform.m.excel.service;
 
 import com.alibaba.fastjson2.JSON;
 import jakarta.annotation.Resource;
-import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.constants.ColumnDefault;
 import org.geelato.core.enums.DeleteStatusEnum;
@@ -13,6 +12,7 @@ import org.geelato.core.meta.model.field.ColumnMeta;
 import org.geelato.core.meta.model.field.FieldMeta;
 import org.geelato.core.orm.Dao;
 import org.geelato.core.script.js.JsProvider;
+import org.geelato.utils.StringUtils;
 import org.geelato.web.platform.exception.file.FileException;
 import org.geelato.web.platform.m.base.entity.Dict;
 import org.geelato.web.platform.m.base.entity.DictItem;
@@ -81,7 +81,7 @@ public class ExcelCommonUtils {
      */
     public static Object stringToNumber(String value) {
         Object cellValue = null;
-        if (Strings.isNotBlank(value) && value.matches("-?\\d+(\\.\\d+)?")) {
+        if (StringUtils.isNotBlank(value) && value.matches("-?\\d+(\\.\\d+)?")) {
             if (value.indexOf(".") == -1) {
                 cellValue = Long.parseLong(value);
             } else {
@@ -301,6 +301,30 @@ public class ExcelCommonUtils {
         return ranges;
     }
 
+    public static void bottomLayerOfTree(List<ExportColumn> columns, List<ExportColumn> target) {
+        for (ExportColumn exportColumn : columns) {
+            if (exportColumn.getChildren() != null && exportColumn.getChildren().size() > 0) {
+                bottomLayerOfTree(exportColumn.getChildren(), target);
+            } else {
+                target.add(exportColumn);
+            }
+        }
+    }
+
+    public static void cellRangeAddress(int startCol, int startRow, List<ExportColumn> columns, List<ExportColumn> target) {
+        for (int i = 0; i < columns.size(); i++) {
+            ExportColumn column = columns.get(i);
+            column.setFirstRow(startRow);
+            column.setLastRow(column.getFirstRow() + column.getDepth() - 1);
+            column.setFirstCol(i > 0 ? (columns.get(i - 1).getLastCol() + 1) : startCol);
+            column.setLastCol(column.getFirstCol() + column.getBreadth() - 1);
+            if (column.getChildren() != null && column.getChildren().size() > 0) {
+                cellRangeAddress(column.getFirstCol(), column.getLastRow() + 1, column.getChildren(), target);
+            }
+            target.add(column);
+        }
+    }
+
     /**
      * 获取表格默认字段
      *
@@ -328,7 +352,7 @@ public class ExcelCommonUtils {
      */
     public Set<BusinessTypeRuleData> readBusinessTypeRuleData(String rules) {
         Set<BusinessTypeRuleData> typeRuleDataSet = new LinkedHashSet<>();
-        if (Strings.isNotBlank(rules)) {
+        if (StringUtils.isNotBlank(rules)) {
             List<BusinessTypeRuleData> typeRuleDataList = com.alibaba.fastjson.JSON.parseArray(rules, BusinessTypeRuleData.class);
             if (typeRuleDataList != null && typeRuleDataList.size() > 0) {
                 typeRuleDataList.sort(new Comparator<BusinessTypeRuleData>() {
@@ -379,7 +403,7 @@ public class ExcelCommonUtils {
                                 multiLoggers.add(multiLogger);
                                 if (multiValue != null && multiValue.length > 0) {
                                     for (int i = 0; i < multiValue.length; i++) {
-                                        multiValue[i] = Strings.isNotBlank(multiValue[i]) ? multiValue[i].trim() : "";
+                                        multiValue[i] = StringUtils.isNotBlank(multiValue[i]) ? multiValue[i].trim() : "";
                                     }
                                     businessData.setMultiValue(multiValue);
                                     if (typeData.isSceneTypeMulti()) {
@@ -566,7 +590,7 @@ public class ExcelCommonUtils {
                 // 一行数据，每个列
                 for (Map.Entry<String, BusinessData> businessDataEntry : businessDataMap.entrySet()) {
                     BusinessData businessData = businessDataEntry.getValue();
-                    if (businessData.getValue() == null || Strings.isBlank(String.valueOf(businessData.getValue()))) {
+                    if (businessData.getValue() == null || StringUtils.isBlank(String.valueOf(businessData.getValue()))) {
                         continue;
                     }
                     BusinessTypeData typeData = businessData.getBusinessTypeData();
@@ -581,13 +605,13 @@ public class ExcelCommonUtils {
                                 Object newValue = null;
                                 String oldValue = String.valueOf(businessData.getValue());
                                 if (ruleData.isRuleTypeDeletes()) {
-                                    if (Strings.isNotBlank(ruleData.getRule())) {
+                                    if (StringUtils.isNotBlank(ruleData.getRule())) {
                                         newValue = oldValue.replaceAll(ruleData.getRule(), "");
                                     } else {
                                         businessData.setErrorMsg("Rule resolution failure。[Deletes] Rule is empty！");
                                     }
                                 } else if (ruleData.isRuleTypeReplace()) {
-                                    if (Strings.isNotBlank(ruleData.getRule()) && Strings.isNotBlank(ruleData.getGoal())) {
+                                    if (StringUtils.isNotBlank(ruleData.getRule()) && StringUtils.isNotBlank(ruleData.getGoal())) {
                                         newValue = oldValue.replaceAll(ruleData.getRule(), ruleData.getGoal());
                                     } else {
                                         businessData.setErrorMsg("Rule resolution failure。[" + ruleData.getType() + "] Rule or Goal is empty！");
@@ -599,13 +623,13 @@ public class ExcelCommonUtils {
                                 } else if (ruleData.isRuleTypeTrim()) {
                                     newValue = oldValue.trim();
                                 } else if (ruleData.isRuleTypeExpression()) {
-                                    if (Strings.isNotBlank(ruleData.getRule())) {
+                                    if (StringUtils.isNotBlank(ruleData.getRule())) {
                                         newValue = JsProvider.executeExpression(ruleData.getRule(), valueMap);
                                     } else {
                                         businessData.setErrorMsg("Rule resolution failure。[" + ruleData.getType() + "] Rule is empty！");
                                     }
                                 } else if (ruleData.isRuleTypeCheckBox()) {
-                                    if (Strings.isNotBlank(ruleData.getRule())) {
+                                    if (StringUtils.isNotBlank(ruleData.getRule())) {
                                         Map<String, String> redisValues = (Map<String, String>) redisTemplate.opsForValue().get(String.format("%s:%s", currentUUID, ruleData.getRule()));
                                         if (redisValues != null && redisValues.size() > 0) {
                                             String[] oValues = oldValue.split(",");
@@ -613,7 +637,7 @@ public class ExcelCommonUtils {
                                                 Set<String> nValues = new LinkedHashSet<>();
                                                 for (String oValue : oValues) {
                                                     String nValue = redisValues.get(oValue);
-                                                    if (Strings.isNotBlank(nValue)) {
+                                                    if (StringUtils.isNotBlank(nValue)) {
                                                         nValues.add(nValue);
                                                     }
                                                 }
@@ -624,7 +648,7 @@ public class ExcelCommonUtils {
                                         businessData.setErrorMsg("Rule resolution failure。[" + ruleData.getType() + "] Rule is empty！");
                                     }
                                 } else if (ruleData.isRuleTypeDictionary()) {
-                                    if (Strings.isNotBlank(ruleData.getRule())) {
+                                    if (StringUtils.isNotBlank(ruleData.getRule())) {
                                         Map<String, String> redisValues = (Map<String, String>) redisTemplate.opsForValue().get(String.format("%s:%s", currentUUID, ruleData.getRule()));
                                         if (redisValues != null && redisValues.size() > 0) {
                                             newValue = redisValues.get(oldValue);
@@ -635,7 +659,7 @@ public class ExcelCommonUtils {
                                 } else if (ruleData.isRuleTypeQueryGoal()) {
                                     String tableName = ruleData.getQueryRuleTable();
                                     List<String> columnNames = ruleData.getQueryRuleColumn();
-                                    if (Strings.isNotBlank(tableName) && columnNames != null && columnNames.size() > 0 && Strings.isNotBlank(ruleData.getGoal())) {
+                                    if (StringUtils.isNotBlank(tableName) && columnNames != null && columnNames.size() > 0 && StringUtils.isNotBlank(ruleData.getGoal())) {
                                         Map<String, Object> redisValues = (Map<String, Object>) redisTemplate.opsForValue().get(String.format("%s:%s,%s", currentUUID, ruleData.getRule(), ruleData.getGoal()));
                                         if (redisValues != null && redisValues.size() > 0) {
                                             newValue = redisValues.get(oldValue);
@@ -649,7 +673,7 @@ public class ExcelCommonUtils {
                                 } else if (ruleData.isRuleTypeQueryRule()) {
                                     String tableName = ruleData.getQueryRuleTable();
                                     List<String> columnNames = ruleData.getQueryRuleColumn();
-                                    if (Strings.isNotBlank(tableName) && columnNames != null && columnNames.size() > 0 && Strings.isNotBlank(ruleData.getGoal())) {
+                                    if (StringUtils.isNotBlank(tableName) && columnNames != null && columnNames.size() > 0 && StringUtils.isNotBlank(ruleData.getGoal())) {
                                         Map<String, Object> redisValues = (Map<String, Object>) redisTemplate.opsForValue().get(String.format("%s:%s", currentUUID, ruleData.getRule()));
                                         if (redisValues != null && redisValues.size() > 0) {
                                             newValue = redisValues.get(oldValue);
@@ -701,7 +725,7 @@ public class ExcelCommonUtils {
                                 continue;
                             }
                             if (ruleData.isRuleTypeDictionary() || ruleData.isRuleTypeCheckBox()) {
-                                if (Strings.isNotBlank(ruleData.getRule())) {
+                                if (StringUtils.isNotBlank(ruleData.getRule())) {
                                     String key = String.format("%s:%s", currentUUID, ruleData.getRule());
                                     if (!ruleDataDict.containsKey(key)) {
                                         ruleDataDict.put(key, ruleData);
@@ -710,7 +734,7 @@ public class ExcelCommonUtils {
                             } else if (ruleData.isRuleTypeQueryGoal()) {
                                 String tableName = ruleData.getQueryRuleTable();
                                 List<String> columnNames = ruleData.getQueryRuleColumn();
-                                if (Strings.isNotBlank(ruleData.getGoal()) && Strings.isNotBlank(tableName) && columnNames != null && columnNames.size() > 0) {
+                                if (StringUtils.isNotBlank(ruleData.getGoal()) && StringUtils.isNotBlank(tableName) && columnNames != null && columnNames.size() > 0) {
                                     String key = String.format("%s:%s,%s", currentUUID, ruleData.getRule(), ruleData.getGoal());
                                     if (!ruleDataGoal.containsKey(key)) {
                                         ruleDataGoal.put(key, ruleData);
@@ -719,7 +743,7 @@ public class ExcelCommonUtils {
                             } else if (ruleData.isRuleTypeQueryRule()) {
                                 String tableName = ruleData.getQueryRuleTable();
                                 List<String> columnNames = ruleData.getQueryRuleColumn();
-                                if (Strings.isNotBlank(ruleData.getGoal()) && Strings.isNotBlank(tableName) && columnNames != null && columnNames.size() > 0) {
+                                if (StringUtils.isNotBlank(ruleData.getGoal()) && StringUtils.isNotBlank(tableName) && columnNames != null && columnNames.size() > 0) {
                                     String key = String.format("%s:%s", currentUUID, ruleData.getRule());
                                     if (!ruleDataRule.containsKey(key)) {
                                         ruleDataRule.put(key, ruleData);
@@ -847,11 +871,11 @@ public class ExcelCommonUtils {
             if (metaMap.getValue() != null && metaMap.getValue().size() > 0) {
                 for (BusinessMeta meta : metaMap.getValue()) {
                     ConditionMeta conditionMeta = null;
-                    if ((meta.isEvaluationTypeDictionary() || meta.isEvaluationTypeCheckBox()) && Strings.isNotBlank(meta.getDictCode())) {
+                    if ((meta.isEvaluationTypeDictionary() || meta.isEvaluationTypeCheckBox()) && StringUtils.isNotBlank(meta.getDictCode())) {
                         conditionMeta = new ConditionMeta();
                         conditionMeta.setVariable(meta.getVariableValue());
                         conditionMeta.setDictCode(meta.getDictCode());
-                    } else if (meta.isEvaluationTypePrimaryKey() && Strings.isNotBlank(meta.getPrimaryValue())) {
+                    } else if (meta.isEvaluationTypePrimaryKey() && StringUtils.isNotBlank(meta.getPrimaryValue())) {
                         conditionMeta = new ConditionMeta();
                         conditionMeta.setVariable(meta.getVariableValue());
                         conditionMeta.setTableName(meta.getPrimaryKeyTable());
@@ -1001,7 +1025,7 @@ public class ExcelCommonUtils {
                 if (goalValue != null) {
                     for (String columnName : columnNames) {
                         String value = String.valueOf(map.get(columnName));
-                        if (Strings.isNotBlank(value) && !redisMap.containsKey(value)) {
+                        if (StringUtils.isNotBlank(value) && !redisMap.containsKey(value)) {
                             redisMap.put(value, goalValue);
                         }
                     }
@@ -1016,7 +1040,7 @@ public class ExcelCommonUtils {
         if (fieldMetas != null && fieldMetas.size() > 0) {
             for (FieldMeta fieldMeta : fieldMetas) {
                 ColumnMeta meta = fieldMeta.getColumn();
-                if (meta != null && Strings.isNotBlank(meta.getFieldName()) && meta.getEnableStatus() == EnableStatusEnum.ENABLED.getCode() && meta.getDelStatus() == DeleteStatusEnum.NO.getCode()) {
+                if (meta != null && StringUtils.isNotBlank(meta.getFieldName()) && meta.getEnableStatus() == EnableStatusEnum.ENABLED.getCode() && meta.getDelStatus() == DeleteStatusEnum.NO.getCode()) {
                     if (!uniqueColumns.containsKey(meta.getFieldName()) && !columnNames.contains(meta.getName()) && !meta.isNullable()) {
                         uniqueColumns.put(meta.getFieldName(), meta);
                     }
@@ -1032,7 +1056,7 @@ public class ExcelCommonUtils {
         if (fieldMetas != null && fieldMetas.size() > 0) {
             for (FieldMeta fieldMeta : fieldMetas) {
                 ColumnMeta meta = fieldMeta.getColumn();
-                if (meta != null && Strings.isNotBlank(meta.getFieldName()) && meta.getEnableStatus() == EnableStatusEnum.ENABLED.getCode() && meta.getDelStatus() == DeleteStatusEnum.NO.getCode()) {
+                if (meta != null && StringUtils.isNotBlank(meta.getFieldName()) && meta.getEnableStatus() == EnableStatusEnum.ENABLED.getCode() && meta.getDelStatus() == DeleteStatusEnum.NO.getCode()) {
                     if (!uniqueColumns.containsKey(meta.getFieldName()) && !columnNames.contains(meta.getName()) && meta.isUniqued()) {
                         uniqueColumns.put(meta.getFieldName(), meta);
                     }
@@ -1056,7 +1080,7 @@ public class ExcelCommonUtils {
         String gglFormat = "{\"%s\": {\"@fs\": \"%s\"}}";
         String key = String.format("%s:%s:%s", currentUUID, tableName, REDIS_UNIQUE_KEY);
         try {
-            if (Strings.isNotBlank(tableName) && uniqueColumns.size() > 0) {
+            if (StringUtils.isNotBlank(tableName) && uniqueColumns.size() > 0) {
                 String ggl = String.format(gglFormat, tableName, String.join(",", uniqueColumns));
                 ApiPagedResult page = ruleService.queryForMapList(ggl, false);
                 Map<String, Set<Object>> redisValue = pageResultToMap(page, uniqueColumns);
@@ -1177,15 +1201,15 @@ public class ExcelCommonUtils {
         for (Map.Entry<String, BusinessData> businessDataEntry : businessDataMap.entrySet()) {
             boolean isMulti = false;
             BusinessData businessData = businessDataEntry.getValue();
-            if (businessData != null && businessData.getValue() != null && Strings.isNotBlank(String.valueOf(businessData.getValue()))) {
+            if (businessData != null && businessData.getValue() != null && StringUtils.isNotBlank(String.valueOf(businessData.getValue()))) {
                 for (String columnName : columnNames) {
                     if (columnName.equalsIgnoreCase(businessDataEntry.getKey())) {
-                        if (Strings.isNotBlank(ruleData.getRule())) {
+                        if (StringUtils.isNotBlank(ruleData.getRule())) {
                             try {
                                 String[] multiValue = String.valueOf(businessData.getValue()).split(ruleData.getRule());
                                 if (multiValue != null && multiValue.length > 0) {
                                     for (int i = 0; i < multiValue.length; i++) {
-                                        multiValue[i] = Strings.isNotBlank(multiValue[i]) ? multiValue[i].trim() : "";
+                                        multiValue[i] = StringUtils.isNotBlank(multiValue[i]) ? multiValue[i].trim() : "";
                                     }
                                     businessData.setMultiValue(multiValue);
                                     if (ruleData.isRuleTypeMulti()) {
@@ -1267,41 +1291,41 @@ public class ExcelCommonUtils {
             Object newValue = null;
             String oldValue = businessData.getValue() == null ? null : String.valueOf(businessData.getValue());
             if (ruleData.isRuleTypeDeletes()) {
-                if (Strings.isNotBlank(ruleData.getRule())) {
-                    newValue = Strings.isNotBlank(oldValue) ? oldValue.replaceAll(ruleData.getRule(), "") : "";
-                    newValue = Strings.isNotBlank(String.valueOf(newValue)) ? newValue : null;
+                if (StringUtils.isNotBlank(ruleData.getRule())) {
+                    newValue = StringUtils.isNotBlank(oldValue) ? oldValue.replaceAll(ruleData.getRule(), "") : "";
+                    newValue = StringUtils.isNotBlank(String.valueOf(newValue)) ? newValue : null;
                 } else {
                     businessData.setErrorMsg("Rule resolution failure。[" + ruleData.getType() + "] Rule is empty！");
                 }
             } else if (ruleData.isRuleTypeReplace()) {
-                if (Strings.isNotBlank(ruleData.getRule()) && Strings.isNotBlank(ruleData.getGoal())) {
-                    newValue = Strings.isNotBlank(oldValue) ? oldValue.replaceAll(ruleData.getRule(), ruleData.getGoal()) : "";
-                    newValue = Strings.isNotBlank(String.valueOf(newValue)) ? newValue : null;
+                if (StringUtils.isNotBlank(ruleData.getRule()) && StringUtils.isNotBlank(ruleData.getGoal())) {
+                    newValue = StringUtils.isNotBlank(oldValue) ? oldValue.replaceAll(ruleData.getRule(), ruleData.getGoal()) : "";
+                    newValue = StringUtils.isNotBlank(String.valueOf(newValue)) ? newValue : null;
                 } else {
                     businessData.setErrorMsg("Rule resolution failure。[" + ruleData.getType() + "] Rule or Goal is empty！");
                 }
             } else if (ruleData.isRuleTypeUpperCase()) {
-                newValue = Strings.isNotBlank(oldValue) ? oldValue.toUpperCase(Locale.ENGLISH) : null;
+                newValue = StringUtils.isNotBlank(oldValue) ? oldValue.toUpperCase(Locale.ENGLISH) : null;
             } else if (ruleData.isRuleTypeLowerCase()) {
-                newValue = Strings.isNotBlank(oldValue) ? oldValue.toLowerCase(Locale.ENGLISH) : null;
+                newValue = StringUtils.isNotBlank(oldValue) ? oldValue.toLowerCase(Locale.ENGLISH) : null;
             } else if (ruleData.isRuleTypeTrim()) {
-                newValue = Strings.isNotBlank(oldValue) && Strings.isNotBlank(oldValue.trim()) ? oldValue.trim() : null;
+                newValue = StringUtils.isNotBlank(oldValue) && StringUtils.isNotBlank(oldValue.trim()) ? oldValue.trim() : null;
             } else if (ruleData.isRuleTypeExpression()) {
-                if (Strings.isNotBlank(ruleData.getRule())) {
+                if (StringUtils.isNotBlank(ruleData.getRule())) {
                     newValue = JsProvider.executeExpression(ruleData.getRule(), valueMap);
                 } else {
                     businessData.setErrorMsg("Rule resolution failure。[" + ruleData.getType() + "] Rule is empty！");
                 }
             } else if (ruleData.isRuleTypeCheckBox()) {
-                if (Strings.isNotBlank(ruleData.getRule())) {
+                if (StringUtils.isNotBlank(ruleData.getRule())) {
                     Map<String, String> redisValues = (Map<String, String>) redisTemplate.opsForValue().get(String.format("%s:%s", currentUUID, ruleData.getRule()));
-                    if (Strings.isNotBlank(oldValue) && redisValues != null && redisValues.size() > 0) {
+                    if (StringUtils.isNotBlank(oldValue) && redisValues != null && redisValues.size() > 0) {
                         String[] oValues = oldValue.split(",");
                         if (oValues != null && oValues.length > 0) {
                             Set<String> nValues = new LinkedHashSet<>();
                             for (String oValue : oValues) {
                                 String nValue = redisValues.get(oValue);
-                                if (Strings.isNotBlank(nValue)) {
+                                if (StringUtils.isNotBlank(nValue)) {
                                     nValues.add(nValue);
                                 }
                             }
@@ -1312,9 +1336,9 @@ public class ExcelCommonUtils {
                     businessData.setErrorMsg("Rule resolution failure。[" + ruleData.getType() + "] Rule is empty！");
                 }
             } else if (ruleData.isRuleTypeDictionary()) {
-                if (Strings.isNotBlank(ruleData.getRule())) {
+                if (StringUtils.isNotBlank(ruleData.getRule())) {
                     Map<String, String> redisValues = (Map<String, String>) redisTemplate.opsForValue().get(String.format("%s:%s", currentUUID, ruleData.getRule()));
-                    if (Strings.isNotBlank(oldValue) && redisValues != null && redisValues.size() > 0) {
+                    if (StringUtils.isNotBlank(oldValue) && redisValues != null && redisValues.size() > 0) {
                         newValue = redisValues.get(oldValue);
                     }
                 } else {
@@ -1323,9 +1347,9 @@ public class ExcelCommonUtils {
             } else if (ruleData.isRuleTypeQueryGoal()) {
                 String tableName = ruleData.getQueryRuleTable();
                 List<String> colNames = ruleData.getQueryRuleColumn();
-                if (Strings.isNotBlank(tableName) && colNames != null && colNames.size() > 0 && Strings.isNotBlank(ruleData.getGoal())) {
+                if (StringUtils.isNotBlank(tableName) && colNames != null && colNames.size() > 0 && StringUtils.isNotBlank(ruleData.getGoal())) {
                     Map<String, Object> redisValues = (Map<String, Object>) redisTemplate.opsForValue().get(String.format("%s:%s,%s", currentUUID, ruleData.getRule(), ruleData.getGoal()));
-                    if (Strings.isNotBlank(oldValue) && redisValues != null && redisValues.size() > 0) {
+                    if (StringUtils.isNotBlank(oldValue) && redisValues != null && redisValues.size() > 0) {
                         newValue = redisValues.get(oldValue);
                     }
                 } else {
@@ -1334,9 +1358,9 @@ public class ExcelCommonUtils {
             } else if (ruleData.isRuleTypeQueryRule()) {
                 String tableName = ruleData.getQueryRuleTable();
                 List<String> colNames = ruleData.getQueryRuleColumn();
-                if (Strings.isNotBlank(tableName) && colNames != null && colNames.size() > 0 && Strings.isNotBlank(ruleData.getGoal())) {
+                if (StringUtils.isNotBlank(tableName) && colNames != null && colNames.size() > 0 && StringUtils.isNotBlank(ruleData.getGoal())) {
                     Map<String, Object> redisValues = (Map<String, Object>) redisTemplate.opsForValue().get(String.format("%s:%s", currentUUID, ruleData.getRule()));
-                    if (Strings.isNotBlank(oldValue) && redisValues != null && redisValues.size() > 0) {
+                    if (StringUtils.isNotBlank(oldValue) && redisValues != null && redisValues.size() > 0) {
                         newValue = redisValues.get(oldValue);
                     }
                 } else {
@@ -1365,7 +1389,7 @@ public class ExcelCommonUtils {
                     BusinessTypeRuleData ruleData = ruleDataEntry.getValue();
                     if (ruleData != null) {
                         if (ruleData.isRuleTypeDictionary() || ruleData.isRuleTypeCheckBox()) {
-                            if (Strings.isNotBlank(ruleData.getRule())) {
+                            if (StringUtils.isNotBlank(ruleData.getRule())) {
                                 String key = String.format("%s:%s", currentUUID, ruleData.getRule());
                                 if (!ruleDataDict.containsKey(key)) {
                                     ruleDataDict.put(key, ruleData);
@@ -1374,7 +1398,7 @@ public class ExcelCommonUtils {
                         } else if (ruleData.isRuleTypeQueryGoal()) {
                             String tableName = ruleData.getQueryRuleTable();
                             List<String> columnNames = ruleData.getQueryRuleColumn();
-                            if (Strings.isNotBlank(ruleData.getGoal()) && Strings.isNotBlank(tableName) && columnNames != null && columnNames.size() > 0) {
+                            if (StringUtils.isNotBlank(ruleData.getGoal()) && StringUtils.isNotBlank(tableName) && columnNames != null && columnNames.size() > 0) {
                                 String key = String.format("%s:%s,%s", currentUUID, ruleData.getRule(), ruleData.getGoal());
                                 if (!ruleDataGoal.containsKey(key)) {
                                     ruleDataGoal.put(key, ruleData);
@@ -1383,7 +1407,7 @@ public class ExcelCommonUtils {
                         } else if (ruleData.isRuleTypeQueryRule()) {
                             String tableName = ruleData.getQueryRuleTable();
                             List<String> columnNames = ruleData.getQueryRuleColumn();
-                            if (Strings.isNotBlank(ruleData.getGoal()) && Strings.isNotBlank(tableName) && columnNames != null && columnNames.size() > 0) {
+                            if (StringUtils.isNotBlank(ruleData.getGoal()) && StringUtils.isNotBlank(tableName) && columnNames != null && columnNames.size() > 0) {
                                 String key = String.format("%s:%s", currentUUID, ruleData.getRule());
                                 if (!ruleDataRule.containsKey(key)) {
                                     ruleDataRule.put(key, ruleData);
@@ -1405,30 +1429,6 @@ public class ExcelCommonUtils {
         cacheList.addAll(ruleRedis);
 
         return cacheList;
-    }
-
-    public static void bottomLayerOfTree(List<ExportColumn> columns, List<ExportColumn> target) {
-        for (ExportColumn exportColumn : columns) {
-            if (exportColumn.getChildren() != null && exportColumn.getChildren().size() > 0) {
-                bottomLayerOfTree(exportColumn.getChildren(), target);
-            } else {
-                target.add(exportColumn);
-            }
-        }
-    }
-
-    public static void cellRangeAddress(int startCol, int startRow, List<ExportColumn> columns, List<ExportColumn> target) {
-        for (int i = 0; i < columns.size(); i++) {
-            ExportColumn column = columns.get(i);
-            column.setFirstRow(startRow);
-            column.setLastRow(column.getFirstRow() + column.getDepth() - 1);
-            column.setFirstCol(i > 0 ? (columns.get(i - 1).getLastCol() + 1) : startCol);
-            column.setLastCol(column.getFirstCol() + column.getBreadth() - 1);
-            if (column.getChildren() != null && column.getChildren().size() > 0) {
-                cellRangeAddress(column.getFirstCol(), column.getLastRow() + 1, column.getChildren(), target);
-            }
-            target.add(column);
-        }
     }
 
 }

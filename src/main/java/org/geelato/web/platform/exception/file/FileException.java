@@ -1,7 +1,6 @@
 package org.geelato.web.platform.exception.file;
 
 import org.geelato.core.exception.CoreException;
-import org.geelato.web.platform.PlatformRuntimeException;
 
 /**
  * @author diabl
@@ -11,14 +10,14 @@ public class FileException extends CoreException {
     private static final int CODE = 1200;
 
     public FileException() {
-        super(CODE,MESSAGE);
+        super(CODE, MESSAGE);
     }
 
     public FileException(String msg, int code) {
-        super( code, msg);
+        super(code, msg);
     }
 
     public FileException(String detailMessage) {
-        super(CODE,String.format("%s：%s", MESSAGE, detailMessage));
+        super(CODE, String.format("%s：%s", MESSAGE, detailMessage));
     }
 }

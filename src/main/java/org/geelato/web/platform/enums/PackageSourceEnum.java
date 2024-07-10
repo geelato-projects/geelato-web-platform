@@ -1,6 +1,6 @@
 package org.geelato.web.platform.enums;
 
-import org.apache.logging.log4j.util.Strings;
+import org.geelato.utils.StringUtils;
 
 /**
  * @author diabl
@@ -19,16 +19,8 @@ public enum PackageSourceEnum {
         this.value = value;
     }
 
-    public String getLabel() {
-        return label;
-    }
-
-    public String getValue() {
-        return value;
-    }
-
     public static String getLabel(String value) {
-        if (Strings.isNotBlank(value)) {
+        if (StringUtils.isNotBlank(value)) {
             for (PackageSourceEnum enums : PackageSourceEnum.values()) {
                 if (enums.getValue().equals(value)) {
                     return enums.getLabel();
@@ -36,5 +28,13 @@ public enum PackageSourceEnum {
             }
         }
         return null;
+    }
+
+    public String getLabel() {
+        return label;
+    }
+
+    public String getValue() {
+        return value;
     }
 }

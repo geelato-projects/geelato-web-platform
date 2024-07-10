@@ -5,7 +5,6 @@ import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.Part;
-import org.apache.logging.log4j.util.Strings;
 import org.apache.poi.hssf.usermodel.HSSFCellStyle;
 import org.apache.poi.hssf.usermodel.HSSFFormulaEvaluator;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
@@ -26,6 +25,7 @@ import org.geelato.core.meta.model.entity.EntityMeta;
 import org.geelato.core.meta.model.field.ColumnMeta;
 import org.geelato.core.meta.model.field.FieldMeta;
 import org.geelato.core.script.js.JsProvider;
+import org.geelato.utils.StringUtils;
 import org.geelato.utils.UIDGenerator;
 import org.geelato.web.platform.enums.AttachmentSourceEnum;
 import org.geelato.web.platform.exception.file.FileNotFoundException;
@@ -114,8 +114,8 @@ public class ImportExcelService {
                 businessTypeDataMap = getBusinessTypeData(templateRuleFile, 0);
                 // 清洗规则
                 businessTypeRuleDataSet = getBusinessTypeRuleData(templateRuleFile, 1);
-            } else if (Strings.isNotBlank(exportTemplate.getBusinessTypeData()) &&
-                    Strings.isNotBlank(exportTemplate.getBusinessRuleData()) && Strings.isNotBlank(exportTemplate.getBusinessMetaData())) {
+            } else if (StringUtils.isNotBlank(exportTemplate.getBusinessTypeData()) &&
+                    StringUtils.isNotBlank(exportTemplate.getBusinessRuleData()) && StringUtils.isNotBlank(exportTemplate.getBusinessMetaData())) {
                 // 元数据
                 businessMetaListMap = getBusinessMeta(exportTemplate.getBusinessMetaData());
                 // 事务，模板数据类型
@@ -130,7 +130,7 @@ public class ImportExcelService {
             }
             // 事务，业务数据
             Attach businessFile = null;
-            if (Strings.isNotBlank(attachId)) {
+            if (StringUtils.isNotBlank(attachId)) {
                 businessFile = getFile(attachId);
                 ExcelCommonUtils.notNull(businessFile, new FileNotFoundException("Business Data File Not Found"));
                 logger.info(String.format("业务数据（%s[%s]）[%s]", businessFile.getName(), businessFile.getId(), sdf.format(new Date())));
@@ -307,10 +307,10 @@ public class ImportExcelService {
                 }
                 if (businessMetaEntry.getValue() != null && businessMetaEntry.getValue().size() > 0) {
                     for (BusinessMeta businessMeta : businessMetaEntry.getValue()) {
-                        if (Strings.isNotBlank(businessMeta.getColumnName())) {
+                        if (StringUtils.isNotBlank(businessMeta.getColumnName())) {
                             metaColumnNames.add(businessMeta.getColumnName());
                         }
-                        if (Strings.isNotBlank(businessMeta.getVariableValue())) {
+                        if (StringUtils.isNotBlank(businessMeta.getVariableValue())) {
                             metaVariableValues.add(businessMeta.getVariableValue());
                         }
                     }
@@ -444,7 +444,7 @@ public class ImportExcelService {
                         Set<String> nValues = new LinkedHashSet<>();
                         for (String oValue : oValues) {
                             String nValue = redisValues.get(oValue);
-                            if (Strings.isNotBlank(nValue)) {
+                            if (StringUtils.isNotBlank(nValue)) {
                                 nValues.add(nValue);
                             }
                         }
@@ -866,11 +866,11 @@ public class ImportExcelService {
      */
     private File getTemplate(String currentUUID, String template) {
         File file = null;
-        if (Strings.isNotBlank(template)) {
+        if (StringUtils.isNotBlank(template)) {
             if (template.length() > 64) {
                 try {
                     Base64Info bi = JSON.parseObject(template, Base64Info.class);
-                    if (bi != null && Strings.isNotBlank(bi.getName()) && Strings.isNotBlank(bi.getBase64())) {
+                    if (bi != null && StringUtils.isNotBlank(bi.getName()) && StringUtils.isNotBlank(bi.getBase64())) {
                         // 解码Base64字符串为字节数组
                         byte[] decodedBytes = Base64.getDecoder().decode(bi.getBase64());
                         // 创建临时文件
@@ -908,7 +908,7 @@ public class ImportExcelService {
      */
     private Attach getFile(String attachId) {
         try {
-            if (Strings.isNotBlank(attachId)) {
+            if (StringUtils.isNotBlank(attachId)) {
                 Attach attach = attachService.getModel(attachId);
                 File file = new File(attach.getPath());
                 if (file.exists()) {

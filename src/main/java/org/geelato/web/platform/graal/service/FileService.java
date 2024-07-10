@@ -2,9 +2,9 @@ package org.geelato.web.platform.graal.service;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
-import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.graal.GraalService;
+import org.geelato.utils.StringUtils;
 import org.geelato.web.platform.m.base.entity.Attach;
 import org.geelato.web.platform.m.excel.service.ExportExcelService;
 
@@ -26,7 +26,7 @@ public class FileService {
      * @return
      */
     public String exportExcel(String fileName, String templateId, Object data, Map<String, Object> options) {
-        if (Strings.isBlank(fileName) || Strings.isBlank(templateId) || data == null) {
+        if (StringUtils.isBlank(fileName) || StringUtils.isBlank(templateId) || data == null) {
             return null;
         }
         try {
@@ -40,7 +40,7 @@ public class FileService {
             // 其他参数
             String markText = options.get("markText") == null ? "" : String.valueOf(options.get("markText"));
             String markKey = options.get("markKey") == null ? "" : String.valueOf(options.get("markKey"));
-            Boolean readonly = options.get("readonly") == null ? false : Boolean.valueOf(String.valueOf(options.get("readonly")));
+            Boolean readonly = options.get("readonly") != null && Boolean.valueOf(String.valueOf(options.get("readonly")));
             // 导出
             ExportExcelService exportExcelService = new ExportExcelService();
             ApiResult result = exportExcelService.exportWps(templateId, fileName, valueMapList, valueMap, markText, markKey, readonly);

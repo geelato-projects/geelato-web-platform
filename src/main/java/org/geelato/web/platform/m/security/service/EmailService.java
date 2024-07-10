@@ -2,12 +2,12 @@ package org.geelato.web.platform.m.security.service;
 
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
-import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.constants.ColumnDefault;
 import org.geelato.core.enums.DeleteStatusEnum;
 import org.geelato.core.enums.EnableStatusEnum;
 import org.geelato.core.gql.parser.FilterGroup;
 import org.geelato.core.orm.Dao;
+import org.geelato.utils.StringUtils;
 import org.geelato.web.platform.m.base.entity.SysConfig;
 import org.geelato.web.platform.m.base.service.SysConfigService;
 import org.geelato.web.platform.m.security.entity.AliEmail;
@@ -29,12 +29,11 @@ import java.util.Properties;
  */
 @Component
 public class EmailService {
-    private final Logger logger = LoggerFactory.getLogger(EmailService.class);
     private static final String CONFIG_KEY_EMAIL_PORT = "emailPort";
     private static final String CONFIG_KEY_EMAIL_HOST = "emailHost";
     private static final String CONFIG_KEY_EMAIL_USERNAME = "emailUserName";
     private static final String CONFIG_KEY_EMAIL_PASSWORD = "emailPassWord";
-
+    private final Logger logger = LoggerFactory.getLogger(EmailService.class);
     @Autowired
     @Qualifier("primaryDao")
     public Dao dao;
@@ -103,7 +102,7 @@ public class EmailService {
         // 填充
         if (sysConfigs != null && sysConfigs.size() > 0) {
             for (SysConfig config : sysConfigs) {
-                if (config == null || Strings.isBlank(config.getConfigKey())) {
+                if (config == null || StringUtils.isBlank(config.getConfigKey())) {
                     continue;
                 }
                 config.afterSet();
@@ -115,7 +114,7 @@ public class EmailService {
                     aliEmail.setHost(value);
                 } else if (config.getConfigKey().equals(port)) {
                     try {
-                        int pos = Strings.isNotBlank(value) ? Integer.parseInt(value) : JavaMailSenderImpl.DEFAULT_PORT;
+                        int pos = StringUtils.isNotBlank(value) ? Integer.parseInt(value) : JavaMailSenderImpl.DEFAULT_PORT;
                         aliEmail.setPort(pos > -1 ? pos : JavaMailSenderImpl.DEFAULT_PORT);
                     } catch (Exception ex) {
                         aliEmail.setPort(JavaMailSenderImpl.DEFAULT_PORT);
@@ -128,7 +127,7 @@ public class EmailService {
             }
         }
         // 校验
-        if (Strings.isBlank(aliEmail.getHost()) || aliEmail.getPort() <= -1 || Strings.isBlank(aliEmail.getUsername()) || Strings.isBlank(aliEmail.getPassword())) {
+        if (StringUtils.isBlank(aliEmail.getHost()) || aliEmail.getPort() <= -1 || StringUtils.isBlank(aliEmail.getUsername()) || StringUtils.isBlank(aliEmail.getPassword())) {
             throw new RuntimeException("发送邮件需要的参数缺失。");
         }
 

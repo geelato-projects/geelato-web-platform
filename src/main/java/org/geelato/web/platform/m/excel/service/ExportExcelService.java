@@ -2,7 +2,6 @@ package org.geelato.web.platform.m.excel.service;
 
 import com.alibaba.fastjson2.JSON;
 import jakarta.servlet.http.HttpServletRequest;
-import org.apache.logging.log4j.util.Strings;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.hwpf.HWPFDocument;
@@ -13,6 +12,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.geelato.core.Ctx;
 import org.geelato.core.api.ApiResult;
+import org.geelato.utils.StringUtils;
 import org.geelato.web.platform.enums.AttachmentSourceEnum;
 import org.geelato.web.platform.m.base.entity.Attach;
 import org.geelato.web.platform.m.base.entity.Base64Info;
@@ -91,7 +91,7 @@ public class ExportExcelService {
             if (templateRuleAttach != null) {
                 // 读取，模板源数据
                 metaMap = getPlaceholderMeta(templateRuleAttach.getFile());
-            } else if (Strings.isNotBlank(exportTemplate.getBusinessMetaData())) {
+            } else if (StringUtils.isNotBlank(exportTemplate.getBusinessMetaData())) {
                 metaMap = getPlaceholderMeta(exportTemplate.getBusinessMetaData());
             }
             if (metaMap == null || metaMap.isEmpty()) {
@@ -100,7 +100,7 @@ public class ExportExcelService {
             // 实体文件名称
             String templateExt = templateAttach.getName().substring(templateAttach.getName().lastIndexOf("."));
             String templateName = templateAttach.getName().substring(0, templateAttach.getName().lastIndexOf("."));
-            if (Strings.isNotBlank(fileName)) {
+            if (StringUtils.isNotBlank(fileName)) {
                 if (pattern.matcher(fileName).matches()) {
                     fileName = fileName.substring(0, fileName.lastIndexOf("."));
                 }
@@ -142,7 +142,7 @@ public class ExportExcelService {
             WordWaterMarkMeta markMeta = setWaterMark(markText, markKey);
             // 实体文件名称
             String templateExt = ".xlsx";
-            if (Strings.isNotBlank(fileName)) {
+            if (StringUtils.isNotBlank(fileName)) {
                 if (pattern.matcher(fileName).matches()) {
                     fileName = fileName.substring(0, fileName.lastIndexOf("."));
                 }
@@ -191,7 +191,7 @@ public class ExportExcelService {
      */
     private WordWaterMarkMeta setWaterMark(String markText, String markKey) {
         WordWaterMarkMeta meta = null;
-        if (Strings.isNotBlank(markKey)) {
+        if (StringUtils.isNotBlank(markKey)) {
             Map<String, Object> params = new HashMap<>();
             params.put("configKey", markKey);
             List<SysConfig> list = sysConfigService.queryModel(SysConfig.class, params);
@@ -211,7 +211,7 @@ public class ExportExcelService {
             } else {
                 throw new RuntimeException("水印功能，配置值查询失败");
             }
-        } else if (Strings.isNotBlank(markText)) {
+        } else if (StringUtils.isNotBlank(markText)) {
             meta = WordWaterMarkMeta.defaultWaterMarkMeta();
             meta.setDefaultText(markText);
         }
@@ -446,11 +446,11 @@ public class ExportExcelService {
      */
     private Base64Info getTemplate(String template) {
         Base64Info info = null;
-        if (Strings.isNotBlank(template)) {
+        if (StringUtils.isNotBlank(template)) {
             if (template.length() > 64) {
                 try {
                     Base64Info bi = JSON.parseObject(template, Base64Info.class);
-                    if (bi != null && Strings.isNotBlank(bi.getName()) && Strings.isNotBlank(bi.getBase64())) {
+                    if (bi != null && StringUtils.isNotBlank(bi.getName()) && StringUtils.isNotBlank(bi.getBase64())) {
                         // 解码Base64字符串为字节数组
                         byte[] decodedBytes = Base64.getDecoder().decode(bi.getBase64());
                         // 创建临时文件
@@ -488,7 +488,7 @@ public class ExportExcelService {
      * @return
      */
     private Attach getFile(String attachId) {
-        if (Strings.isNotBlank(attachId)) {
+        if (StringUtils.isNotBlank(attachId)) {
             Attach attach = attachService.getModel(attachId);
             File file = new File(attach.getPath());
             if (file.exists()) {

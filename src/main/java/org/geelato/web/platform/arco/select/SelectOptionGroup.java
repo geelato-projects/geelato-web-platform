@@ -7,9 +7,9 @@ import java.io.Serializable;
  * @description: Arco Design select group
  */
 public class SelectOptionGroup implements Serializable {
-    private final Boolean isGroup = true;//是否为选项组
-    private String label;//选项组标题
-    private SelectOptionData[] options;//选项组中的选项
+    private final Boolean isGroup = true;// 是否为选项组
+    private String label;// 选项组标题
+    private SelectOptionData[] options;// 选项组中的选项
 
     public Boolean getGroup() {
         return isGroup;

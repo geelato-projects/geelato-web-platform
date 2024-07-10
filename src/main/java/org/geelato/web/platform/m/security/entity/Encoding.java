@@ -1,7 +1,6 @@
 package org.geelato.web.platform.m.security.entity;
 
 import com.alibaba.fastjson2.JSON;
-import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.constants.ColumnDefault;
 import org.geelato.core.meta.annotation.Col;
 import org.geelato.core.meta.annotation.Entity;
@@ -9,6 +8,7 @@ import org.geelato.core.meta.annotation.Title;
 import org.geelato.core.meta.annotation.Transient;
 import org.geelato.core.meta.model.entity.BaseEntity;
 import org.geelato.core.meta.model.entity.EntityEnableAble;
+import org.geelato.utils.StringUtils;
 import org.geelato.utils.UUIDUtils;
 import org.geelato.web.platform.enums.EncodingItemTypeEnum;
 import org.geelato.web.platform.enums.EncodingSerialTypeEnum;
@@ -156,24 +156,24 @@ public class Encoding extends BaseEntity implements EntityEnableAble {
 
     @Override
     public void afterSet() {
-        if (Strings.isNotBlank(getTemplate())) {
+        if (StringUtils.isNotBlank(getTemplate())) {
             List<EncodingItem> itemList = JSON.parseArray(getTemplate(), EncodingItem.class);
             if (itemList != null && !itemList.isEmpty()) {
                 List<String> examples = new ArrayList<>();
                 for (EncodingItem item : itemList) {
                     if (EncodingItemTypeEnum.CONSTANT.getValue().equals(item.getItemType())) {
                         // 常量
-                        if (Strings.isNotBlank(item.getConstantValue())) {
+                        if (StringUtils.isNotBlank(item.getConstantValue())) {
                             examples.add(item.getConstantValue());
                         }
                     } else if (EncodingItemTypeEnum.VARIABLE.getValue().equals(item.getItemType())) {
                         // 常量
-                        if (Strings.isNotBlank(item.getConstantValue())) {
+                        if (StringUtils.isNotBlank(item.getConstantValue())) {
                             examples.add(String.format("{%s}", item.getConstantValue()));
                         }
                     } else if (EncodingItemTypeEnum.ARGUMENT.getValue().equals(item.getItemType())) {
                         // 常量
-                        if (Strings.isNotBlank(item.getConstantValue())) {
+                        if (StringUtils.isNotBlank(item.getConstantValue())) {
                             examples.add(String.format("[%s]", item.getConstantValue()));
                         }
                     } else if (EncodingItemTypeEnum.SERIAL.getValue().equals(item.getItemType())) {
@@ -189,13 +189,13 @@ public class Encoding extends BaseEntity implements EntityEnableAble {
                         }
                     } else if (EncodingItemTypeEnum.DATE.getValue().equals(item.getItemType())) {
                         // 日期
-                        if (Strings.isNotBlank(item.getDateType())) {
+                        if (StringUtils.isNotBlank(item.getDateType())) {
                             examples.add(item.getDateType());
                             setDateType(item.getDateType());
                         }
                     }
                 }
-                String separator = Strings.isNotBlank(getSeparators()) ? getSeparators() : "";
+                String separator = StringUtils.isNotBlank(getSeparators()) ? getSeparators() : "";
                 setFormatExample(String.join(separator, examples));
             }
         }

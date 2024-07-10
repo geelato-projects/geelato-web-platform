@@ -8,12 +8,12 @@ import com.itextpdf.text.pdf.BaseFont;
 import com.itextpdf.text.pdf.PdfWriter;
 import com.itextpdf.tool.xml.XMLWorkerHelper;
 import org.apache.commons.lang3.SystemUtils;
-import org.apache.logging.log4j.util.Strings;
 import org.apache.poi.hwpf.HWPFDocument;
 import org.apache.poi.hwpf.converter.PicturesManager;
 import org.apache.poi.hwpf.converter.WordToHtmlConverter;
 import org.apache.poi.hwpf.usermodel.PictureType;
 import org.apache.poi.xwpf.usermodel.*;
+import org.geelato.utils.StringUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Entities;
 import org.jsoup.select.Elements;
@@ -39,10 +39,10 @@ import java.util.Map;
  */
 public class OfficeUtils {
 
+    public static final String OS_UNIX_FONT_FOLDER = "/usr/share/fonts";
     private static final String CHINA_FONT_RESOURCE = "geelato/fonts/simfang.ttf";
     private static final String WORD_DOCX_CONTENT_TYPE = ".DOCX";
     private static final String WORD_DOC_CONTENT_TYPE = ".DOC";
-    public static final String OS_UNIX_FONT_FOLDER = "/usr/share/fonts";
 
     public static void toPdf(String officePath, String pdfPath, String contentType) throws Exception {
         if (WORD_DOCX_CONTENT_TYPE.equalsIgnoreCase(contentType)) {
@@ -55,14 +55,14 @@ public class OfficeUtils {
     }
 
     public static void wordToPdf(String inputPath, String outputPath, String contentType, String printType, int width, int height) throws Exception {
-        if (Strings.isNotBlank(contentType)) {
+        if (StringUtils.isNotBlank(contentType)) {
             if (WORD_DOCX_CONTENT_TYPE.equalsIgnoreCase(contentType)) {
                 asposeToPdf(inputPath, outputPath);
             } else if (WORD_DOC_CONTENT_TYPE.equalsIgnoreCase(contentType)) {
                 Rectangle pageSize = null;
                 if (printType.equalsIgnoreCase("RM") && width > 0 && height > 0) {
                     pageSize = new Rectangle(width * 72f / 25.4f, height * 72f / 25.4f);
-                } else if (Strings.isNotBlank(printType)) {
+                } else if (StringUtils.isNotBlank(printType)) {
                     Map<String, Rectangle> rectangleMap = getRectangle();
                     if (rectangleMap != null && !rectangleMap.isEmpty()) {
                         for (Map.Entry<String, Rectangle> entry : rectangleMap.entrySet()) {
@@ -149,7 +149,7 @@ public class OfficeUtils {
             }
             pdfDocument.add(new Chunk(Chunk.NEWLINE));
         }
-        //需要关闭，不然无法获取到输出流
+        // 需要关闭，不然无法获取到输出流
         pdfDocument.close();
         pdfWriter.close();
         baos.writeTo(new FileOutputStream(outputPath));
@@ -167,11 +167,11 @@ public class OfficeUtils {
 
     public static void spireToPdf(String inputPath, String outputPath) {
         //  com.spire.license.LicenseProvider.setLicenseFile("license.elic.xml");
-        //实例化Document类的对象
+        // 实例化Document类的对象
         //  com.spire.doc.Document doc = new com.spire.doc.Document();
-        //加载Word
+        // 加载Word
         //   doc.loadFromFile(inputPath);
-        //保存为PDF格式
+        // 保存为PDF格式
         //   doc.saveToFile(outputPath, FileFormat.PDF);
     }
 
@@ -236,13 +236,13 @@ public class OfficeUtils {
         org.jsoup.nodes.Document doc = Jsoup.parse(html);
         // 去除过大的宽度
         String style = doc.attr("style");
-        if (Strings.isNotBlank(style) && style.contains("width")) {
+        if (StringUtils.isNotBlank(style) && style.contains("width")) {
             doc.attr("style", "");
         }
         Elements divs = doc.select("div");
         for (org.jsoup.nodes.Element div : divs) {
             String divStyle = div.attr("style");
-            if (Strings.isNotEmpty(divStyle) && divStyle.contains("width")) {
+            if (StringUtils.isNotEmpty(divStyle) && divStyle.contains("width")) {
                 div.attr("style", "");
             }
         }

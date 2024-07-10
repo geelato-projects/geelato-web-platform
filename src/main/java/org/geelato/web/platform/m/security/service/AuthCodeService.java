@@ -2,9 +2,9 @@ package org.geelato.web.platform.m.security.service;
 
 import jakarta.annotation.Resource;
 import org.apache.commons.collections4.map.HashedMap;
-import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.orm.Dao;
+import org.geelato.utils.StringUtils;
 import org.geelato.web.platform.enums.AuthCodeAction;
 import org.geelato.web.platform.enums.ValidTypeEnum;
 import org.geelato.web.platform.m.security.entity.AuthCodeParams;
@@ -68,7 +68,7 @@ public class AuthCodeService {
      */
     public boolean generate(AuthCodeParams form) throws NoSuchFieldException, IllegalAccessException {
         String redisKey = form.getRedisKey();
-        if (Strings.isBlank(redisKey)) {
+        if (StringUtils.isBlank(redisKey)) {
             return false;
         }
         // 用户
@@ -79,7 +79,7 @@ public class AuthCodeService {
         if (Arrays.binarySearch(needUser, form.getAction().toUpperCase(Locale.ENGLISH)) > -1) {
             form.setPrefix(user.getMobilePrefix());
             String label = ValidTypeEnum.getLabel(form.getValidType());
-            if (Strings.isNotBlank(label)) {
+            if (StringUtils.isNotBlank(label)) {
                 Class<?> clazz = user.getClass();
                 Field labelField = clazz.getDeclaredField(label);
                 labelField.setAccessible(true);
@@ -87,7 +87,7 @@ public class AuthCodeService {
             }
         }
         // 验证方式不能为空
-        if (Strings.isBlank(form.getValidBox())) {
+        if (StringUtils.isBlank(form.getValidBox())) {
             return false;
         }
         // 验证码
@@ -96,7 +96,7 @@ public class AuthCodeService {
         logger.info("authCode：" + authCode);
         // 加密
         String saltCode = form.getRedisValue(authCode);
-        if (Strings.isBlank(saltCode)) {
+        if (StringUtils.isBlank(saltCode)) {
             return false;
         }
         // 发送信息
@@ -127,7 +127,7 @@ public class AuthCodeService {
 
     public boolean sendMobile(String mobilePrefix, String mobilePhone, String authCode) {
         String phoneNumbers = mobilePhone;
-        if (Strings.isNotBlank(mobilePrefix) && !"+86".equals(mobilePrefix)) {
+        if (StringUtils.isNotBlank(mobilePrefix) && !"+86".equals(mobilePrefix)) {
             phoneNumbers = mobilePrefix + phoneNumbers;
         }
         try {
@@ -148,7 +148,7 @@ public class AuthCodeService {
      */
     public boolean validate(AuthCodeParams form) {
         String redisKey = form.getRedisKey();
-        if (Strings.isBlank(redisKey) || Strings.isBlank(form.getAuthCode())) {
+        if (StringUtils.isBlank(redisKey) || StringUtils.isBlank(form.getAuthCode())) {
             return false;
         }
         // 加密

@@ -1,7 +1,6 @@
 package org.geelato.web.platform.m.model.rest;
 
 import jakarta.servlet.http.HttpServletRequest;
-import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiErrorMsg;
@@ -14,6 +13,7 @@ import org.geelato.core.meta.model.entity.TableMeta;
 import org.geelato.core.meta.model.field.ColumnMeta;
 import org.geelato.core.meta.model.field.ColumnSelectType;
 import org.geelato.core.meta.model.view.TableView;
+import org.geelato.utils.StringUtils;
 import org.geelato.web.platform.enums.PermissionTypeEnum;
 import org.geelato.web.platform.m.base.rest.BaseController;
 import org.geelato.web.platform.m.model.service.DevTableColumnService;
@@ -105,7 +105,7 @@ public class DevTableColumnController extends BaseController {
         try {
             form.afterSet();
             // ID为空方可插入
-            if (Strings.isNotBlank(form.getId())) {
+            if (StringUtils.isNotBlank(form.getId())) {
                 // 存在，方可更新
                 ColumnMeta meta = devTableColumnService.getModel(CLAZZ, form.getId());
                 Assert.notNull(meta, ApiErrorMsg.IS_NULL);
@@ -127,7 +127,7 @@ public class DevTableColumnController extends BaseController {
                 devTableColumnService.automaticGeneration(form);
             }
             // 刷新实体缓存
-            if (result.isSuccess() && Strings.isNotEmpty(form.getTableName())) {
+            if (result.isSuccess() && StringUtils.isNotEmpty(form.getTableName())) {
                 // 刷新默认视图
                 updateDefaultTableView(form.getTableId());
                 metaManager.refreshDBMeta(form.getTableName());
@@ -158,7 +158,7 @@ public class DevTableColumnController extends BaseController {
             String tableId = String.valueOf(params.get("tableId"));
             String tableName = String.valueOf(params.get("tableName"));
             String columnIds = String.valueOf(params.get("columnIds"));
-            if (Strings.isBlank(tableId) || Strings.isBlank(columnIds)) {
+            if (StringUtils.isBlank(tableId) || StringUtils.isBlank(columnIds)) {
                 return result.error().setMsg(ApiErrorMsg.PARAMETER_MISSING);
             }
             //
@@ -196,7 +196,7 @@ public class DevTableColumnController extends BaseController {
                 }
             }
             // 刷新实体缓存
-            if (result.isSuccess() && Strings.isNotEmpty(tableMeta.getEntityName())) {
+            if (result.isSuccess() && StringUtils.isNotEmpty(tableMeta.getEntityName())) {
                 // 刷新默认视图
                 updateDefaultTableView(tableMeta.getId());
                 metaManager.refreshDBMeta(tableMeta.getEntityName());
@@ -218,7 +218,7 @@ public class DevTableColumnController extends BaseController {
             Assert.notNull(model, ApiErrorMsg.IS_NULL);
             devTableColumnService.isDeleteModel(model);
             // 刷新实体缓存
-            if (Strings.isNotEmpty(model.getTableName())) {
+            if (StringUtils.isNotEmpty(model.getTableName())) {
                 // 刷新默认视图
                 updateDefaultTableView(model.getTableId());
                 metaManager.refreshDBMeta(model.getTableName());

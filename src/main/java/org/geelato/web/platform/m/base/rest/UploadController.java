@@ -2,10 +2,10 @@ package org.geelato.web.platform.m.base.rest;
 
 import com.alibaba.fastjson2.JSON;
 import jakarta.servlet.http.HttpServletRequest;
-import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.meta.model.field.ColumnMeta;
+import org.geelato.utils.StringUtils;
 import org.geelato.web.platform.enums.AttachmentSourceEnum;
 import org.geelato.web.platform.m.base.entity.Attach;
 import org.geelato.web.platform.m.base.entity.Resources;
@@ -52,7 +52,7 @@ public class UploadController extends BaseController {
             attach.setObjectId(objectId);
             attach.setGenre(genre);
             attach.setAppId(appId);
-            if (Strings.isNotBlank(root)) {
+            if (StringUtils.isNotBlank(root)) {
                 attach.setPath(UploadService.getSaveRootPath(root, attach.getName(), true));
             } else {
                 // upload/存放表/租户编码/应用Id
@@ -79,7 +79,7 @@ public class UploadController extends BaseController {
     @ResponseBody
     public ApiResult uploadObject(@RequestBody Map<String, Object> params, String fileName, String catalog) throws IOException {
         ApiResult result = new ApiResult();
-        if (params == null || params.isEmpty() || Strings.isBlank(fileName)) {
+        if (params == null || params.isEmpty() || StringUtils.isBlank(fileName)) {
             return result.error().setMsg(ApiErrorMsg.OPERATE_FAIL);
         }
         FileOutputStream fops = null;
@@ -87,12 +87,12 @@ public class UploadController extends BaseController {
         try {
             // 文件名称
             String ext = UploadService.getFileExtension(fileName);
-            if (Strings.isBlank(ext) || !ext.equalsIgnoreCase(UploadService.ROOT_CONFIG_SUFFIX)) {
+            if (StringUtils.isBlank(ext) || !ext.equalsIgnoreCase(UploadService.ROOT_CONFIG_SUFFIX)) {
                 fileName += UploadService.ROOT_CONFIG_SUFFIX;
             }
             // 路径
             String rootDir = UploadService.ROOT_CONFIG_DIRECTORY;
-            if (Strings.isNotBlank(catalog)) {
+            if (StringUtils.isNotBlank(catalog)) {
                 rootDir = String.format(catalog.startsWith("/") ? "%s%s" : "%s/%s", rootDir, catalog);
             }
             UploadService.fileMkdirs(rootDir);
@@ -124,7 +124,7 @@ public class UploadController extends BaseController {
     @ResponseBody
     public ApiResult uploadJson(@RequestBody String JsonData, String fileName, String catalog) throws IOException {
         ApiResult result = new ApiResult();
-        if (Strings.isBlank(JsonData) || Strings.isBlank(fileName)) {
+        if (StringUtils.isBlank(JsonData) || StringUtils.isBlank(fileName)) {
             return result.error().setMsg(ApiErrorMsg.OPERATE_FAIL);
         }
         FileWriter fileWriter = null;
@@ -132,12 +132,12 @@ public class UploadController extends BaseController {
         try {
             // 文件名称
             String ext = UploadService.getFileExtension(fileName);
-            if (Strings.isBlank(ext) || !ext.equalsIgnoreCase(UploadService.ROOT_CONFIG_SUFFIX)) {
+            if (StringUtils.isBlank(ext) || !ext.equalsIgnoreCase(UploadService.ROOT_CONFIG_SUFFIX)) {
                 fileName += UploadService.ROOT_CONFIG_SUFFIX;
             }
             // 路径
             String rootDir = UploadService.ROOT_CONFIG_DIRECTORY;
-            if (Strings.isNotBlank(catalog)) {
+            if (StringUtils.isNotBlank(catalog)) {
                 rootDir = String.format(catalog.startsWith("/") ? "%s%s" : "%s/%s", rootDir, catalog);
             }
             UploadService.fileMkdirs(rootDir);
@@ -169,15 +169,15 @@ public class UploadController extends BaseController {
     @ResponseBody
     public ApiResult uploadModel(@PathVariable("entityName") String entityName, @PathVariable("id") String id, String fileName) {
         ApiResult result = new ApiResult();
-        if (Strings.isBlank(entityName) || Strings.isBlank(id)) {
+        if (StringUtils.isBlank(entityName) || StringUtils.isBlank(id)) {
             return result.error().setMsg(ApiErrorMsg.OPERATE_FAIL);
         }
-        if (Strings.isBlank(fileName)) {
+        if (StringUtils.isBlank(fileName)) {
             return result.error().setMsg("File Name Is Null");
         }
         try {
             String fieldNames = getColumnFieldNames(entityName);
-            if (Strings.isBlank(fieldNames)) {
+            if (StringUtils.isBlank(fieldNames)) {
                 return result.error().setMsg("Column Meta Is Null");
             }
             String sql = String.format("select %s from %s where id = '%s'", fieldNames, entityName, id);
@@ -192,11 +192,11 @@ public class UploadController extends BaseController {
             }
             /*String configName = null;
             String tenantCode = columnMap.get("tenantCode") == null ? null : String.valueOf(columnMap.get("tenantCode"));
-            if (Strings.isBlank(tenantCode)) {
+            if (StringUtils.isBlank(tenantCode)) {
                 return result.error().setMsg("TenantCode Is Null");
             }
             String appId = columnMap.get("appId") == null ? null : String.valueOf(columnMap.get("appId"));
-            if (Strings.isBlank(appId)) {
+            if (StringUtils.isBlank(appId)) {
                 configName = String.format("%s_%s%s", tenantCode, id, ROOT_CONFIG_SUFFIX);
             } else {
                 configName = String.format("%s_%s_%s%s", tenantCode, appId, id, ROOT_CONFIG_SUFFIX);

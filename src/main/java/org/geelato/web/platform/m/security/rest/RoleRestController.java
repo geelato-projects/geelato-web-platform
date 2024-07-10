@@ -1,13 +1,13 @@
 package org.geelato.web.platform.m.security.rest;
 
 import jakarta.servlet.http.HttpServletRequest;
-import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.enums.DeleteStatusEnum;
 import org.geelato.core.gql.parser.FilterGroup;
 import org.geelato.core.gql.parser.PageQueryRequest;
+import org.geelato.utils.StringUtils;
 import org.geelato.web.platform.m.base.rest.BaseController;
 import org.geelato.web.platform.m.security.entity.Role;
 import org.geelato.web.platform.m.security.service.RoleService;
@@ -105,7 +105,7 @@ public class RoleRestController extends BaseController {
     public ApiResult createOrUpdate(@RequestBody Role form) {
         ApiResult result = new ApiResult();
         try {
-            if (Strings.isNotBlank(form.getId())) {
+            if (StringUtils.isNotBlank(form.getId())) {
                 result.setData(roleService.updateModel(form));
             } else {
                 result.setData(roleService.createModel(form));

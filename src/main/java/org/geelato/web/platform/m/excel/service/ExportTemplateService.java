@@ -2,13 +2,13 @@ package org.geelato.web.platform.m.excel.service;
 
 import com.alibaba.fastjson2.JSON;
 import org.apache.commons.beanutils.BeanUtils;
-import org.apache.logging.log4j.util.Strings;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.*;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.enums.DeleteStatusEnum;
 import org.geelato.core.enums.EnableStatusEnum;
+import org.geelato.utils.StringUtils;
 import org.geelato.web.platform.enums.AttachmentSourceEnum;
 import org.geelato.web.platform.m.base.entity.Resources;
 import org.geelato.web.platform.m.base.service.BaseService;
@@ -45,19 +45,19 @@ public class ExportTemplateService extends BaseService {
 
     public ApiResult generateFile(String id, String fileType) throws IOException {
         ApiResult result = new ApiResult();
-        if (Strings.isBlank(id) || Strings.isBlank(fileType)) {
+        if (StringUtils.isBlank(id) || StringUtils.isBlank(fileType)) {
             return result.error().setMsg(ApiErrorMsg.PARAMETER_MISSING);
         }
         String[] fileTypes = fileType.split(",");
         ExportTemplate exportTemplate = this.getModel(ExportTemplate.class, id);
         Assert.notNull(exportTemplate, ApiErrorMsg.QUERY_FAIL);
-        if (Arrays.asList(fileTypes).contains("template") && "import".equalsIgnoreCase(exportTemplate.getUseType()) && Strings.isNotBlank(exportTemplate.getBusinessTypeData())) {
+        if (Arrays.asList(fileTypes).contains("template") && "import".equalsIgnoreCase(exportTemplate.getUseType()) && StringUtils.isNotBlank(exportTemplate.getBusinessTypeData())) {
             result = this.generateImportTemplate(exportTemplate);
         }
         if (Arrays.asList(fileTypes).contains("meta")) {
-            if ("import".equalsIgnoreCase(exportTemplate.getUseType()) && Strings.isNotBlank(exportTemplate.getBusinessMetaData()) && Strings.isNotBlank(exportTemplate.getBusinessRuleData()) && Strings.isNotBlank(exportTemplate.getBusinessTypeData())) {
+            if ("import".equalsIgnoreCase(exportTemplate.getUseType()) && StringUtils.isNotBlank(exportTemplate.getBusinessMetaData()) && StringUtils.isNotBlank(exportTemplate.getBusinessRuleData()) && StringUtils.isNotBlank(exportTemplate.getBusinessTypeData())) {
                 result = this.generateImportMeta(exportTemplate);
-            } else if ("export".equalsIgnoreCase(exportTemplate.getUseType()) && Strings.isNotBlank(exportTemplate.getBusinessMetaData())) {
+            } else if ("export".equalsIgnoreCase(exportTemplate.getUseType()) && StringUtils.isNotBlank(exportTemplate.getBusinessMetaData())) {
                 result = this.generateExportMeta(exportTemplate);
             }
         }
@@ -233,7 +233,7 @@ public class ExportTemplateService extends BaseService {
             BusinessTypeData data = metas.get(i);
             XSSFCell cell = row.createCell(i);
             cell.setCellStyle(headerCellStyle);
-            if (Strings.isNotBlank(data.getName())) {
+            if (StringUtils.isNotBlank(data.getName())) {
                 cell.setCellValue(data.getName());
                 // 调整列宽
                 ExcelXSSFUtils.setColumnWidth(sheet, data.getName(), i);

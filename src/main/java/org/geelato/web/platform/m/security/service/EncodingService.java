@@ -2,10 +2,10 @@ package org.geelato.web.platform.m.security.service;
 
 import com.alibaba.fastjson2.JSON;
 import jakarta.annotation.Resource;
-import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.Ctx;
 import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.enums.EnableStatusEnum;
+import org.geelato.utils.StringUtils;
 import org.geelato.utils.UUIDUtils;
 import org.geelato.web.platform.enums.EncodingItemTypeEnum;
 import org.geelato.web.platform.enums.EncodingSerialTypeEnum;
@@ -123,14 +123,14 @@ public class EncodingService extends BaseService {
         logParams.put("encodingId", encoding.getId());
         logParams.put("template", encoding.getFormatExample());
         logParams.put("enableStatus", EnableStatusEnum.ENABLED.getCode());
-        if (Strings.isNotBlank(encoding.getDateType())) {
+        if (StringUtils.isNotBlank(encoding.getDateType())) {
             logParams.put("exampleDate", new SimpleDateFormat(encoding.getDateType()).format(new Date()));
         }
         logger.info("logParams：" + JSON.toJSONString(logParams));
         List<EncodingLog> encodingLogList = queryModel(EncodingLog.class, logParams);
         if (encodingLogList != null && !encodingLogList.isEmpty()) {
             for (EncodingLog log : encodingLogList) {
-                if (Strings.isNotBlank(log.getExampleSerial())) {
+                if (StringUtils.isNotBlank(log.getExampleSerial())) {
                     serials.add(log.getExampleSerial());
                 }
             }
@@ -147,7 +147,7 @@ public class EncodingService extends BaseService {
      */
     public String generate(Encoding form, Map<String, Object> argument) {
         redisTemplateEncoding();
-        if (Strings.isBlank(form.getTemplate())) {
+        if (StringUtils.isBlank(form.getTemplate())) {
             return null;
         }
         List<EncodingItem> itemList = JSON.parseArray(form.getTemplate(), EncodingItem.class);
@@ -168,34 +168,34 @@ public class EncodingService extends BaseService {
         for (EncodingItem item : itemList) {
             if (EncodingItemTypeEnum.CONSTANT.getValue().equals(item.getItemType())) {
                 // 常量
-                if (Strings.isNotBlank(item.getConstantValue())) {
+                if (StringUtils.isNotBlank(item.getConstantValue())) {
                     examples.add(item.getConstantValue());
                 }
             } else if (EncodingItemTypeEnum.ARGUMENT.getValue().equals(item.getItemType())) {
-                if (Strings.isNotBlank(item.getConstantValue()) && argument != null) {
+                if (StringUtils.isNotBlank(item.getConstantValue()) && argument != null) {
                     Object value = argument.get(item.getConstantValue());
                     if (value != null) {
                         examples.add(String.valueOf(value));
                     }
                 }
             } else if (EncodingItemTypeEnum.VARIABLE.getValue().equals(item.getItemType())) {
-                if (Strings.isNotBlank(item.getConstantValue()) && variableParams != null) {
+                if (StringUtils.isNotBlank(item.getConstantValue()) && variableParams != null) {
                     Object value = variableParams.get(item.getConstantValue());
-                    if (value != null && Strings.isNotBlank(String.valueOf(value))) {
+                    if (value != null && StringUtils.isNotBlank(String.valueOf(value))) {
                         examples.add(String.valueOf(value));
                     }
                 }
             } else if (EncodingItemTypeEnum.SERIAL.getValue().equals(item.getItemType())) {
                 // 序列号
                 String serial = getSerialByRedisLock(redisItemKey, item);
-                if (Strings.isBlank(serial)) {
+                if (StringUtils.isBlank(serial)) {
                     throw new RuntimeException(ApiErrorMsg.SERIAL_USE_UP);
                 }
                 encodingLog.setExampleSerial(serial);
                 examples.add(serial);
             } else if (EncodingItemTypeEnum.DATE.getValue().equals(item.getItemType())) {
                 // 日期
-                if (Strings.isNotBlank(item.getDateType())) {
+                if (StringUtils.isNotBlank(item.getDateType())) {
                     try {
                         String date = new SimpleDateFormat(item.getDateType()).format(new Date());
                         examples.add(date);
@@ -206,14 +206,14 @@ public class EncodingService extends BaseService {
                 }
             }
         }
-        String separator = Strings.isNotBlank(form.getSeparators()) ? form.getSeparators() : "";
+        String separator = StringUtils.isNotBlank(form.getSeparators()) ? form.getSeparators() : "";
         encodingLog.setExample(String.join(separator, examples));
         logger.info(redisItemKey + " 记录：" + JSON.toJSONString(encodingLog));
-        if (Strings.isBlank(encodingLog.getId()) && Strings.isBlank(encodingLog.getTenantCode())) {
+        if (StringUtils.isBlank(encodingLog.getId()) && StringUtils.isBlank(encodingLog.getTenantCode())) {
             encodingLog.setTenantCode(getSessionTenantCode());
         }
         dao.save(encodingLog);
-        if (Strings.isNotBlank(encodingLog.getExampleSerial())) {
+        if (StringUtils.isNotBlank(encodingLog.getExampleSerial())) {
             redisTemplate.opsForList().rightPush(redisItemKey, encodingLog.getExampleSerial());
         }
 
@@ -285,7 +285,7 @@ public class EncodingService extends BaseService {
         long radius = Long.parseLong(UUIDUtils.generateFixation(serialDigit, 9));
         for (int i = 0; i < radius; i++) {
             serial = UUIDUtils.generateRandom(serialDigit);
-            if (Strings.isNotBlank(serial) && !redisSerials.contains(serial)) {
+            if (StringUtils.isNotBlank(serial) && !redisSerials.contains(serial)) {
                 break;
             }
             serial = null;
@@ -332,7 +332,7 @@ public class EncodingService extends BaseService {
      */
     private void redisTemplateListRightPush(String key, List<Object> list) {
         redisTemplate.delete(key);
-        if (Strings.isNotBlank(key) && list != null) {
+        if (StringUtils.isNotBlank(key) && list != null) {
             for (Object item : list) {
                 redisTemplate.opsForList().rightPush(key, item);
             }
@@ -350,7 +350,7 @@ public class EncodingService extends BaseService {
         if (list != null && !list.isEmpty()) {
             for (int i = 0; i < list.size(); i++) {
                 T obj = list.get(i);
-                if (obj != null && Strings.isNotBlank(obj.toString())) {
+                if (obj != null && StringUtils.isNotBlank(obj.toString())) {
                     if (!nList.contains(obj)) {
                         nList.add(obj);
                     }
@@ -389,9 +389,9 @@ public class EncodingService extends BaseService {
         List<String> variableValues = new ArrayList<>();
         for (EncodingItem item : itemList) {
             if (EncodingItemTypeEnum.VARIABLE.getValue().equals(item.getItemType())) {
-                if (Strings.isNotBlank(item.getConstantValue())) {
+                if (StringUtils.isNotBlank(item.getConstantValue())) {
                     String[] keys = item.getConstantValue().split("\\.");
-                    if (keys != null && keys.length == 2 && Strings.isNotBlank(keys[0]) && Strings.isNotBlank(keys[1])) {
+                    if (keys != null && keys.length == 2 && StringUtils.isNotBlank(keys[0]) && StringUtils.isNotBlank(keys[1])) {
                         variableKeys.add(keys[0]);
                         variableValues.add(keys[1]);
                     }
@@ -401,8 +401,8 @@ public class EncodingService extends BaseService {
         if (variableKeys.size() > 0 && variableValues.size() > 0) {
             if (variableKeys.contains("tenant")) {
                 String tenantCode = Ctx.getCurrentTenantCode();
-                if (Strings.isNotBlank(tenantCode)) {
-                    List<Map<String, Object>> mapList = dao.getJdbcTemplate().queryForList("SELECT * FROM platform_tenant WHERE 1=1 AND del_status = 0 AND code = ?", new Object[]{tenantCode});
+                if (StringUtils.isNotBlank(tenantCode)) {
+                    List<Map<String, Object>> mapList = dao.getJdbcTemplate().queryForList("SELECT * FROM platform_tenant WHERE 1=1 AND del_status = 0 AND code = ?", tenantCode);
                     if (mapList != null && mapList.size() > 0) {
                         resultMap.put("tenant.id", mapList.get(0).get("id"));
                         resultMap.put("tenant.code", mapList.get(0).get("code"));
@@ -414,7 +414,7 @@ public class EncodingService extends BaseService {
                     }
                 }
             }
-            if (variableKeys.contains("app") && Strings.isNotBlank(appId)) {
+            if (variableKeys.contains("app") && StringUtils.isNotBlank(appId)) {
                 Map<String, Object> model = dao.queryForMap(App.class, "id", appId);
                 if (model != null) {
                     for (Map.Entry<String, Object> entry : model.entrySet()) {
@@ -424,7 +424,7 @@ public class EncodingService extends BaseService {
             }
             if (variableKeys.contains("user")) {
                 org.geelato.core.env.entity.User user = Ctx.getCurrentUser();
-                if (user != null && Strings.isNotBlank(user.getUserId())) {
+                if (user != null && StringUtils.isNotBlank(user.getUserId())) {
                     Map<String, Object> model = dao.queryForMap(User.class, "id", user.getUserId());
                     if (model != null) {
                         for (Map.Entry<String, Object> entry : model.entrySet()) {
@@ -432,7 +432,7 @@ public class EncodingService extends BaseService {
                         }
                         if (variableValues.contains("companyId") || variableValues.contains("companyName")) {
                             Object orgId = model.get("orgId");
-                            if (orgId != null && Strings.isNotBlank(String.valueOf(orgId))) {
+                            if (orgId != null && StringUtils.isNotBlank(String.valueOf(orgId))) {
                                 Org org = orgService.getCompany(String.valueOf(orgId));
                                 if (org != null) {
                                     resultMap.put("user.companyId", org.getId());

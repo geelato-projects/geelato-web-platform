@@ -1,7 +1,6 @@
 package org.geelato.web.platform.m.base.rest;
 
 import jakarta.servlet.http.HttpServletRequest;
-import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiErrorMsg;
@@ -10,6 +9,7 @@ import org.geelato.core.enums.EnableStatusEnum;
 import org.geelato.core.env.EnvManager;
 import org.geelato.core.gql.parser.FilterGroup;
 import org.geelato.core.gql.parser.PageQueryRequest;
+import org.geelato.utils.StringUtils;
 import org.geelato.web.platform.m.base.entity.Attach;
 import org.geelato.web.platform.m.base.entity.SysConfig;
 import org.geelato.web.platform.m.base.service.AttachService;
@@ -107,7 +107,7 @@ public class SysConfigController extends BaseController {
         try {
             form.afterSet();
             // ID为空方可插入
-            if (Strings.isNotBlank(form.getId())) {
+            if (StringUtils.isNotBlank(form.getId())) {
                 result.setData(sysConfigService.updateModel(form));
             } else {
                 result.setData(sysConfigService.createModel(form));
@@ -162,7 +162,7 @@ public class SysConfigController extends BaseController {
     public ApiResult getValue(@PathVariable(required = true) String key) {
         ApiResult result = new ApiResult();
         try {
-            if (Strings.isNotBlank(key)) {
+            if (StringUtils.isNotBlank(key)) {
                 Map<String, Object> params = new HashMap<>();
                 params.put("configKey", key);
                 List<SysConfig> list = sysConfigService.queryModel(CLAZZ, params);
@@ -194,9 +194,9 @@ public class SysConfigController extends BaseController {
             List<Attach> attachList = attachService.list(filter);
             if (attachList != null && attachList.size() > 0) {
                 for (SysConfig model : sysConfigs) {
-                    if (CONFIG_TYPE_UPLOAD.equalsIgnoreCase(model.getValueType()) && Strings.isNotBlank(model.getConfigValue())) {
+                    if (CONFIG_TYPE_UPLOAD.equalsIgnoreCase(model.getValueType()) && StringUtils.isNotBlank(model.getConfigValue())) {
                         for (Attach attach : attachList) {
-                            if (Strings.isNotBlank(attach.getName()) && model.getConfigValue().equals(attach.getId())) {
+                            if (StringUtils.isNotBlank(attach.getName()) && model.getConfigValue().equals(attach.getId())) {
                                 model.setConfigAssist(attach.getName());
                                 break;
                             }

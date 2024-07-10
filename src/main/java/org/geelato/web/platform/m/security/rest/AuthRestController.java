@@ -28,23 +28,21 @@ import java.util.Map;
 @RequestMapping(value = "/api/sys/auth")
 public class AuthRestController extends BaseController {
 
+    private final Logger logger = LoggerFactory.getLogger(AuthRestController.class);
     @Autowired
     private AccountService accountService;
-
-
-    private final Logger logger = LoggerFactory.getLogger(AuthRestController.class);
 
     @RequestMapping(value = "/login", method = RequestMethod.POST)
     @ResponseBody
     public Map login(@RequestBody User user, HttpServletRequest req) {
         Subject currentUser = SecurityUtils.getSubject();
         if (!currentUser.isAuthenticated()) {
-            //collect user principals and credentials in a gui specific manner
-            //such as username/password html form, X509 certificate, OpenID, etc.
-            //We'll use the username/password example here since it is the most common.
+            // collect user principals and credentials in a gui specific manner
+            // such as username/password html form, X509 certificate, OpenID, etc.
+            // We'll use the username/password example here since it is the most common.
             //(do you know what movie this is from? ;)
             UsernamePasswordToken token = new UsernamePasswordToken(user.getLoginName(), user.getPassword());
-            //this is all you have to do to support 'remember me' (no config - built in!):
+            // this is all you have to do to support 'remember me' (no config - built in!):
             boolean rememberMe = Boolean.parseBoolean(req.getParameter("remember"));
             token.setRememberMe(rememberMe);
             try {
@@ -52,21 +50,21 @@ public class AuthRestController extends BaseController {
                     logger.debug("User [" + token.getUsername() + "] logging in ... ");
                 }
                 currentUser.login(token);
-                //if no exception, that's it, we're done!
+                // if no exception, that's it, we're done!
                 if (logger.isDebugEnabled()) {
                     logger.debug("User [" + currentUser.getPrincipal() + "] login successfully.");
                 }
             } catch (UnknownAccountException uae) {
-                //username wasn't in the system, show them an error message?
+                // username wasn't in the system, show them an error message?
                 throw new RestException(HttpStatus.UNAUTHORIZED, "无效的用户名！");
             } catch (IncorrectCredentialsException ice) {
-                //password didn't match, try again?
+                // password didn't match, try again?
                 throw new RestException(HttpStatus.UNAUTHORIZED, "无效的密码！");
             } catch (LockedAccountException lae) {
-                //account for that username is locked - can't login.  Show them a message?
+                // account for that username is locked - can't login.  Show them a message?
                 throw new RestException(HttpStatus.FORBIDDEN, "用户账号已被锁！");
             } catch (AuthenticationException ae) {
-                //unexpected condition - error?
+                // unexpected condition - error?
                 throw new RestException(HttpStatus.BAD_REQUEST, "登录失败！[" + ae.getMessage() + "]");
             }
         }

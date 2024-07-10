@@ -26,24 +26,29 @@ public class DataSourceConfiguration extends BaseConfiguration {
     public DataSource primaryDataSource() {
         return DataSourceBuilder.create().build();
     }
+
     @Bean(name = "primaryJdbcTemplate")
     public JdbcTemplate primaryJdbcTemplate(@Qualifier("primaryDataSource") DataSource dataSource) {
         return new JdbcTemplate(dataSource);
     }
+
     @Bean(name = "primaryDao")
     public Dao primaryDao(@Qualifier("primaryJdbcTemplate") JdbcTemplate jdbcTemplate) {
         return new Dao(jdbcTemplate);
     }
+
     @Bean(name = "secondaryDataSource")
     @Qualifier("secondaryDataSource")
     @ConfigurationProperties(prefix = "spring.datasource.secondary")
     public DataSource secondaryDataSource() {
-       return DataSourceBuilder.create().build();
+        return DataSourceBuilder.create().build();
     }
+
     @Bean(name = "secondaryJdbcTemplate")
     public JdbcTemplate secondaryJdbcTemplate(@Qualifier("secondaryDataSource") DataSource dataSource) {
         return new JdbcTemplate(dataSource);
     }
+
     @Bean(name = "secondaryDao")
     public Dao secondaryDao(@Qualifier("secondaryJdbcTemplate") JdbcTemplate jdbcTemplate) {
         return new Dao(jdbcTemplate);
@@ -52,10 +57,10 @@ public class DataSourceConfiguration extends BaseConfiguration {
     @Bean(name = "dynamicDataSource")
     @Qualifier("dynamicDataSource")
     public DataSource dynamicDataSource() {
-        DynamicDataSource dynamicDatasource=new DynamicDataSource();
+        DynamicDataSource dynamicDatasource = new DynamicDataSource();
         DataSourceManager.singleInstance().parseDataSourceMeta(primaryDao(primaryJdbcTemplate(primaryDataSource())));
-        Map<Object, Object> dymanicDataSourceMap=DataSourceManager.singleInstance().getDynamicDataSourceMap();
-        dymanicDataSourceMap.put("primary",primaryDataSource());
+        Map<Object, Object> dymanicDataSourceMap = DataSourceManager.singleInstance().getDynamicDataSourceMap();
+        dymanicDataSourceMap.put("primary", primaryDataSource());
         dynamicDatasource.setTargetDataSources(dymanicDataSourceMap);
         dynamicDatasource.setDefaultTargetDataSource(primaryDataSource());
         return dynamicDatasource;

@@ -19,7 +19,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * @author  hongxq
+ * @author hongxq
  */
 @Configuration
 public class ShiroConfiguration {
@@ -34,6 +34,7 @@ public class ShiroConfiguration {
         shiroFilterFactoryBean.setFilterChainDefinitionMap(filterChainDefinitionMap);
         return shiroFilterFactoryBean;
     }
+
     @Bean
     public EhCacheManager getEhCacheManager() {
         EhCacheManager em = new EhCacheManager();
@@ -77,8 +78,6 @@ public class ShiroConfiguration {
         aasa.setSecurityManager(securityManager);
         return aasa;
     }
-
-
 
 
 }

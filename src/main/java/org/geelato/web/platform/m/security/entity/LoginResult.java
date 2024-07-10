@@ -35,6 +35,38 @@ public class LoginResult {
     private String homePath;
     private ArrayList<LoginRoleInfo> roles;
 
+    /**
+     * 对象转换
+     *
+     * @param user
+     * @return
+     */
+    public static LoginResult formatLoginResult(User user) {
+        LoginResult loginResult = new LoginResult();
+        loginResult.setId(user.getId());
+        loginResult.setJobNumber(user.getJobNumber());
+        loginResult.setName(user.getName());
+        loginResult.setLoginName(user.getLoginName());
+        loginResult.setAvatar(user.getAvatar());
+        loginResult.setMobilePrefix(user.getMobilePrefix());
+        loginResult.setMobilePhone(user.getMobilePhone());
+        loginResult.setEmail(user.getEmail());
+        loginResult.setRegistrationDate(user.getCreateAt());
+        loginResult.setOrgId(user.getOrgId());
+        loginResult.setOrgName(user.getOrgName());
+        loginResult.setNationCode(user.getNationCode());
+        loginResult.setProvinceCode(user.getProvinceCode());
+        loginResult.setCityCode(user.getCityCode());
+        loginResult.setAddress(user.getAddress());
+        loginResult.setDescription(user.getDescription());
+        loginResult.setTenantCode(user.getTenantCode());
+        loginResult.setCooperatingOrgId(user.getCooperatingOrgId());
+        loginResult.setEnableStatus(user.getEnableStatus());
+        loginResult.setCompanyId(user.getBuId());
+
+        return loginResult;
+    }
+
     public String getId() {
         return id;
     }
@@ -225,37 +257,5 @@ public class LoginResult {
 
     public void setCompanyName(String companyName) {
         this.companyName = companyName;
-    }
-
-    /**
-     * 对象转换
-     *
-     * @param user
-     * @return
-     */
-    public static LoginResult formatLoginResult(User user) {
-        LoginResult loginResult = new LoginResult();
-        loginResult.setId(user.getId());
-        loginResult.setJobNumber(user.getJobNumber());
-        loginResult.setName(user.getName());
-        loginResult.setLoginName(user.getLoginName());
-        loginResult.setAvatar(user.getAvatar());
-        loginResult.setMobilePrefix(user.getMobilePrefix());
-        loginResult.setMobilePhone(user.getMobilePhone());
-        loginResult.setEmail(user.getEmail());
-        loginResult.setRegistrationDate(user.getCreateAt());
-        loginResult.setOrgId(user.getOrgId());
-        loginResult.setOrgName(user.getOrgName());
-        loginResult.setNationCode(user.getNationCode());
-        loginResult.setProvinceCode(user.getProvinceCode());
-        loginResult.setCityCode(user.getCityCode());
-        loginResult.setAddress(user.getAddress());
-        loginResult.setDescription(user.getDescription());
-        loginResult.setTenantCode(user.getTenantCode());
-        loginResult.setCooperatingOrgId(user.getCooperatingOrgId());
-        loginResult.setEnableStatus(user.getEnableStatus());
-        loginResult.setCompanyId(user.getBuId());
-
-        return loginResult;
     }
 }

@@ -2,11 +2,11 @@ package org.geelato.web.platform.m.security.service;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
-import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.gql.parser.FilterGroup;
 import org.geelato.core.meta.MetaManager;
 import org.geelato.core.meta.model.field.ColumnMeta;
+import org.geelato.utils.StringUtils;
 import org.geelato.web.platform.enums.PermissionTypeEnum;
 import org.geelato.web.platform.m.base.service.BaseService;
 import org.geelato.web.platform.m.model.service.DevTableColumnService;
@@ -41,7 +41,7 @@ public class RolePermissionMapService extends BaseService {
      */
     public List<RolePermissionMap> queryModelByIds(String roleId, String permissionId) {
         List<RolePermissionMap> list = new ArrayList<>();
-        if (Strings.isNotBlank(roleId) && Strings.isNotBlank(permissionId)) {
+        if (StringUtils.isNotBlank(roleId) && StringUtils.isNotBlank(permissionId)) {
             FilterGroup filter = new FilterGroup();
             filter.addFilter("roleId", FilterGroup.Operator.in, roleId);
             filter.addFilter("permissionId", FilterGroup.Operator.in, permissionId);
@@ -208,7 +208,7 @@ public class RolePermissionMapService extends BaseService {
      * @return
      */
     public Map<String, JSONArray> queryTablePermissions(String type, String object, String appId, String tenantCode) {
-        tenantCode = Strings.isNotBlank(tenantCode) ? tenantCode : getSessionTenantCode();
+        tenantCode = StringUtils.isNotBlank(tenantCode) ? tenantCode : getSessionTenantCode();
         Map<String, JSONArray> tablePermissionMap = new HashMap<>();
         // 表头，表格权限
         FilterGroup tableFilter = new FilterGroup();
@@ -248,8 +248,8 @@ public class RolePermissionMapService extends BaseService {
         List<RolePermissionMap> rolePermissionMaps = new ArrayList<>();
         if (permissionIds.size() > 0 && roleIds.size() > 0) {
             FilterGroup filter = new FilterGroup();
-            filter.addFilter("permissionId", FilterGroup.Operator.in, Strings.join(permissionIds, ','));
-            filter.addFilter("roleId", FilterGroup.Operator.in, Strings.join(roleIds, ','));
+            filter.addFilter("permissionId", FilterGroup.Operator.in, String.join(",", permissionIds));
+            filter.addFilter("roleId", FilterGroup.Operator.in, String.join(",", roleIds));
             filter.addFilter("tenantCode", tenantCode);
             rolePermissionMaps = queryModel(RolePermissionMap.class, filter);
         }
@@ -297,7 +297,7 @@ public class RolePermissionMapService extends BaseService {
      * @return
      */
     public Map<String, JSONArray> queryColumnPermissions(String type, String tableName, String appId, String tenantCode) {
-        tenantCode = Strings.isNotBlank(tenantCode) ? tenantCode : getSessionTenantCode();
+        tenantCode = StringUtils.isNotBlank(tenantCode) ? tenantCode : getSessionTenantCode();
         Map<String, JSONArray> tablePermissionMap = new HashMap<>();
         // 默认字段
         List<ColumnMeta> defaultColumnMetaList = metaManager.getDefaultColumn();
@@ -309,7 +309,7 @@ public class RolePermissionMapService extends BaseService {
         FilterGroup colFilter = new FilterGroup();
         colFilter.addFilter("tableName", tableName);
         colFilter.addFilter("tenantCode", tenantCode);
-        colFilter.addFilter("name", FilterGroup.Operator.notin, Strings.join(defaultColumnNames, ','));
+        colFilter.addFilter("name", FilterGroup.Operator.notin, String.join(",", defaultColumnNames));
         List<ColumnMeta> columnMetas = devTableColumnService.queryModel(ColumnMeta.class, colFilter);
         // 模型字段
         List<String> columnObjects = new ArrayList<>();
@@ -326,7 +326,7 @@ public class RolePermissionMapService extends BaseService {
         if (columnObjects != null && columnObjects.size() > 0) {
             FilterGroup filter = new FilterGroup();
             filter.addFilter("type", type);
-            filter.addFilter("object", FilterGroup.Operator.in, Strings.join(columnObjects, ','));
+            filter.addFilter("object", FilterGroup.Operator.in, String.join(",", columnObjects));
             filter.addFilter("tenantCode", tenantCode);
             permissions = permissionService.queryModel(Permission.class, filter);
         }
@@ -355,8 +355,8 @@ public class RolePermissionMapService extends BaseService {
         List<RolePermissionMap> rolePermissionMaps = new ArrayList<>();
         if (permissionIds.size() > 0 && roleIds.size() > 0) {
             FilterGroup filter = new FilterGroup();
-            filter.addFilter("permissionId", FilterGroup.Operator.in, Strings.join(permissionIds, ','));
-            filter.addFilter("roleId", FilterGroup.Operator.in, Strings.join(roleIds, ','));
+            filter.addFilter("permissionId", FilterGroup.Operator.in, String.join(",", permissionIds));
+            filter.addFilter("roleId", FilterGroup.Operator.in, String.join(",", roleIds));
             filter.addFilter("tenantCode", tenantCode);
             rolePermissionMaps = queryModel(RolePermissionMap.class, filter);
         }
@@ -402,11 +402,11 @@ public class RolePermissionMapService extends BaseService {
     }
 
     public void insertTablePermission(RolePermissionMap form) {
-        if (Strings.isNotBlank(form.getRoleId()) && Strings.isNotBlank(form.getPermissionId())) {
+        if (StringUtils.isNotBlank(form.getRoleId()) && StringUtils.isNotBlank(form.getPermissionId())) {
             Map<String, Object> params = new HashMap<>();
             params.put("roleId", form.getRoleId());
             params.put("permissionId", form.getPermissionId());
-            params.put("tenantCode", Strings.isNotBlank(form.getTenantCode()) ? form.getTenantCode() : getSessionTenantCode());
+            params.put("tenantCode", StringUtils.isNotBlank(form.getTenantCode()) ? form.getTenantCode() : getSessionTenantCode());
             List<RolePermissionMap> maps = queryModel(RolePermissionMap.class, params);
             if (maps != null && maps.size() > 0) {
                 for (RolePermissionMap map : maps) {
@@ -421,11 +421,11 @@ public class RolePermissionMapService extends BaseService {
     }
 
     public void insertTableViewPermission(RolePermissionMap form) {
-        if (Strings.isNotBlank(form.getRoleId()) && Strings.isNotBlank(form.getPermissionIds())) {
+        if (StringUtils.isNotBlank(form.getRoleId()) && StringUtils.isNotBlank(form.getPermissionIds())) {
             FilterGroup filter = new FilterGroup();
             filter.addFilter("roleId", form.getRoleId());
             filter.addFilter("permissionId", FilterGroup.Operator.in, form.getPermissionIds());
-            filter.addFilter("tenantCode", Strings.isNotBlank(form.getTenantCode()) ? form.getTenantCode() : getSessionTenantCode());
+            filter.addFilter("tenantCode", StringUtils.isNotBlank(form.getTenantCode()) ? form.getTenantCode() : getSessionTenantCode());
             List<RolePermissionMap> maps = queryModel(RolePermissionMap.class, filter);
             // 删除所有权限
             if (maps != null && maps.size() > 0) {
@@ -434,7 +434,7 @@ public class RolePermissionMapService extends BaseService {
                 }
             }
             // 传入 需要打开的权限
-            if (Strings.isNotBlank(form.getPermissionId())) {
+            if (StringUtils.isNotBlank(form.getPermissionId())) {
                 insertModels(form);
             }
         } else {
@@ -502,7 +502,7 @@ public class RolePermissionMapService extends BaseService {
         if (permissionIds != null && permissionIds.size() > 0) {
             FilterGroup filter1 = new FilterGroup();
             filter1.addFilter("roleId", role.getId());
-            filter1.addFilter("permissionId", FilterGroup.Operator.in, Strings.join(permissionIds, ','));
+            filter1.addFilter("permissionId", FilterGroup.Operator.in, String.join(",", permissionIds));
             filter1.addFilter("tenantCode", getSessionTenantCode());
             List<RolePermissionMap> rolePermissionMaps = queryModel(RolePermissionMap.class, filter1);
             if (rolePermissionMaps != null && rolePermissionMaps.size() > 0) {

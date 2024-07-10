@@ -1,6 +1,6 @@
 package org.geelato.web.platform.enums;
 
-import org.apache.logging.log4j.util.Strings;
+import org.geelato.utils.StringUtils;
 
 /**
  * @author diabl
@@ -11,24 +11,16 @@ public enum PermissionTypeEnum {
     MODEL("实体模型权限", "mp"),
     COLUMN("实体字段权限", "cp");
 
-    private final String label;//选项内容
-    private final String value;//选项值
+    private final String label;// 选项内容
+    private final String value;// 选项值
 
     PermissionTypeEnum(String label, String value) {
         this.label = label;
         this.value = value;
     }
 
-    public String getLabel() {
-        return label;
-    }
-
-    public String getValue() {
-        return value;
-    }
-
     public static String getLabel(String value) {
-        if (Strings.isNotBlank(value)) {
+        if (StringUtils.isNotBlank(value)) {
             for (PermissionTypeEnum enums : PermissionTypeEnum.values()) {
                 if (enums.getValue().equals(value)) {
                     return enums.getLabel();
@@ -54,5 +46,13 @@ public enum PermissionTypeEnum {
      */
     public static String getTableAndColumnPermissions() {
         return String.format("%s,%s,%s", PermissionTypeEnum.DATA.getValue(), PermissionTypeEnum.MODEL.getValue(), PermissionTypeEnum.COLUMN.getValue());
+    }
+
+    public String getLabel() {
+        return label;
+    }
+
+    public String getValue() {
+        return value;
     }
 }

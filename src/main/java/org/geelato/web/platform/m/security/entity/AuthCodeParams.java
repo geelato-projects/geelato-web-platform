@@ -1,9 +1,9 @@
 package org.geelato.web.platform.m.security.entity;
 
-import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.utils.Digests;
 import org.geelato.utils.Encodes;
+import org.geelato.utils.StringUtils;
 import org.geelato.web.platform.enums.ValidTypeEnum;
 import org.geelato.web.platform.m.security.service.AccountService;
 import org.springframework.util.Assert;
@@ -19,6 +19,25 @@ public class AuthCodeParams {
     private String validBox;// 手机、邮箱
     private String authCode; // 验证码
     private String userId;// 用户id，
+
+    /**
+     * 找回密码，设置验证码
+     *
+     * @param fp
+     * @return
+     */
+    public static AuthCodeParams buildAuthCodeParams(ForgetPasswordParams fp) {
+        Assert.notNull(fp, ApiErrorMsg.IS_NULL);
+        AuthCodeParams ac = new AuthCodeParams();
+        ac.setAction(fp.getAction());
+        ac.setAuthCode(fp.getAuthCode());
+        ac.setPrefix(fp.getPrefix());
+        ac.setValidType(fp.getValidType());
+        ac.setValidBox(fp.getValidBox());
+        ac.setUserId(fp.getUserId());
+
+        return ac;
+    }
 
     public String getAction() {
         return action;
@@ -74,9 +93,9 @@ public class AuthCodeParams {
      * @return
      */
     public String getRedisKey() {
-        if (Strings.isNotBlank(this.action) && Strings.isNotBlank(this.userId) && Strings.isNotBlank(this.validType)) {
+        if (StringUtils.isNotBlank(this.action) && StringUtils.isNotBlank(this.userId) && StringUtils.isNotBlank(this.validType)) {
             String validLabel = ValidTypeEnum.getLabel(this.validType);
-            if (Strings.isNotBlank(validLabel)) {
+            if (StringUtils.isNotBlank(validLabel)) {
                 return String.format("%s-%s-%s", this.action, this.userId, validLabel);
             }
         }
@@ -100,29 +119,10 @@ public class AuthCodeParams {
      * @return
      */
     public String getRedisValue(String authCode) {
-        if (Strings.isNotBlank(authCode)) {
+        if (StringUtils.isNotBlank(authCode)) {
             return Encodes.encodeHex(Digests.sha1(authCode.getBytes(), this.userId.getBytes(), AccountService.HASH_INTERATIONS));
         }
 
         return null;
-    }
-
-    /**
-     * 找回密码，设置验证码
-     *
-     * @param fp
-     * @return
-     */
-    public static AuthCodeParams buildAuthCodeParams(ForgetPasswordParams fp) {
-        Assert.notNull(fp, ApiErrorMsg.IS_NULL);
-        AuthCodeParams ac = new AuthCodeParams();
-        ac.setAction(fp.getAction());
-        ac.setAuthCode(fp.getAuthCode());
-        ac.setPrefix(fp.getPrefix());
-        ac.setValidType(fp.getValidType());
-        ac.setValidBox(fp.getValidBox());
-        ac.setUserId(fp.getUserId());
-
-        return ac;
     }
 }

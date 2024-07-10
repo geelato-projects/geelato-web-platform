@@ -10,13 +10,12 @@ import java.util.List;
  * @description: 导出excel表头
  */
 public class ExportColumn {
+    List<ExportColumn> children = new LinkedList<>();
     private String dataIndex; // 数据key，对应导出excel中的var
     private String title; // 列标题，对应导出excel中的placeholder，不包括符号${}的部分
     private String align; // 列标题的对齐，默认为center，'left' | 'center' | 'right'
     private String description; // 导出excel列上的注释信息
     private long width;
-    List<ExportColumn> children = new LinkedList<>();
-
     private int level; // 所属第几层
     private int depth; // 多少行
     private int breadth; // 多少列

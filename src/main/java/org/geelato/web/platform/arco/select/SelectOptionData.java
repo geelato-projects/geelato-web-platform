@@ -7,9 +7,9 @@ import java.io.Serializable;
  * @description: Arco Design select
  */
 public class SelectOptionData<E> implements Serializable {
-    private Boolean disabled = false;//是否禁用
-    private String value;//选项值
-    private String label;//选项内容
+    private Boolean disabled = false;// 是否禁用
+    private String value;// 选项值
+    private String label;// 选项内容
     private E data;// 存放可能存在的数据
 
     public String getValue() {
@@ -28,12 +28,12 @@ public class SelectOptionData<E> implements Serializable {
         this.label = label;
     }
 
-    public void setDisabled(Boolean disabled) {
-        this.disabled = disabled;
-    }
-
     public Boolean getDisabled() {
         return disabled;
+    }
+
+    public void setDisabled(Boolean disabled) {
+        this.disabled = disabled;
     }
 
     public E getData() {

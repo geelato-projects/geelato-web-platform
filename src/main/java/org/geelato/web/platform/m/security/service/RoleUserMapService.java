@@ -1,8 +1,8 @@
 package org.geelato.web.platform.m.security.service;
 
-import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.gql.parser.FilterGroup;
+import org.geelato.utils.StringUtils;
 import org.geelato.web.platform.m.base.service.BaseService;
 import org.geelato.web.platform.m.security.entity.Role;
 import org.geelato.web.platform.m.security.entity.RoleUserMap;
@@ -34,7 +34,7 @@ public class RoleUserMapService extends BaseService {
      */
     public List<RoleUserMap> queryModelByIds(String roleId, String userId) {
         List<RoleUserMap> list = new ArrayList<>();
-        if (Strings.isNotBlank(roleId) && Strings.isNotBlank(userId)) {
+        if (StringUtils.isNotBlank(roleId) && StringUtils.isNotBlank(userId)) {
             FilterGroup filter = new FilterGroup();
             filter.addFilter("roleId", FilterGroup.Operator.in, roleId);
             filter.addFilter("userId", FilterGroup.Operator.in, userId);
@@ -137,7 +137,7 @@ public class RoleUserMapService extends BaseService {
      */
     public List<Role> queryRoleByUser(String userId, String appId, String tenantCode) {
         List<Role> result = new ArrayList<>();
-        if (Strings.isBlank(userId)) {
+        if (StringUtils.isBlank(userId)) {
             return result;
         }
         Map<String, Object> params = new HashMap<>();
@@ -148,12 +148,12 @@ public class RoleUserMapService extends BaseService {
         }
         params.clear();
         params.put("userId", userId);
-        params.put("tenantCode", Strings.isNotBlank(tenantCode) ? tenantCode : getSessionTenantCode());
+        params.put("tenantCode", StringUtils.isNotBlank(tenantCode) ? tenantCode : getSessionTenantCode());
         List<RoleUserMap> roleUserMaps = queryModel(RoleUserMap.class, params);
         if (roleUserMaps != null && roleUserMaps.size() > 0) {
             for (RoleUserMap roleUserMap : roleUserMaps) {
                 for (Role role : roleList) {
-                    if (Strings.isNotBlank(roleUserMap.getRoleId()) && roleUserMap.getRoleId().equals(role.getId())) {
+                    if (StringUtils.isNotBlank(roleUserMap.getRoleId()) && roleUserMap.getRoleId().equals(role.getId())) {
                         result.add(role);
                     }
                 }

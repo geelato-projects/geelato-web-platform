@@ -1,7 +1,6 @@
 package org.geelato.web.platform.m.model.rest;
 
 import jakarta.servlet.http.HttpServletRequest;
-import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiErrorMsg;
@@ -11,6 +10,7 @@ import org.geelato.core.gql.parser.FilterGroup;
 import org.geelato.core.gql.parser.PageQueryRequest;
 import org.geelato.core.meta.MetaManager;
 import org.geelato.core.meta.model.view.TableView;
+import org.geelato.utils.StringUtils;
 import org.geelato.web.platform.m.base.rest.BaseController;
 import org.geelato.web.platform.m.model.service.DevViewService;
 import org.geelato.web.platform.m.security.entity.DataItems;
@@ -100,13 +100,13 @@ public class DevViewController extends BaseController {
             // 视图
             devViewService.viewColumnMapperDBObject(form);
             // ID为空方可插入
-            if (Strings.isNotBlank(form.getId())) {
+            if (StringUtils.isNotBlank(form.getId())) {
                 result.setData(devViewService.updateModel(form));
             } else {
                 result.setData(devViewService.createModel(form));
             }
             // 刷新实体缓存
-            if (Strings.isNotEmpty(form.getViewName())) {
+            if (StringUtils.isNotEmpty(form.getViewName())) {
                 metaManager.refreshDBMeta(form.getViewName());
             }
         } catch (Exception e) {
@@ -127,7 +127,7 @@ public class DevViewController extends BaseController {
             model.setEnableStatus(EnableStatusEnum.DISABLED.getCode());
             devViewService.isDeleteModel(model);
             // 刷新实体缓存
-            if (Strings.isNotEmpty(model.getViewName())) {
+            if (StringUtils.isNotEmpty(model.getViewName())) {
                 metaManager.removeLiteMeta(model.getViewName());
             }
         } catch (Exception e) {

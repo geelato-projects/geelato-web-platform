@@ -1,7 +1,7 @@
 package org.geelato.web.platform.enums;
 
-import org.apache.logging.log4j.util.Strings;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
+import org.geelato.utils.StringUtils;
 
 /**
  * @author diabl
@@ -19,16 +19,8 @@ public enum ExcelAlignmentEnum {
         this.value = value;
     }
 
-    public HorizontalAlignment getLabel() {
-        return label;
-    }
-
-    public String getValue() {
-        return value;
-    }
-
     public static HorizontalAlignment getLabel(String value) {
-        if (Strings.isNotBlank(value)) {
+        if (StringUtils.isNotBlank(value)) {
             for (ExcelAlignmentEnum enums : ExcelAlignmentEnum.values()) {
                 if (enums.getValue().equalsIgnoreCase(value)) {
                     return enums.getLabel();
@@ -36,5 +28,13 @@ public enum ExcelAlignmentEnum {
             }
         }
         return ExcelAlignmentEnum.CENTER.getLabel();
+    }
+
+    public HorizontalAlignment getLabel() {
+        return label;
+    }
+
+    public String getValue() {
+        return value;
     }
 }

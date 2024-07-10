@@ -9,7 +9,6 @@ import org.geelato.core.api.ApiResult;
 import org.geelato.core.biz.rules.BizManagerFactory;
 import org.geelato.core.biz.rules.common.EntityValidateRule;
 import org.geelato.core.constants.ApiResultCode;
-import org.geelato.core.ds.DataSourceManager;
 import org.geelato.core.gql.GqlManager;
 import org.geelato.core.gql.execute.BoundPageSql;
 import org.geelato.core.gql.execute.BoundSql;
@@ -30,7 +29,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.DataAccessException;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.TransactionStatus;
@@ -43,20 +41,19 @@ import java.util.*;
 @Component
 public class RuleService {
 
-    @Autowired
-    @Qualifier("dynamicDao")
-    private Dao dao;
+    private final static String VARS_PARENT = "$parent";
+    private final static String VARS_CTX = "$ctx";
+    // $fn.now.
+    private final static String VARS_FN = "$fn";
+    private static final Logger logger = LoggerFactory.getLogger(RuleService.class);
     private final GqlManager gqlManager = GqlManager.singleInstance();
     private final SqlManager sqlManager = SqlManager.singleInstance();
     private final MetaManager metaManager = MetaManager.singleInstance();
     private final BizMvelRuleManager bizMvelRuleManager = BizManagerFactory.getBizMvelRuleManager("mvelRule");
     private final RulesEngine rulesEngine = new DefaultRulesEngine();
-    private final static String VARS_PARENT = "$parent";
-    private final static String VARS_CTX = "$ctx";
-    // $fn.now.
-    private final static String VARS_FN = "$fn";
-
-    private static final Logger logger = LoggerFactory.getLogger(RuleService.class);
+    @Autowired
+    @Qualifier("dynamicDao")
+    private Dao dao;
 
     /**
      * <p>注意: 在使用之前，需先设置dao
@@ -73,13 +70,13 @@ public class RuleService {
         this.dao = dao;
     }
 
-    public EntityMeta resolveEntity(String gql,String type) {
-        BaseCommand command=null;
-        switch (type){
+    public EntityMeta resolveEntity(String gql, String type) {
+        BaseCommand command = null;
+        switch (type) {
             case "save":
                 command = gqlManager.generateSaveSql(gql, getSessionCtx());
                 break;
-            case"query":
+            case "query":
                 command = gqlManager.generateQuerySql(gql, getSessionCtx());
                 break;
 //            case"multiSave":
@@ -88,10 +85,10 @@ public class RuleService {
 //            case"batchSave":
 //                command = gqlManager.generateBatchSaveSql(gql, getSessionCtx());
 //                break;
-            case"delete":
+            case "delete":
                 command = gqlManager.generateDeleteSql(gql, getSessionCtx());
                 break;
-            case"pageQuery":
+            case "pageQuery":
                 command = gqlManager.generatePageQuerySql(gql, getSessionCtx());
                 break;
             default:
@@ -99,6 +96,7 @@ public class RuleService {
         }
         return metaManager.getByEntityName(command.getEntityName());
     }
+
     public Map<String, Object> queryForMap(String gql) throws DataAccessException {
         QueryCommand command = gqlManager.generateQuerySql(gql, getSessionCtx());
         BoundSql boundSql = sqlManager.generateQuerySql(command);
@@ -116,8 +114,8 @@ public class RuleService {
         ApiPagedResult<List<Map<String, Object>>> result = new ApiPagedResult<>();
         QueryCommand command = gqlManager.generateQuerySql(gql, getSessionCtx());
         BoundPageSql boundPageSql = sqlManager.generatePageQuerySql(command);
-        List<Map<String, Object>> list=dao.queryForMapList(boundPageSql);
-        Long total=dao.queryTotal(boundPageSql);
+        List<Map<String, Object>> list = dao.queryForMapList(boundPageSql);
+        Long total = dao.queryTotal(boundPageSql);
         result.setData(list);
         result.setTotal(total);
         result.setPage(command.getPageNum());
@@ -195,8 +193,8 @@ public class RuleService {
         QueryCommand command = gqlManager.generateQuerySql(gql, getSessionCtx());
         command.getWhere().addFilter("tn.tree_id", treeId);
         BoundPageSql boundPageSql = sqlManager.generatePageQuerySql(command);
-        List<Map<String, Object>> list=dao.queryForMapList(boundPageSql);
-        Long total=dao.queryTotal(boundPageSql);
+        List<Map<String, Object>> list = dao.queryForMapList(boundPageSql);
+        Long total = dao.queryTotal(boundPageSql);
         result.setData(list);
         result.setTotal(total);
         result.setPage(command.getPageNum());
@@ -297,7 +295,6 @@ public class RuleService {
     /**
      * 递归执行，存在需解析依赖变更的情况
      * 不执行业务规则检查
-     *
      */
     public String recursiveSave(SaveCommand command, DataSourceTransactionManager dataSourceTransactionManager, TransactionStatus transactionStatus) throws DaoException {
         BoundSql boundSql = sqlManager.generateSaveSql(command);
@@ -415,7 +412,7 @@ public class RuleService {
             return parseValueExp((SaveCommand) currentCommand.getParentCommand(), valueExpTrim.substring(VARS_PARENT.length() + 1), times + 1);
         } else {
             if (times == 0) {
-                //如果是第一次且无VARS_PARENT关键字，则直接返回值
+                // 如果是第一次且无VARS_PARENT关键字，则直接返回值
                 return valueExp;
             } else {
                 // 如果是updateCommand，id值不在valueMap中，可从PK值中获取

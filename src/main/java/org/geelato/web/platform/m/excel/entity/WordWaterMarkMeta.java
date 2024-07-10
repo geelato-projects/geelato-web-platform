@@ -1,8 +1,8 @@
 package org.geelato.web.platform.m.excel.entity;
 
-import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.Ctx;
 import org.geelato.core.env.entity.User;
+import org.geelato.utils.StringUtils;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -26,17 +26,17 @@ public class WordWaterMarkMeta {
     private static final SimpleDateFormat SDF_DATETIME = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     private String defaultText;
-    //水印列距
+    // 水印列距
     private Integer cellSpace;
-    //水印行距
+    // 水印行距
     private Integer rowSpace;
-    //水印旋转角度
+    // 水印旋转角度
     private Double rotationAngle;
-    //字体名称
+    // 字体名称
     private String fontFamily;
-    //字体颜色
+    // 字体颜色
     private String fontColor;
-    //字体大小
+    // 字体大小
     private Double fontSize;
     private String template;
 
@@ -125,10 +125,10 @@ public class WordWaterMarkMeta {
         if (this.rotationAngle == null) {
             setRotationAngle(WordWaterMarkMeta.ROTATION_ANGLE);
         }
-        if (Strings.isBlank(this.fontFamily)) {
+        if (StringUtils.isBlank(this.fontFamily)) {
             setFontFamily(WordWaterMarkMeta.FONT_FAMILY);
         }
-        if (Strings.isBlank(this.fontColor)) {
+        if (StringUtils.isBlank(this.fontColor)) {
             setFontColor(WordWaterMarkMeta.FONT_COLOR);
         }
         if (this.fontSize == null || this.fontSize.doubleValue() <= 0) {
@@ -138,11 +138,11 @@ public class WordWaterMarkMeta {
 
     public String formatWaterMark() {
         StringBuilder sb = new StringBuilder();
-        if (Strings.isNotBlank(this.template)) {
+        if (StringUtils.isNotBlank(this.template)) {
             Matcher temMatcher = templatePatten.matcher(this.template);
             while (temMatcher.find()) {
                 String replaceStr = getMarkTypeString(this.defaultText, temMatcher.group());
-                setTemplate(this.template.replace(temMatcher.group(), Strings.isNotBlank(replaceStr) ? replaceStr : ""));
+                setTemplate(this.template.replace(temMatcher.group(), StringUtils.isNotBlank(replaceStr) ? replaceStr : ""));
             }
             sb.append(this.template);
         } else {
@@ -153,7 +153,7 @@ public class WordWaterMarkMeta {
     }
 
     private String getMarkTypeString(String markText, String type) {
-        if (Strings.isNotBlank(type)) {
+        if (StringUtils.isNotBlank(type)) {
             if ("${TEXT}".equalsIgnoreCase(type)) {
                 return markText;
             } else if ("${TENANTCODE}".equalsIgnoreCase(type)) {

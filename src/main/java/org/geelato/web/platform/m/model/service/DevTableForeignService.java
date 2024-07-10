@@ -1,12 +1,12 @@
 package org.geelato.web.platform.m.model.service;
 
-import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.constants.MetaDaoSql;
 import org.geelato.core.enums.EnableStatusEnum;
 import org.geelato.core.meta.model.entity.TableForeign;
 import org.geelato.core.meta.model.entity.TableMeta;
 import org.geelato.core.meta.schema.SchemaForeign;
 import org.geelato.utils.SchemaUtils;
+import org.geelato.utils.StringUtils;
 import org.geelato.web.platform.m.base.rest.MetaDdlController;
 import org.geelato.web.platform.m.base.service.BaseSortableService;
 import org.slf4j.Logger;
@@ -45,7 +45,7 @@ public class DevTableForeignService extends BaseSortableService {
                     isDeleteModel(meta);
                     continue;
                 }
-                if (Strings.isNotBlank(meta.getMainTableCol()) && !tableForeignMap.containsKey(meta.getMainTableCol())) {
+                if (StringUtils.isNotBlank(meta.getMainTableCol()) && !tableForeignMap.containsKey(meta.getMainTableCol())) {
                     tableForeignMap.put(meta.getMainTableCol(), meta);
                 }
             }
@@ -60,7 +60,7 @@ public class DevTableForeignService extends BaseSortableService {
             HashMap<String, SchemaForeign> schemaForeignMap = new HashMap<>();
             if (schemaForeigns != null && schemaForeigns.size() > 0) {
                 for (SchemaForeign schema : schemaForeigns) {
-                    if (Strings.isNotBlank(schema.getColumnName()) && !schemaForeignMap.containsKey(schema.getColumnName())) {
+                    if (StringUtils.isNotBlank(schema.getColumnName()) && !schemaForeignMap.containsKey(schema.getColumnName())) {
                         schemaForeignMap.put(schema.getColumnName(), schema);
                     }
                 }

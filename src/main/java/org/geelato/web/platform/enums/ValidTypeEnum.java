@@ -1,6 +1,6 @@
 package org.geelato.web.platform.enums;
 
-import org.apache.logging.log4j.util.Strings;
+import org.geelato.utils.StringUtils;
 
 /**
  * @author diabl
@@ -10,12 +10,23 @@ public enum ValidTypeEnum {
     MAIL("email", "2"),
     PASSWORD("'password'", "3");
 
-    private final String label;//选项内容
-    private final String value;//选项值
+    private final String label;// 选项内容
+    private final String value;// 选项值
 
     ValidTypeEnum(String label, String value) {
         this.label = label;
         this.value = value;
+    }
+
+    public static String getLabel(String value) {
+        if (StringUtils.isNotBlank(value)) {
+            for (ValidTypeEnum validType : ValidTypeEnum.values()) {
+                if (validType.getValue().equals(value)) {
+                    return validType.getLabel();
+                }
+            }
+        }
+        return null;
     }
 
     public String getLabel() {
@@ -24,16 +35,5 @@ public enum ValidTypeEnum {
 
     public String getValue() {
         return value;
-    }
-
-    public static String getLabel(String value) {
-        if (Strings.isNotBlank(value)) {
-            for (ValidTypeEnum validType : ValidTypeEnum.values()) {
-                if (validType.getValue().equals(value)) {
-                    return validType.getLabel();
-                }
-            }
-        }
-        return null;
     }
 }

@@ -4,5 +4,5 @@ import org.geelato.web.platform.m.base.service.BaseSortableService;
 import org.springframework.stereotype.Component;
 
 @Component
-public class ApiService extends  BaseSortableService{
+public class ApiService extends BaseSortableService {
 }

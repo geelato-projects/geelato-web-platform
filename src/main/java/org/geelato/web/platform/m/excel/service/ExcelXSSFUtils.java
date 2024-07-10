@@ -1,8 +1,8 @@
 package org.geelato.web.platform.m.excel.service;
 
-import org.apache.logging.log4j.util.Strings;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.*;
+import org.geelato.utils.StringUtils;
 
 /**
  * @author diabl
@@ -146,7 +146,7 @@ public class ExcelXSSFUtils {
      * @param mark
      */
     public static void setCellComment(XSSFSheet sheet, XSSFCell cell, String mark) {
-        if (Strings.isBlank(mark)) {
+        if (StringUtils.isBlank(mark)) {
             return;
         }
         ClientAnchor anchor = new XSSFClientAnchor();

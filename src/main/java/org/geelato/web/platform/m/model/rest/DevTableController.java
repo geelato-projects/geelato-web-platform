@@ -1,7 +1,6 @@
 package org.geelato.web.platform.m.model.rest;
 
 import jakarta.servlet.http.HttpServletRequest;
-import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.api.ApiMetaResult;
 import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
@@ -15,6 +14,7 @@ import org.geelato.core.gql.parser.PageQueryRequest;
 import org.geelato.core.meta.MetaManager;
 import org.geelato.core.meta.model.entity.TableMeta;
 import org.geelato.core.meta.model.view.TableView;
+import org.geelato.utils.StringUtils;
 import org.geelato.web.platform.enums.PermissionTypeEnum;
 import org.geelato.web.platform.m.base.rest.BaseController;
 import org.geelato.web.platform.m.model.service.DevTableColumnService;
@@ -108,7 +108,7 @@ public class DevTableController extends BaseController {
         ApiResult result = new ApiResult<>();
         try {
             // ID为空方可插入
-            if (Strings.isNotBlank(form.getId())) {
+            if (StringUtils.isNotBlank(form.getId())) {
                 // 存在，方可更新
                 TableMeta model = devTableService.getModel(CLAZZ, form.getId());
                 if (model != null) {
@@ -138,7 +138,7 @@ public class DevTableController extends BaseController {
                 devTableColumnService.createDefaultColumn(form);
                 result.setData(resultMap);
             }
-            if (result.isSuccess() && Strings.isNotEmpty(form.getEntityName())) {
+            if (result.isSuccess() && StringUtils.isNotEmpty(form.getEntityName())) {
                 // 刷新实体缓存
                 metaManager.refreshDBMeta(form.getEntityName());
             }
@@ -162,14 +162,14 @@ public class DevTableController extends BaseController {
             String tableComment = String.valueOf(params.get("tableComment"));
             String appId = String.valueOf(params.get("appId"));
             String tenantCode = String.valueOf(params.get("tenantCode"));
-            if (Strings.isBlank(entityName) || Strings.isBlank(tableId)) {
+            if (StringUtils.isBlank(entityName) || StringUtils.isBlank(tableId)) {
                 return result.error().setMsg(ApiErrorMsg.PARAMETER_MISSING);
             }
             TableMeta form = devTableService.copyTable(tableId, title, entityName, connectId, tableComment, appId, tenantCode);
             result.setData(form);
             // 添加默认权限
             permissionService.resetDefaultPermission(PermissionTypeEnum.getTablePermissions(), form.getEntityName(), form.getAppId());
-            if (result.isSuccess() && Strings.isNotEmpty(form.getEntityName())) {
+            if (result.isSuccess() && StringUtils.isNotEmpty(form.getEntityName())) {
                 // 刷新默认视图
                 // devViewService.createOrUpdateDefaultTableView(form, devTableColumnService.getDefaultViewSql(form.getEntityName()));
                 // 刷新实体缓存
@@ -193,7 +193,7 @@ public class DevTableController extends BaseController {
             Assert.notNull(model, ApiErrorMsg.IS_NULL);
             devTableService.isDeleteModel(model);
             // 刷新实体缓存
-            if (Strings.isNotEmpty(model.getEntityName())) {
+            if (StringUtils.isNotEmpty(model.getEntityName())) {
                 metaManager.removeLiteMeta(model.getEntityName());
             }
         } catch (Exception e) {
@@ -224,7 +224,7 @@ public class DevTableController extends BaseController {
     public ApiResult<String> resetDefaultView(@RequestBody TableMeta form) {
         ApiResult<String> result = new ApiResult<>();
         try {
-            if (Strings.isNotBlank(form.getEntityName())) {
+            if (StringUtils.isNotBlank(form.getEntityName())) {
                 Assert.notNull(form, ApiErrorMsg.IS_NULL);
                 Map<String, Object> params = new HashMap<>();
                 params.put("id", form.getId());
@@ -253,7 +253,7 @@ public class DevTableController extends BaseController {
     public ApiMetaResult resetModelFormTable(@PathVariable("tableId") String tableId) {
         ApiMetaResult result = new ApiMetaResult();
         try {
-            if (Strings.isNotBlank(tableId)) {
+            if (StringUtils.isNotBlank(tableId)) {
                 // dev_table
                 TableMeta model = devTableService.getModel(CLAZZ, tableId);
                 Assert.notNull(model, ApiErrorMsg.IS_NULL);

@@ -1,8 +1,8 @@
 package org.geelato.web.platform.m.base.service;
 
-import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.enums.EnableStatusEnum;
+import org.geelato.utils.StringUtils;
 import org.geelato.web.platform.m.base.entity.Dict;
 import org.geelato.web.platform.m.base.entity.DictItem;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,8 +51,8 @@ public class DictService extends BaseSortableService {
         Assert.notNull(source, ApiErrorMsg.IS_NULL);
         Dict dict = super.updateModel(model);
         // 应用变更
-        if ((Strings.isNotBlank(source.getAppId()) && !source.getAppId().equals(dict.getAppId())) ||
-                (Strings.isNotBlank(dict.getAppId()) && !dict.getAppId().equals(source.getAppId()))) {
+        if ((StringUtils.isNotBlank(source.getAppId()) && !source.getAppId().equals(dict.getAppId())) ||
+                (StringUtils.isNotBlank(dict.getAppId()) && !dict.getAppId().equals(source.getAppId()))) {
             Map<String, Object> params = new HashMap<>();
             params.put("dictId", dict.getId());
             List<DictItem> iList = dictItemService.queryModel(DictItem.class, params);

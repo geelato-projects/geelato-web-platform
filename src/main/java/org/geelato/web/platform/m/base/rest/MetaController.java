@@ -4,16 +4,15 @@ package org.geelato.web.platform.m.base.rest;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import jakarta.servlet.http.HttpServletRequest;
-import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.api.ApiMetaResult;
 import org.geelato.core.api.ApiMultiPagedResult;
 import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.MediaTypes;
-import org.geelato.core.ds.DataSourceManager;
 import org.geelato.core.meta.MetaManager;
 import org.geelato.core.meta.model.entity.EntityMeta;
 import org.geelato.core.orm.DaoException;
+import org.geelato.utils.StringUtils;
 import org.geelato.web.platform.boot.DynamicDatasourceHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,26 +32,24 @@ import java.io.IOException;
 @RequestMapping(value = "/api/meta/")
 public class MetaController extends BaseController implements InitializingBean {
 
-    private final MetaManager metaManager = MetaManager.singleInstance();
-
     private static final Logger logger = LoggerFactory.getLogger(MetaController.class);
+    private final MetaManager metaManager = MetaManager.singleInstance();
     private String gql;
 
     @RequestMapping(value = {"list", "list/*"}, method = {RequestMethod.POST, RequestMethod.GET}, produces = MediaTypes.JSON_UTF_8)
     @ResponseBody
     public ApiPagedResult list(@RequestParam(value = "withMeta", defaultValue = "true") boolean withMeta, HttpServletRequest request) {
-        gql = getGql(request,"query");
+        gql = getGql(request, "query");
         return ruleService.queryForMapList(gql, withMeta);
     }
 
     /**
      * 多列表查询，一次查询返回多个列表
-     *
      */
     @RequestMapping(value = {"multiList", "multiList/*"}, method = RequestMethod.POST, produces = MediaTypes.JSON_UTF_8)
     @ResponseBody
     public ApiMultiPagedResult multiList(@RequestParam(value = "withMeta", defaultValue = "true") boolean withMeta, HttpServletRequest request) {
-        gql = getGql(request,"query");
+        gql = getGql(request, "query");
         return ruleService.queryForMultiMapList(gql, withMeta);
     }
 
@@ -64,7 +61,7 @@ public class MetaController extends BaseController implements InitializingBean {
     @RequestMapping(value = {"save/{biz}"}, method = RequestMethod.POST, produces = MediaTypes.JSON_UTF_8)
     @ResponseBody
     public ApiMetaResult save(@PathVariable("biz") String biz, HttpServletRequest request) throws DaoException {
-        gql = getGql(request,"save");
+        gql = getGql(request, "save");
         ApiMetaResult result = new ApiMetaResult();
         result.setData(ruleService.save(biz, gql));
         return result;
@@ -73,19 +70,21 @@ public class MetaController extends BaseController implements InitializingBean {
     @RequestMapping(value = {"batchSave"}, method = RequestMethod.POST, produces = MediaTypes.JSON_UTF_8)
     @ResponseBody
     public ApiMetaResult batchSave(HttpServletRequest request) throws DaoException {
-        gql = getGql(request,"batchSave");
+        gql = getGql(request, "batchSave");
         ApiMetaResult result = new ApiMetaResult();
-        result.setData(ruleService.batchSave( gql,true));
+        result.setData(ruleService.batchSave(gql, true));
         return result;
     }
+
     @RequestMapping(value = {"multiSave"}, method = RequestMethod.POST, produces = MediaTypes.JSON_UTF_8)
     @ResponseBody
     public ApiMetaResult multiSave(HttpServletRequest request) {
-        gql = getGql(request,"multiSave");
+        gql = getGql(request, "multiSave");
         ApiMetaResult result = new ApiMetaResult();
         result.setData(ruleService.multiSave(gql));
         return result;
     }
+
     @RequestMapping(value = {"delete/{biz}/{id}"}, method = RequestMethod.POST, produces = MediaTypes.JSON_UTF_8)
     @ResponseBody
     public ApiMetaResult delete(@PathVariable("biz") String biz, @PathVariable("id") String id) {
@@ -97,7 +96,7 @@ public class MetaController extends BaseController implements InitializingBean {
     @RequestMapping(value = {"delete2/{biz}"}, method = RequestMethod.POST, produces = MediaTypes.JSON_UTF_8)
     @ResponseBody
     public ApiMetaResult delete(@PathVariable("biz") String biz, HttpServletRequest request) {
-        gql = getGql(request,"delete");
+        gql = getGql(request, "delete");
         ApiMetaResult result = new ApiMetaResult();
         result.setData(ruleService.deleteByGql(biz, gql));
         return result;
@@ -121,7 +120,6 @@ public class MetaController extends BaseController implements InitializingBean {
 
     /**
      * 获取实体名称列表
-     *
      */
     @RequestMapping(value = {"entityNames"}, method = {RequestMethod.POST, RequestMethod.GET}, produces = MediaTypes.JSON_UTF_8)
     @ResponseBody
@@ -159,7 +157,7 @@ public class MetaController extends BaseController implements InitializingBean {
     }
 
 
-    private String getGql(HttpServletRequest request,String type) {
+    private String getGql(HttpServletRequest request, String type) {
         StringBuilder stringBuilder = new StringBuilder();
         BufferedReader br = null;
         try {
@@ -175,23 +173,23 @@ public class MetaController extends BaseController implements InitializingBean {
         } catch (IOException e) {
             logger.error("未能从httpServletRequest中获取gql的内容", e);
         }
-        String gql=stringBuilder.toString();
-        if(type!=null){
-            EntityMeta entityMeta=ruleService.resolveEntity(gql,type);
+        String gql = stringBuilder.toString();
+        if (type != null) {
+            EntityMeta entityMeta = ruleService.resolveEntity(gql, type);
             DynamicDatasourceHolder.setDataSource(entityMeta.getTableMeta().getConnectId());
         }
         return gql;
     }
+
     /**
      * 唯一性校验
-     *
      */
     @RequestMapping(value = {"uniqueness"}, method = {RequestMethod.POST, RequestMethod.GET}, produces = MediaTypes.JSON_UTF_8)
     @ResponseBody
     public ApiResult uniqueness(HttpServletRequest request) {
         ApiResult result = new ApiResult();
-        String gql = getGql(request,null);
-        if (Strings.isNotBlank(gql)) {
+        String gql = getGql(request, null);
+        if (StringUtils.isNotBlank(gql)) {
             JSONObject jo = JSON.parseObject(gql);
             String key = jo.keySet().iterator().next();
             JSONObject value = jo.getJSONObject(key);

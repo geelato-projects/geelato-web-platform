@@ -1,12 +1,12 @@
 package org.geelato.web.platform.m.security.rest;
 
 import jakarta.servlet.http.HttpServletRequest;
-import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.gql.parser.FilterGroup;
 import org.geelato.core.gql.parser.PageQueryRequest;
+import org.geelato.utils.StringUtils;
 import org.geelato.web.platform.m.base.rest.BaseController;
 import org.geelato.web.platform.m.security.entity.Permission;
 import org.geelato.web.platform.m.security.entity.RolePermissionMap;
@@ -180,7 +180,7 @@ public class RolePermissionMapController extends BaseController {
     public ApiResult insertTableViewPermission(@RequestBody RolePermissionMap form) {
         ApiResult result = new ApiResult();
         try {
-            if (Strings.isNotBlank(form.getPermissionId())) {
+            if (StringUtils.isNotBlank(form.getPermissionId())) {
                 Permission permission = rolePermissionMapService.getModel(Permission.class, form.getPermissionId());
                 if (permission != null) {
                     form.setAppId(permission.getAppId());
@@ -203,7 +203,7 @@ public class RolePermissionMapController extends BaseController {
             String roleId = (String) form.get("roleId");
             String columnId = (String) form.get("columnId");
             String rule = (String) form.get("rule");
-            if (Strings.isNotBlank(roleId) && Strings.isNotBlank(columnId) && Strings.isNotBlank(rule)) {
+            if (StringUtils.isNotBlank(roleId) && StringUtils.isNotBlank(columnId) && StringUtils.isNotBlank(rule)) {
                 rolePermissionMapService.insertColumnPermission(roleId, columnId, rule);
             } else {
                 result.error().setMsg(ApiErrorMsg.PARAMETER_MISSING);

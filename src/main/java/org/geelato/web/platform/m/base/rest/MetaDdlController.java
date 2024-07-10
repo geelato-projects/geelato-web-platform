@@ -1,7 +1,6 @@
 package org.geelato.web.platform.m.base.rest;
 
 
-import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.Ctx;
 import org.geelato.core.api.ApiMetaResult;
 import org.geelato.core.constants.MediaTypes;
@@ -12,6 +11,7 @@ import org.geelato.core.meta.MetaManager;
 import org.geelato.core.meta.model.entity.TableMeta;
 import org.geelato.core.meta.model.view.TableView;
 import org.geelato.core.orm.DbGenerateDao;
+import org.geelato.utils.StringUtils;
 import org.geelato.web.platform.m.base.service.ViewService;
 import org.geelato.web.platform.m.model.service.DevTableService;
 import org.slf4j.Logger;
@@ -31,15 +31,13 @@ import java.util.*;
 @RequestMapping(value = "/api/meta/ddl/")
 public class MetaDdlController extends BaseController {
 
+    private static final Logger logger = LoggerFactory.getLogger(MetaDdlController.class);
     @Autowired
     protected DbGenerateDao dbGenerateDao;
     @Autowired
     private DevTableService devTableService;
     @Autowired
     private ViewService viewService;
-
-    private static final Logger logger = LoggerFactory.getLogger(MetaDdlController.class);
-
 
     /**
      * 新建或更新表，不删除表字段
@@ -67,7 +65,7 @@ public class MetaDdlController extends BaseController {
         String tenantCode = Ctx.getCurrentTenantCode();
         String errorModel = "";
         try {
-            if (Strings.isNotBlank(appId)) {
+            if (StringUtils.isNotBlank(appId)) {
                 FilterGroup filterGroup = new FilterGroup();
                 filterGroup.addFilter("appId", appId);
                 filterGroup.addFilter("tenantCode", tenantCode);
@@ -101,7 +99,7 @@ public class MetaDdlController extends BaseController {
             result.error().setMsg(String.format("%s, %s", errorModel, ex.getCause().getMessage())).setData(tableResult);
         } finally {
             // 刷新缓存
-            if (Strings.isNotBlank(appId) && Strings.isNotBlank(tenantCode)) {
+            if (StringUtils.isNotBlank(appId) && StringUtils.isNotBlank(tenantCode)) {
                 Map<String, String> table = new HashMap<>();
                 table.put("app_id", appId);
                 table.put("tenant_code", tenantCode);
@@ -119,7 +117,7 @@ public class MetaDdlController extends BaseController {
         String tenantCode = Ctx.getCurrentTenantCode();
         String errorModel = "";
         try {
-            if (Strings.isNotBlank(appId)) {
+            if (StringUtils.isNotBlank(appId)) {
                 FilterGroup filterGroup = new FilterGroup();
                 filterGroup.addFilter("tenantCode", tenantCode);
                 List<TableMeta> tableMetas = devTableService.queryModel(TableMeta.class, filterGroup);
@@ -149,7 +147,7 @@ public class MetaDdlController extends BaseController {
                             tableResult.put(viewMeta.getViewName(), "模型与数据库表不一致");
                             continue;
                         }
-                        if (Strings.isBlank(viewMeta.getViewConstruct())) {
+                        if (StringUtils.isBlank(viewMeta.getViewConstruct())) {
                             logger.warn(String.format("%s（%s），视图语句不存在。", viewMeta.getTitle(), viewMeta.getViewName()));
                             tableResult.put(viewMeta.getViewName(), "视图语句不存在");
                             continue;
@@ -179,7 +177,7 @@ public class MetaDdlController extends BaseController {
             result.error().setMsg(String.format("%s, %s", errorModel, ex.getMessage())).setData(tableResult);
         } finally {
             // 刷新缓存
-            if (Strings.isNotBlank(appId) && Strings.isNotBlank(tenantCode)) {
+            if (StringUtils.isNotBlank(appId) && StringUtils.isNotBlank(tenantCode)) {
                 Map<String, String> table = new HashMap<>();
                 table.put("app_id", appId);
                 table.put("tenant_code", tenantCode);
@@ -196,7 +194,7 @@ public class MetaDdlController extends BaseController {
         ApiMetaResult result = new ApiMetaResult();
         String entityName = null;
         try {
-            if (Strings.isNotBlank(id)) {
+            if (StringUtils.isNotBlank(id)) {
                 TableView viewMeta = viewService.getModel(TableView.class, id);
                 Assert.notNull(viewMeta, "视图信息查询失败");
                 Map<String, Object> tableParams = new HashMap<>();
@@ -210,7 +208,7 @@ public class MetaDdlController extends BaseController {
                     logger.warn(String.format("%s（%s），模型与数据库表不一致。", viewMeta.getTitle(), viewMeta.getViewName()));
                     throw new RuntimeException("模型与数据库表不一致，需同步");
                 }
-                if (Strings.isBlank(viewMeta.getViewConstruct())) {
+                if (StringUtils.isBlank(viewMeta.getViewConstruct())) {
                     logger.warn(String.format("%s（%s），视图语句不存在。", viewMeta.getTitle(), viewMeta.getViewName()));
                     throw new RuntimeException("视图语句不存在");
                 }
@@ -232,7 +230,7 @@ public class MetaDdlController extends BaseController {
             logger.error(ex.getMessage(), ex);
             result.error().setMsg(ex.getMessage());
         } finally {
-            if (Strings.isNotBlank(entityName)) {
+            if (StringUtils.isNotBlank(entityName)) {
                 MetaManager.singleInstance().refreshDBMeta(entityName);
             }
         }
@@ -275,7 +273,7 @@ public class MetaDdlController extends BaseController {
             table.put("entity_name", params.get("entityName"));
             table.put("connect_id", params.get("connectId"));
             table.put("app_id", params.get("appId"));
-            table.put("tenant_code", Strings.isNotBlank(params.get("tenantCode")) ? params.get("tenantCode") : Ctx.getCurrentTenantCode());
+            table.put("tenant_code", StringUtils.isNotBlank(params.get("tenantCode")) ? params.get("tenantCode") : Ctx.getCurrentTenantCode());
             MetaManager.singleInstance().parseDBMeta(dao, table);
         } catch (Exception ex) {
             logger.error(ex.getMessage());

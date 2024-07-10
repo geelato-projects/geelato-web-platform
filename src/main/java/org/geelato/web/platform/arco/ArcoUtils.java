@@ -14,7 +14,7 @@ import java.util.Map;
  * @description: 系统枚举查询
  */
 public class ArcoUtils {
-    private static Map<String, Class<? extends Enum>> enumMap = new HashMap<>();
+    private static final Map<String, Class<? extends Enum>> enumMap = new HashMap<>();
 
     public static synchronized Class<? extends Enum> getEnum(String enumName) {
         if (ArcoUtils.enumMap.isEmpty()) {

@@ -1,12 +1,12 @@
 package org.geelato.web.platform.m.excel.service;
 
-import org.apache.logging.log4j.util.Strings;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.util.Units;
 import org.apache.poi.xwpf.usermodel.*;
 import org.apache.xmlbeans.XmlCursor;
 import org.apache.xmlbeans.XmlException;
 import org.apache.xmlbeans.XmlToken;
+import org.geelato.utils.StringUtils;
 import org.geelato.utils.UIDGenerator;
 import org.geelato.web.platform.enums.WordTableLoopTypeEnum;
 import org.geelato.web.platform.m.excel.entity.*;
@@ -37,6 +37,60 @@ public class WordXWPFWriter {
     private final Logger logger = LoggerFactory.getLogger(WordXWPFWriter.class);
 
     /**
+     * 修改水印样式高度的方法,如果不想改高度可以不用方法
+     *
+     * @param styleStr 之前的水印样式
+     * @param height   需要改成的高度
+     * @return 返回新修改好的水印样式
+     */
+    public static String getWaterMarkStyle(String styleStr, double height) {
+        // 把拿到的样式用";"切割，切割后保存到数组中
+        Pattern p = Pattern.compile(";");
+        String[] strs = p.split(styleStr);
+        // 遍历保存的数据，找到高度样式，将高度改为参数传入高度的
+        for (String str : strs) {
+            if (str.startsWith("height:")) {
+                String heightStr = "height:" + height + "pt";
+                styleStr = styleStr.replace(str, heightStr);
+                break;
+            }
+        }
+        return styleStr;
+    }
+
+    private static void insertPicture(XWPFDocument document, String filePath, CTInline inline, double imageWidth, double imageHeight, int format) throws FileNotFoundException, InvalidFormatException {
+        document.addPictureData(new FileInputStream(filePath), XWPFDocument.PICTURE_TYPE_PNG);
+        long id = UIDGenerator.generate();
+        long width = (long) Math.floor(Units.toEMU(imageWidth) * 1000 / 35);
+        long height = (long) Math.floor(Units.toEMU(imageHeight) * 1000 / 35);
+        String blipId = document.addPictureData(new FileInputStream(filePath), format);
+        String picXml = getPicXml(blipId, width, height);
+        XmlToken xmlToken = null;
+        try {
+            xmlToken = XmlToken.Factory.parse(picXml);
+        } catch (XmlException xe) {
+            throw new RuntimeException(xe.getMessage());
+        }
+        inline.set(xmlToken);
+        inline.setDistT(0);
+        inline.setDistB(0);
+        inline.setDistL(0);
+        inline.setDistR(0);
+        CTPositiveSize2D extent = inline.addNewExtent();
+        extent.setCx(width);
+        extent.setCy(height);
+        CTNonVisualDrawingProps docPr = inline.addNewDocPr();
+        docPr.setId(id);
+        docPr.setName("IMG_" + id);
+        docPr.setDescr("IMG_" + id);
+    }
+
+    private static String getPicXml(String blipId, long width, long height) {
+        String picXml = "<a:graphic xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\">" + "   <a:graphicData uri=\"http://schemas.openxmlformats.org/drawingml/2006/picture\">" + "      <pic:pic xmlns:pic=\"http://schemas.openxmlformats.org/drawingml/2006/picture\">" + "         <pic:nvPicPr>" + "            <pic:cNvPr id=\"" + 0 + "\" name=\"Generated\"/>" + "            <pic:cNvPicPr/>" + "         </pic:nvPicPr>" + "         <pic:blipFill>" + "            <a:blip r:embed=\"" + blipId + "\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\"/>" + "            <a:stretch>" + "               <a:fillRect/>" + "            </a:stretch>" + "         </pic:blipFill>" + "         <pic:spPr>" + "            <a:xfrm>" + "               <a:off x=\"0\" y=\"0\"/>" + "               <a:ext cx=\"" + width + "\" cy=\"" + height + "\"/>" + "            </a:xfrm>" + "            <a:prstGeom prst=\"rect\">" + "               <a:avLst/>" + "            </a:prstGeom>" + "         </pic:spPr>" + "      </pic:pic>" + "   </a:graphicData>" + "</a:graphic>";
+        return picXml;
+    }
+
+    /**
      * @param document
      * @param placeholderMetaMap
      * @param valueMapList
@@ -53,29 +107,6 @@ public class WordXWPFWriter {
         setTableLoop(document, placeholderMetaMap, tableMetas);
         // 标签替换：文本、图片 ${}
         setValueMap(document, placeholderMetaMap, valueMap);
-    }
-
-
-    /**
-     * 修改水印样式高度的方法,如果不想改高度可以不用方法
-     *
-     * @param styleStr 之前的水印样式
-     * @param height   需要改成的高度
-     * @return 返回新修改好的水印样式
-     */
-    public static String getWaterMarkStyle(String styleStr, double height) {
-        //把拿到的样式用";"切割，切割后保存到数组中
-        Pattern p = Pattern.compile(";");
-        String[] strs = p.split(styleStr);
-        //遍历保存的数据，找到高度样式，将高度改为参数传入高度的
-        for (String str : strs) {
-            if (str.startsWith("height:")) {
-                String heightStr = "height:" + height + "pt";
-                styleStr = styleStr.replace(str, heightStr);
-                break;
-            }
-        }
-        return styleStr;
     }
 
     /**
@@ -136,7 +167,7 @@ public class WordXWPFWriter {
                                                             for (int u = 0; u < runs.size(); u++) {
                                                                 String runText = runs.get(u).getText(0);
                                                                 runList.add(runText);
-                                                                if (Strings.isNotBlank(runText)) {
+                                                                if (StringUtils.isNotBlank(runText)) {
                                                                     if (loopHeadPattern.matcher(runText).find()) {
                                                                         meta.setType(WordTableLoopTypeEnum.TABLE.name());
                                                                         meta.setIdentify(getIdentify(loopHeadPattern, runText, new String[]{"{?", "}"}));
@@ -285,7 +316,7 @@ public class WordXWPFWriter {
                         for (int r = 0; r < runs.size(); r++) {
                             String runText = runs.get(r).getText(0);
                             runList.add(runText);
-                            if (Strings.isNotBlank(runText)) {
+                            if (StringUtils.isNotBlank(runText)) {
                                 if (loopHeadPattern.matcher(runText).find()) {
                                     WordTagMeta meta = new WordTagMeta();
                                     meta.setIndex(tagIndex++);
@@ -476,7 +507,7 @@ public class WordXWPFWriter {
                 for (int r = 0; r < runs.size(); r++) {
                     String runText = runs.get(r).getText(0);
                     runList.add(runText);
-                    if (Strings.isNotBlank(runText)) {
+                    if (StringUtils.isNotBlank(runText)) {
                         Matcher phm = paragraphPattern.matcher(runText);
                         while (phm.find()) {
                             PlaceholderMeta meta = placeholderMetaMap.get(phm.group());
@@ -518,7 +549,7 @@ public class WordXWPFWriter {
             text = mp.group();
             break;
         }
-        if (replaces != null && replaces.length > 0) {
+        if (replaces != null) {
             for (String re : replaces) {
                 text = text.replace(re, "");
             }
@@ -658,38 +689,6 @@ public class WordXWPFWriter {
         }
 
         return newParagraph;
-    }
-
-    private static void insertPicture(XWPFDocument document, String filePath, CTInline inline, double imageWidth, double imageHeight, int format) throws FileNotFoundException, InvalidFormatException {
-        document.addPictureData(new FileInputStream(filePath), XWPFDocument.PICTURE_TYPE_PNG);
-        long id = UIDGenerator.generate();
-        long width = (long) Math.floor(Units.toEMU(imageWidth) * 1000 / 35);
-        long height = (long) Math.floor(Units.toEMU(imageHeight) * 1000 / 35);
-        String blipId = document.addPictureData(new FileInputStream(filePath), format);
-        String picXml = getPicXml(blipId, width, height);
-        XmlToken xmlToken = null;
-        try {
-            xmlToken = XmlToken.Factory.parse(picXml);
-        } catch (XmlException xe) {
-            throw new RuntimeException(xe.getMessage());
-        }
-        inline.set(xmlToken);
-        inline.setDistT(0);
-        inline.setDistB(0);
-        inline.setDistL(0);
-        inline.setDistR(0);
-        CTPositiveSize2D extent = inline.addNewExtent();
-        extent.setCx(width);
-        extent.setCy(height);
-        CTNonVisualDrawingProps docPr = inline.addNewDocPr();
-        docPr.setId(id);
-        docPr.setName("IMG_" + id);
-        docPr.setDescr("IMG_" + id);
-    }
-
-    private static String getPicXml(String blipId, long width, long height) {
-        String picXml = "<a:graphic xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\">" + "   <a:graphicData uri=\"http://schemas.openxmlformats.org/drawingml/2006/picture\">" + "      <pic:pic xmlns:pic=\"http://schemas.openxmlformats.org/drawingml/2006/picture\">" + "         <pic:nvPicPr>" + "            <pic:cNvPr id=\"" + 0 + "\" name=\"Generated\"/>" + "            <pic:cNvPicPr/>" + "         </pic:nvPicPr>" + "         <pic:blipFill>" + "            <a:blip r:embed=\"" + blipId + "\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\"/>" + "            <a:stretch>" + "               <a:fillRect/>" + "            </a:stretch>" + "         </pic:blipFill>" + "         <pic:spPr>" + "            <a:xfrm>" + "               <a:off x=\"0\" y=\"0\"/>" + "               <a:ext cx=\"" + width + "\" cy=\"" + height + "\"/>" + "            </a:xfrm>" + "            <a:prstGeom prst=\"rect\">" + "               <a:avLst/>" + "            </a:prstGeom>" + "         </pic:spPr>" + "      </pic:pic>" + "   </a:graphicData>" + "</a:graphic>";
-        return picXml;
     }
 }
 

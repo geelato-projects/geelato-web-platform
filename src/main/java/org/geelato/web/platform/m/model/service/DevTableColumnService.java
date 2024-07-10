@@ -2,7 +2,6 @@ package org.geelato.web.platform.m.model.service;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
-import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.constants.ColumnDefault;
 import org.geelato.core.constants.MetaDaoSql;
@@ -49,7 +48,7 @@ public class DevTableColumnService extends BaseSortableService {
      */
     public void automaticGeneration(ColumnMeta model) {
         Assert.notNull(model, ApiErrorMsg.IS_NULL);
-        if (!model.isAutoAdd() || Strings.isBlank(model.getAutoName())) {
+        if (!model.isAutoAdd() || StringUtils.isBlank(model.getAutoName())) {
             return;
         }
         // 校验是否已经存在
@@ -87,7 +86,7 @@ public class DevTableColumnService extends BaseSortableService {
      */
     public void createDefaultColumn(TableMeta tableMeta) {
         Assert.notNull(tableMeta, ApiErrorMsg.IS_NULL);
-        if (Strings.isBlank(tableMeta.getId()) || Strings.isBlank(tableMeta.getEntityName())) {
+        if (StringUtils.isBlank(tableMeta.getId()) || StringUtils.isBlank(tableMeta.getEntityName())) {
             throw new RuntimeException(ApiErrorMsg.ID_IS_NULL);
         }
         if (TableTypeEnum.TABLE.getCode().equals(tableMeta.getTableType())) {
@@ -124,7 +123,7 @@ public class DevTableColumnService extends BaseSortableService {
      */
     public Map<String, Object> getDefaultViewSql(String entityName) {
         Map<String, Object> viewParams = new HashMap<>();
-        if (Strings.isBlank(entityName)) {
+        if (StringUtils.isBlank(entityName)) {
             return viewParams;
         }
         Map<String, Object> params = new HashMap<>();
@@ -141,7 +140,7 @@ public class DevTableColumnService extends BaseSortableService {
             // 去重
             HashMap<String, ColumnMeta> columnMetaMap = new HashMap<String, ColumnMeta>();
             for (ColumnMeta columnMeta : columnMetaList) {
-                if (Strings.isNotBlank(columnMeta.getName()) && !columnMetaMap.containsKey(columnMeta.getName())) {
+                if (StringUtils.isNotBlank(columnMeta.getName()) && !columnMetaMap.containsKey(columnMeta.getName())) {
                     columnMetaMap.put(columnMeta.getName(), columnMeta);
                 }
             }
@@ -187,7 +186,7 @@ public class DevTableColumnService extends BaseSortableService {
                     isDeleteModel(meta);
                     continue;
                 }
-                if (Strings.isNotBlank(meta.getName()) && !columnMetaMap.containsKey(meta.getName())) {
+                if (StringUtils.isNotBlank(meta.getName()) && !columnMetaMap.containsKey(meta.getName())) {
                     columnMetaMap.put(meta.getName(), meta);
                 }
             }
@@ -201,8 +200,8 @@ public class DevTableColumnService extends BaseSortableService {
             List<String> uniques = new ArrayList<>();
             if (schemaIndices != null && schemaIndices.size() > 0) {
                 for (SchemaIndex index : schemaIndices) {
-                    boolean isUnique = !Strings.isBlank(index.getNonUnique()) && !Boolean.parseBoolean(index.getNonUnique());
-                    if (Strings.isNotBlank(index.getColumnName()) && isUnique) {
+                    boolean isUnique = !StringUtils.isBlank(index.getNonUnique()) && !Boolean.parseBoolean(index.getNonUnique());
+                    if (StringUtils.isNotBlank(index.getColumnName()) && isUnique) {
                         uniques.add(index.getColumnName());
                     }
                 }
@@ -215,7 +214,7 @@ public class DevTableColumnService extends BaseSortableService {
             HashMap<String, SchemaColumn> schemaColumnMap = new HashMap<>();
             if (schemaColumns != null && schemaColumns.size() > 0) {
                 for (SchemaColumn schema : schemaColumns) {
-                    if (Strings.isNotBlank(schema.getColumnName()) && !schemaColumnMap.containsKey(schema.getColumnName())) {
+                    if (StringUtils.isNotBlank(schema.getColumnName()) && !schemaColumnMap.containsKey(schema.getColumnName())) {
                         schema.setUnique(uniques.contains(schema.getColumnName()));
                         schemaColumnMap.put(schema.getColumnName(), schema);
                     }
@@ -265,7 +264,7 @@ public class DevTableColumnService extends BaseSortableService {
         // 重命名
         String newColumnName = String.format("%s_d%s", model.getName(), System.currentTimeMillis());
         String newTitle = DELETE_COMMENT_PREFIX + model.getTitle();
-        String newComment = DELETE_COMMENT_PREFIX + (Strings.isNotBlank(model.getComment()) ? model.getComment() : model.getTitle());
+        String newComment = DELETE_COMMENT_PREFIX + (StringUtils.isNotBlank(model.getComment()) ? model.getComment() : model.getTitle());
         // delete 2023-06-25 13:14:15 用户[user]=>[user_2023...]。
         String newDescription = String.format("delete %s %s[%s]=>[%s]。\n", sdf.format(new Date()), model.getTitle(), model.getName(), newColumnName) + model.getDescription();
         // 常用
@@ -356,7 +355,7 @@ public class DevTableColumnService extends BaseSortableService {
         if (selectTypes != null && !selectTypes.isEmpty()) {
             // 设置分组
             for (ColumnSelectType st1 : selectTypes) {
-                if (Strings.isNotBlank(st1.getGroup()) && !stringListMap.containsKey(st1.getGroup())) {
+                if (StringUtils.isNotBlank(st1.getGroup()) && !stringListMap.containsKey(st1.getGroup())) {
                     // 实际选项
                     List<SelectOptionData<ColumnSelectType>> optionDatas = new ArrayList<>();
                     for (ColumnSelectType st2 : selectTypes) {
@@ -412,11 +411,11 @@ public class DevTableColumnService extends BaseSortableService {
         if (columnList == null || columnList.isEmpty()) {
             changeParams.put("isColumn", false);
         } else {
-            form.setComment(Strings.isNotBlank(form.getComment()) ? form.getComment() : form.getTitle());
+            form.setComment(StringUtils.isNotBlank(form.getComment()) ? form.getComment() : form.getTitle());
             changeParams.put("isColumn", true);
         }
         dao.execute("metaResetColumn", changeParams);
-        //dao.save(model);
+        // dao.save(model);
 
         return form;
     }

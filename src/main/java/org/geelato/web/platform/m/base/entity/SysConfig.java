@@ -105,6 +105,14 @@ public class SysConfig extends BaseSortableEntity implements EntityEnableAble {
         return enableStatus;
     }
 
+    /**
+     *
+     */
+    @Override
+    public void setEnableStatus(int enableStatus) {
+        this.enableStatus = enableStatus;
+    }
+
     @Col(name = "purpose")
     @Title(title = "目的，应用范围")
     public String getPurpose() {
@@ -123,14 +131,6 @@ public class SysConfig extends BaseSortableEntity implements EntityEnableAble {
 
     public void setEncrypted(boolean encrypted) {
         this.encrypted = encrypted;
-    }
-
-    /**
-     *
-     */
-    @Override
-    public void setEnableStatus(int enableStatus) {
-        this.enableStatus = enableStatus;
     }
 
     @Col(name = "sm2_key")

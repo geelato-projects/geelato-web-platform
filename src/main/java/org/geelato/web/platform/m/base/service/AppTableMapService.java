@@ -1,8 +1,8 @@
 package org.geelato.web.platform.m.base.service;
 
-import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.gql.parser.FilterGroup;
 import org.geelato.core.meta.model.entity.TableMeta;
+import org.geelato.utils.StringUtils;
 import org.geelato.web.platform.m.base.entity.App;
 import org.geelato.web.platform.m.base.entity.AppTableMap;
 import org.geelato.web.platform.m.model.service.DevTableService;
@@ -31,25 +31,25 @@ public class AppTableMapService extends BaseService {
     private PermissionService permissionService;
 
     public void after(AppTableMap form) {
-        if (Strings.isNotBlank(form.getAppId())) {
+        if (StringUtils.isNotBlank(form.getAppId())) {
             App app = appService.getModel(App.class, form.getAppId());
             form.setAppName(app.getName());
         }
-        if (Strings.isNotBlank(form.getTableId())) {
+        if (StringUtils.isNotBlank(form.getTableId())) {
             TableMeta tableMeta = devTableService.getModel(TableMeta.class, form.getTableId());
             form.setTableName(tableMeta.getEntityName());
             form.setTableTitle(tableMeta.getTitle());
-            if (Strings.isBlank(form.getTableAppId())) {
+            if (StringUtils.isBlank(form.getTableAppId())) {
                 form.setTableAppId(tableMeta.getAppId());
             }
         }
-        if (Strings.isNotBlank(form.getPermissionId())) {
+        if (StringUtils.isNotBlank(form.getPermissionId())) {
             FilterGroup filter = new FilterGroup();
             filter.addFilter("id", FilterGroup.Operator.in, form.getPermissionId());
             List<Permission> list = permissionService.queryModel(Permission.class, filter);
             List<String> names = new ArrayList<>();
             for (Permission permission : list) {
-                if (Strings.isNotBlank(permission.getDescription())) {
+                if (StringUtils.isNotBlank(permission.getDescription())) {
                     names.add(String.format("%s（%s）", permission.getName(), permission.getDescription()));
                 } else {
                     names.add(String.format("%s（%s）", permission.getName(), permission.getCode()));

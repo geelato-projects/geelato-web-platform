@@ -1,8 +1,8 @@
 package org.geelato.web.platform.m.security.service;
 
-import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.gql.parser.FilterGroup;
+import org.geelato.utils.StringUtils;
 import org.geelato.web.platform.enums.IsDefaultOrgEnum;
 import org.geelato.web.platform.m.base.service.BaseService;
 import org.geelato.web.platform.m.security.entity.Org;
@@ -35,7 +35,7 @@ public class OrgUserMapService extends BaseService {
      */
     public List<OrgUserMap> queryModelByIds(String orgId, String userId) {
         List<OrgUserMap> list = new ArrayList<>();
-        if (Strings.isNotBlank(orgId) && Strings.isNotBlank(userId)) {
+        if (StringUtils.isNotBlank(orgId) && StringUtils.isNotBlank(userId)) {
             FilterGroup filter = new FilterGroup();
             filter.addFilter("orgId", FilterGroup.Operator.in, orgId);
             filter.addFilter("userId", FilterGroup.Operator.in, userId);

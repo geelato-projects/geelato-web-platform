@@ -1,6 +1,6 @@
 package org.geelato.web.platform.m.excel.entity;
 
-import org.apache.logging.log4j.util.Strings;
+import org.geelato.utils.StringUtils;
 import org.geelato.web.platform.enums.ExcelEvaluationEnum;
 
 import java.util.ArrayList;
@@ -11,23 +11,23 @@ import java.util.List;
  * @description: 业务元数据
  */
 public class BusinessMeta {
-    //表格名称
+    // 表格名称
     private String tableName;
-    //字段名称
+    // 字段名称
     private String columnName;
-    //取值计算方式
+    // 取值计算方式
     private String evaluation;
-    //常量
+    // 常量
     private String constValue;
-    //变量 ${}
+    // 变量 ${}
     private String variableValue;
-    //表达式
+    // 表达式
     private String expression;
-    //数据字典，字典编码；变量对应字典项的label值，求取字典项value值
+    // 数据字典，字典编码；变量对应字典项的label值，求取字典项value值
     private String dictCode;
-    //对应主键，【表格名称:字段名称】；变量对应的表格字段，求取表格的主键值。
+    // 对应主键，【表格名称:字段名称】；变量对应的表格字段，求取表格的主键值。
     private String primaryValue;
-    //备注
+    // 备注
     private String remark;
 
     public String getTableName() {
@@ -195,9 +195,9 @@ public class BusinessMeta {
     public List<String> getPrimaryKeyColumns() {
         List<String> columnNames = new ArrayList<>();
         String column = getPrimaryKeyColumn();
-        if (Strings.isNotBlank(column)) {
+        if (StringUtils.isNotBlank(column)) {
             String[] values = column.split(",");
-            if (values != null && values.length > 0) {
+            if (values != null) {
                 for (String columnName : values) {
                     if (!columnNames.contains(columnName)) {
                         columnNames.add(columnName);
@@ -213,14 +213,14 @@ public class BusinessMeta {
     }
 
     private String getPrimarySplit(String type) {
-        if (Strings.isNotBlank(type) && Strings.isNotBlank(this.primaryValue)) {
+        if (StringUtils.isNotBlank(type) && StringUtils.isNotBlank(this.primaryValue)) {
             String[] keys = this.primaryValue.split(":");
-            if (keys != null && keys.length == 2 && Strings.isNotBlank(keys[0]) && Strings.isNotBlank(keys[1])) {
+            if (keys != null && keys.length == 2 && StringUtils.isNotBlank(keys[0]) && StringUtils.isNotBlank(keys[1])) {
                 if ("table".equalsIgnoreCase(type)) {
                     return keys[0];
                 } else if ("column".equalsIgnoreCase(type) || "goal".equalsIgnoreCase(type)) {
                     String[] values = keys[1].split("\\|");
-                    if (values != null && values.length == 2 && Strings.isNotBlank(values[0]) && Strings.isNotBlank(values[1])) {
+                    if (values != null && values.length == 2 && StringUtils.isNotBlank(values[0]) && StringUtils.isNotBlank(values[1])) {
                         if ("goal".equalsIgnoreCase(type)) {
                             return values[0];
                         } else if ("column".equalsIgnoreCase(type)) {

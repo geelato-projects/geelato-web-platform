@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
  */
 public class SecurityHelper {
 
-    private static Logger logger = LoggerFactory.getLogger(SecurityHelper.class);
+    private static final Logger logger = LoggerFactory.getLogger(SecurityHelper.class);
 
     public static ShiroDbRealm.ShiroUser getCurrentUser() {
         ShiroDbRealm.ShiroUser user = (ShiroDbRealm.ShiroUser) SecurityUtils.getSubject().getPrincipal();

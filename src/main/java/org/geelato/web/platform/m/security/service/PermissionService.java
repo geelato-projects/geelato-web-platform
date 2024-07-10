@@ -1,11 +1,11 @@
 package org.geelato.web.platform.m.security.service;
 
 import com.alibaba.fastjson2.JSON;
-import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.constants.ResourcesFiles;
 import org.geelato.core.gql.parser.FilterGroup;
 import org.geelato.core.meta.model.field.ColumnMeta;
 import org.geelato.utils.FastJsonUtils;
+import org.geelato.utils.StringUtils;
 import org.geelato.web.platform.enums.PermissionTypeEnum;
 import org.geelato.web.platform.m.base.service.BaseService;
 import org.geelato.web.platform.m.security.entity.Permission;
@@ -97,7 +97,7 @@ public class PermissionService extends BaseService {
      */
     public boolean isDefault(Permission model, List<Permission> defaultPermissions) {
         boolean isDef = false;
-        if (Strings.isBlank(model.getCode()) || Strings.isBlank(model.getType()) || Strings.isBlank(model.getObject())) {
+        if (StringUtils.isBlank(model.getCode()) || StringUtils.isBlank(model.getType()) || StringUtils.isBlank(model.getObject())) {
             return isDef;
         }
         if (defaultPermissions != null && defaultPermissions.size() > 0) {
@@ -387,7 +387,7 @@ public class PermissionService extends BaseService {
         if (columnObjects != null && columnObjects.size() > 0) {
             FilterGroup filter = new FilterGroup();
             filter.addFilter("type", type);
-            filter.addFilter("object", FilterGroup.Operator.in, Strings.join(columnObjects, ','));
+            filter.addFilter("object", FilterGroup.Operator.in, String.join(",", columnObjects));
             filter.addFilter("tenantCode", getSessionTenantCode());
             permissions = queryModel(Permission.class, filter);
         }
@@ -436,7 +436,7 @@ public class PermissionService extends BaseService {
         // 重置角色权限
         if (permissionIds != null && permissionIds.size() > 0) {
             FilterGroup filter = new FilterGroup();
-            filter.addFilter("permissionId", FilterGroup.Operator.in, Strings.join(permissionIds, ','));
+            filter.addFilter("permissionId", FilterGroup.Operator.in, String.join(",", permissionIds));
             filter.addFilter("tenantCode", getSessionTenantCode());
             List<RolePermissionMap> rolePermissionMaps = queryModel(RolePermissionMap.class, filter);
             if (rolePermissionMaps != null && rolePermissionMaps.size() > 0) {

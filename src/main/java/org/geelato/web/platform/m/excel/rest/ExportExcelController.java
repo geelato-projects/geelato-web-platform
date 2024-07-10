@@ -4,12 +4,12 @@ import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.gql.parser.FilterGroup;
 import org.geelato.core.gql.parser.PageQueryRequest;
+import org.geelato.utils.StringUtils;
 import org.geelato.web.platform.m.base.entity.Attach;
 import org.geelato.web.platform.m.base.rest.BaseController;
 import org.geelato.web.platform.m.base.service.AttachService;
@@ -82,7 +82,7 @@ public class ExportExcelController extends BaseController {
             List<Map> valueMapList = new ArrayList<>();
             Map valueMap = new HashMap();
             if ("mql".equals(dataType)) {
-            } else if ("data".equals(dataType) && Strings.isNotBlank(jsonText)) {
+            } else if ("data".equals(dataType) && StringUtils.isNotBlank(jsonText)) {
                 JSONObject jo = JSON.parseObject(jsonText);
                 valueMapList = (List<Map>) jo.get("valueMapList");
                 valueMap = (Map) jo.get("valueMap");
@@ -112,7 +112,7 @@ public class ExportExcelController extends BaseController {
 
             String jsonText = exportExcelService.getGql(request);
 
-            if (Strings.isNotBlank(jsonText)) {
+            if (StringUtils.isNotBlank(jsonText)) {
                 JSONObject jo = JSON.parseObject(jsonText);
                 valueMapList = (List<Map>) jo.get("valueMapList");
                 valueMap = (Map) jo.get("valueMap");

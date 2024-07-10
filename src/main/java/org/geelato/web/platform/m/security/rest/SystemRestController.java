@@ -2,10 +2,10 @@ package org.geelato.web.platform.m.security.rest;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.meta.annotation.IgnoreJWTVerify;
+import org.geelato.utils.StringUtils;
 import org.geelato.web.platform.m.base.rest.BaseController;
 import org.geelato.web.platform.m.security.entity.*;
 import org.geelato.web.platform.m.security.service.AccountService;
@@ -27,12 +27,11 @@ import java.util.List;
 @Controller
 @RequestMapping(value = {"/api/sys"})
 public class SystemRestController extends BaseController {
+    private final Logger logger = LoggerFactory.getLogger(SystemRestController.class);
     @Autowired
     protected AccountService accountService;
     @Autowired
     protected OrgService orgService;
-    private final Logger logger = LoggerFactory.getLogger(SystemRestController.class);
-
 
     @IgnoreJWTVerify
     @RequestMapping(value = "/getRoleListByPage", method = RequestMethod.GET, produces = {"application/json;charset=UTF-8"})
@@ -139,10 +138,10 @@ public class SystemRestController extends BaseController {
      * @param loginResult
      */
     private void setCompany(LoginResult loginResult) {
-        if (Strings.isNotBlank(loginResult.getCompanyId())) {
+        if (StringUtils.isNotBlank(loginResult.getCompanyId())) {
             Org org = orgService.getModel(Org.class, loginResult.getCompanyId());
             loginResult.setCompanyName(org.getName());
-        } else if (Strings.isNotBlank(loginResult.getOrgId())) {
+        } else if (StringUtils.isNotBlank(loginResult.getOrgId())) {
             Org org = orgService.getCompany(loginResult.getOrgId());
             if (org != null) {
                 loginResult.setCompanyId(org.getId());

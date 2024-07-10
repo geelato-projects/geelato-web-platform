@@ -1,9 +1,9 @@
 package org.geelato.web.platform.m.base.service;
 
-import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.constants.ColumnDefault;
 import org.geelato.core.gql.parser.FilterGroup;
 import org.geelato.core.meta.model.entity.BaseSortableEntity;
+import org.geelato.utils.StringUtils;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -26,7 +26,7 @@ public class BaseSortableService extends BaseService {
      */
     @Override
     public <T> List<T> queryModel(Class<T> entity, Map<String, Object> params, String orderBy) {
-        orderBy = Strings.isNotBlank(orderBy) ? orderBy : BaseSortableService.DEFAULT_ORDER_BY;
+        orderBy = StringUtils.isNotBlank(orderBy) ? orderBy : BaseSortableService.DEFAULT_ORDER_BY;
         return super.queryModel(entity, params, orderBy);
     }
 
@@ -45,7 +45,7 @@ public class BaseSortableService extends BaseService {
      */
     @Override
     public <T> List<T> queryModel(Class<T> entity, FilterGroup filter, String orderBy) {
-        orderBy = Strings.isNotBlank(orderBy) ? orderBy : BaseSortableService.DEFAULT_ORDER_BY;
+        orderBy = StringUtils.isNotBlank(orderBy) ? orderBy : BaseSortableService.DEFAULT_ORDER_BY;
         return super.queryModel(entity, filter, orderBy);
     }
 

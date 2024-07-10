@@ -9,7 +9,7 @@ public class InstanceProxy {
     @Autowired
     protected RuleService ruleService;
 
-    public RuleService getRuleService(){
-        return  ruleService;
+    public RuleService getRuleService() {
+        return ruleService;
     }
 }

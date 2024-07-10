@@ -19,10 +19,9 @@ import org.springframework.web.bind.annotation.ResponseBody;
 @RequestMapping(value = "/api/sys/account")
 public class AccountRestController extends BaseController {
 
+    private final Logger logger = LoggerFactory.getLogger(AccountRestController.class);
     @Autowired
     protected AccountService accountService;
-
-    private Logger logger = LoggerFactory.getLogger(AccountRestController.class);
 
     @RequestMapping(method = RequestMethod.POST)
     @ResponseBody

@@ -1,8 +1,8 @@
 package org.geelato.web.platform.m.security.service;
 
-import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.gql.parser.FilterGroup;
+import org.geelato.utils.StringUtils;
 import org.geelato.web.platform.m.base.entity.App;
 import org.geelato.web.platform.m.base.service.AppService;
 import org.geelato.web.platform.m.base.service.BaseService;
@@ -33,7 +33,7 @@ public class RoleAppMapService extends BaseService {
      */
     public List<RoleAppMap> queryModelByIds(String roleId, String appId) {
         List<RoleAppMap> list = new ArrayList<>();
-        if (Strings.isNotBlank(roleId) && Strings.isNotBlank(appId)) {
+        if (StringUtils.isNotBlank(roleId) && StringUtils.isNotBlank(appId)) {
             FilterGroup filter = new FilterGroup();
             filter.addFilter("roleId", FilterGroup.Operator.in, roleId);
             filter.addFilter("appId", FilterGroup.Operator.in, appId);

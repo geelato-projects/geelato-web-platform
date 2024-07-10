@@ -20,7 +20,7 @@ public class OrgUserMap extends BaseEntity {
     private String userId;
     private String userName;
 
-    //1-默认组织 0-兼职
+    // 1-默认组织 0-兼职
     private int defaultOrg;
 
     @Title(title = "组织ID")

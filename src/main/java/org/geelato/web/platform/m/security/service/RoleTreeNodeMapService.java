@@ -1,8 +1,8 @@
 package org.geelato.web.platform.m.security.service;
 
-import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.gql.parser.FilterGroup;
+import org.geelato.utils.StringUtils;
 import org.geelato.web.platform.m.base.entity.TreeNode;
 import org.geelato.web.platform.m.base.service.BaseService;
 import org.geelato.web.platform.m.base.service.TreeNodeService;
@@ -33,7 +33,7 @@ public class RoleTreeNodeMapService extends BaseService {
      */
     public List<RoleTreeNodeMap> queryModelByIds(String roleId, String treeNodeId) {
         List<RoleTreeNodeMap> list = new ArrayList<>();
-        if (Strings.isNotBlank(roleId) && Strings.isNotBlank(treeNodeId)) {
+        if (StringUtils.isNotBlank(roleId) && StringUtils.isNotBlank(treeNodeId)) {
             FilterGroup filter = new FilterGroup();
             filter.addFilter("roleId", FilterGroup.Operator.in, roleId);
             filter.addFilter("treeNodeId", FilterGroup.Operator.in, treeNodeId);

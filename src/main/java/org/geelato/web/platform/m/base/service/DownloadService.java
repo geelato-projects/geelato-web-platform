@@ -1,6 +1,6 @@
 package org.geelato.web.platform.m.base.service;
 
-import org.apache.logging.log4j.util.Strings;
+import org.geelato.utils.StringUtils;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -17,7 +17,7 @@ public class DownloadService {
 
 
     public File downloadFile(String name, String path) {
-        if (Strings.isBlank(path)) {
+        if (StringUtils.isBlank(path)) {
             return null;
         }
 

@@ -26,10 +26,9 @@ public class JWTInterceptor implements HandlerInterceptor {
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
 
         // 如果不是映射到方法直接通过
-        if (!(handler instanceof HandlerMethod)) {
+        if (!(handler instanceof HandlerMethod handlerMethod)) {
             return true;
         }
-        HandlerMethod handlerMethod = (HandlerMethod) handler;
         Method method = handlerMethod.getMethod();
         // 检查是否有IgnoreToken注释，有则跳过认证
         if (method.isAnnotationPresent(IgnoreJWTVerify.class)) {
@@ -51,8 +50,8 @@ public class JWTInterceptor implements HandlerInterceptor {
         String loginName = verify.getClaim("loginName").asString();
         String id = verify.getClaim("id").asString();
         String passWord = verify.getClaim("passWord").asString();
-        //初始化Core中的当前用户
-        User currentUser= EnvManager.singleInstance().InitCurrentUser(loginName);
+        // 初始化Core中的当前用户
+        User currentUser = EnvManager.singleInstance().InitCurrentUser(loginName);
 
         PlatformContext.setCurrentUser(currentUser);
         PlatformContext.setCurrentTenant(new Tenant("geelato"));

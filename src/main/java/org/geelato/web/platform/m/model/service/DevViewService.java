@@ -2,7 +2,6 @@ package org.geelato.web.platform.m.model.service;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
-import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.constants.ColumnDefault;
 import org.geelato.core.constants.MetaDaoSql;
@@ -12,6 +11,7 @@ import org.geelato.core.meta.model.entity.TableMeta;
 import org.geelato.core.meta.model.field.ColumnMeta;
 import org.geelato.core.meta.model.view.TableView;
 import org.geelato.core.util.ClassUtils;
+import org.geelato.utils.StringUtils;
 import org.geelato.web.platform.m.base.service.BaseSortableService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,7 +49,7 @@ public class DevViewService extends BaseSortableService {
         Assert.notNull(tableMeta, ApiErrorMsg.IS_NULL);
         String viewColumns = (String) viewParams.get("viewColumns");
         String viewConstruct = (String) viewParams.get("viewConstruct");
-        if (Strings.isBlank(viewColumns) || Strings.isBlank(viewConstruct)) {
+        if (StringUtils.isBlank(viewColumns) || StringUtils.isBlank(viewConstruct)) {
             return;
         }
         List<TableView> tableViewList = getTableView(tableMeta.getConnectId(), tableMeta.getEntityName());
@@ -86,7 +86,7 @@ public class DevViewService extends BaseSortableService {
     }
 
     public void viewColumnMapperDBObject(TableView form) {
-        if (Strings.isNotBlank(form.getViewColumn())) {
+        if (StringUtils.isNotBlank(form.getViewColumn())) {
             List<Object> list = new ArrayList<>();
             List<String> columnNames = new ArrayList<>();
             JSONArray columnData = JSONArray.parse(form.getViewColumn());
@@ -115,7 +115,7 @@ public class DevViewService extends BaseSortableService {
     }
 
     public void viewColumnMeta(TableView form) {
-        if (Strings.isNotBlank(form.getViewColumn())) {
+        if (StringUtils.isNotBlank(form.getViewColumn())) {
             List<Object> list = new ArrayList<>();
             JSONArray columnData = JSONArray.parse(form.getViewColumn());
             columnData.forEach(x -> {
@@ -168,7 +168,7 @@ public class DevViewService extends BaseSortableService {
 
     private List<Map<String, Object>> queryInformationSchemaViews(String viewName) {
         List<Map<String, Object>> tableList = new ArrayList<>();
-        if (Strings.isNotBlank(viewName)) {
+        if (StringUtils.isNotBlank(viewName)) {
             String tableSql = String.format(MetaDaoSql.INFORMATION_SCHEMA_VIEWS, MetaDaoSql.TABLE_SCHEMA_METHOD, " AND TABLE_NAME='" + viewName + "'");
             logger.info(tableSql);
             tableList = dao.getJdbcTemplate().queryForList(tableSql);

@@ -1,6 +1,6 @@
 package org.geelato.web.platform.m.security.service;
 
-import org.apache.logging.log4j.util.Strings;
+import org.geelato.utils.StringUtils;
 import org.geelato.web.platform.enums.OrgTypeEnum;
 import org.geelato.web.platform.m.base.service.BaseSortableService;
 import org.geelato.web.platform.m.security.entity.Org;
@@ -70,18 +70,18 @@ public class OrgService extends BaseSortableService {
      * @return
      */
     public Org getCompany(String id) {
-        if (Strings.isNotBlank(id)) {
+        if (StringUtils.isNotBlank(id)) {
             Org model = this.getModel(Org.class, id);
             if (model != null) {
                 if (OrgTypeEnum.ROOT.getValue().equals(model.getType())) {
                     return model;
                 } else if (OrgTypeEnum.COMPANY.getValue().equals(model.getType())) {
-                    if (Strings.isNotBlank(model.getPid())) {
+                    if (StringUtils.isNotBlank(model.getPid())) {
                         return getCompany(model.getPid());
                     } else {
                         return model;
                     }
-                } else if (Strings.isNotBlank(model.getPid())) {
+                } else if (StringUtils.isNotBlank(model.getPid())) {
                     return getCompany(model.getPid());
                 }
             }

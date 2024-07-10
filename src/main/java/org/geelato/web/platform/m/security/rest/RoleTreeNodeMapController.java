@@ -1,12 +1,12 @@
 package org.geelato.web.platform.m.security.rest;
 
 import jakarta.servlet.http.HttpServletRequest;
-import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.gql.parser.FilterGroup;
 import org.geelato.core.gql.parser.PageQueryRequest;
+import org.geelato.utils.StringUtils;
 import org.geelato.web.platform.m.base.rest.BaseController;
 import org.geelato.web.platform.m.security.entity.RoleTreeNodeMap;
 import org.geelato.web.platform.m.security.service.RoleTreeNodeMapService;
@@ -134,7 +134,7 @@ public class RoleTreeNodeMapController extends BaseController {
     public ApiResult isDelete(@PathVariable(required = true) String roleId, @PathVariable(required = true) String treeNodeId) {
         ApiResult result = new ApiResult();
         try {
-            if (Strings.isNotBlank(roleId) && Strings.isNotBlank(treeNodeId)) {
+            if (StringUtils.isNotBlank(roleId) && StringUtils.isNotBlank(treeNodeId)) {
                 Map<String, Object> params = new HashMap<>();
                 params.put("roleId", roleId);
                 params.put("treeNodeId", treeNodeId);

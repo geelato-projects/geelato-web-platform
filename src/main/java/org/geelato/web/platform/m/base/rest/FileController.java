@@ -32,14 +32,11 @@ import java.util.Random;
 @RequestMapping(value = "/api/file/")
 public class FileController extends BaseController {
 
+    private static final Logger logger = LoggerFactory.getLogger(FileController.class);
     @Value(value = "${geelato.file.root.path}")
     protected String fileRootPath;
-
-    private SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmm");
-    private Random random = new Random();
-
-
-    private static Logger logger = LoggerFactory.getLogger(FileController.class);
+    private final SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmm");
+    private final Random random = new Random();
 
     /**
      * 处理文件上传
@@ -49,13 +46,13 @@ public class FileController extends BaseController {
     @RequestMapping(value = "/upload", method = RequestMethod.POST)
     @ResponseBody
     public ApiResult uploadFile(@RequestParam("file") MultipartFile file,
-                                    HttpServletRequest request) {
+                                HttpServletRequest request) {
         String contentType = file.getContentType();
         String originalFilename = file.getOriginalFilename();
         String relativePath = sdf.format(new Date());
-        String filePath = this.fileRootPath +"\\upload\\"+ relativePath + "\\";
-        String fileType = originalFilename.substring(originalFilename.lastIndexOf(".")+1);
-        String savedFileName = System.currentTimeMillis() + "" + random.nextInt(9)+ random.nextInt(9)+"."+fileType;
+        String filePath = this.fileRootPath + "\\upload\\" + relativePath + "\\";
+        String fileType = originalFilename.substring(originalFilename.lastIndexOf(".") + 1);
+        String savedFileName = System.currentTimeMillis() + "" + random.nextInt(9) + random.nextInt(9) + "." + fileType;
 
 
         ApiResult apiResult = new ApiResult();
@@ -64,7 +61,7 @@ public class FileController extends BaseController {
             saveToFileSystem(file.getBytes(), filePath, savedFileName);
             // TODO 事务
             FileInfo fileInfo = new FileInfo();
-            fileInfo.setName(originalFilename.substring(0,originalFilename.lastIndexOf(".")));
+            fileInfo.setName(originalFilename.substring(0, originalFilename.lastIndexOf(".")));
             fileInfo.setSavedName(savedFileName);
             fileInfo.setRelativePath(relativePath);
             fileInfo.setFileType(fileType);
@@ -82,6 +79,7 @@ public class FileController extends BaseController {
     }
 
     /**
+     *
      */
     private void saveToFileSystem(byte[] file, String filePath, String fileName) throws IOException {
         File targetFile = new File(filePath);

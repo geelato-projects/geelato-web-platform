@@ -14,6 +14,19 @@ public class Base64Info {
     private File file;
     private String remark;
 
+    public static Base64Info getBase64InfoByAttach(Attach attach) {
+        Base64Info info = new Base64Info();
+        if (attach != null) {
+            info.setId(attach.getId());
+            info.setName(attach.getName());
+            info.setType(attach.getType());
+            info.setSize(attach.getSize());
+            File aFile = new File(attach.getPath());
+            info.setFile((aFile != null && aFile.exists()) ? aFile : null);
+        }
+        return info;
+    }
+
     public String getId() {
         return id;
     }
@@ -68,18 +81,5 @@ public class Base64Info {
 
     public void setRemark(String remark) {
         this.remark = remark;
-    }
-
-    public static Base64Info getBase64InfoByAttach(Attach attach) {
-        Base64Info info = new Base64Info();
-        if (attach != null) {
-            info.setId(attach.getId());
-            info.setName(attach.getName());
-            info.setType(attach.getType());
-            info.setSize(attach.getSize());
-            File aFile = new File(attach.getPath());
-            info.setFile((aFile != null && aFile.exists()) ? aFile : null);
-        }
-        return info;
     }
 }

@@ -27,15 +27,11 @@ public class AccountService {
     public static final String HASH_ALGORITHM = "SHA-1";
     public static final int HASH_INTERATIONS = 1024;
     private static final int SALT_SIZE = 8;
-
-
-    private Dao dao;
+    //    private static AccountService ref;
+    private final CacheChannel cache = J2Cache.getChannel();
     @Autowired
     protected RuleService ruleService;
-//    private static AccountService ref;
-
-    private CacheChannel cache = J2Cache.getChannel();
-
+    private Dao dao;
 
     public User findUserByLoginName(String loginName) {
         return dao.queryForObject(User.class, "loginName", loginName);
@@ -52,13 +48,13 @@ public class AccountService {
         }
         dao.save(user);
 
-        //注册之后自动登录
+        // 注册之后自动登录
         UsernamePasswordToken token = new UsernamePasswordToken();
         token.setUsername(user.getLoginName());
         token.setPassword(user.getPlainPassword().toCharArray());
         SecurityUtils.getSubject().login(token);
 
-        //更新Shiro中当前用户的用户名.
+        // 更新Shiro中当前用户的用户名.
         SecurityHelper.getCurrentUser().name = user.getName();
     }
 
@@ -82,7 +78,7 @@ public class AccountService {
     public Map wrapUser(User user) {
         HashMap map = new HashMap(3);
         map.put("user", user);
-        CacheObject userConfigCacheObject = cache.get("config", user.getId().toString(), null);
+        CacheObject userConfigCacheObject = cache.get("config", user.getId(), null);
         HashMap userConfig = new HashMap();
         if (userConfigCacheObject.getValue() != null) {
             List<Map<String, Object>> list = (List<Map<String, Object>>) userConfigCacheObject.getValue();
@@ -92,7 +88,7 @@ public class AccountService {
         }
         map.put("userConfig", userConfig);
 
-        CacheObject commonConfigCacheObject = cache.get("config", user.getId().toString(), null);
+        CacheObject commonConfigCacheObject = cache.get("config", user.getId(), null);
         HashMap commonConfig = new HashMap();
         if (userConfigCacheObject.getValue() != null) {
             List<Map<String, Object>> list = (List<Map<String, Object>>) commonConfigCacheObject.getValue();

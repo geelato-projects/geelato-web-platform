@@ -1,6 +1,6 @@
 package org.geelato.web.platform.enums;
 
-import org.apache.logging.log4j.util.Strings;
+import org.geelato.utils.StringUtils;
 
 /**
  * @author diabl
@@ -21,7 +21,7 @@ public enum EncodingItemTypeEnum {
     }
 
     public static String getLabel(String value) {
-        if (Strings.isNotBlank(value)) {
+        if (StringUtils.isNotBlank(value)) {
             for (EncodingItemTypeEnum enums : EncodingItemTypeEnum.values()) {
                 if (enums.getValue().equals(value)) {
                     return enums.getLabel();

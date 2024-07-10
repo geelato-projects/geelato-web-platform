@@ -9,5 +9,5 @@ public enum AuthCodeAction {
     VALIDATEUSER,
     UPDATEMOBILE,
     UPDATEEMAIL,
-    UPDATEPASSWORD;
+    UPDATEPASSWORD
 }

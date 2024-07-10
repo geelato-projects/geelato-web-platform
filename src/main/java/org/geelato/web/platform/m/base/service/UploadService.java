@@ -1,7 +1,7 @@
 package org.geelato.web.platform.m.base.service;
 
-import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.Ctx;
+import org.geelato.utils.StringUtils;
 import org.geelato.utils.UIDGenerator;
 import org.geelato.web.platform.enums.AttachmentSourceEnum;
 import org.geelato.web.platform.m.base.entity.Attach;
@@ -19,11 +19,11 @@ import java.util.Date;
  */
 @Component
 public class UploadService {
-    private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
     public static final String ROOT_DIRECTORY = "upload";
     public static final String ROOT_CONFIG_DIRECTORY = "/upload/config";
     public static final String ROOT_CONVERT_DIRECTORY = "/upload/convert";
     public static final String ROOT_CONFIG_SUFFIX = ".config";
+    private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
 
     /**
      * 返回文件上传绝对路径
@@ -35,7 +35,7 @@ public class UploadService {
      */
     public static String getSavePath(String subPath, String fileName, boolean isRename) {
         // 处理子路径
-        if (Strings.isNotBlank(subPath)) {
+        if (StringUtils.isNotBlank(subPath)) {
             subPath += "/";
         } else {
             subPath = "";
@@ -73,8 +73,8 @@ public class UploadService {
      */
     public static String getSavePath(String subPath, String tenantCode, String appId, String fileName, boolean isRename) {
         String rootPath = subPath;
-        tenantCode = Strings.isNotBlank(tenantCode) ? tenantCode : Ctx.getCurrentTenantCode();
-        if (Strings.isNotBlank(appId) && Strings.isNotBlank(tenantCode)) {
+        tenantCode = StringUtils.isNotBlank(tenantCode) ? tenantCode : Ctx.getCurrentTenantCode();
+        if (StringUtils.isNotBlank(appId) && StringUtils.isNotBlank(tenantCode)) {
             rootPath = String.format("%s/%s/%s", subPath, tenantCode, appId);
         }
 
@@ -125,7 +125,7 @@ public class UploadService {
      * @param path
      */
     public static void fileMkdirs(String path) {
-        if (Strings.isNotBlank(path)) {
+        if (StringUtils.isNotBlank(path)) {
             File pathFile = new File(path);
             if (!pathFile.exists()) {
                 pathFile.mkdirs();
@@ -140,7 +140,7 @@ public class UploadService {
      * @return
      */
     public static String getFileExtension(String fileName) {
-        if (Strings.isNotBlank(fileName)) {
+        if (StringUtils.isNotBlank(fileName)) {
             int lastIndexOfDot = fileName.lastIndexOf('.');
             if (lastIndexOfDot != -1) {
                 return fileName.substring(lastIndexOfDot);
@@ -151,7 +151,7 @@ public class UploadService {
     }
 
     public static String getFileName(String fileName) {
-        if (Strings.isNotBlank(fileName)) {
+        if (StringUtils.isNotBlank(fileName)) {
             int lastIndexOfDot = fileName.lastIndexOf('.');
             if (lastIndexOfDot != -1) {
                 return fileName.substring(0, lastIndexOfDot);
@@ -170,7 +170,7 @@ public class UploadService {
      */
     public static boolean fileResetName(File file, String fileName) {
         if (file != null && file.exists()) {
-            if (Strings.isBlank(fileName)) {
+            if (StringUtils.isBlank(fileName)) {
                 fileName = String.format("%s_bak_%s%s", UploadService.getFileName(file.getName()), sdf.format(new Date()), UploadService.getFileExtension(file.getName()));
             }
             File newFile = new File(String.format("%s/%s", file.getParent(), fileName));

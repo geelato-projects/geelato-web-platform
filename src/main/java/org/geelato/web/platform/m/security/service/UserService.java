@@ -2,12 +2,12 @@ package org.geelato.web.platform.m.security.service;
 
 import com.alibaba.fastjson2.JSON;
 import org.apache.commons.collections4.map.HashedMap;
-import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.enums.EnableStatusEnum;
 import org.geelato.core.gql.parser.FilterGroup;
 import org.geelato.core.gql.parser.PageQueryRequest;
+import org.geelato.utils.StringUtils;
 import org.geelato.web.platform.enums.IsDefaultOrgEnum;
 import org.geelato.web.platform.m.base.service.BaseSortableService;
 import org.geelato.web.platform.m.security.entity.*;
@@ -92,7 +92,7 @@ public class UserService extends BaseSortableService {
             }
         }
         String orgId = String.valueOf(model.getOrgId());
-        if (!isExit && Strings.isNotBlank(orgId)) {
+        if (!isExit && StringUtils.isNotBlank(orgId)) {
             OrgUserMap oModel = new OrgUserMap();
             oModel.setUserId(model.getId());
             oModel.setUserName(model.getName());
@@ -172,7 +172,7 @@ public class UserService extends BaseSortableService {
 
     public ApiResult sendMessage(User user, String type, String message) {
         ApiResult result = new ApiResult();
-        if (Strings.isNotBlank(message)) {
+        if (StringUtils.isNotBlank(message)) {
             user.setPlainPassword(message);
             return sendMessage(user, type);
         } else {
@@ -187,7 +187,7 @@ public class UserService extends BaseSortableService {
             return result.error().setMsg("请选择发送方式，短信或邮件！");
         }
         if (types.contains("phone")) {
-            if (Strings.isNotBlank(user.getMobilePhone())) {
+            if (StringUtils.isNotBlank(user.getMobilePhone())) {
                 boolean pushSuccess = sendMobile(user.getMobilePrefix(), user.getMobilePhone(), user.getName(), user.getPlainPassword());
                 if (!pushSuccess) {
                     return result.error().setMsg("短信发送失败，请重试！");
@@ -197,7 +197,7 @@ public class UserService extends BaseSortableService {
             }
         }
         if (types.contains("email")) {
-            if (Strings.isNotBlank(user.getEmail())) {
+            if (StringUtils.isNotBlank(user.getEmail())) {
                 String text = String.format("尊敬的 %s 用户，您的密码已经设置为 %s ，请及时登录并修改密码。", user.getName(), user.getPlainPassword());
                 boolean pushSuccess = emailService.sendHtmlMail(user.getEmail(), "Reset User Password", text);
                 if (!pushSuccess) {
@@ -213,7 +213,7 @@ public class UserService extends BaseSortableService {
 
     public boolean sendMobile(String mobilePrefix, String mobilePhone, String name, String password) {
         String phoneNumbers = mobilePhone;
-        if (Strings.isNotBlank(mobilePrefix) && !"+86".equals(mobilePrefix)) {
+        if (StringUtils.isNotBlank(mobilePrefix) && !"+86".equals(mobilePrefix)) {
             phoneNumbers = mobilePrefix + phoneNumbers;
         }
         if (!CHINESE_PATTERN.matcher(name).matches()) {
@@ -233,7 +233,7 @@ public class UserService extends BaseSortableService {
 
     public List<String> getSendType(String type) {
         List<String> list = new ArrayList<>();
-        if (Strings.isNotBlank(type)) {
+        if (StringUtils.isNotBlank(type)) {
             String[] typeStr = type.split(",");
             for (int i = 0; i < typeStr.length; i++) {
                 if ("phone".equalsIgnoreCase(typeStr[i]) || "email".equalsIgnoreCase(typeStr[i])) {

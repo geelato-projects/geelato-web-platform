@@ -1,9 +1,9 @@
 package org.geelato.web.platform.m.base.service;
 
-import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.gql.parser.FilterGroup;
 import org.geelato.core.meta.model.connect.ConnectMeta;
+import org.geelato.utils.StringUtils;
 import org.geelato.web.platform.m.base.entity.App;
 import org.geelato.web.platform.m.base.entity.AppConnectMap;
 import org.geelato.web.platform.m.model.service.DevDbConnectService;
@@ -29,12 +29,12 @@ public class AppConnectMapService extends BaseService {
 
     public List<AppConnectMap> queryModelByIds(String connectId, String appId) {
         List<AppConnectMap> list = new ArrayList<>();
-        if (Strings.isNotBlank(connectId) || Strings.isNotBlank(appId)) {
+        if (StringUtils.isNotBlank(connectId) || StringUtils.isNotBlank(appId)) {
             FilterGroup filter = new FilterGroup();
-            if (Strings.isNotBlank(connectId)) {
+            if (StringUtils.isNotBlank(connectId)) {
                 filter.addFilter("connectId", FilterGroup.Operator.in, connectId);
             }
-            if (Strings.isNotBlank(appId)) {
+            if (StringUtils.isNotBlank(appId)) {
                 filter.addFilter("appId", FilterGroup.Operator.in, appId);
             }
             list = this.queryModel(AppConnectMap.class, filter);

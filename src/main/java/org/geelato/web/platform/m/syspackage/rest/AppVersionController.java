@@ -3,7 +3,6 @@ package org.geelato.web.platform.m.syspackage.rest;
 import com.alibaba.fastjson2.JSONObject;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
-import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiErrorMsg;
@@ -135,7 +134,7 @@ public class AppVersionController extends BaseController {
         ApiResult result = new ApiResult();
         try {
             // ID为空方可插入
-            if (Strings.isNotBlank(form.getId())) {
+            if (StringUtils.isNotBlank(form.getId())) {
                 result.setData(appVersionService.updateModel(form));
             } else {
                 result.setData(appVersionService.createModel(form));

@@ -8,19 +8,18 @@ import org.geelato.core.meta.model.entity.BaseSortableEntity;
 /**
  * @author geemeta
  */
-@Entity( name = "platform_component_meta")
+@Entity(name = "platform_component_meta")
 @Title(title = "组件元数据")
 public class ComponentMeta extends BaseSortableEntity {
 
+    public int publicStatus;
     private String title;
     private String packageName;
     private String alias;
     private String group;
     private String SettingDisplayMode;
     private String SettingPanels;
-
     private String thumbnail;
-    public int publicStatus;
     private String ComponentName;
 
     private String metaContent;
@@ -141,7 +140,7 @@ public class ComponentMeta extends BaseSortableEntity {
         this.cssFiles = cssFiles;
     }
 
-    @Title(title = "vue单文件组件内容",description = "适用于一些简单一些的，单Vue文件组件")
+    @Title(title = "vue单文件组件内容", description = "适用于一些简单一些的，单Vue文件组件")
     public String getVueContent() {
         return vueContent;
     }

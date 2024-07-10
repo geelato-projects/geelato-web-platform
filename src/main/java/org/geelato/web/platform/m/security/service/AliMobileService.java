@@ -1,12 +1,12 @@
 package org.geelato.web.platform.m.security.service;
 
 import com.alibaba.fastjson2.JSON;
-import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.constants.ColumnDefault;
 import org.geelato.core.enums.DeleteStatusEnum;
 import org.geelato.core.enums.EnableStatusEnum;
 import org.geelato.core.gql.parser.FilterGroup;
 import org.geelato.core.orm.Dao;
+import org.geelato.utils.StringUtils;
 import org.geelato.web.platform.m.base.entity.SysConfig;
 import org.geelato.web.platform.m.base.service.SysConfigService;
 import org.geelato.web.platform.m.security.entity.AliMobile;
@@ -26,7 +26,6 @@ import java.util.Map;
  */
 @Component
 public class AliMobileService {
-    private final Logger logger = LoggerFactory.getLogger(AliMobileService.class);
     // private static final String SIGN_NAME = "深圳海桥物流";// 阿里云短信测试
     // private static final String TEMPLATE_CODE = "SMS_465430460";// SMS_154950909
     private static final int SEND_SMS_RESPONSE_STATUS_CODE = 200;
@@ -35,7 +34,7 @@ public class AliMobileService {
     private static final String CONFIG_KEY_ACCESS_KEY_ID = "mobileAccessKeyId";
     private static final String CONFIG_KEY_ACCESS_KEY_SECRET = "mobileAccessKeySecret";
     private static final String CONFIG_KEY_SECURITY_TOKEN = "mobileSecurityToken";
-
+    private final Logger logger = LoggerFactory.getLogger(AliMobileService.class);
     @Autowired
     @Qualifier("primaryDao")
     public Dao dao;
@@ -100,7 +99,7 @@ public class AliMobileService {
         com.aliyun.dysmsapi20170525.models.SendSmsResponse resp = client.sendSmsWithOptions(sendSmsRequest, runtime);
         com.aliyun.teaconsole.Client.log(com.aliyun.teautil.Common.toJSONString(resp));
         if (resp.getStatusCode() == SEND_SMS_RESPONSE_STATUS_CODE) {
-            if (Strings.isNotBlank(resp.getBody().getCode()) && SEND_SMS_RESPONSE_BODY_CODE.equals(resp.getBody().getCode().toUpperCase(Locale.ENGLISH))) {
+            if (StringUtils.isNotBlank(resp.getBody().getCode()) && SEND_SMS_RESPONSE_BODY_CODE.equals(resp.getBody().getCode().toUpperCase(Locale.ENGLISH))) {
                 logger.info("短信发送成功！" + phoneNumbers);
                 return true;
             }
@@ -131,7 +130,7 @@ public class AliMobileService {
         // 填充
         if (sysConfigs != null && sysConfigs.size() > 0) {
             for (SysConfig config : sysConfigs) {
-                if (config == null || Strings.isBlank(config.getConfigKey())) {
+                if (config == null || StringUtils.isBlank(config.getConfigKey())) {
                     continue;
                 }
                 config.afterSet();
@@ -154,8 +153,8 @@ public class AliMobileService {
             }
         }
         // 校验
-        if (Strings.isBlank(aliMobile.getSignName()) || Strings.isBlank(aliMobile.getTemplateCode()) ||
-                Strings.isBlank(aliMobile.getAccessKeyId()) || Strings.isBlank(aliMobile.getAccessKeySecret())) {
+        if (StringUtils.isBlank(aliMobile.getSignName()) || StringUtils.isBlank(aliMobile.getTemplateCode()) ||
+                StringUtils.isBlank(aliMobile.getAccessKeyId()) || StringUtils.isBlank(aliMobile.getAccessKeySecret())) {
             throw new RuntimeException("短信模板需要的参数缺失。");
         }
 

@@ -29,7 +29,7 @@ import java.util.Properties;
 
 // 在繼承的类中编写该注解
 //@SpringBootApplication
-@ComponentScan(basePackages = {"org.geelato","cn.geelato"})
+@ComponentScan(basePackages = {"org.geelato", "cn.geelato"})
 public class BootApplication implements CommandLineRunner, InitializingBean {
     private static final Logger logger = LoggerFactory.getLogger(BootApplication.class);
     @Autowired
@@ -90,7 +90,6 @@ public class BootApplication implements CommandLineRunner, InitializingBean {
     }
 
 
-
     private void initDataSource() {
 //        DataSourceManager.singleInstance().parseDataSourceMeta(this.dao);
     }
@@ -124,16 +123,17 @@ public class BootApplication implements CommandLineRunner, InitializingBean {
     }
 
 
-
     private void initClassPackageMeta() {
         String[] packageNames = getProperty("geelato.meta.scan-package-names", "cn.geelato").split(",");
         for (String packageName : packageNames) {
             MetaManager.singleInstance().scanAndParse(packageName, false);
         }
     }
+
     private void initDataBaseMeta() {
         MetaManager.singleInstance().parseDBMeta(dao);
     }
+
     private void resolveSqlScript(String... args) throws IOException {
         if (this.getClass().getClassLoader() == null || this.getClass().getClassLoader().getResource("//") == null) {
             initFromFatJar();
@@ -142,18 +142,18 @@ public class BootApplication implements CommandLineRunner, InitializingBean {
         }
     }
 
-    public void initEnvironment(){
+    public void initEnvironment() {
         EnvManager.singleInstance().SetDao(dao);
         EnvManager.singleInstance().EnvInit();
     }
+
     /**
      * 配置文件不打包在jar包中运行，可基于文件系统加载配置文件
-     *
      */
     protected void initFromExploreFile(String... args) throws IOException {
-        //String path =applicationContext.getEnvironment().getProperty("geelato.res.path").trim();
+        // String path =applicationContext.getEnvironment().getProperty("geelato.res.path").trim();
         String path = this.getClass().getClassLoader().getResource("//").getPath();
-        //由测试类启动时，修改资源目录为源码下的资源目录
+        // 由测试类启动时，修改资源目录为源码下的资源目录
         path = path.replace("test-classes", "classes");
         //--1、sql
         SqlScriptManagerFactory.get(Dao.SQL_TEMPLATE_MANAGER).loadFiles(path + "/geelato/web/platform/sql/");
@@ -183,7 +183,6 @@ public class BootApplication implements CommandLineRunner, InitializingBean {
 
     /**
      * 打包成单个fatJar文件运行时，加载的资源不能采用文件系统加载，需采用流的方式加载
-     *
      */
     protected void initFromFatJar() throws IOException {
         //--1、sql

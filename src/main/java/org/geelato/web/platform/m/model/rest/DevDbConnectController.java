@@ -1,7 +1,6 @@
 package org.geelato.web.platform.m.model.rest;
 
 import jakarta.servlet.http.HttpServletRequest;
-import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiErrorMsg;
@@ -10,6 +9,7 @@ import org.geelato.core.gql.parser.FilterGroup;
 import org.geelato.core.gql.parser.PageQueryRequest;
 import org.geelato.core.meta.model.connect.ConnectMeta;
 import org.geelato.core.util.ConnectUtils;
+import org.geelato.utils.StringUtils;
 import org.geelato.web.platform.m.base.rest.BaseController;
 import org.geelato.web.platform.m.model.service.DevDbConnectService;
 import org.slf4j.Logger;
@@ -95,7 +95,7 @@ public class DevDbConnectController extends BaseController {
     public ApiResult createOrUpdate(@RequestBody ConnectMeta form) {
         ApiResult result = new ApiResult<>();
         try {
-            if (Strings.isNotBlank(form.getId())) {
+            if (StringUtils.isNotBlank(form.getId())) {
                 result.setData(devDbConnectService.updateModel(form));
             } else {
                 result.setData(devDbConnectService.createModel(form));

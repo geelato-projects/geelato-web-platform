@@ -2,7 +2,6 @@ package org.geelato.web.platform.m.security.rest;
 
 import com.alibaba.fastjson2.JSON;
 import jakarta.servlet.http.HttpServletRequest;
-import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiErrorMsg;
@@ -10,6 +9,7 @@ import org.geelato.core.constants.ApiResultStatus;
 import org.geelato.core.enums.DeleteStatusEnum;
 import org.geelato.core.gql.parser.FilterGroup;
 import org.geelato.core.gql.parser.PageQueryRequest;
+import org.geelato.utils.StringUtils;
 import org.geelato.utils.UUIDUtils;
 import org.geelato.web.platform.m.base.rest.BaseController;
 import org.geelato.web.platform.m.security.entity.DataItems;
@@ -40,7 +40,7 @@ public class UserRestController extends BaseController {
 
     static {
         OPERATORMAP.put("contains", Arrays.asList("name", "loginName", "orgName", "description"));
-        OPERATORMAP.put("consists", Arrays.asList("orgId"));
+        OPERATORMAP.put("consists", List.of("orgId"));
         OPERATORMAP.put("intervals", Arrays.asList("createAt", "updateAt"));
     }
 
@@ -147,7 +147,7 @@ public class UserRestController extends BaseController {
             // 组织
             setUserOrg(form);
             // 组织ID为空方可插入
-            if (Strings.isNotBlank(form.getId())) {
+            if (StringUtils.isNotBlank(form.getId())) {
                 // 组织存在，方可更新
                 User user = userService.getModel(CLAZZ, form.getId());
                 if (user != null) {
@@ -183,7 +183,7 @@ public class UserRestController extends BaseController {
         ApiResult result = new ApiResult();
         try {
             User uMap = new User();
-            if (Strings.isNotBlank(form.getLoginName())) {
+            if (StringUtils.isNotBlank(form.getLoginName())) {
                 Map<String, Object> params = new HashMap<>();
                 params.put("loginName", form.getLoginName());
                 List<User> users = userService.queryModel(User.class, params);
@@ -216,7 +216,7 @@ public class UserRestController extends BaseController {
     }
 
     private void setUserOrg(User form) {
-        if (Strings.isNotBlank(form.getOrgId())) {
+        if (StringUtils.isNotBlank(form.getOrgId())) {
             Org oForm = orgService.getModel(Org.class, form.getOrgId());
             if (oForm != null) {
                 form.setOrgName(oForm.getName());
@@ -227,7 +227,7 @@ public class UserRestController extends BaseController {
                 form.setOrgId(null);
             }
         }
-        if (Strings.isBlank(form.getOrgId())) {
+        if (StringUtils.isBlank(form.getOrgId())) {
             form.setOrgId(null);
             form.setOrgName(null);
             form.setBuId(null);
@@ -240,7 +240,7 @@ public class UserRestController extends BaseController {
     public ApiResult resetPassword(@PathVariable(required = true) String id) {
         ApiResult result = new ApiResult();
         try {
-            if (Strings.isNotBlank(id)) {
+            if (StringUtils.isNotBlank(id)) {
                 User user = userService.getModel(CLAZZ, id);
                 Assert.notNull(user, ApiErrorMsg.IS_NULL);
                 user.setPlainPassword(UUIDUtils.generatePassword(DEFAULT_PASSWORD_DIGIT));
@@ -263,7 +263,7 @@ public class UserRestController extends BaseController {
     public ApiResult resetPush(@PathVariable(required = true) String id, String type) {
         ApiResult result = new ApiResult();
         try {
-            if (Strings.isNotBlank(id)) {
+            if (StringUtils.isNotBlank(id)) {
                 User user = userService.getModel(CLAZZ, id);
                 Assert.notNull(user, ApiErrorMsg.IS_NULL);
                 user.setPlainPassword(UUIDUtils.generatePassword(DEFAULT_PASSWORD_DIGIT));
@@ -290,7 +290,7 @@ public class UserRestController extends BaseController {
     public ApiResult sendMessage(@PathVariable(required = true) String id, String type, String message) {
         ApiResult result = new ApiResult();
         try {
-            if (Strings.isNotBlank(id)) {
+            if (StringUtils.isNotBlank(id)) {
                 User user = userService.getModel(CLAZZ, id);
                 Assert.notNull(user, ApiErrorMsg.IS_NULL);
                 result = userService.sendMessage(user, type, message);
@@ -327,7 +327,7 @@ public class UserRestController extends BaseController {
     public ApiResult validate(@PathVariable(required = true) String type, @RequestBody User form) {
         ApiResult result = new ApiResult();
         try {
-            if (Strings.isNotBlank(type)) {
+            if (StringUtils.isNotBlank(type)) {
                 Map<String, String> params = new HashMap<>();
                 if ("loginName".equalsIgnoreCase(type)) {
                     params.put("login_name", form.getLoginName());
@@ -361,7 +361,7 @@ public class UserRestController extends BaseController {
         ApiResult result = new ApiResult();
         try {
             User user = userService.getModel(User.class, id);
-            if (user != null && Strings.isNotBlank(user.getOrgId())) {
+            if (user != null && StringUtils.isNotBlank(user.getOrgId())) {
                 result.setData(orgService.getCompany(user.getOrgId()));
             }
         } catch (Exception e) {
@@ -380,7 +380,7 @@ public class UserRestController extends BaseController {
             List<User> users = userService.queryModel(User.class, new HashMap<>());
             if (users != null && users.size() > 0) {
                 for (User user : users) {
-                    if (Strings.isNotBlank(user.getOrgId())) {
+                    if (StringUtils.isNotBlank(user.getOrgId())) {
                         Org org = orgService.getCompany(user.getOrgId());
                         user.setBuId(org.getId());
                         user.setDeptId(user.getOrgId());

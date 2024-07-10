@@ -1,6 +1,5 @@
 package org.geelato.web.platform.m.model.service;
 
-import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.constants.ColumnDefault;
 import org.geelato.core.constants.MetaDaoSql;
@@ -9,6 +8,7 @@ import org.geelato.core.meta.model.entity.TableMeta;
 import org.geelato.core.meta.model.field.ColumnMeta;
 import org.geelato.core.meta.schema.SchemaTable;
 import org.geelato.utils.SchemaUtils;
+import org.geelato.utils.StringUtils;
 import org.geelato.web.platform.m.base.service.BaseSortableService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -109,7 +109,7 @@ public class DevTableService extends BaseSortableService {
             form.setTableName(form.getEntityName());
         }
         // 修正当前表
-        //form.setDescription(String.format("update %s from %s[%s]。\n", sdf.format(new Date()), model.getTitle(), model.getEntityName()) + form.getDescription());
+        // form.setDescription(String.format("update %s from %s[%s]。\n", sdf.format(new Date()), model.getTitle(), model.getEntityName()) + form.getDescription());
         // 备份原来的表
         model.setId(null);
         model.setLinked(LinkedEnum.NO.getValue());
@@ -122,7 +122,7 @@ public class DevTableService extends BaseSortableService {
         model.setDelStatus(DeleteStatusEnum.IS.getCode());
         model.setDeleteAt(new Date());
         model.setSeqNo(ColumnDefault.SEQ_NO_DELETE);
-        //dao.save(model);
+        // dao.save(model);
         // 数据库表修正
         sqlParams.put("newEntityName", form.getEntityName());// 新
         sqlParams.put("entityName", model.getEntityName());// 旧
@@ -146,7 +146,7 @@ public class DevTableService extends BaseSortableService {
         // 格式：table_name_20230625141315
         String newTableName = String.format("%s_d%s", model.getEntityName(), System.currentTimeMillis());
         String newTitle = DELETE_COMMENT_PREFIX + model.getTitle();
-        String newComment = DELETE_COMMENT_PREFIX + (Strings.isNotBlank(model.getTableComment()) ? model.getTableComment() : model.getTitle());
+        String newComment = DELETE_COMMENT_PREFIX + (StringUtils.isNotBlank(model.getTableComment()) ? model.getTableComment() : model.getTitle());
         // delete 2023-06-25 13:14:15 用户[user]=>[user_2023...]。
         String newDescription = String.format("delete %s %s[%s]=>[%s]。\n", sdf.format(new Date()), model.getTitle(), model.getEntityName(), newTableName) + model.getDescription();
         // 数据表处理
@@ -194,7 +194,7 @@ public class DevTableService extends BaseSortableService {
      */
     private List<Map<String, Object>> queryInformationSchemaTables(String tableName) {
         List<Map<String, Object>> tableList = new ArrayList<>();
-        if (Strings.isNotBlank(tableName)) {
+        if (StringUtils.isNotBlank(tableName)) {
             String tableSql = String.format(MetaDaoSql.INFORMATION_SCHEMA_TABLES, MetaDaoSql.TABLE_SCHEMA_METHOD, " AND TABLE_NAME='" + tableName + "'");
             logger.info(tableSql);
             tableList = dao.getJdbcTemplate().queryForList(tableSql);
@@ -202,20 +202,28 @@ public class DevTableService extends BaseSortableService {
         return tableList;
     }
 
-    public TableMeta copyTable(String tableId,String title, String entityName, String connectId,String tableComment,String appId,String tenantCode) {
+    public TableMeta copyTable(String tableId, String title, String entityName, String connectId, String tableComment, String appId, String tenantCode) {
         // 源模型
         TableMeta form = this.getModel(TableMeta.class, tableId);
         Assert.notNull(form, ApiErrorMsg.IS_NULL);
-        title = Strings.isBlank(title) ? form.getTitle() : title;
+        title = StringUtils.isBlank(title) ? form.getTitle() : title;
         // 新模型
         form.setId(null);
         form.setEntityName(entityName);
         form.setTitle(title);
         form.setTableName(null);
-        if (Strings.isNotBlank(connectId)){form.setConnectId(connectId);}
-        if (Strings.isNotBlank(tableComment)){form.setTableComment(tableComment);}
-        if (Strings.isNotBlank(appId)){form.setAppId(appId);}
-        if (Strings.isNotBlank(tenantCode)){form.setTenantCode(tenantCode);}
+        if (StringUtils.isNotBlank(connectId)) {
+            form.setConnectId(connectId);
+        }
+        if (StringUtils.isNotBlank(tableComment)) {
+            form.setTableComment(tableComment);
+        }
+        if (StringUtils.isNotBlank(appId)) {
+            form.setAppId(appId);
+        }
+        if (StringUtils.isNotBlank(tenantCode)) {
+            form.setTenantCode(tenantCode);
+        }
         form.setSynced(ColumnSyncedEnum.FALSE.getValue());
         form.setSourceType(TableSourceTypeEnum.CREATION.getValue());
         form.setPackBusData(0);

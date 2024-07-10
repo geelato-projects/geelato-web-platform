@@ -3,10 +3,10 @@ package org.geelato.web.platform.m.security.rest;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.meta.annotation.IgnoreJWTVerify;
+import org.geelato.utils.StringUtils;
 import org.geelato.web.platform.enums.ValidTypeEnum;
 import org.geelato.web.platform.m.base.rest.BaseController;
 import org.geelato.web.platform.m.base.service.AttachService;
@@ -133,7 +133,7 @@ public class JWTAuthRestController extends BaseController {
         ApiResult result = new ApiResult();
         try {
             // 用户信息
-            if (Strings.isBlank(userId)) {
+            if (StringUtils.isBlank(userId)) {
                 return result.error().setMsg(ApiErrorMsg.OPERATE_FAIL);
             }
             User user = dao.queryForObject(User.class, userId);
@@ -167,7 +167,7 @@ public class JWTAuthRestController extends BaseController {
         ApiResult result = new ApiResult();
         try {
             // 用户信息
-            if (Strings.isBlank(userId)) {
+            if (StringUtils.isBlank(userId)) {
                 return result.error().setMsg(ApiErrorMsg.OPERATE_FAIL);
             }
             User user = dao.queryForObject(User.class, userId);
@@ -239,11 +239,11 @@ public class JWTAuthRestController extends BaseController {
         logger.info(String.format("当前用户菜单查询，用户：%s", (user != null ? String.format("%s（%s）", user.getName(), user.getLoginName()) : "")));
         String token = getToken(request);
         logger.info(String.format("当前用户菜单查询，Token：%s", token));
-        if (user == null || Strings.isBlank(token)) {
+        if (user == null || StringUtils.isBlank(token)) {
             return result;
         }
         // 用户与租户比对
-        if (Strings.isNotBlank(tenantCode) && !tenantCode.equalsIgnoreCase(user.getTenantCode())) {
+        if (StringUtils.isNotBlank(tenantCode) && !tenantCode.equalsIgnoreCase(user.getTenantCode())) {
             logger.info(String.format("当前用户菜单查询，租户不一致：User=>%s | %s", user.getTenantCode(), tenantCode));
             return result;
         } else {
@@ -251,7 +251,7 @@ public class JWTAuthRestController extends BaseController {
         }
         logger.info(String.format("当前用户菜单查询，租户：%s；应用：%s", tenantCode, appId));
         // 菜单查询
-        if (Strings.isNotBlank(appId) && Strings.isNotBlank(tenantCode)) {
+        if (StringUtils.isNotBlank(appId) && StringUtils.isNotBlank(tenantCode)) {
             map.put("currentUser", user.getId());
             map.put("appId", appId);
             map.put("tenantCode", tenantCode);
@@ -288,12 +288,12 @@ public class JWTAuthRestController extends BaseController {
             BeanUtils.populate(form, params);
             Map<String, Object> map = new HashMap<>();
             String validLabel = ValidTypeEnum.getLabel(form.getValidType());
-            if (Strings.isBlank(form.getValidBox()) || Strings.isBlank(validLabel)) {
+            if (StringUtils.isBlank(form.getValidBox()) || StringUtils.isBlank(validLabel)) {
                 return result.error();
             }
             map.put(validLabel, form.getValidBox());
             if (ValidTypeEnum.MOBILE.getValue().equals(form.getValidType())) {
-                if (Strings.isBlank(form.getPrefix())) {
+                if (StringUtils.isBlank(form.getPrefix())) {
                     return result.error();
                 }
                 map.put("mobilePrefix", form.getPrefix());
@@ -321,7 +321,7 @@ public class JWTAuthRestController extends BaseController {
             ForgetPasswordParams form = new ForgetPasswordParams();
             BeanUtils.populate(form, params);
             // 用户、密码
-            if (Strings.isBlank(form.getUserId()) || Strings.isBlank(form.getPassword())) {
+            if (StringUtils.isBlank(form.getUserId()) || StringUtils.isBlank(form.getPassword())) {
                 return result.error().setMsg(ApiErrorMsg.PARAMETER_MISSING);
             }
             // 验证码
@@ -351,7 +351,7 @@ public class JWTAuthRestController extends BaseController {
             AuthCodeParams form = new AuthCodeParams();
             BeanUtils.populate(form, params);
             // 用户、密码
-            if (Strings.isBlank(form.getValidType()) || Strings.isBlank(form.getUserId()) || Strings.isBlank(form.getAuthCode())) {
+            if (StringUtils.isBlank(form.getValidType()) || StringUtils.isBlank(form.getUserId()) || StringUtils.isBlank(form.getAuthCode())) {
                 return result.error().setMsg(ApiErrorMsg.PARAMETER_MISSING);
             }
             // 用户验证
@@ -359,7 +359,7 @@ public class JWTAuthRestController extends BaseController {
             Assert.notNull(user, ApiErrorMsg.IS_NULL);
             // 验证方式：密码、手机、邮箱
             if (ValidTypeEnum.PASSWORD.getValue().equals(form.getValidType())) {
-                if (Strings.isNotBlank(user.getPassword()) && Strings.isNotBlank(user.getSalt())) {
+                if (StringUtils.isNotBlank(user.getPassword()) && StringUtils.isNotBlank(user.getSalt())) {
                     String pwd = accountService.entryptPassword(form.getAuthCode(), user.getSalt());
                     if (user.getPassword().equals(pwd)) {
                         return result.success();
@@ -395,7 +395,7 @@ public class JWTAuthRestController extends BaseController {
             AuthCodeParams form = new AuthCodeParams();
             BeanUtils.populate(form, params);
             // 用户、密码
-            if (Strings.isBlank(form.getValidType()) || Strings.isBlank(form.getUserId()) || Strings.isBlank(form.getAuthCode()) || Strings.isBlank(form.getValidBox())) {
+            if (StringUtils.isBlank(form.getValidType()) || StringUtils.isBlank(form.getUserId()) || StringUtils.isBlank(form.getAuthCode()) || StringUtils.isBlank(form.getValidBox())) {
                 return result.error().setMsg(ApiErrorMsg.PARAMETER_MISSING);
             }
             // 用户验证
@@ -460,10 +460,10 @@ public class JWTAuthRestController extends BaseController {
      * @param loginResult
      */
     private void setCompany(LoginResult loginResult) {
-        if (Strings.isNotBlank(loginResult.getCompanyId())) {
+        if (StringUtils.isNotBlank(loginResult.getCompanyId())) {
             Org org = orgService.getModel(Org.class, loginResult.getCompanyId());
             loginResult.setCompanyName(org.getName());
-        } else if (Strings.isNotBlank(loginResult.getOrgId())) {
+        } else if (StringUtils.isNotBlank(loginResult.getOrgId())) {
             Org org = orgService.getCompany(loginResult.getOrgId());
             if (org != null) {
                 loginResult.setCompanyId(org.getId());

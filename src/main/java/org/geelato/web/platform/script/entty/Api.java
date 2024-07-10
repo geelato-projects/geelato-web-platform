@@ -10,6 +10,7 @@ import org.geelato.core.meta.model.entity.BaseEntity;
 @Title(title = "服务接口")
 public class Api extends BaseEntity {
     private String release_content;
+
     @Col(name = "release_content", nullable = true)
     @Title(title = "服务脚本", description = "服务脚本")
     public String getRelease_content() {

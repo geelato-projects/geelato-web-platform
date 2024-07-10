@@ -1,7 +1,6 @@
 package org.geelato.web.platform.m.model.rest;
 
 import jakarta.servlet.http.HttpServletRequest;
-import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiErrorMsg;
@@ -9,6 +8,7 @@ import org.geelato.core.enums.EnableStatusEnum;
 import org.geelato.core.gql.parser.FilterGroup;
 import org.geelato.core.gql.parser.PageQueryRequest;
 import org.geelato.core.meta.model.entity.TableForeign;
+import org.geelato.utils.StringUtils;
 import org.geelato.web.platform.m.base.rest.BaseController;
 import org.geelato.web.platform.m.model.service.DevTableForeignService;
 import org.geelato.web.platform.m.security.entity.DataItems;
@@ -93,7 +93,7 @@ public class DevTableForeignController extends BaseController {
     public ApiResult createOrUpdate(@RequestBody TableForeign form) {
         ApiResult result = new ApiResult<>();
         try {
-            if (Strings.isNotBlank(form.getId())) {
+            if (StringUtils.isNotBlank(form.getId())) {
                 result.setData(devTableForeignService.updateModel(form));
             } else {
                 result.setData(devTableForeignService.createModel(form));

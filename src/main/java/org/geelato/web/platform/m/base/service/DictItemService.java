@@ -1,9 +1,9 @@
 package org.geelato.web.platform.m.base.service;
 
-import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.enums.DeleteStatusEnum;
 import org.geelato.core.enums.EnableStatusEnum;
+import org.geelato.utils.StringUtils;
 import org.geelato.web.platform.m.base.entity.DictItem;
 import org.springframework.stereotype.Component;
 
@@ -26,7 +26,7 @@ public class DictItemService extends BaseSortableService {
      * @param forms
      */
     public void batchCreateOrUpdate(String dictId, String parentId, List<DictItem> forms) {
-        if (Strings.isBlank(dictId)) {
+        if (StringUtils.isBlank(dictId)) {
             throw new RuntimeException(ApiErrorMsg.UPDATE_FAIL);
         }
         Map<String, Object> params = new HashMap<>();
@@ -56,9 +56,9 @@ public class DictItemService extends BaseSortableService {
             for (int i = 0; i < forms.size(); i++) {
                 DictItem item = forms.get(i);
                 item.setSeqNo(i + 1);
-                item.setDictId(Strings.isBlank(item.getDictId()) ? dictId : item.getDictId());
+                item.setDictId(StringUtils.isBlank(item.getDictId()) ? dictId : item.getDictId());
                 item.setDelStatus(DeleteStatusEnum.NO.getCode());
-                if (Strings.isBlank(item.getId()) && Strings.isBlank(item.getTenantCode())) {
+                if (StringUtils.isBlank(item.getId()) && StringUtils.isBlank(item.getTenantCode())) {
                     item.setTenantCode(getSessionTenantCode());
                 }
                 dao.save(item);
@@ -130,7 +130,7 @@ public class DictItemService extends BaseSortableService {
     private List<DictItem> childIteration(List<DictItem> list, String pid) {
         List<DictItem> result = new ArrayList<>();
         for (DictItem item : list) {
-            if (Strings.isNotBlank(item.getPid()) && item.getPid().equals(pid)) {
+            if (StringUtils.isNotBlank(item.getPid()) && item.getPid().equals(pid)) {
                 // 如果当前节点是指定id的父节点，则将其添加到结果中并继续递归查找其子集
                 result.add(item);
                 result.addAll(childIteration(list, item.getId()));

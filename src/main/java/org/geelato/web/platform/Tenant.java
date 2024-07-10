@@ -1,11 +1,11 @@
 package org.geelato.web.platform;
 
 public class Tenant {
-    public Tenant(String code){
-        this.code=code;
-    }
     private String code;
     private String name;
+    public Tenant(String code) {
+        this.code = code;
+    }
 
     public String getCode() {
         return code;

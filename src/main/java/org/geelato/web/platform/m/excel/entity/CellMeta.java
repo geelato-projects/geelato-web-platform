@@ -1,8 +1,8 @@
 package org.geelato.web.platform.m.excel.entity;
 
 /**
- *  占位符元数据
- *  用于word或excel的占位符替换
+ * 占位符元数据
+ * 用于word或excel的占位符替换
  */
 public class CellMeta {
     private int index;

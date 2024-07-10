@@ -3,9 +3,9 @@ package org.geelato.web.platform.m.base.rest;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiErrorMsg;
+import org.geelato.utils.StringUtils;
 import org.geelato.web.platform.m.base.entity.Attach;
 import org.geelato.web.platform.m.base.service.AttachService;
 import org.geelato.web.platform.m.base.service.DownloadService;
@@ -48,33 +48,33 @@ public class DownloadController extends BaseController {
             File file = null;
             String appId = null;
             String tenantCode = null;
-            if (Strings.isNotBlank(id)) {
+            if (StringUtils.isNotBlank(id)) {
                 Attach attach = attachService.getModel(id);
                 Assert.notNull(attach, ApiErrorMsg.IS_NULL);
                 appId = attach.getAppId();
                 tenantCode = attach.getTenantCode();
                 file = downloadService.downloadFile(attach.getName(), attach.getPath());
                 name = attach.getName();
-            } else if (Strings.isNotBlank(path)) {
+            } else if (StringUtils.isNotBlank(path)) {
                 file = downloadService.downloadFile(name, path);
-                name = Strings.isNotBlank(name) ? name : file.getName();
+                name = StringUtils.isNotBlank(name) ? name : file.getName();
             }
             if (isPdf) {
                 String ext = name.substring(name.lastIndexOf("."));
-                name = Strings.isNotBlank(name) ? name.replace(ext, ".pdf") : null;
+                name = StringUtils.isNotBlank(name) ? name.replace(ext, ".pdf") : null;
                 String outputPath = UploadService.getSavePath(UploadService.ROOT_CONVERT_DIRECTORY, tenantCode, appId, "word-to-pdf.pdf", true);
                 OfficeUtils.toPdf(file.getAbsolutePath(), outputPath, ext);
                 File pFile = new File(outputPath);
                 file = pFile.exists() ? pFile : null;
             }
-            if (file != null && Strings.isNotBlank(name)) {
+            if (file != null && StringUtils.isNotBlank(name)) {
                 out = response.getOutputStream();
                 // 编码
                 String encodeName = URLEncoder.encode(name, StandardCharsets.UTF_8);
                 String mineType = request.getServletContext().getMimeType(encodeName);
                 response.setContentType(mineType);
                 // 在线查看图片、pdf
-                if (isPreview && Strings.isNotBlank(mineType) && (mineType.startsWith("image/") || mineType.equalsIgnoreCase("application/pdf"))) {
+                if (isPreview && StringUtils.isNotBlank(mineType) && (mineType.startsWith("image/") || mineType.equalsIgnoreCase("application/pdf"))) {
                     //  file = downloadService.copyToFile(file, name);
                 } else {
                     response.setHeader("Content-Disposition", "attachment; filename=" + encodeName);
@@ -106,13 +106,13 @@ public class DownloadController extends BaseController {
     @ResponseBody
     public ApiResult downloadJson(String fileName) throws IOException {
         ApiResult result = new ApiResult();
-        if (Strings.isBlank(fileName)) {
+        if (StringUtils.isBlank(fileName)) {
             return result.success().setMsg("fileName is null");
         }
         BufferedReader bufferedReader = null;
         try {
             String ext = UploadService.getFileExtension(fileName);
-            if (Strings.isBlank(ext) || !ext.equalsIgnoreCase(".config")) {
+            if (StringUtils.isBlank(ext) || !ext.equalsIgnoreCase(".config")) {
                 fileName += ".config";
             }
             File file = new File(String.format("%s/%s", UploadService.ROOT_CONFIG_DIRECTORY, fileName));

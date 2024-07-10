@@ -1,13 +1,13 @@
 package org.geelato.web.platform.m.excel.service;
 
 import com.microsoft.schemas.vml.*;
-import org.apache.logging.log4j.util.Strings;
 import org.apache.poi.wp.usermodel.HeaderFooterType;
 import org.apache.poi.xwpf.model.XWPFHeaderFooterPolicy;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFHeader;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.apache.xmlbeans.XmlObject;
+import org.geelato.utils.StringUtils;
 import org.geelato.web.platform.m.excel.entity.WordWaterMarkMeta;
 import org.openxmlformats.schemas.officeDocument.x2006.sharedTypes.STTrueFalse;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.*;
@@ -28,7 +28,7 @@ public class DocxWaterMarkUtils {
      * @param markText
      */
     public static void setXWPFDocumentWaterMark(XWPFDocument document, String markText) {
-        if (document == null || Strings.isBlank(markText)) {
+        if (document == null || StringUtils.isBlank(markText)) {
             throw new RuntimeException("XWPFDocument or WaterMarkText is null");
         }
         XWPFParagraph paragraph = document.createParagraph();
@@ -60,7 +60,7 @@ public class DocxWaterMarkUtils {
         }
         markMeta.afterSet();
         String markText = markMeta.formatWaterMark();
-        if (document == null || Strings.isBlank(markText)) {
+        if (document == null || StringUtils.isBlank(markText)) {
             throw new RuntimeException("XWPFDocument or WaterMarkText is null");
         }
         markText = markText + DocxWaterMarkUtils.repeatString(" ", markMeta.getCellSpace()); // 水印文字之间使用8个空格分隔
@@ -141,21 +141,20 @@ public class DocxWaterMarkUtils {
      * @return
      */
     private static String getShapeStyle(String customText, String styleTop, double fontSize, double styleRotation) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("position: ").append("absolute"); // 文本path绘制的定位方式
-        sb.append(";width: ").append(customText.length() * 10).append("pt"); // 计算文本占用的长度（文本总个数*单字长度）
-        sb.append(";height: ").append(fontSize + "pt"); // 字体高度
-        sb.append(";font-size: ").append(fontSize + "pt");
-        sb.append(";z-index: ").append("-251654144");
-        sb.append(";mso-wrap-edited: ").append("f");
-        sb.append(";margin-top: ").append(styleTop);
-        sb.append(";margin-left: ").append("-50pt");
-        sb.append(";mso-position-horizontal-relative: ").append("margin");
-        sb.append(";mso-position-vertical-relative: ").append("margin");
-        sb.append(";mso-position-vertical: ").append("left");
-        sb.append(";mso-position-horizontal: ").append("center");
-        sb.append(";rotation: ").append(styleRotation);
-        return sb.toString();
+        String sb = "position: " + "absolute" + // 文本path绘制的定位方式
+                ";width: " + customText.length() * 10 + "pt" + // 计算文本占用的长度（文本总个数*单字长度）
+                ";height: " + fontSize + "pt" + // 字体高度
+                ";font-size: " + fontSize + "pt" +
+                ";z-index: " + "-251654144" +
+                ";mso-wrap-edited: " + "f" +
+                ";margin-top: " + styleTop +
+                ";margin-left: " + "-50pt" +
+                ";mso-position-horizontal-relative: " + "margin" +
+                ";mso-position-vertical-relative: " + "margin" +
+                ";mso-position-vertical: " + "left" +
+                ";mso-position-horizontal: " + "center" +
+                ";rotation: " + styleRotation;
+        return sb;
     }
 
     /**
@@ -164,21 +163,20 @@ public class DocxWaterMarkUtils {
      * @return
      */
     private static String getShapeStyle() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("position: ").append("absolute"); // 文本path绘制的定位方式
-        sb.append(";left: ").append("opt");
-        sb.append(";width: ").append("500pt"); // 计算文本占用的长度（文本总个数*单字长度）
-        sb.append(";height: ").append("150pt"); // 字体高度
-        sb.append(";z-index: ").append("-251654144");
-        sb.append(";mso-wrap-edited: ").append("f");
-        sb.append(";margin-left: ").append("-50pt");
-        sb.append(";margin-top: ").append("270pt");
-        sb.append(";mso-position-horizontal-relative: ").append("margin");
-        sb.append(";mso-position-vertical-relative: ").append("margin");
-        sb.append(";mso-width-relative: ").append("page");
-        sb.append(";mso-height-relative: ").append("page");
-        sb.append(";rotation: ").append("-45");
-        return sb.toString();
+        String sb = "position: " + "absolute" + // 文本path绘制的定位方式
+                ";left: " + "opt" +
+                ";width: " + "500pt" + // 计算文本占用的长度（文本总个数*单字长度）
+                ";height: " + "150pt" + // 字体高度
+                ";z-index: " + "-251654144" +
+                ";mso-wrap-edited: " + "f" +
+                ";margin-left: " + "-50pt" +
+                ";margin-top: " + "270pt" +
+                ";mso-position-horizontal-relative: " + "margin" +
+                ";mso-position-vertical-relative: " + "margin" +
+                ";mso-width-relative: " + "page" +
+                ";mso-height-relative: " + "page" +
+                ";rotation: " + "-45";
+        return sb;
     }
 
 }

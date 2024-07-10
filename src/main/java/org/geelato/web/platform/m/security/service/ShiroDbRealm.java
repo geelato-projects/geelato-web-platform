@@ -42,16 +42,17 @@ import java.util.Map;
 @Component
 public class ShiroDbRealm extends AuthorizingRealm {
 
+    private final static String SECURITY_USER_PERMISSION_STRING_LIST = "security_user_permission_string_list";
+    private final static String SECURITY_USER_ROLE_CODE_LIST = "security_user_role_code_list";
     @Autowired
     @Qualifier("primaryDao")
     protected Dao dao;
-    private final static String SECURITY_USER_PERMISSION_STRING_LIST="security_user_permission_string_list";
-    private final static String SECURITY_USER_ROLE_CODE_LIST="security_user_role_code_list";
+
     /**
      * 认证回调函数,登录时调用.
      */
     @Override
-        protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken authcToken) throws AuthenticationException {
+    protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken authcToken) throws AuthenticationException {
         UsernamePasswordToken token = (UsernamePasswordToken) authcToken;
         User user = dao.queryForObject(User.class, "loginName", token.getUsername());
         if (user != null) {
@@ -111,6 +112,7 @@ public class ShiroDbRealm extends AuthorizingRealm {
         public String getName() {
             return name;
         }
+
         /**
          * 本函数输出将作为默认的<shiro:principal/>输出.
          */
@@ -143,13 +145,8 @@ public class ShiroDbRealm extends AuthorizingRealm {
             }
             ShiroUser other = (ShiroUser) obj;
             if (loginName == null) {
-                if (other.loginName != null) {
-                    return false;
-                }
-            } else if (!loginName.equals(other.loginName)) {
-                return false;
-            }
-            return true;
+                return other.loginName == null;
+            } else return loginName.equals(other.loginName);
         }
     }
 }

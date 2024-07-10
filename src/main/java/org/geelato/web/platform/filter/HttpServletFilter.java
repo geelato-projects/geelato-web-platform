@@ -14,13 +14,13 @@ public class HttpServletFilter implements Filter {
 
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
-        HttpServletRequest httpServletRequest=(HttpServletRequest)servletRequest;
-        boolean cacheOption=Boolean.parseBoolean(httpServletRequest.getHeader("cache"));
-        if(cacheOption){
+        HttpServletRequest httpServletRequest = (HttpServletRequest) servletRequest;
+        boolean cacheOption = Boolean.parseBoolean(httpServletRequest.getHeader("cache"));
+        if (cacheOption) {
             CustomHttpServletRequest customHttpServletRequest = new CustomHttpServletRequest((HttpServletRequest) servletRequest);
-            CustomHttpServletResponse customHttpServletResponse = new CustomHttpServletResponse((HttpServletResponse)servletResponse);
+            CustomHttpServletResponse customHttpServletResponse = new CustomHttpServletResponse((HttpServletResponse) servletResponse);
             filterChain.doFilter(customHttpServletRequest, customHttpServletResponse);
-        }else {
+        } else {
             filterChain.doFilter(servletRequest, servletResponse);
         }
 

@@ -1,12 +1,12 @@
 package org.geelato.web.platform.m.base.rest;
 
 import jakarta.servlet.http.HttpServletRequest;
-import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiErrorMsg;
 import org.geelato.core.gql.parser.FilterGroup;
 import org.geelato.core.gql.parser.PageQueryRequest;
+import org.geelato.utils.StringUtils;
 import org.geelato.web.platform.m.base.entity.App;
 import org.geelato.web.platform.m.base.entity.AppViewMap;
 import org.geelato.web.platform.m.base.service.AppViewMapService;
@@ -110,7 +110,7 @@ public class AppViewMapController extends BaseController {
         try {
             appViewMapService.after(form);
             // ID为空方可插入
-            if (Strings.isNotBlank(form.getId())) {
+            if (StringUtils.isNotBlank(form.getId())) {
                 result.setData(appViewMapService.updateModel(form));
             } else {
                 result.setData(appViewMapService.createModel(form));

@@ -4,7 +4,6 @@ import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import jakarta.annotation.Resource;
 import jakarta.validation.constraints.NotNull;
-import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.Ctx;
 import org.geelato.core.api.ApiResult;
 import org.geelato.core.constants.ApiResultCode;
@@ -50,32 +49,26 @@ import java.util.*;
 @Controller
 @RequestMapping(value = "/package")
 public class PackageController extends BaseController {
-    private DataSourceTransactionManager dataSourceTransactionManager;
-    private TransactionStatus transactionStatus;
     private static final Logger logger = LoggerFactory.getLogger(PackageController.class);
     private final String defaultPackageName = "geelatoApp";
-
     private final ArrayList<String> incrementMetas = new ArrayList<>();
-
     private final String[] incrementPlatformMetas = {"platform_dict", "platform_dict_item", "platform_sys_config",
             "platform_export_template", "platform_encoding", "platform_resources"};
     private final ArrayList<String> incrementBizMetas = new ArrayList<>();
-
-
     private final Map<String, List<String>> incrementMetaIds = new HashMap<>();
+    private final MetaManager metaManager = MetaManager.singleInstance();
+    private final SqlManager sqlManager = SqlManager.singleInstance();
+    private final JsonTextSaveParser jsonTextSaveParser = new JsonTextSaveParser();
+    @Resource
+    AppVersionService appVersionService;
+    private DataSourceTransactionManager dataSourceTransactionManager;
+    private TransactionStatus transactionStatus;
     @Resource
     private PackageConfigurationProperties packageConfigurationProperties;
     @Resource
     private AttachService attachService;
     @Resource
     private DownloadService downloadService;
-    @Resource
-    AppVersionService appVersionService;
-
-    private final MetaManager metaManager = MetaManager.singleInstance();
-    private final SqlManager sqlManager = SqlManager.singleInstance();
-    private final JsonTextSaveParser jsonTextSaveParser = new JsonTextSaveParser();
-
 
     /*
     打包应用
@@ -536,7 +529,7 @@ public class PackageController extends BaseController {
     private String compressAppPackage(String sourcePackageFolder, AppVersion appVersion, AppPackage appPackage) throws IOException {
         String packageSuffix = ".zgdp";
         String appPackageName = StringUtils.isEmpty(appPackage.getAppCode()) ? defaultPackageName : appPackage.getAppCode();
-        String appPackageFullName = (Strings.isNotBlank(appVersion.getVersion()) ? appVersion.getVersion() : appPackageName) + packageSuffix;
+        String appPackageFullName = (StringUtils.isNotBlank(appVersion.getVersion()) ? appVersion.getVersion() : appPackageName) + packageSuffix;
         String targetZipPath = packageConfigurationProperties.getPath() + appPackageFullName;
         targetZipPath = UploadService.getSavePath(UploadService.ROOT_DIRECTORY, AttachmentSourceEnum.PLATFORM_ATTACH.getValue(), Ctx.getCurrentTenantCode(), appPackage.getSourceAppId(), appPackageFullName, true);
         ZipUtils.compressDirectory(sourcePackageFolder, targetZipPath);

@@ -1,6 +1,6 @@
 package org.geelato.web.platform.m.excel.entity;
 
-import org.apache.logging.log4j.util.Strings;
+import org.geelato.utils.StringUtils;
 import org.geelato.web.platform.enums.ExcelColumnTypeEnum;
 import org.geelato.web.platform.enums.ExcelMultiSceneTypeEnum;
 
@@ -12,11 +12,11 @@ import java.util.Set;
  * @description: 导入业务数据，每列数据的类型
  */
 public class BusinessTypeData {
-    //业务表格，第一行，每列名称
+    // 业务表格，第一行，每列名称
     private String name;
-    //每列值的类型
+    // 每列值的类型
     private String type;
-    //存在的格式，布尔值、时间格式
+    // 存在的格式，布尔值、时间格式
     private String format;
     // 多值分隔符
     private String multiSeparator;
@@ -24,7 +24,7 @@ public class BusinessTypeData {
     private String multiScene;
     // 分解规则
     private Set<BusinessTypeRuleData> typeRuleData = new LinkedHashSet<>();
-    //备注
+    // 备注
     private String remark;
 
 
@@ -85,7 +85,7 @@ public class BusinessTypeData {
     }
 
     public boolean isMulti() {
-        return Strings.isNotBlank(this.multiSeparator);
+        return StringUtils.isNotBlank(this.multiSeparator);
     }
 
     public boolean isSceneTypeMulti() {

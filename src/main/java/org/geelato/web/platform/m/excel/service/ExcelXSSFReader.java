@@ -1,7 +1,6 @@
 package org.geelato.web.platform.m.excel.service;
 
 import com.alibaba.fastjson2.JSON;
-import org.apache.logging.log4j.util.Strings;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.CellValue;
 import org.apache.poi.ss.usermodel.ClientAnchor;
@@ -9,6 +8,7 @@ import org.apache.poi.ss.usermodel.Drawing;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.*;
 import org.geelato.core.meta.model.field.ColumnMeta;
+import org.geelato.utils.StringUtils;
 import org.geelato.web.platform.exception.file.FileContentIsEmptyException;
 import org.geelato.web.platform.exception.file.FileContentReadFailedException;
 import org.geelato.web.platform.m.excel.entity.*;
@@ -149,9 +149,9 @@ public class ExcelXSSFReader {
                 XSSFCell cell4 = row.getCell(4);
                 if (cell4 != null) {
                     if (CellType.BOOLEAN.equals(cell4.getCellType())) {
-                        meta.setRetain(cell4.getBooleanCellValue() || false);
+                        meta.setRetain(cell4.getBooleanCellValue());
                     } else if (CellType.STRING.equals(cell4.getCellType())) {
-                        meta.setRetain("TRUE".equalsIgnoreCase(cell4.getStringCellValue()) || false);
+                        meta.setRetain("TRUE".equalsIgnoreCase(cell4.getStringCellValue()));
                     }
                 }
                 meta.setOrder((int) row.getCell(5).getNumericCellValue());
@@ -200,7 +200,7 @@ public class ExcelXSSFReader {
                 XSSFCell cell = firstRow.getCell(i);
                 if (cell != null) {
                     String cellValue = cell.getStringCellValue();
-                    if (Strings.isNotBlank(cellValue)) {
+                    if (StringUtils.isNotBlank(cellValue)) {
                         BusinessColumnMeta busColMeta = new BusinessColumnMeta();
                         busColMeta.setIndex(i);
                         busColMeta.setBusinessTypeData(businessTypeDataMap.get(cellValue));
@@ -257,9 +257,9 @@ public class ExcelXSSFReader {
                         } else if (data.isColumnTypeBoolean()) {
                             if (CellType.BOOLEAN.equals(cell.getCellType())) {
                                 cellValue = cell.getBooleanCellValue();
-                            } else if (CellType.STRING.equals(cell.getCellType()) && Strings.isNotBlank(data.getFormat())) {
+                            } else if (CellType.STRING.equals(cell.getCellType()) && StringUtils.isNotBlank(data.getFormat())) {
                                 cellValue = data.getFormat().equalsIgnoreCase(cell.getStringCellValue());
-                            } else if (CellType.NUMERIC.equals(cell.getCellType()) && Strings.isNotBlank(data.getFormat())) {
+                            } else if (CellType.NUMERIC.equals(cell.getCellType()) && StringUtils.isNotBlank(data.getFormat())) {
                                 cellValue = data.getFormat() == cell.getStringCellValue();
                             } else if (CellType.NUMERIC.equals(cell.getCellType())) {
                                 cellValue = cell.getNumericCellValue() > 0;
@@ -269,7 +269,7 @@ public class ExcelXSSFReader {
                         } else if (data.isColumnTypeDateTime()) {
                             if (CellType.NUMERIC.equals(cell.getCellType())) {
                                 cellValue = cell.getDateCellValue();
-                            } else if (Strings.isNotBlank(data.getFormat())) {
+                            } else if (StringUtils.isNotBlank(data.getFormat())) {
                                 cellValue = new SimpleDateFormat(data.getFormat()).parse(cell.getStringCellValue());
                             }
                         }

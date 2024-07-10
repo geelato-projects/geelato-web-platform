@@ -14,7 +14,9 @@ import com.fasterxml.jackson.datatype.jsr310.ser.LocalTimeSerializer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.time.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 
 /**
@@ -23,10 +25,9 @@ import java.time.format.DateTimeFormatter;
 @Configuration
 public class SerializerConfiguration {
 
-       /**
+    /**
      * 防止json时出现错误FAIL_ON_EMPTY_BEANS
-     *
-        */
+     */
     @Bean
     public ObjectMapper objectMapper() {
         SimpleModule simpleModule = new SimpleModule();

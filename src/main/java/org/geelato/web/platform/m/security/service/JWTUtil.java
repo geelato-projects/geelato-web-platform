@@ -8,6 +8,7 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 
 import java.util.Calendar;
 import java.util.Map;
+
 /**
  * @author geemeta
  */
@@ -37,24 +38,24 @@ public class JWTUtil {
      */
     public static String getToken(Map<String, String> map, Integer expires) throws Exception {
 
-        //创建日历
+        // 创建日历
         Calendar instance = Calendar.getInstance();
-        //设置过期时间
+        // 设置过期时间
         instance.add(Calendar.SECOND, expires);
 
-        //创建jwt builder对象
+        // 创建jwt builder对象
         JWTCreator.Builder builder = JWT.create();
 
-        //payload
+        // payload
         map.forEach((k, v) -> {
             builder.withClaim(k, v);
         });
 
-        //指定过期时间
+        // 指定过期时间
         String token = builder.withExpiresAt(instance.getTime())
-                //设置加密方式
+                // 设置加密方式
                 .sign(Algorithm.HMAC256(SIGN_KEY));
-        //返回tokean
+        // 返回tokean
         return confoundPayload(token);
     }
 
@@ -64,13 +65,13 @@ public class JWTUtil {
      * @param token 输入混淆payload后的token
      */
     public static DecodedJWT verify(String token) throws Exception {
-        //如果token无效
+        // 如果token无效
         if (token == null || "".equals(token)) {
             throw new JWTDecodeException("无效的token！");
         }
-        //解析token
+        // 解析token
         String dToken = deConfoundPayload(token);
-        //创建返回结果
+        // 创建返回结果
         return JWT.require(Algorithm.HMAC256(SIGN_KEY)).build().verify(dToken);
     }
 
@@ -91,19 +92,19 @@ public class JWTUtil {
      * @param token 混淆payload前的token
      */
     private static String confoundPayload(String token) throws Exception {
-        //分割token
+        // 分割token
         String[] split = token.split("\\.");
-        //如果token不符合规范
+        // 如果token不符合规范
         if (split.length != DEFAULT_TOKEN_SIZE) {
             throw new JWTDecodeException("签名不正确");
         }
-        //取出payload
+        // 取出payload
         String payload = split[1];
-        //获取长度
+        // 获取长度
         int length = payload.length() / 2;
-        //指定截取点
+        // 指定截取点
         int index = payload.length() % 2 != 0 ? length + 1 : length;
-        //混淆处理后的token
+        // 混淆处理后的token
         return split[0] + "." + reversePayload(payload, index) + "." + split[2];
     }
 
@@ -113,15 +114,15 @@ public class JWTUtil {
      * @param token 混淆后的token
      */
     private static String deConfoundPayload(String token) throws Exception {
-        //分割token
+        // 分割token
         String[] split = token.split("\\.");
-        //如果token不符合规范
+        // 如果token不符合规范
         if (split.length != DEFAULT_TOKEN_SIZE) {
             throw new JWTDecodeException("签名不正确");
         }
-        //取出payload
+        // 取出payload
         String payload = split[1];
-        //返回解析后的token
+        // 返回解析后的token
         return split[0] + "." + reversePayload(payload, payload.length() / 2) + "." + split[2];
     }
 
