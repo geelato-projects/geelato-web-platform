@@ -28,7 +28,6 @@ import java.nio.file.Paths;
 
 /**
  * @author diabl
- * @date 2023/7/5 14:00
  */
 @Controller
 @RequestMapping(value = "/api/resources")

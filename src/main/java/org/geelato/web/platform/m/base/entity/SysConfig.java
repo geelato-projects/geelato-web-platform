@@ -11,7 +11,6 @@ import org.geelato.web.platform.enums.SysConfigValueTypeEnum;
 
 /**
  * @Description 应用参数配置，
- * @Date 2020/4/12 12:00 by liuwq
  */
 @Entity(name = "platform_sys_config")
 @Title(title = "配置")

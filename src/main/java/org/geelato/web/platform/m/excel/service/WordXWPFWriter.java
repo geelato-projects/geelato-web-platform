@@ -26,7 +26,6 @@ import java.util.regex.Pattern;
 
 /**
  * @author diabl
- * @date 2023/9/20 10:24
  */
 @Component
 public class WordXWPFWriter {

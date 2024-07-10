@@ -12,7 +12,6 @@ import java.util.List;
 
 /**
  * @author liuwq
- * @Date 2020/4/10 18:12
  */
 @Entity(name = "platform_dict_item")
 @Title(title = "数据字典项")

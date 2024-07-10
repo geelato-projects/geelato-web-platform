@@ -13,7 +13,6 @@ import java.nio.file.Files;
 
 /**
  * @author geelato
- * @date 2018/12/19
  */
 @Entity(name = "platform_resources", table = "platform_resources")
 @Title(title = "资源信息", description = "对应各类资源文件，如mvel规则文件，sql语句等")

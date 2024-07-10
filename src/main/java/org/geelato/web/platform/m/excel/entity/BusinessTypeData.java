@@ -10,7 +10,6 @@ import java.util.Set;
 /**
  * @author diabl
  * @description: 导入业务数据，每列数据的类型
- * @date 2023/10/12 14:18
  */
 public class BusinessTypeData {
     //业务表格，第一行，每列名称

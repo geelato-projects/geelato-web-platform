@@ -4,7 +4,6 @@ import org.apache.logging.log4j.util.Strings;
 
 /**
  * @author diabl
- * @date 2024/7/9 14:55
  */
 public enum SysConfigValueTypeEnum {
     STRING("字符串", "string"),

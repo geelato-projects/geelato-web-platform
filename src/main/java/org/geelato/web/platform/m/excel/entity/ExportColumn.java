@@ -8,7 +8,6 @@ import java.util.List;
 /**
  * @author diabl
  * @description: 导出excel表头
- * @date 2024/5/24 9:45
  */
 public class ExportColumn {
     private String dataIndex; // 数据key，对应导出excel中的var

@@ -3,7 +3,6 @@ package org.geelato.web.platform.m.security.entity;
 /**
  * @author diabl
  * @description: 找回密码
- * @date 2023/7/17 11:13
  */
 
 public class ForgetPasswordParams {

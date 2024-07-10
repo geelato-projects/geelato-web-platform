@@ -6,7 +6,6 @@ import java.util.Set;
 /**
  * @author diabl
  * @description: 业务数据
- * @date 2023/10/15 10:53
  */
 public class BusinessData {
     private int XIndex;

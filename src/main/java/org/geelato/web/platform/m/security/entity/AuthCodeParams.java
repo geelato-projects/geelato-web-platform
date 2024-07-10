@@ -11,7 +11,6 @@ import org.springframework.util.Assert;
 /**
  * @author diabl
  * @description: 验证码
- * @date 2023/7/17 9:28
  */
 public class AuthCodeParams {
     private String action; // forgetPassword;updateMobile,updatePassword,updateEmail

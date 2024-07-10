@@ -4,7 +4,6 @@ import java.io.File;
 
 /**
  * @author diabl
- * @date 2023/11/12 15:27
  */
 public class Base64Info {
     private String id;

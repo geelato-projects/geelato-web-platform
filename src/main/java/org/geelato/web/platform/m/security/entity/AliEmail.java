@@ -2,7 +2,6 @@ package org.geelato.web.platform.m.security.entity;
 
 /**
  * @author diabl
- * @date 2024/6/5 15:28
  */
 public class AliEmail {
     private String host;

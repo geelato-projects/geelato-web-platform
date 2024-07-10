@@ -7,7 +7,6 @@ import org.geelato.core.meta.model.entity.BaseSortableEntity;
 
 /**
  * @author itechgee@126.com
- * @date 2017/5/27.
  */
 @Entity(name = "platform_app_page", table = "platform_app_page")
 @Title(title = "页面")

@@ -8,7 +8,6 @@ import org.geelato.core.meta.model.entity.BaseSortableEntity;
 
 /**
  * @author itechgee@126.com
- * @date 2017/9/8.
  */
 @Entity(name = "platform_tree_node", table = "platform_tree_node")
 @Title(title = "菜单")

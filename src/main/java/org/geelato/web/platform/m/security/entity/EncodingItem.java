@@ -3,7 +3,6 @@ package org.geelato.web.platform.m.security.entity;
 /**
  * @author diabl
  * @description: 编码，模板项
- * @date 2023/8/2 10:51
  */
 public class EncodingItem {
     // 基础

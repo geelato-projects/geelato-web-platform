@@ -2,7 +2,6 @@ package org.geelato.web.platform.m.excel.entity;
 
 /**
  * @author diabl
- * @date 2024/1/10 10:50
  */
 public class WordTagMeta {
     public static final String TYPE_START = "start";

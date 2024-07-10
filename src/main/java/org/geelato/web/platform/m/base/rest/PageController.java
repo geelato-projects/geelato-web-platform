@@ -24,7 +24,6 @@ import java.util.Map;
 
 /**
  * @author itechgee@126.com
- * @date 2017/7/7.
  */
 @Controller
 @RequestMapping(value = "/api/page/")

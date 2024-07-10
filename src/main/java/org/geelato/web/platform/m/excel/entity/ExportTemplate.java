@@ -10,7 +10,6 @@ import org.geelato.core.meta.model.entity.EntityEnableAble;
 /**
  * @author diabl
  * @description: 导出文件模板
- * @date 2023/8/11 11:26
  */
 @Entity(name = "platform_export_template")
 @Title(title = "导出文件模板")

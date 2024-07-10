@@ -26,7 +26,6 @@ import java.util.*;
 
 /**
  * @author itechgee@126.com
- * @date 2017/6/3.
  */
 @Controller
 @RequestMapping(value = "/api/meta/ddl/")

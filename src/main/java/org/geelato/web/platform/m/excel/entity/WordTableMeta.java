@@ -8,7 +8,6 @@ import java.util.Map;
 
 /**
  * @author diabl
- * @date 2024/1/9 18:01
  */
 public class WordTableMeta {
     private String type;// 行循环、列循环、表循环

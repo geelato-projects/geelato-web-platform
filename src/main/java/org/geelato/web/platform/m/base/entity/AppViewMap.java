@@ -9,7 +9,6 @@ import org.geelato.core.meta.model.entity.BaseEntity;
 
 /**
  * @author diabl
- * @date 2024/4/17 16:24
  */
 @Entity(name = "platform_app_r_view")
 @Title(title = "应用视图授权关系表")
