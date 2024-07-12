@@ -70,7 +70,7 @@ public class MetaController extends BaseController implements InitializingBean {
     @RequestMapping(value = {"batchSave"}, method = RequestMethod.POST, produces = MediaTypes.JSON_UTF_8)
     @ResponseBody
     public ApiMetaResult batchSave(HttpServletRequest request) throws DaoException {
-        gql = getGql(request, null);
+        gql = getGql(request, "batchSave");
         ApiMetaResult result = new ApiMetaResult();
         result.setData(ruleService.batchSave(gql, true));
         return result;

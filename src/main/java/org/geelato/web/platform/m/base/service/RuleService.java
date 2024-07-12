@@ -82,9 +82,10 @@ public class RuleService {
 //            case"multiSave":
 //                command = gqlManager.generateMultiSaveSql(gql, getSessionCtx());
 //                break;
-//            case"batchSave":
-//                command = gqlManager.generateBatchSaveSql(gql, getSessionCtx());
-//                break;
+            case"batchSave":
+                List<SaveCommand> commands = gqlManager.generateMultiSaveSql(gql, getSessionCtx());
+                command=commands.get(0);
+                break;
             case "delete":
                 command = gqlManager.generateDeleteSql(gql, getSessionCtx());
                 break;
