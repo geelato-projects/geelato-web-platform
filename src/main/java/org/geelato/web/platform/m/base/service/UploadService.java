@@ -150,6 +150,22 @@ public class UploadService {
         return "";
     }
 
+    /**
+     * 文件后缀
+     * @param fileName 文件名称
+     * @return 例：xlsx，不包含.
+     */
+    public static String getFileExtensionWithNoDot(String fileName) {
+        if (StringUtils.isNotBlank(fileName)) {
+            int lastIndexOfDot = fileName.lastIndexOf('.');
+            if (lastIndexOfDot != -1) {
+                return fileName.substring(lastIndexOfDot+1);
+            }
+        }
+
+        return "";
+    }
+
     public static String getFileName(String fileName) {
         if (StringUtils.isNotBlank(fileName)) {
             int lastIndexOfDot = fileName.lastIndexOf('.');
