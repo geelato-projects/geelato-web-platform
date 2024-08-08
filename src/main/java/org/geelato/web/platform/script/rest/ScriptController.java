@@ -7,7 +7,7 @@ import org.geelato.core.graal.GraalManager;
 import org.geelato.web.platform.graal.GraalContext;
 import org.geelato.web.platform.graal.InstanceProxy;
 import org.geelato.web.platform.m.base.rest.BaseController;
-import org.geelato.web.platform.script.entty.Api;
+import org.geelato.web.platform.script.entity.Api;
 import org.geelato.web.platform.script.service.ApiService;
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.HostAccess;
@@ -60,7 +60,7 @@ public class ScriptController extends BaseController {
 
     private String customContent(String id) {
         Api api = apiService.getModel(Api.class, id);
-        return api.getRelease_content();
+        return api.getReleaseContent();
 //        return "var result=$gl.dao.queryForMapList(gql,false);context.result=result;" +
 //                "return result;";
     }

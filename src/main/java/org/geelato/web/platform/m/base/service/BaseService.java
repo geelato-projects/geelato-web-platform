@@ -2,6 +2,7 @@ package org.geelato.web.platform.m.base.service;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
+import org.apache.logging.log4j.util.Strings;
 import org.geelato.core.Ctx;
 import org.geelato.core.api.ApiPagedResult;
 import org.geelato.core.constants.ColumnDefault;
@@ -10,13 +11,13 @@ import org.geelato.core.gql.parser.FilterGroup;
 import org.geelato.core.gql.parser.PageQueryRequest;
 import org.geelato.core.meta.model.entity.BaseEntity;
 import org.geelato.core.orm.Dao;
-import org.geelato.utils.StringUtils;
 import org.geelato.web.platform.m.security.entity.DataItems;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author diabl
@@ -24,6 +25,10 @@ import java.util.*;
 @Service
 public class BaseService {
     private static final String DEFAULT_ORDER_BY = "update_at DESC";
+    public static final String COMPARE_RESULT_ADD = "add";
+    public static final String COMPARE_RESULT_UPDATE = "update";
+    public static final String COMPARE_RESULT_DELETE = "delete";
+
     @Autowired
     @Qualifier("primaryDao")
     public Dao dao;
@@ -69,7 +74,7 @@ public class BaseService {
         ApiPagedResult result = new ApiPagedResult();
         // 配置参数
         dao.setDefaultFilter(true, filterGroup);
-        String orderBy = StringUtils.isNotBlank(request.getOrderBy()) ? request.getOrderBy() : BaseService.DEFAULT_ORDER_BY;
+        String orderBy = Strings.isNotBlank(request.getOrderBy()) ? request.getOrderBy() : BaseService.DEFAULT_ORDER_BY;
         request.setOrderBy(orderBy);
         // dao查询
         List<T> pageQueryList = dao.pageQueryList(entity, params, request);
@@ -97,7 +102,7 @@ public class BaseService {
         ApiPagedResult result = new ApiPagedResult();
         // 配置参数
         dao.setDefaultFilter(true, filterGroup);
-        String orderBy = StringUtils.isNotBlank(request.getOrderBy()) ? request.getOrderBy() : BaseService.DEFAULT_ORDER_BY;
+        String orderBy = Strings.isNotBlank(request.getOrderBy()) ? request.getOrderBy() : BaseService.DEFAULT_ORDER_BY;
         request.setOrderBy(orderBy);
         // dao查询
         List<T> pageQueryList = dao.pageQueryList(entity, filter, request);
@@ -120,7 +125,7 @@ public class BaseService {
      */
     public <T> List<T> queryModel(Class<T> entity, Map<String, Object> params, String orderBy) {
         dao.setDefaultFilter(true, filterGroup);
-        orderBy = StringUtils.isNotBlank(orderBy) ? orderBy : BaseService.DEFAULT_ORDER_BY;
+        orderBy = Strings.isNotBlank(orderBy) ? orderBy : BaseService.DEFAULT_ORDER_BY;
         return dao.queryList(entity, params, orderBy);
     }
 
@@ -144,7 +149,7 @@ public class BaseService {
      */
     public <T> List<T> queryModel(Class<T> entity, FilterGroup filter, String orderBy) {
         dao.setDefaultFilter(true, filterGroup);
-        orderBy = StringUtils.isNotBlank(orderBy) ? orderBy : BaseService.DEFAULT_ORDER_BY;
+        orderBy = Strings.isNotBlank(orderBy) ? orderBy : BaseService.DEFAULT_ORDER_BY;
         return dao.queryList(entity, filter, orderBy);
     }
 
@@ -181,7 +186,7 @@ public class BaseService {
     public <T extends BaseEntity> T createModel(T model) {
         model.setDelStatus(DeleteStatusEnum.NO.getCode());
         model.setDeleteAt(null);
-        if (StringUtils.isBlank(model.getTenantCode())) {
+        if (Strings.isBlank(model.getTenantCode())) {
             model.setTenantCode(getSessionTenantCode());
         }
 
@@ -199,7 +204,7 @@ public class BaseService {
     public <T extends BaseEntity> T updateModel(T model) {
         model.setDelStatus(DeleteStatusEnum.NO.getCode());
         model.setDeleteAt(null);
-        if (StringUtils.isBlank(model.getTenantCode())) {
+        if (Strings.isBlank(model.getTenantCode())) {
             model.setTenantCode(getSessionTenantCode());
         }
 
@@ -237,7 +242,7 @@ public class BaseService {
      * @return
      */
     public boolean isExist(Class entity, String id) {
-        if (StringUtils.isNotBlank(id)) {
+        if (Strings.isNotBlank(id)) {
             return dao.queryForObject(entity, id) != null;
         }
         return false;
@@ -265,21 +270,21 @@ public class BaseService {
     public boolean validate(String tableName, String id, Map<String, String> params) {
         Map<String, Object> map = new HashMap<>();
         // 租户编码
-        if (StringUtils.isBlank(params.get("tenant_code"))) {
+        if (Strings.isBlank(params.get("tenant_code"))) {
             params.put("tenant_code", getSessionTenantCode());
         }
         // 查询表格
-        if (StringUtils.isBlank(tableName)) {
+        if (Strings.isBlank(tableName)) {
             return false;
         }
         map.put("tableName", tableName);
         // 排除本身
-        map.put("id", StringUtils.isNotBlank(id) ? id : null);
+        map.put("id", Strings.isNotBlank(id) ? id : null);
         // 条件限制
         List<JSONObject> list = new ArrayList<>();
         for (Map.Entry<String, String> param : params.entrySet()) {
             Map<String, String> jParams = new HashMap<>();
-            if (StringUtils.isNotBlank(param.getKey())) {
+            if (Strings.isNotBlank(param.getKey())) {
                 jParams.put("key", param.getKey());
                 jParams.put("value", param.getValue());
                 list.add(JSONObject.parseObject(JSON.toJSONString(jParams)));
@@ -305,12 +310,40 @@ public class BaseService {
      */
     public <T extends BaseEntity> List getModelsById(Class<T> entity, String id) {
         List<T> list = new ArrayList<>();
-        if (StringUtils.isNotBlank(id)) {
+        if (Strings.isNotBlank(id)) {
             FilterGroup filter = new FilterGroup();
             filter.addFilter("id", FilterGroup.Operator.in, id);
             list = this.queryModel(entity, filter);
         }
 
         return list;
+    }
+
+    /**
+     * 旧集合与新集合对比，返回新增、更新、删除
+     *
+     * @param sources
+     * @param targets
+     * @param <T>
+     * @return
+     */
+    public <T extends BaseEntity> Map<String, List<T>> compareBaseEntity(List<T> sources, List<T> targets) {
+        Map<String, List<T>> result = new HashMap<>();
+        if (sources != null && sources.size() > 0 && targets != null && targets.size() > 0) {
+            List<String> sourceIds = sources.stream().map(T::getId).collect(Collectors.toList());
+            List<String> targetIds = targets.stream().map(T::getId).collect(Collectors.toList());
+            // 删除的，新的没有
+            result.put(COMPARE_RESULT_DELETE, sources.stream().filter(apiParam -> !targetIds.contains(apiParam.getId())).collect(Collectors.toList()));
+            // 更新的，旧的有的
+            result.put(COMPARE_RESULT_UPDATE, targets.stream().filter(apiParam -> sourceIds.contains(apiParam.getId())).collect(Collectors.toList()));
+            // 新增的，旧的没有
+            result.put(COMPARE_RESULT_ADD, targets.stream().filter(apiParam -> !sourceIds.contains(apiParam.getId())).collect(Collectors.toList()));
+        } else if (sources != null && sources.size() > 0) {
+            result.put(COMPARE_RESULT_DELETE, sources);
+        } else if (targets != null && targets.size() > 0) {
+            result.put(COMPARE_RESULT_ADD, targets);
+        }
+
+        return result;
     }
 }
