@@ -34,5 +34,7 @@ public class RestfulService extends BaseService {
                 appRestfulMapService.isDeleteModel(map);
             }
         }
+        // 删除
+        super.isDeleteModel(model);
     }
 }

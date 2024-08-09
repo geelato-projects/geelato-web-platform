@@ -2,9 +2,14 @@ package org.geelato.web.platform.script.service;
 
 import org.geelato.web.platform.m.base.service.BaseService;
 import org.geelato.web.platform.script.entity.Api;
+import org.geelato.web.platform.script.entity.ApiParam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author diabl
@@ -46,5 +51,24 @@ public class ApiService extends BaseService {
         api.setParameters(apiParamService.batchHandleModelByApis(api));
 
         return api;
+    }
+
+    /**
+     * 逻辑删除
+     *
+     * @param model
+     */
+    public void isDeleteModel(Api model) {
+        // 删除关联申请
+        Map<String, Object> params = new HashMap<>();
+        params.put("apiId", model.getId());
+        List<ApiParam> list = apiParamService.queryModel(ApiParam.class, params);
+        if (list != null && list.size() > 0) {
+            for (ApiParam map : list) {
+                apiParamService.isDeleteModel(map);
+            }
+        }
+        // 删除
+        super.isDeleteModel(model);
     }
 }
